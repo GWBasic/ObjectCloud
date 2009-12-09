@@ -1,0 +1,36 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/transitional.dtd">
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+<title>Walking Live</title>
+<!-- Uncomment to run against raw jsio source -->
+<!--script type="text/javascript" src="jsio/jsio.js"></script-->
+
+
+<!-- Uncomment to run against compiled jsio + world source.
+     To compile against jsio turnk, run: 
+     	jsio_compile -o build/world_client.js index.html
+ -->
+<script type="text/javascript" src="jsio/jsio.js"></script>
+<script type="text/javascript">
+jsio('from .index import *');
+window.onload = init;
+</script>
+<link type="text/css" rel="stylesheet" href="css/world.css" />
+</head>
+<body>
+	<div id="worldWrapper">
+		<div id="background"></div>
+		<div id="history"></div>
+		<div id="board"></div>
+		<div id="console">
+			<input type="text" id="joinInput">
+			<button id="joinBtn">join</button>
+			<input type="text" id="sayInput">
+			<button id="sayBtn">say</button>
+			<button id="toggleHistoryBtn">history</button>
+		</div>
+	</div>
+</body>
+</html>

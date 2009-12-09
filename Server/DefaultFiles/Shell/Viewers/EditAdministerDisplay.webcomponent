@@ -1,0 +1,18 @@
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+<script>
+   var permissions = <? WebComponent($_GET["FileName"] . "?Method=GetPermissionAsJSON") ?>;
+
+   if (permissions.CanWrite || permissions.CanAdminister)
+   {
+      document.write('<div style="position: absolute; top: 20px; right:20px;">');
+
+      if (permissions.CanWrite)
+         document.write('<a href="<? $_GET["FileName"] ?>?Action=Edit" >Edit</a> ');
+
+      if (permissions.CanAdminister)
+         document.write('<a href="/Shell/Security/Permissions.wchtml?FileName=<? $_GETENCODE["FileName"] ?>" target="_blank" >Permissions</a> ');
+
+      document.write('</div>');
+   }
+</script>

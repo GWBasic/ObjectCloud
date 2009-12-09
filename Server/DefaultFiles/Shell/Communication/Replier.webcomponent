@@ -1,0 +1,56 @@
+<? Scripts(/API/Prototype.js, /API/nicEdit.js, /Shell/Communication/Replier.js, /API/Comet/CometProtocol.js) ?>
+
+<div id="Replier">
+   <input type="button" value="Add a reply" onclick="rply_addReply(<? $_GET["ObjectName"] ?>)" />
+</div>
+
+<script>
+   // Hide replier if the user doesn't have permission to reply
+   if (!<? WebComponent($_GET["FileName"] . "?Method=HasNamedPermission&namedPermission=reply") ?>)
+      $("Replier").remove();
+</script>
+
+<hr />
+<div id="Replies">
+</div>
+
+<script>
+   var replies = <? WebComponent($_GET["FileName"] . "?Method=Replier_GetRepliesForDisplay" ?>;
+   var repliesElement = $("Replies");
+
+   for (var ctr = 0; ctr < replies.length; ctr++)
+      repliesElement.appendChild(rpy_createReplyElement(replies[ctr]));
+
+   var rpy_lastUpdated = 0;
+
+   // Connect back to the server to get COMET updates when a reply is added
+   var rpy_oldOnload = onload;
+   onload = function()
+   {
+      if (null != rpy_oldOnload)
+         rpy_oldOnload();
+
+      CP_QualityReliable.connect(
+         "<? $_GET["FileName"] ?>?ChannelEndpoint=RelationshipEvent",
+         {
+            handleIncomingData: function(data)
+            {
+               if (data.Timestamp > rpy_lastUpdated)
+               {
+                  rpy_lastUpdated = data.Timestamp;
+
+                  if ("reply" == data.Relationship)
+                  {
+                     var replyElement = rpy_createReplyElement(data);
+                     var repliesElementChilden = repliesElement.childElements();
+
+                     if (0 == repliesElementChilden.length)
+                        repliesElement.appendChild(replyElement);
+                     else
+                        repliesElement.insertBefore(replyElement, repliesElementChilden[0]);
+                  }
+               }
+            }
+         });
+   }
+</script>

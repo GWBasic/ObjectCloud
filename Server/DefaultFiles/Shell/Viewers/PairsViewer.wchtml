@@ -1,0 +1,25 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+		<title><? $_GET["FileName"] ?></title>
+		<script>
+                        var pairs = <? WebComponent($_GET["FileName"] . "?Method=GetAll") ?>;
+		</script>
+	</head>
+	<body id="body" onload="Render()">
+		<h1><? $_GET["FileName"] ?></h1>
+		<script>
+			for ( var i in pairs )
+			{
+				var pair = pairs[i];
+
+				document.write('<font size="+2">' + i + '</font> = ' + pairs[i] + '<br />');
+			}
+		</script>
+	</body>
+</html>
+                        

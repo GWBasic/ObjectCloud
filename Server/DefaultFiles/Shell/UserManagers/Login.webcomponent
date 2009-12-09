@@ -1,0 +1,121 @@
+<? Scripts(/API/Prototype.js, /API/Filehandlers/SessionManager.js, /Users/UserDB?Method=GetJavascriptWrapper&assignToVariable=UserDB, /API/Url.js) ?>
+<script>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+
+function DoLocalLogin()
+{
+   UserDB.Login(
+      $('username').value,
+      $('password').value,
+      {},
+      function(transport)
+      {
+         alert(transport.responseText);
+         window.location.reload();
+      });
+
+   return false;
+}
+
+function DoLocalLogout()
+{
+   if (confirm("Are you sure you want to log out?"))
+   {
+      UserDB.Logout(
+         {},
+         function(transport)
+         {
+            alert(transport.responseText);
+            window.location.reload();
+         });
+   }
+
+   return false;
+}
+
+var currentUserName = "<? WebComponent("/Users/UserDB?Method=GetUsername") ?>";
+
+function Login_UpdateKeepAlive()
+{
+   var keepAliveInput = $("Login_KeepAlive");
+   var maxAgeInput = $("Login_MaxAge");
+   var maxAgeSpan = $("Login_MaxAgeSpan");
+
+   var session = SessionManager.GetSession();
+
+   keepAliveInput.checked = session.KeepAlive;
+   maxAgeInput.value = session.MaxAge;
+
+   if (session.KeepAlive)
+      maxAgeSpan.show();
+   else
+      maxAgeSpan.hide();
+}
+
+function Login_OnKeepAliveChanged()
+{
+   SessionManager.SetKeepAlive(
+      $("Login_KeepAlive").checked,
+      {},
+      Login_UpdateKeepAlive);
+}
+
+function Login_OnMaxAgeChanged()
+{
+   SessionManager.SetMaxAge(
+      $("Login_MaxAge").value,
+      {},
+      Login_UpdateKeepAlive);
+}
+
+</script>
+<div align="right" class="login" style="z-index: 0;">
+   <div id="Login_Welcome">
+      <script>
+         document.write("Welcome " + currentUserName + "!");
+      </script>
+      <input type="submit" value="Logout" onclick="DoLocalLogout()" />
+      <form>
+         Stay logged in <input id="Login_KeepAlive" type="checkbox" onclick="Login_OnKeepAliveChanged()" />
+         <span id="Login_MaxAgeSpan">for <input id="Login_MaxAge" type="text" onchange="Login_OnMaxAgeChanged()" /> days</span>.
+      </form>
+   </div>
+   <div id="Login_Forms">
+      <form action="/Users/UserDB?Method=OpenIDLogin" method="POST">
+         OpenID:
+         <img src="/Shell/OpenID/login-bg.gif" alt="OpenId:" /> <input type="text" name="openid_url" id="openid_url"/>
+         <input type="submit" value="OpenID login" />
+         <input type="hidden" name="redirect" id="Login_redirect" />
+      </form>
+      <form id="LocalLoginForm" onsubmit="return false;" >
+         Username: <input id="username" type="text" name="username" id="username" />
+         Password: <input id="password" type="password" name="password" />
+         <input type="submit" value="login" onclick="DoLocalLogin()" />
+      </form>
+   </div>
+</div>
+
+<script>
+   if ("anonymous" == currentUserName)
+   {
+      $("Login_Welcome").hide();
+      $("Login_redirect").value = window.location.href;
+   }
+   else
+   {
+      $("Login_Forms").hide();
+      Login_UpdateKeepAlive();
+   }
+
+   var arguments = Url.getArguments();
+
+   if (arguments.AsUser)
+   {
+      if (0 == arguments.AsUser.indexOf("http://"))
+         $("openid_url").value = arguments.AsUser;
+      else
+         $("username").value = arguments.AsUser;
+   }
+</script>

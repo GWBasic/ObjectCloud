@@ -1,0 +1,270 @@
+elevate(function()
+{
+   var version = base.GetVersion();
+
+   // Constructor
+   if (null == version)
+      lockMe(function()
+      {
+         callAsOwner(function()
+         {
+            // Need to double-check in case someone else built the DB...
+            version = base.GetVersion();
+            if (null == version)
+            {
+               base.PostQuery("create table Question (qId integer not null primary key AUTOINCREMENT, text not null)");
+               base.PostQuery("create table AuthenticatedVotes (qId not null, voterId not null, timestamp integer not null)");
+               base.PostQuery("create table AnonymousVotes (qId not null, timestamp integer not null)");
+               base.PostQuery("create table Options (theOptions not null)");
+
+               var defaultOptions =
+               {
+                  canChangeVote: false,
+                  canSeeResultsWithoutVoting: false,
+                  title: "",
+                  question: ""
+               };
+
+               base.PostQuery("insert into Options (theOptions) values (@theOptions)", {"@theOptions": JSON.stringify(defaultOptions)});
+
+               base.SetVersion(0);
+               version = 0;
+            }
+         });
+      });
+});
+
+// Load the options
+function getOptions()
+{
+   var options;
+   elevate(function()
+   {
+      callAsOwner(function()
+      {
+         options = base.PostQuery("select theOptions from Options")[0][0].theOptions;
+         options = eval('(' + options + ')');
+      });
+   });
+
+   return options;
+}
+
+getTitle.webCallable = "GET";
+getTitle.minimumWebPermission = "Read";
+function getTitle()
+{
+   return getOptions().title;
+}
+
+getQuestionsAndOptions.webCallable = "GET";
+getQuestionsAndOptions.minimumWebPermission = "Read";
+function getQuestionsAndOptions()
+{
+   var questions;
+   elevate(function()
+   {
+      callAsOwner(function()
+      {
+         questions = base.PostQuery("select qId, text from question")[0];
+      });
+   });
+
+   var toReturn =
+   {
+      questions: questions,
+      options: getOptions()
+   };
+
+   return toReturn;
+}
+
+setOptions.webCallable = "POST_application_x_www_form_urlencoded";
+setOptions.minimumWebPermission = "Administer";
+setOptions.parser_canChangeVote = "bool";
+setOptions.parser_canSeeResultsWithoutVoting = "bool";
+function setOptions(canChangeVote, canSeeResultsWithoutVoting, question, title)
+{
+   var options = getOptions();
+
+   if (null != canChangeVote)
+      options.canChangeVote = canChangeVote;
+
+   if (null != canSeeResultsWithoutVoting)
+      options.canSeeResultsWithoutVoting = canSeeResultsWithoutVoting;
+
+   if (null != question)
+      options.question = question;
+
+   if (null != title)
+      options.title = title;
+
+   elevate(function()
+   {
+      base.PostQuery("update Options set theOptions=@theOptions", {"@theOptions": JSON.stringify(options)});
+   });
+}
+
+addQuestion.webCallable = "POST_application_x_www_form_urlencoded";
+addQuestion.minimumWebPermission = "Administer";
+addQuestion.webReturnConvention = "JavaScriptObject";
+function addQuestion(text)
+{
+   text = sanitize(text);
+
+   var qId;
+
+   elevate(function()
+   {
+      qId = base.PostQuery(
+         "insert into Question (text) values (@text);select last_insert_rowid() AS RecordID;", {"@text": text})[0][0].RecordID;
+   });
+
+   var toReturn =
+   {
+      qId: qId,
+      text: text
+   }
+
+   return toReturn;
+}
+
+updateQuestion.webCallable = "POST_application_x_www_form_urlencoded";
+updateQuestion.minimumWebPermission = "Administer";
+updateQuestion.parser_qId = "number";
+updateQuestion.webReturnConvention = "JavaScriptObject";
+function updateQuestion(qId, text)
+{
+   text = sanitize(text);
+
+   elevate(function()
+   {
+      base.PostQuery(
+         "update Question set text = @text where qId = @qId",
+         {
+            "@qId": qId,
+            "@text": text
+         });
+   });
+
+   var toReturn =
+   {
+      qId: qId,
+      text: text
+   }
+
+   return toReturn;
+}
+
+vote.webCallable = "POST_application_x_www_form_urlencoded";
+vote.minimumWebPermission = "Write";
+vote.parser_qId = "number";
+function vote(qId)
+{
+   if (userMetadata.name != "anonymous")
+      elevate(function()
+      {
+         var voted = true;
+         if (0 == base.PostQuery("select qId from AuthenticatedVotes where voterId = @voterId", {"@voterId": userMetadata.id})[0].length)
+            voted = false;
+
+         if (!voted)
+            base.PostQuery(
+               "insert into AuthenticatedVotes (qId, voterId, timestamp) values (@qId, @voterId, @timestamp)",
+               {
+                  "@qId": qId,
+                  "@voterId": userMetadata.id,
+                  "@timestamp": new Date().getTime()
+               });
+         else if (getOptions().canChangeVote)
+            base.PostQuery(
+               "update AuthenticatedVotes set qId = @qId, timestamp = @timestamp where voterId = @voterId",
+               {
+                  "@qId": qId,
+                  "@voterId": userMetadata.id,
+                  "@timestamp": new Date().getTime()
+               });
+         else
+            return throwWebResultOverrideException(450, "You can not change your vote");
+
+      });
+   else
+      elevate(function()
+      {
+         base.PostQuery(
+            "insert into AnonymousVotes (qId, timestamp) values (@qId, @timestamp)",
+            {
+               "@qId": qId,
+               "@timestamp": new Date().getTime()
+            });
+      });
+}
+
+getVote.webCallable = "GET";
+getVote.minimumWebPermission = "Read";  // In case someone's permission changed!  What if someone closed voting by revoking Write?
+getVote.webReturnConvention = "JavaScriptObject";
+function getVote()
+{
+   var qId = null;
+
+   if (userMetadata.name != "anonymous")
+      elevate(function()
+      {
+         var votes = base.PostQuery("select qId from AuthenticatedVotes where voterId = @voterId", {"@voterId": userMetadata.id})[0];
+
+         if (votes.length > 0)
+            qId = votes[0].qId;
+      });
+
+   return qId;
+}
+
+// Helps aggregate data from a query's results
+function aggregate(validQIds, results)
+{
+   var toReturn = {};
+
+   for (var ctr = 0; ctr < validQIds.length; ctr++)
+      toReturn[validQIds[ctr].qId] = 0;
+
+   for (var ctr = 0; ctr < results.length; ctr++)
+      if (null != toReturn[results[ctr].qId])
+         toReturn[results[ctr].qId] = results[ctr].numVotes;
+
+   return toReturn;
+}
+
+getVotes.webCallable = "GET";
+getVotes.minimumWebPermission = "Read";  // In case someone's permission changed!  What if someone closed voting by revoking Write?
+getVotes.webReturnConvention = "JavaScriptObject";
+function getVotes()
+{
+   var options = getOptions();
+
+   if (!options.canSeeResultsWithoutVoting)
+   {
+      if (userMetadata.name == "anonymous")
+         return generateWebResult(450, "You must be logged in to see results");
+
+      if (null == getVote())
+         return generateWebResult(450, "You can only see results after voting");
+   }
+
+   var resultsFromDB;
+
+   elevate(function()
+   {
+      resultsFromDB = base.PostQuery(
+         "select qId from Question group by qId;" +
+         "select distinct qId, count(qId) as numVotes from AuthenticatedVotes group by qId;" +
+         "select distinct qId, count(qId) as numVotes from AnonymousVotes group by qId;");
+   });
+
+   var resultsToReturn =
+   {
+      authenticated: aggregate(resultsFromDB[0], resultsFromDB[1]),
+      anonymous: aggregate(resultsFromDB[0], resultsFromDB[2])
+   };
+
+   return resultsToReturn;
+}

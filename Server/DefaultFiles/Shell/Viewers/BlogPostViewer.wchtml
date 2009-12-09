@@ -1,0 +1,107 @@
+<? WebComponent("/Pages/header.webcomponent?Title=" . $_GETENCODE["FileName"]) ?>
+<? Scripts(/API/nicEdit.js, /API/Prototype.js, <? $_GET["FileName"] ?>/p.posts?Method=GetJavascriptWrapper&assignToVariable=Posts) ?>
+
+<? WebComponent("/Shell/Viewers/EditAdministerDisplay.webcomponent?FileName=" . $_GET["FileName"]) ?>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+
+<div id="pagecontents" style="position: relative">
+   <? WebComponent($_GET["FileName"] . "/p.page?Method=ResolveComponents") ?>
+</div>
+
+<script>
+   var titleDiv = $("title");
+   var pagecontentsDiv = $("pagecontents");
+
+   var childElements = pagecontentsDiv.childElements();
+
+   if (childElements.length > 0)
+   {
+      document.title = titleDiv.innerHTML = childElements[0].innerHTML;
+      childElements[0].remove();
+   }
+
+</script>
+
+<div class="title">Replies...</div>
+<div id="posts" style="position: relative">
+   <script>
+      var replies = <? WebComponent($_GET["FileName"] . "/p.posts?Method=readAllPosts") ?>;
+
+      replies.each(function(reply)
+      {
+         document.write('<hr /><span style="font-size: 1.25em">' + reply.author + ' says:</span> (' +
+            new Date(reply.timestamp) + ')<div>' + reply.text + '</div>');
+      });
+
+   </script>
+   <hr />
+</div>
+
+<div id="addreply">
+   <h1>Add a reply</h1>
+
+   <div class="contents">
+      <div class="contents" style="width: 100%; height: 200px" id="textarea"></div>
+   </div>
+
+   <script>
+
+      var editor;
+      var instance;
+
+      var replyPermissions = <? WebComponent($_GET["FileName"] . "/p.posts?Method=GetPermissionAsJSON") ?>;
+
+      // Hide the reply form if the user can't reply to a blog
+      if (!replyPermissions.CanWrite)
+         $("addreply").hide();
+      else
+      {
+         // replace the textarea div with an editor once the page loads
+         var oldOnload = window.onload;
+         window.onload = function()
+         {
+            if (null != oldOnload)
+               oldOnload();
+
+            editor = new nicEditor(
+            {
+               fullPanel: true,
+               style: "contents"
+            });
+
+            instance = editor.panelInstance(
+               'textarea',
+               {
+                  hasPanel: true,
+                  style: "contents"
+               });
+
+            $("addreplybutton").enable();
+         };
+      }
+
+      function saveReply()
+      {
+         $("addreplybutton").disable();
+
+         Posts.addReply(
+            nicEditors.findEditor('textarea').getContent(),            
+            {},
+            function()
+            {
+               window.location.reload(true);
+            },
+            function()
+            {
+               alert("An error occurred when saving the post");
+               $("addreplybutton").enable();
+            });
+      }
+
+   </script>
+
+   <input id="addreplybutton" type="button" value="Add Reply" onclick="saveReply()" />
+</div>
+<? WebComponent("/Pages/footer.webcomponent") ?>

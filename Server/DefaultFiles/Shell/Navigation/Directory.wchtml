@@ -1,0 +1,154 @@
+<? WebComponent("/Pages/header.webcomponent?Title=" . $_GETENCODE["Directory"]) ?>
+<? Scripts(/API/Url.js, <? $_GET["Directory"] ?>?Method=GetJavascriptWrapper&assignToVariable=Dir) ?>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+<script>
+   var supportedFileTypes = <? WebComponent("/Shell/Navigation/Directory.json?Method=ReadAll") ?>;
+
+   // Updates the various inputs to match the selected file type
+   function UpdateCreateNewFile()
+   {
+      var selectFileType = $("SelectFileType");
+      var fileNameInput = $("FileNameInput");
+      var sourceFilenameInput = $("SourceFilename");
+
+      var selectedFileType = supportedFileTypes[selectFileType.selectedIndex];
+
+      // Remove the extension from the input
+      var extensionPos = fileNameInput.value.lastIndexOf(".");
+
+      var currentPrefix;
+      if (extensionPos >= 0)
+         currentPrefix = fileNameInput.value.substring(0, extensionPos);
+      else
+         currentPrefix = fileNameInput.value;
+
+      fileNameInput.value = currentPrefix + selectedFileType.Extension;
+   }
+
+   // <body onload="UpdateCreateNewFile()">
+   var oldOnload = window.onload;
+   window.onload = function()
+   {
+      UpdateCreateNewFile();
+
+      if (null != oldOnload)
+         oldOnload();
+   }
+
+   $("title").remove();
+</script>
+
+<div class="title" id="title">
+   <script>
+
+      var url = Url.parseCurrent();
+      var server = url.server;
+
+      document.write('<a href="/">http://' + server + '</a>&nbsp;');
+
+      // Display links to all parent directories
+      var parentDirs = "<? $_GET["Directory"] ?>".split("/");
+      var pathBuilder = "";
+
+      parentDirs.each(function(parentDir, i)
+      {
+         if (parentDir.length > 0)
+         {
+            pathBuilder = pathBuilder + parentDir + "/";
+            document.write('/ <a href="/' + pathBuilder + '">' + parentDir + '</a> ');
+         }
+      });
+   </script>
+</div>
+
+<? WebComponent("/Shell/Navigation/Directory.webcomponent?Method=ResolveComponents&Directory=" . $_GET["Directory"]) ?>
+
+<script>
+   function newFile()
+   {
+      var selectFileType = $("SelectFileType");
+      var selectedFileType = supportedFileTypes[selectFileType.selectedIndex];
+      var source = selectedFileType.Template;
+      var destination = $("FileNameInput").value;
+
+      Dir.CopyFile(
+         source,
+         destination,
+         {},
+         function()
+         {
+            alert(destination + " created");
+         });
+   }
+</script>
+
+   <h3>New File</h3>
+
+   <select id="SelectFileType" onchange="UpdateCreateNewFile()">
+      <script>
+         // Write out all of the different supported file types
+         supportedFileTypes.each(function(supportedFileType, i)
+         {
+            document.write("<option>" + supportedFileType.Display + "</option>");
+         });
+     </script>
+   </select>
+
+   <input id="FileNameInput" type="text" name="DestinationFilename" value="new file" />
+   <input type="submit" value="create" onclick="newFile()" />
+
+<script>
+   function copy()
+   {
+      var source = $("SourceFileNameInput").value;
+      var destination = $("DestinationFileNameInput").value;
+
+      Dir.CopyFile(
+         source,
+         destination,
+         {},
+         function()
+         {
+            alert(source + " copied to " + destination);
+         });
+   }
+</script>
+
+<h3>Copy</h3>
+
+From <input id="SourceFileNameInput" type="text" name="SourceFilename" />
+to <input id="DestinationFileNameInput" type="text" name="DestinationFilename" />
+<input type="submit" value="copy" onclick="copy()" />
+(Start the filename with a "/" for an absolute path, or omit a path to copy from this directory)
+
+<form method="post" action="<? $_GET["Directory"] ?>?Method=Upload" name="submit" enctype="multipart/form-data" target="_blank">
+   <h3>Upload</h3>
+
+   <input type="file" name="File" />
+   <input type="submit" value="upload" onclick="setTimeout('window.location.reload(true)', 2500)" />
+</form>
+
+<script>
+   function setIndexFile()
+   {
+      var indexFile = $("IndexFileInput").value;
+
+      Dir.SetIndexFile(
+         indexFile,
+         {},
+         function(message)
+         {
+            alert(message);
+         });
+   }
+</script>
+
+<h3>Set default file</h3>
+
+<input type="text" id="IndexFileInput" name="IndexFile" value="<? WebComponent($_GET["Directory"] . "?Method=GetIndexFile") ?>" />
+(Set to blank to disable)
+<input type="submit" value="set index file" onclick="setIndexFile()" /><br />
+
+<? WebComponent("/Pages/footer.webcomponent") ?>

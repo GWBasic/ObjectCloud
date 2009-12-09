@@ -1,0 +1,8 @@
+<script>
+   if (<? WebComponent("/System/BrowserInfo?Method=IsLegacyWithoutChromePlug") ?>)
+      if (confirm("This page does not run on legacy browsers. "
+         + " Click \"OK\" to install ChromeFrame, an adapter that helps your older browser handle modern web sites."))
+   {
+      window.navigate("http://code.google.com/chrome/chromeframe/");
+   }
+</script>

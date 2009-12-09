@@ -1,0 +1,16 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+   <head>
+      <title><? $_GET["Title"] ?></title>
+      <link href="/Pages/objectcloud.css" type="text/css" rel="stylesheet" />
+      <link href="/API/proto.menu.css" type="text/css" rel="stylesheet" />
+   </head>
+   <body>
+      <div style="position: relative;">
+         <? WebComponent("/Pages/logo.webcomponent") ?>
+         <div style="clear: both"></div>
+      </div>
+      <? WebComponent("/Pages/navbar.webcomponent") ?>
+      <div class="contents">
+         <div class="title" id="title"><? $_GET["Title"] ?></div>

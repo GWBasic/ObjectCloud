@@ -1,0 +1,320 @@
+<? WebComponent("/Pages/header.webcomponent?Title=ObjectCloud%20Log%20Viewer" ?>
+<? Scripts(/API/Prototype.js, /API/datetimepicker_css.js, /API/date.js, /System/Log?Method=GetJavascriptWrapper&assignToVariable=Log) ?>
+
+<a href="/Shell/Editors/Whisquil.wchtml?FileName=/System/Log">Access Log as a Database</a>
+
+<script>
+
+/*
+What rolls down stairs
+alone or in pairs,
+and over your neighbor's dog?
+What's great for a snack,
+And fits on your back?
+It's log, log, log
+
+It's log, it's log,
+It's big, it's heavy, it's wood.
+It's log, it's log, it's better than bad, it's good."
+
+Everyone wants a log
+You're gonna love it, log
+Come on and get your log
+Everyone needs a log
+log log log
+
+*whistle*
+LOG FROM BLAMMO
+*/
+
+   var classnames = <? WebComponent("/System/Log?Method=GetClassnames") ?>;
+   classnames.sort();
+
+   function includeClassesChanged()
+   {
+      if ($("allClassesCheckbox").checked)
+         $("classnameSelect").enable();
+      else
+         $("classnameSelect").disable();
+   }
+</script>
+
+<p>
+   <input type="checkbox" id="allClassesCheckbox" onclick="includeClassesChanged()" />Filter Classes<br/>
+   Select classes to include<br />
+   <select multiple id="classnameSelect">
+      <script>
+         classnames.each(function(classname)
+         {
+            document.write('<option>' + classname + '</option>');
+         });
+      </script>
+   </select>
+</p>
+<script>
+   includeClassesChanged();
+</script>
+
+<p>
+   Oldest logging event: <input id="minTimestampInput" type="text" size="25">
+   <a href="javascript:NewCssCal('minTimestampInput','yyyymmdd','dropdown',true,12,false)">
+   <img src="/API/DateTime%20Picker%20Images/cal.png" width="16" height="16" alt="Pick a date"></a>
+</p>
+
+<p>
+   Newest logging event: <input id="maxTimestampInput" type="text" size="25">
+   <a href="javascript:NewCssCal('maxTimestampInput','yyyymmdd','dropdown',true,12,false)">
+   <img src="/API/DateTime%20Picker%20Images/cal.png" width="16" height="16" alt="Pick a date"></a>
+</p>
+
+<script>
+   function includeLoggingLevelChanged()
+   {
+      if ($("allLoggingLevelsCheckbox").checked)
+         $("loggingLevelSelect").enable();
+      else
+         $("loggingLevelSelect").disable();
+   }
+</script>
+
+<p>
+   <input type="checkbox" id="allLoggingLevelsCheckbox" onclick="includeLoggingLevelChanged()" />Filter LoggingLevels<br/>
+   Select logging levels<br />
+   <select multiple id="loggingLevelSelect">
+      <option>Trace</option>
+      <option>Debug</option>
+      <option>Info</option>
+      <option>Warn</option>
+      <option>Error</option>
+      <option>Fatal</option>
+   </select>
+</p>
+<script>
+   includeLoggingLevelChanged();
+</script>
+
+<p>
+   ThreadIDs (seperate with commas):<input type="text" id="threadIdsInput" length="70" />
+</p>
+
+<p>
+   SessionIDs (seperate with commas):<input type="text" id="sessionIdsInput" length="70" />
+</p>
+
+<p>
+   Users  (seperate with commas):<input type="text", id="usersInput" length="70" />
+</p>
+
+<p>
+   Remote EndPoints (seperate with commas):<input type="text" id="remoteEndpointsInput" length="70" />
+</p>
+
+<script>
+   function exceptionClassesChanged()
+   {
+      if ($("allexceptionClassesCheckbox").checked)
+         $("exceptionclassnameSelect").enable();
+      else
+         $("exceptionclassnameSelect").disable();
+   }
+</script>
+
+<p>
+   Message like: <input type="text" id="messageLikeInput" size="100" /> <a href="http://www.sqlite.org/lang_expr.html#like">Like Syntax</a>
+</p>
+
+<p>
+   <input type="checkbox" id="allexceptionClassesCheckbox" onclick="exceptionClassesChanged()" />Filter Exception Classes<br/>
+   Select exception classes to include<br />
+   <select multiple id="exceptionclassnameSelect">
+      <script>
+         classnames.each(function(classname)
+         {
+            document.write('<option>' + classname + '</option>');
+         });
+      </script>
+   </select>
+</p>
+
+<p>
+   Exception Message like: <input type="text" id="exceptionMessageLikeInput" size="100" /> <a href="http://www.sqlite.org/lang_expr.html#like">Like Syntax</a>
+</p>
+
+<script>
+   exceptionClassesChanged();
+
+   function displayLoggingEvents(loggingEvents)
+   {
+      $("getLoggingEventsButton").enable();
+
+      var htmlBuilder = '<table><tr><th>Timestamp</th><th>IP</th><th>SessionID</th><th>User</th><th>ThreadID</th><th>Level</th><th>Class Name</th><th>Message</th><th>Exception Class Name</th><th>Exception message</th><th>Exception stack trace</th></tr>'
+
+      loggingEvents.each(function(event)
+      {
+         htmlBuilder += '<tr><td>' + new Date(event.timestamp) + '</td><td>' + event.remoteEndPoint + '</td><td>' + event.sessionId + '</td><td>' + event.user + '; ' + event.userId + '</td><td>' + event.threadId + '</td><td>' + event.level + '</td><td>' + event.classname + '</td><td>' + event.message + '</td><td>' + event.exceptionClassname + '</td><td>' + event.exceptionMessage + '</td><td>' + event.exceptionStackTrace + '</td></tr>';
+      });
+
+      htmlBuilder += '</table>';
+
+      $("resultsDiv").innerHTML = htmlBuilder;
+   }
+
+   function getLoggingEvents()
+   {
+      var classnames = null;
+      if ($("allClassesCheckbox").checked)
+      {
+         classnames = [];
+         var classnameSelect = $("classnameSelect");
+
+         for (var i = 0; i < classnameSelect.options.length; i++)
+            if (classnameSelect.options[i].selected)
+               classnames.push(classnameSelect.options[i].value);
+      }
+
+      var minTimeStamp = null;
+      var minTimeStampString = $("minTimestampInput").value;
+      if (minTimeStampString.length > 0)
+         try
+         {
+            minTimeStamp = Date.parse(minTimeStampString).getTime();
+         }
+         catch (exception)
+         {
+            alert('"' + minTimeStampString + '" is not a valid date:\n');
+            return;
+         }
+
+      var maxTimeStamp = null;
+      var maxTimeStampString = $("maxTimestampInput").value;
+      if (maxTimeStampString.length > 0)
+         try
+         {
+            maxTimeStamp = Date.parse(maxTimeStampString).getTime();
+         }
+         catch (exception)
+         {
+            alert('"' + maxTimeStampString + '" is not a valid date:\n');
+            return;
+         }
+
+      var loggingLevels = null;
+      if ($("allLoggingLevelsCheckbox").checked)
+      {
+         loggingLevels = [];
+         var loggingLevelSelect = $("loggingLevelSelect");
+
+         for (var i = 0; i < loggingLevelSelect.options.length; i++)
+            if (loggingLevelSelect.options[i].selected)
+               loggingLevels.push(loggingLevelSelect.options[i].value);
+      }
+
+      var threadIds = null;
+      var threadIdsString = $("threadIdsInput").value;
+      if (threadIdsString.length > 0)
+      {
+         var threadIdStrings = threadIdsString.split(",");
+         threadIds = [];
+
+         for (var i = 0; i < threadIdStrings.length; i++)
+            try
+            {
+               var threadId = parseInt(threadIdStrings[i]);
+
+               if (isNaN(threadId))
+               {
+                  alert('"' + threadIdStrings[i] + '" is not a valid Thread ID');
+                  return;
+               }
+
+               threadIds.push(threadId);
+            }
+            catch (exception)
+            {
+               alert('"' + threadIdStrings[i] + '" is not a valid Thread ID');
+               return;
+            }
+      }
+
+      var sessionIds = null;
+      var sessionIdsString = $("sessionIdsInput").value;
+      if (sessionIdsString.length > 0)
+      {
+         sessionIds = sessionIdsString.split(",");
+
+         // trim each string
+         for (var i = 0; i < sessionIds.length; i++)
+            sessionIds[i] = sessionIds[i].replace(/^\s+|\s+$/g,"");
+      }
+
+      var users = null;
+      var usersString = $("usersInput").value;
+      if (usersString.length > 0)
+      {
+         users = usersString.split(",");
+
+         // trim each string
+         for (var i = 0; i < users.length; i++)
+            users[i] = users[i].replace(/^\s+|\s+$/g,"");
+      }
+
+      var remoteEndpoints = null;
+      var remoteEndpointsString = $("remoteEndpointsInput").value;
+      if (remoteEndpointsString.length > 0)
+      {
+         remoteEndpoints = remoteEndpointsString.split(",");
+
+         // trim each string
+         for (var i = 0; i < remoteEndpoints.length; i++)
+            remoteEndpoints[i] = remoteEndpoints[i].replace(/^\s+|\s+$/g,"");
+      }
+
+      var messageLike = $("messageLikeInput").value;
+      if (messageLike.length == 0)
+         messageLike = null;
+
+      var exceptionClassnames = null;
+      if ($("allexceptionClassesCheckbox").checked)
+      {
+         exceptionClassnames = [];
+         var exceptionclassnameSelect = $("exceptionclassnameSelect");
+
+         for (var i = 0; i < exceptionclassnameSelect.options.length; i++)
+            if (exceptionclassnameSelect.options[i].selected)
+               exceptionClassnames.push(exceptionclassnameSelect.options[i].value);
+      }
+
+      var exceptionMessageLike = $("exceptionMessageLikeInput").value;
+      if (exceptionMessageLike.length == 0)
+         exceptionMessageLike = null;
+
+      $("getLoggingEventsButton").disable();
+
+      Log.ReadLog(
+         classnames,
+         minTimeStamp,
+         maxTimeStamp,
+         loggingLevels,
+         threadIds,
+         sessionIds,
+         users,
+         remoteEndpoints,
+         messageLike,
+         exceptionClassnames,
+         exceptionMessageLike,
+         {},
+         displayLoggingEvents,
+         function(transport)
+         {
+            $("getLoggingEventsButton").enable();
+            alert(transport.responseText);
+         });
+   }
+</script>
+
+<input type="button" id="getLoggingEventsButton" onclick="getLoggingEvents()" value="Get Logging Events" />
+
+<h1>Results</h1>
+<div id="resultsDiv"></div>
+
+<? WebComponent("/Pages/footer.webcomponent" ?>

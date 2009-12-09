@@ -1,0 +1,47 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+   <head>
+      <? Scripts(/API/Prototype.js, /API/Comet/CometTransport.js) ?>
+      <title>Test Latency CometTransport</title>
+      <link href="/Pages/objectcloud.css" type="text/css" rel="stylesheet" />
+
+      <script>
+         var dataToSend = null;
+
+         var transport = CP_Transport.create(
+            "/System/Comet/Echo",
+            {
+               getDataToSend: function()
+               {
+                  return (new Date()).getTime();
+               },
+               handleIncomingData: function(incoming)
+               {
+                  $("result").innerHTML = "Latency: " + (new Date().getTime() - incoming);
+               },
+               handleError: function(error) { $("status").innerHTML = "disconnected: " + error; },
+               flashSuccess: function(t, sendId) { $("status").innerHTML = "connected (SendId: " + sendId + ")"; },
+               flashError: function(t, sendId) { $("status").innerHTML = "attempting to reconnect (SendId: " + sendId + ")"; }
+            });
+
+         function send()
+         {
+            try
+            {
+               transport.startSend(0);
+            }
+            catch (exception)
+            {
+               alert(exception);
+            }
+         }
+
+      </script>
+
+   </head>
+   <body>
+      <pre id="result">Waiting...</pre><input type="button" value="Test Latency" onclick="send()" />
+      <pre id="status">Connecting</pre>
+   </body>
+</html>

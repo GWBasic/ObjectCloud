@@ -1,0 +1,198 @@
+<? WebComponent("/Pages/header.webcomponent?Title=ObjectCloud%20Licenses") ?>
+
+All original ObjectCloud source code is copyright (c) 2009 Andrew Rondeau.  ObjectCloud contains additional source code, programs, and libraries from additional authors.  These retain their original copyright, and are documented in this file.
+
+<h1>Summary</h1>
+<p><em>The terms of the license are subject to change.  Assume that future releases will modify or replace this license.</em></p>
+<p>ObjectCloud is primarily released under an <a href="/Docs/licenses/lgpl-2.1.txt">LGPL</a> license, although some additional constraints apply:</p>
+<ul>
+   <li>All original ObjectCloud code is <a href="/Docs/licenses/lgpl-2.1.txt">LGPL</a>, version 2.</li>
+   <li>All re-used open-source libraries, dlls, and javascript files retain their original licenses.  These are listed at the end of this page.</li>
+   <li>Modifications to re-used open-source libraries, dlls, and javascript are released under the library's original license.</li>
+</ul>
+
+<h2>Redistribution</h2>
+
+<p>Re-distributions of ObjectCloud must comply with the <a href="/Docs/licenses/lgpl-2.1.txt">LGPL</a> and all licenses of all included software.</p>
+
+<h2>Modification</h2>
+
+<p>Modifications to ObjectCloud must comply with and be released under the <a href="/Docs/licenses/lgpl-2.1.txt">LGPL</a>.  Modifications to libraries included with ObjectCloud must comply with and be released under the library's license.</p>
+
+<h2>Commercial Use</h2>
+
+<p>Commercial (Closed-Source) Use of ObjectCloud is allowed and encouraged.  Specifically, you may:</p>
+<ul>
+   <li>Develop non-LGPL software that utilizes ObjectCloud's AJAX API.</li>
+   <li>Develop non-LGPL software that utilizes ObjectCloud's Javascript API.</li>
+   <li>Develop non-LGPL software that utilizes ObjectCloud's WebComponent system and WebComponents.</li>
+   <li>Modify any of the included Javascript libraries, provided that the license is not violated.</li>
+   <li>Modify any of the included Javascript server-side classes, provided the changes are also released according to the terms of the <a href="/Docs/licenses/lgpl-2.1.txt">LGPL</a>.</li>
+   <li>Create and distribute proprietary libraries such as .dll files that inherit from classes in, implement interfaces from, or call APIs in any .dll that is included with ObjectCloud</li>
+   <li>Utilize dependency injection to replace any <a href="/Docs/licenses/lgpl-2.1.txt">LGPL</a> .dll with a non-LGPL equivalent.</li>
+   <li>Utilize dependency injection to include additional functionality with a non-LGPL .dll.</li>
+</ul>
+
+<p>The <a href="/Docs/licenses/lgpl-2.1.txt">LGPL</a> may grant you additional rights that are not documented here.</p>
+
+<h1>Included Open-Source Projects</h1>
+
+   <p>
+      The following open source projects are included and utilized in ObjectCloud.
+   </p>
+
+<h2>Client-side: (Javascript and HTML)</h2>
+
+<table>
+   <tr>
+      <th>Name and URL</th><th>Author(s)</th><th>Summary</th><th>license</th><th>Usage</th><th>Location</th><th>Modifications</th>
+   </tr>
+
+   <tr>
+      <td><a href="http://sameshirteveryday.com/2007/06/02/javascript-cookies-library/">JavaScript cookies library<br />http://sameshirteveryday.com/2007/06/02/javascript-cookies-library/</a>
+      </td><td>Alex Gorbatchev</td><td>Easy-to-use wrapper for Javascript's cookies API.</td><td>Unknown</td><td>Used in the "Stay logged in" checkbox to keep a session open after the browser is closed.</td><td><a href="/API/Cookies.js">/API/Cookies.js</a></td>
+   </tr>
+
+   <tr>
+      <td><a href="http://jquery.com/">jQuery JavaScript Library v1.3.2<br />http://jquery.com/</a>
+         </td><td><a href="http://docs.jquery.com/About">See jQuery's About page</a></td><td>jQuery is a fast and concise JavaScript Library that simplifies HTML document traversing, event handling, animating, and Ajax interactions for rapid web development</td><td><a href="http://docs.jquery.com/License">Dual licensed under the MIT and GPL licenses.</a></td><td>ObjectCloud does not use jQuery.  It is included because it is very popular.  When using jQuery with ObjectCloud, care must be taken because ObjectCloud's AJAX APIs use Prototype.js and can cause a potential conflict with the $("...") function.</td><td><a href="/API/jquery.js">/API/jquery.js</a></td>
+   </tr>
+
+   <tr>
+      <td><a href="http://www.JSON.org/json2.js">json2<br />http://www.JSON.org/json2.js</a></td>
+         <td>???</td><td>Serializes Javascript objects to JSON, and provides safe parsing of JSON objects without eval.</td><td>Public Domain</td><td>Utilized in server-side Javascript due to prototype incompatibilities</td><td><a href="/API/json2.js">/API/json2.js</a></td>
+   </tr>
+
+   <tr>
+      <td><a href="http://www.JSON.org/json_parse.js">json_parse.js<br />http://www.JSON.org/json_parse.js</a></td>
+         <td>???</td><td>Provides safe parsing of JSON objects without eval.</td><td>Public Domain</td><td>Not used</td><td><a href="/API/json_parse.js">/API/json_parse.js</a></td>
+   </tr>
+
+   <tr>
+      <td><a href="http://nicedit.com/">NicEdit<br />http://nicedit.com/</td>
+         <td><a href="http://bkirchoff.com/">Brian Kirchoff</a></td><td>NicEdit is a Lightweight, Cross Platform, Inline Content Editor to allow easy editing of web site content on the fly in the browser.</td><td>NicEdit is distributed under the terms of the MIT license For more information visit http://nicedit.com/</td><td><a href="/Shell/Editors/nicEdit.wchtml?Method=ReadAll">/Shell/Editors/nicEdit.wchtml</a> uses nicEdit to edit .page files</td><td><a href="/API/nicEdit.js">/API/nicEdit.js</a> and <a href="/API/nicEditorIcons.gif">/API/nicEditorIcons.gif</a></td><td>Modified to use <a href="/API/nicEditorIcons.gif">/API/nicEditorIcons.gif</a>'s correct location.  This version of NicEdit includes the "save" button and icon.  I had problems with the minimized redistributable, so I use the development version.  Also fixed a minor CSS bug in the font size, font family, and font style menus.</td>
+   </tr>
+
+   <tr>
+      <td><a href="http://code.google.com/p/proto-menu/">Proto.Menu</a><br /><a href="http://yura.thinkweb2.com/scripting/contextMenu/"</a>Also see: http://yura.thinkweb2.com/scripting/contextMenu/</a></td>
+         <td><a href="http://thinkweb2.com/projects/prototype/"Juriy Zaytsev</a></td><td>Prototype-based right-click context menu.  Adds right-click to an element.</td><td><a href="http://www.opensource.org/licenses/mit-license.php">MIT</a></td><td>Used in the <a href="/Shell/Navigation/Directory.webcomponent?Method=ReadAll">directory view webcomponent (/Shell/Navigation/Directory.webcomponent)</a> to add context menus to each file.  Note:  I plan on replacing or augmenting the library with a something that adds a small button to the side of an element; right-click doesn't work very well on touch-screens and goes against my <a href="/Docs/philosophy.page">Web Development Philosophy</a>.</td><td><a href="/API/proto.menu.js">/API/proto.menu.js</a> and <a href="/API/proto.menu.css">/API/proto.menu.css</a></td>
+   </tr>
+
+   <tr>
+      <td><a href="http://www.prototypejs.org/">Prototype.js<br />http://www.prototypejs.org/</td>
+         <td><a href="http://conio.net/">Sam Stephenson</a></td><td>Popular web-development framework that assists in
+         cross-browser functionality for DHTML and AJAX, also provides significant Javascript helper methods including
+         safe JSON parsing and serialization.</td><td><a href="http://dev.rubyonrails.org/browser/spinoffs/prototype/trunk/LICENSE?format=raw">MIT</a></td><td>Used almost everywhere for cross-browser compatibility, including in the
+Javascript AJAX wrappers.  Note:  I chose Prototype because it was very easy to learn.</td><td><a href="/API/Prototype.js">/API/Prototype.js</a></td>
+      </tr>
+   </tr>
+
+   <tr>
+      <td><a href="http://www.webtoolkit.info/javascript-url-decode-encode.html">URL encode / decode<br/>http://www.webtoolkit.info/javascript-url-decode-encode.html</a></td><td><a href="http://www.webtoolkit.info">www.webtoolkit.info</a></td><td>Parses and encodes Url-encoded strings</td><td><a href="http://www.webtoolkit.info/licence.html">As long as you leave the copyright notice of the original script, or link back to this website, you can use any of the content published on this website free of charge for any use: commercial or noncommercial.</a></td><td>Used in many pages that work with Url parsing.</td><td><a href="/API/Url.js">/API/Url.js</a></td><td>Added functions to parse complete URLs.</td>
+   </tr>
+
+   <tr>
+      <td><a href="http://canvaspaint.org/">CanvasPaint<br />http://canvaspaint.org/</a></td><td><a href="http://c3o.org/">Christopher Clay</a></td><td>Microsoft Paint Clone that uses the HTML 5 Canvas</td><td>Public Domain</td><td>In-browser image editor</td><td><a href="/Shell/Editors/CanvasPaint.wchtml">/Shell/Editors/CanvasPaint.wchtml?Method=ReadAll</a></td><td>Some display glitches were fixed by removing the Win2k-style faded window bar.  Disabled / unimplemented options were removed from the menus.  Updated image tags to use .png equivalents.  Replaced image files.  Added a "Save" button.  Updated the Save() codepath to use ObjectCloud's API.  Added some ChromeFrame hooks.</td>
+   </tr>
+
+   <tr>
+      <td><a href="http://www.rainforestnet.com/datetimepicker.htm">Javascript Date Time Picker 2.0 (CSS Version)<br/>http://www.rainforestnet.com/datetimepicker.htm</a></td><td>Ng <a href="http://www.rainforestnet.com/">Teng-Yong<a/>, Yvan Lavoie</td><td>Javascript-based Date/Time picker component</td><td>???</td><td>Date/Time picker on the log viewer</td><td><a href="/API/datetimepicker_css.js">/API/datetimepicker_css.js</a> and <a href="/API/DateTime Picker Images">/API/DateTime Picker Images</a></td><td>Images converted to .png</td>
+   </tr>
+
+   <tr>
+      <td><a href="http://www.datejs.com/">date.js<br />http://www.datejs.com/</a></td><td><a href="http://www.coolite.com/">http://www.coolite.com/</a></td><td>Javascript date parser</td><td><a href="http://www.opensource.org/licenses/mit-license.php">MIT</a></td><td>Date parser on the log viewer</td><td><a href="/API/date.js">/API/date.js</a></td>
+   </tr>
+
+</table>
+
+<p>
+   <em>Kudos and honorable mentions:</em>
+   <ul>
+      <li>I re-wrote <a href="http://jrharshath.wordpress.com/">jrharshath's (http://jrharshath.wordpress.com/)</a> <a href="http://snipplr.com/view/12208/javascript-url-parser/">urlparse function</a>.  My version is in <a href="/API/Url.js">/API/Url.js</a>.</li>
+   </ul>
+</p>
+
+<h2>Server-side: (C# and .Net)</h2>
+
+<table>
+   <tr>
+      <th>Name and URL</th><th>Author(s)</th><th>Summary</th><th>license</th><th>Usage</th><th>Location</th><th>Modifications</th>
+   </tr>
+
+   <tr>
+      <td><a href="http://jsonfx.net">JsonFx.NET<br />http://jsonfx.net</a></td><td><a href="http://smm-resume.com">Stephen M. McKamey</a></td><td>The JsonFx.NET JSON parser/serializer functions similarly to the XmlSerializer in .NET</td><td><a href="http://jsonfx.net/license/">MIT</a></td><td>JSON serialization is used liberally in the ObjectCloud.Implementation.WebHandlers library and in various unit tests.</td><td>JsonFX.net.dll</td><td>Added easy-to-use static serialization methods.  Rewrote date handling logic to work with milliseconds since Javascript's epoc.  Due to regular changes and tweaks, JsonFX.net is part of ObjectCloud's build.</td>
+   </tr>
+
+   <tr>
+      <td><a href="http://www.crockford.com/javascript/jsmin.html">JavaScriptMinifier.cs<br />http://www.crockford.com/javascript/jsmin.html</a></td><td><a href="http://www.crockford.com">Douglas Crockford</a></td><td>Javascript Minifier</td><td><p>Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:</p>
+
+<p>The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</p>
+
+<p>The Software shall be used for Good, not Evil.</p>
+
+<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</p></td><td>Primarily used in TextWebHandler.cs to compress Javascript.</td><td>JavaScriptMinifier.cs in ObjectCloud.Common.dll</td><td>Changed Namespace</td>
+   </tr>
+
+   <tr>
+      <td><a href="http://netcommon.sourceforge.net/">Common.Logging.dll<br />http://netcommon.sourceforge.net/</td>
+      <td>Mark Pollack, Erich Eichinger, Bruno Baia</td><td>High-level logging library intended to abstract popular .Net loggers.</td><td><a href="http://www.apache.org/licenses/LICENSE-2.0">Apache</a></td><td>Logging interface used throughout all of ObjectCloud.</td><td>Common.Logging.dll</td><td>Might be recompiled.</td>
+   </tr>
+
+   <tr>
+      <td><a href="http://extremeswank.com/aspnet_openid.html">ExtremeSwank OpenID<br />http://extremeswank.com/aspnet_openid.html</td><td>http://extremeswank.com</td><td>OpenID consumer library.  Chosen because it does not rely on ASP.</td><td><a href="http://www.opensource.org/licenses/mit-license.php">MIT</a></td><td>Used in ObjectCloud.Implementation.WebHandlers.dll to allow OpenID users to log into an ObjectCloud server.</td><td>ExtremeSwank.OpenId.dll</td>
+   </tr>
+
+   <tr>
+      <td><a href="http://www.ikvm.net/">IKVM.Net</a></td><td>Jeroen Frijters?  IKVM is a large project with many contributors and includes ports of many open-source Java libraries, including the OpenJDK.</td><td>IKVM is a JVM implemented in .Net/Mono.  It allows a .jar file to be translated into a CLR-Complaint .dll file, which then allows CLR languages like C# to use Java libraries with very few headaches.</td><td>
+
+<a href="http://weblog.ikvm.net/story.aspx/license">IKVM license page</a>
+
+<PRE>&nbsp; Copyright (C) 2002-2008 Jeroen Frijters</PRE><PRE>&nbsp; This software is provided 'as-is', without any express or implied<BR>&nbsp; warranty.&nbsp; In no event will the authors be held liable for any damages<BR>&nbsp; arising from the use of this software.</PRE><PRE>&nbsp; Permission is granted to anyone to use this software for any purpose,<BR>&nbsp; including commercial applications, and to alter it and redistribute it<BR>&nbsp; freely, subject to the following restrictions:</PRE><PRE>&nbsp; 1. The origin of this software must not be misrepresented; you must not<BR>&nbsp;&nbsp;&nbsp;&nbsp; claim that you wrote the original software. If you use this software<BR>&nbsp;&nbsp;&nbsp;&nbsp; in a product, an acknowledgment in the product documentation would be<BR>&nbsp;&nbsp;&nbsp;&nbsp; appreciated but is not required.<BR>&nbsp; 2. Altered source versions must be plainly marked as such, and must not be<BR>&nbsp;&nbsp;&nbsp;&nbsp; misrepresented as being the original software.<BR>&nbsp; 3. This notice may not be removed or altered from any source distribution.</PRE><PRE>&nbsp; Jeroen Frijters<BR>&nbsp; <A href="mailto:jeroen@frijters.net">jeroen@frijters.net</A><BR></PRE>
+
+<hr>
+IKVM.OpenJDK.ClassLibrary.dll contains code from the OpenJDK, GNU Classpath and IcedTea projects and is licensed under the <a href="http://openjdk.java.net/legal/gplv2+ce.html">GPL v2 + "Classpath" exception</a>.
+
+</td>
+         <td>Used in ObjectCloud.Javascript.dll to allow use of Rhino, a Javascript interpreter written in Java.</td><td>IKVM.OpenJDK.Core.dll, IKVM.OpenJDK.Security.dll, IKVM.OpenJDK.Text.dll, IKVM.OpenJDK.Util.dll, and IKVM.Runtime.dll</td>
+   </tr>
+
+   <tr>
+      <td><a href="http://www.nunit.org/">NUnit<br />http://www.nunit.org/</td><td>"The NUnit development team currently consists of Charlie Poole, Jamie Cansdale and Gary Feldman. Past developers include James W. Newkirk, Alexei A. Vorontsov, Michael C. Two and Philip A. Craig."</td><td>Popular unit-testing framework for C# and .Net/mono</td><td><a href="http://www.opensource.org/licenses/zlib-license.php">zlib/libpng License</a></td><td>All server-side unit tests use NUnit</td><td>Only used and included in source distributions.</td>
+   </tr>
+
+   <tr>
+      <td><a href="http://sourceforge.net/projects/sqlite-dotnet2">ADO.NET 2.0/3.5 SQLite Data Provider</a><br />
+         <a href="http://sqlite.phxsoftware.com/">http://sqlite.phxsoftware.com/</a></td><td>Robert Simpson</td><td>.Net wrapper for SQLite.dll, includes hooks for mono compatibility.</td><td>Public Domain</td><td>ObjectCloud.ORM.DataAccess.SQLite opens SQLite ADO connections; once the connection is outside of this library it is treated as ordinary ADO.</td><td>System.Data.SQLite.dll and System.Data.SQLite.xml</td>
+   </tr>
+
+   <tr>
+      <td><a href="http://www.springframework.net/">Spring.net<br />http://www.springframework.net/</td><td><a href="http://www.springsource.com/">Springsource</a></td><td>Application framework</td><td><a href="http://www.apache.org/licenses/LICENSE-2.0">Apache 2.0</a></td><td>Basic dependency injection</td><td>Spring.Core.dll</td>
+   </tr>
+
+   <tr>
+      <td><a href="http://www.antlr2.org">antlr.runtime.dll</a></td><td><a href="http://www.antlr2.org/misc/contact">Terence Parr</a></td><td>Code generator</td><td><a href="http://www.antlr2.org/license.html">BSD or Public Domain</a></td><td>Sub-dependancy, possibly for Spring</td><td>antlr.runtime.dll</td>
+   </tr>
+
+   <tr>
+      <td><a href="http://www.mozilla.org/rhino/">Rhino<br />http://www.mozilla.org/rhino/</a></td><td><a href="http://www.mozilla.org/about/owners.html">See http://www.mozilla.org/about/owners.html</a></td><td>Javascript Interpreter</td><td><a href="http://www.mozilla.org/MPL/">MPL 1.1/GPL 2.0</a></td><td>Server-side Javascript interpreter</td><td>js.dll</td>
+   </tr>
+
+   <tr>
+      <td><a href="http://www.sqlite.org/">SQLite<br />http://www.sqlite.org/</a></td><td><a href="http://en.wikipedia.org/wiki/D._Richard_Hipp">D. Richard Hipp</a></td><td>Lightweight embedded SQL database</td><td><a href="http://www.sqlite.org/copyright.html">Public Domain</a></td><td>ObjectCloud.ORM.DataAccess.SQLite opens SQLite ADO connections; once the connection is outside of this library it is treated as ordinary ADO.</td><td>sqlite3.dll and sqlite3.def</td>
+   </tr>
+
+</table>
+
+<? WebComponent("/Pages/footer.webcomponent") ?>

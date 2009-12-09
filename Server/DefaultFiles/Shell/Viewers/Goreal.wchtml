@@ -1,0 +1,89 @@
+<? WebComponent("/Pages/header.webcomponent?Title=<? WebComponent($_GET["FileName"] . "?Method=getTitle") ?>") ?>
+<? Scripts(/API/Prototype.js, <? $_GET["FileName"] ?>?Method=GetJavascriptWrapper&assignToVariable=VotingBooth) ?>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+<script>
+
+   var pollInfo = <? WebComponent($_GET["FileName"] . "?Method=getQuestionsAndOptions") ?>;
+   var options = pollInfo.options;
+   var questions = pollInfo.questions;
+
+   $("title").innerHTML = options.title;
+
+   var vote = <? WebComponent($_GET["FileName"] . "?Method=getVote") ?>;
+
+</script>
+
+<div id="question"></div>
+<div id="questions"></div>
+<form id="voteForm">
+
+<script>
+
+   $("question").innerHTML = options.question;
+
+   function displayQuestion(question)
+   {
+      $("questions").innerHTML += 
+         '<input type="radio" name="vote" id="q' + question.qId + '" ' + (question.qId == vote ? 'checked' : '') +
+         ' />' + question.text + '<span id="s' + question.qId + '"></span><br />';
+   }
+
+   questions.each(displayQuestion);
+
+   function submitVote()
+   {
+      var voteToSubmit = null;
+
+      questions.each(function(question)
+      {
+         if ($("q" + question.qId).checked)
+            voteToSubmit = question.qId;
+      });
+
+      if (null != voteToSubmit)
+         VotingBooth.vote(
+            voteToSubmit,
+            {},
+            function()
+            {
+               window.location.reload(true);
+            });
+         else
+            alert("Please select a question");
+   }
+
+   if (null == vote || options.canChangeVote)
+      $("questions").innerHTML += '</form><input type="button" value="vote" onclick="submitVote()" />';
+   else
+   {
+      $("questions").innerHTML += '</form>';
+      $("voteForm").disable();
+   }
+
+</script>
+</div>
+<div id="results">
+</div>
+
+<script>
+
+   if (options.canSeeResultsWithoutVoting || null != vote)
+      VotingBooth.getVotes(
+         {},
+         function(votes)
+         {
+            questions.each(function(question)
+            {
+               var qId = question.qId;
+               var qSpan = $("s" + qId);
+
+               qSpan.innerHTML = ': <span style="font-size: 1.5em">' + (votes.authenticated[qId] + votes.anonymous[qId]) + '</span><span style="font-size: 0.75em"> (' + 
+                  votes.authenticated[qId] + ' authenticated, ' + votes.anonymous[qId] + ' anonymous)</span>';
+            });
+         });
+
+</script>
+
+<? WebComponent("/Pages/footer.webcomponent") ?>

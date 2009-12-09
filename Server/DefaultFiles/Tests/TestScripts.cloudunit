@@ -1,0 +1,170 @@
+// Scripts: /API/File.js
+
+var unitTests =
+{
+   TestDirectory : null,
+
+   setUp : function(runTests)
+   {
+      File.Open(
+         "/Users/[name]",
+         {},
+         function(myDirectory)
+         {
+            myDirectory.CreateFile(
+               "tests",
+               "directory",
+               false,
+               {},
+               function(testDirectoryWrapper) 
+               {
+                  TestDirectory = testDirectoryWrapper;
+                  runTests();
+               });
+         });
+   },
+
+   testScriptsSanity : function(test)
+   {
+      var myDirectory = DirectoryWrapper.Open("/Users/[name]/tests");
+
+      var subdir = "testScriptsSanity" + Math.random();
+
+      myDirectory.CreateFile(subdir, "directory", false,
+         function(transport)
+         {
+            myDirectory = DirectoryWrapper.Open("/Users/[name]/tests/" + subdir);
+      
+            myDirectory.CreateFile("s1.js", "text", false,
+               function(transport)
+               {
+                  test.Trace(transport.responseText + "<br />");
+
+                  myDirectory.CreateFile("s2.js", "text", false,
+                    function(transport)
+                    {
+                      test.Trace(transport.responseText + "<br />");
+    
+                      myDirectory.CreateFile("wc.wchtml", "text", false,
+                          function(transport)
+                          {
+                             test.Trace(transport.responseText + "<br />");
+
+                             var myWcHtml = TextWrapper.Open("/Users/[name]/tests/" + subdir + "/wc.wchtml");
+
+                             myWcHtml.WriteAll(
+                                "<? Scr" + "ipts(/Users/[name]/tests/" + subdir + "/s1.js, /Users/[name]/tests/" + subdir + "/s2.js) ?>",
+                                function(transport)
+                                {
+                                   myWcHtml.ResolveComponents(
+                                      function(text)
+                                      {
+                                         if (0 == text.indexOf('<script src="/Users/root/tests/' + subdir + '/s1.js?BrowserCache='))
+                                         {
+                                            test.Trace("s1 found<br />");
+
+                                            if (-1 != text.indexOf('&Method=ReadAll&EncodeFor=JavaScript" ></script><script src="/Users/root/tests/' + subdir + '/s2.js?BrowserCache='))
+                                            {
+                                               test.Trace("s2 found<br />");
+
+                                               if (-1 != text.indexOf('&Method=ReadAll&EncodeFor=JavaScript" ></script>'))
+                                               {
+                                                  test.Pass();
+                                                  return;
+                                               }
+                                            }
+                                         }
+
+                                         test.Fail("Could not verify script tags");
+                                      },
+                                      test.FailAJAX);
+                                },
+                                test.FailAJAX);
+                          },
+                          test.FailAJAX);
+                    },
+                    test.FailAJAX);
+               },
+               test.FailAJAX);
+         },
+         test.FailAJAX);
+   },
+
+  testScriptsRecurse : function(test)
+   {
+      var myDirectory = DirectoryWrapper.Open("/Users/[name]/tests");
+
+      var subdir = "testScriptsRecurse" + Math.random();
+
+      myDirectory.CreateFile(subdir, "directory", false,
+         function(transport)
+         {
+            myDirectory = DirectoryWrapper.Open("/Users/[name]/tests/" + subdir);
+      
+            myDirectory.CreateFile("s1.js", "text", false,
+               function(transport)
+               {
+                  test.Trace(transport.responseText + "<br />");
+
+                  myDirectory.CreateFile("s2.js", "text", false,
+                    function(transport)
+                    {
+                      test.Trace(transport.responseText + "<br />");
+
+                      var myS1 = TextWrapper.Open("/Users/[name]/tests/" + subdir + "/s1.js");
+
+                      myS1.WriteAll(
+                         "// Scripts: /Users/[name]/tests/" + subdir + "/s2.js\n\n",
+                         function(transport)
+                         {
+                            test.Trace(transport.responseText + "<br />");
+
+                            myDirectory.CreateFile("wc.wchtml", "text", false,
+                                function(transport)
+                                {
+                                   test.Trace(transport.responseText + "<br />");
+
+                                   var myWcHtml = TextWrapper.Open("/Users/[name]/tests/" + subdir + "/wc.wchtml");
+
+                                   myWcHtml.WriteAll(
+                                      "<? Scr" + "ipts(/Users/[name]/tests/" + subdir + "/s1.js) ?>",
+                                      function(transport)
+                                      {
+                                         myWcHtml.ResolveComponents(
+                                            function(text)
+                                            {
+                                               if (0 == text.indexOf('<script src="/Users/root/tests/' + subdir + '/s2.js?BrowserCache='))
+                                               {
+                                                  test.Trace("s1 found<br />");
+
+                                                  if (-1 != text.indexOf('&Method=ReadAll&EncodeFor=JavaScript" ></script><script src="/Users/root/tests/' + subdir + '/s1.js?BrowserCache='))
+                                                  {
+                                                     test.Trace("s2 found<br />");
+
+                                                     if (-1 != text.indexOf('&Method=ReadAll&EncodeFor=JavaScript" ></script>'))
+                                                     {
+                                                        test.Pass();
+                                                        return;
+                                                     }
+                                                  }
+                                               }
+
+                                               test.Fail("Could not verify script tags");
+                                            },
+                                            test.FailAJAX);
+                                      },
+                                      test.FailAJAX);
+                                },
+                                test.FailAJAX);
+                         },
+                         test.FailAJAX);
+
+                    },
+                    test.FailAJAX);
+               },
+               test.FailAJAX);
+         },
+         test.FailAJAX);
+   },
+
+};

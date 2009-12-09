@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ObjectCloudConfig>
+  <FileSystem ConnectionString="./SecondFileSystem" />
+  <FileHandlerFactoryLocator Hostname="localhost" />
+  <WebServer Port="1081" />
+</ObjectCloudConfig>

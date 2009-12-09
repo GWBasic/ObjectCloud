@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<objects xmlns="http://www.springframework.net" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://www.springframework.net, http://www.springframework.net/xsd/spring-objects-1.1.xsd">
+
+<!--
+// Copyright 2009 Andrew Rondeau
+// This code is released under the LGPL license
+// For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
+
+-->
+
+  <object
+    id="WebServer" 
+    type="ObjectCloud.WebServer.Implementation.MultithreadedWebServer, ObjectCloud.WebServer.Implementation" >
+    
+    <property name="FileSystemResolver" ref="FileSystemResolver" />
+    <property name="ServerType" value="ObjectCloud" />
+    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+    <property name="WebComponentResolver">
+      <object id="WebComponentResolver" type="ObjectCloud.WebServer.Implementation.WebComponentResolver, ObjectCloud.WebServer.Implementation">
+        <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+      </object>
+    </property>
+    <property name="JavascriptWebAccessCodeGenerator">
+      <object id="JavascriptWebAccessCodeGenerator" type="ObjectCloud.WebAccessCodeGenerators.JavascriptWrapperGenerator, ObjectCloud.WebAccessCodeGenerators" />
+    </property>
+    <property name="HeaderSize" value="4096" />
+    <property name="HeaderTimeout">
+      <object type="System.TimeSpan" factory-method="FromMinutes" id="HeaderTimeout">
+        <constructor-arg index="0"  value="5" />
+      </object>
+    </property>
+    <property name="ContentTimeout">
+      <object type="System.TimeSpan" factory-method="FromMinutes" id="ContentTimeout">
+        <constructor-arg index="0"  value="5" />
+      </object>
+    </property>
+
+    <!-- Debugging-only, these should be disabled or deleted -->
+    <!-- <property name="KeepAlive" value="false" /> -->
+
+  </object>
+
+</objects>

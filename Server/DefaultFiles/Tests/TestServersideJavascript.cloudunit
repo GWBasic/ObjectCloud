@@ -1,0 +1,303 @@
+// Scripts: /Tests/file.testclass?Method=GetJavascriptWrapper&assignToVariable=testObject
+
+var unitTests =
+{
+   testHelloWorld : function(test)
+   {
+      testObject.HelloWorld(
+         {},
+         function(result)
+         {
+            if ("Hello from Javascript!" == result)
+               test.Pass();
+            else
+               test.Fail();
+         },
+         test.FailAJAX);
+   },
+
+   testEchoWorld : function(test)
+   {
+      testObject.EchoWorld(
+         "echoooooo...",
+         {},
+         function(result)
+         {
+            if ("echoooooo..." == result)
+               test.Pass();
+            else
+               test.Fail();
+         },
+         test.FailAJAX);
+   },
+
+   testDivide : function(test)
+   {
+      testObject.Divide(
+         420,
+         {},
+         function(result)
+         {
+            if (210.5 == result)
+               test.Pass();
+            else
+               test.Fail();
+         },
+         test.FailAJAX);
+   },
+
+   testBool_True : function(test)
+   {
+      testObject.TestBool(
+         true,
+         {},
+         function(result)
+         {
+            if ("Argument was true" == result)
+               test.Pass();
+            else
+               test.Fail();
+         },
+         test.FailAJAX);
+   },
+
+   testBool_False : function(test)
+   {
+      testObject.TestBool(
+         false,
+         {},
+         function(result)
+         {
+            if ("Argument was false" == result)
+               test.Pass();
+            else
+               test.Fail();
+         },
+         test.FailAJAX);
+   },
+
+   testGenerateWebResults : function(test)
+   {
+      testObject.GenerateWebResults(
+         404,
+         "It's not found!",
+         {},
+         test.FailAJAX,
+         function(transport)
+         {
+            if (404 == transport.status)
+               if ("It's not found!" == transport.responseText)
+               {
+                  test.Pass();
+                  return;
+               }
+
+            test.Fail();
+         });
+   },
+
+   testPostWorld : function(test)
+   {
+      testObject.PostWorld(
+         "echoooooo...",
+         {},
+         function(result)
+         {
+            if ("echoooooo..." == result)
+               test.Pass();
+            else
+               test.Fail(result);
+         },
+         test.FailAJAX);
+   },
+
+   testPostString : function(test)
+   {
+      testObject.PostString(
+         "echoooooo...",
+         function(result)
+         {
+            if ("echoooooo..." == result)
+               test.Pass();
+            else
+               test.Fail();
+         },
+         test.FailAJAX);
+   },
+
+   testPostJSON : function(test)
+   {
+      var toPost =
+      {
+         A : "aaaaaaaa",
+         B : "bbbbbbbb"
+      };
+
+      testObject.PostJSON(
+         toPost,
+         {},
+         function(result)
+         {
+            if ("aaaaaaaa bbbbbbbb" == result)
+               test.Pass();
+            else
+               test.Fail(result);
+         },
+         test.FailAJAX);
+   },
+
+   testReturnJSON : function(test)
+   {
+      testObject.ReturnJSON(
+         {},
+         function(result, transport)
+         {
+            try
+            {
+               if (!result.B)
+                 if (123 == result.A)
+                 {
+                    test.Pass();
+                    return;
+                 }
+
+               test.Fail(transport.responseText);
+            }
+            catch (exception)
+            {
+               test.Fail(exception);
+            }
+         },
+         function(transport)
+         {
+            test.Fail(transport.responseText);
+         });
+   },
+
+   testShellGet : function(test)
+   {
+      testObject.ShellGet(
+         {},
+         function(result)
+         {
+            if (result.Content)
+               if (200 == result.Status)
+               {
+                  test.Pass();
+                  return;
+               }
+
+            test.Fail();
+         },
+         test.FailAJAX);
+   },
+
+   testShellPost_urlencoded : function(test)
+   {
+      testObject.ShellPost_urlencoded(
+         {},
+         function(result)
+         {
+            if (String(true) == result.Content)
+               test.Pass();
+            else
+               test.Fail(result.Content);
+         },
+         test.FailAJAX);
+   },
+
+   testShellPost : function(test)
+   {
+      testObject.ShellPost(
+         {},
+         function(result)
+         {
+            if ("???????transmitted" == result)
+               test.Pass();
+            else
+               test.Fail(result);
+         },
+         test.FailAJAX);
+   },
+
+   testCantCallBase : function(test)
+   {
+      testObject.WriteAll(
+         "Ooops",
+         test.FailAJAX,
+         test.Pass);
+   },
+
+   testCallBase : function(test)
+   {
+      testObject.SetAnonymousPermission(
+         "Read",
+         {},
+         function(result)
+         {
+            testObject.SetAnonymousPermission(
+               null,
+               {},
+               function(result)
+               {
+                  test.Pass();
+               },
+               test.FailAJAX);
+         },
+         test.FailAJAX);
+   },
+
+   testWROE : function(test)
+   {
+      testObject.TestWROE(
+      {},
+      test.FailAJAX,
+      function(response)
+      {
+         if (404 == response.status)
+            if ("WROE" == response.responseText)
+            {
+               test.Pass();
+               return;
+            }
+
+         test.Fail(response.responseText);
+      });
+   },
+
+   testElevateSanity : function(test)
+   {
+      testObject.TestElevateSanity(
+      {},
+      test.Pass,
+      test.FailAJAX);
+   },
+
+   testElevateProxyGet : function(test)
+   {
+      testObject.TestElevateProxyGet(
+      {},
+      function(result)
+      {
+         if (result.indexOf("slashdot") > 0)
+            test.Pass();
+         else
+            test.Fail(result);
+      },
+      test.FailAJAX);
+   },
+
+   testElevateProxyPost : function(test)
+   {
+      testObject.TestElevateProxyPost(
+      {},
+      function(result)
+      {
+         if ("theArg=fromposttransmitted" == result)
+            test.Pass();
+         else
+            test.Fail(result);
+      },
+      test.FailAJAX);
+   }
+};

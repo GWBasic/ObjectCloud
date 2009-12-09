@@ -1,0 +1,3 @@
+To build under Fusion using a shared folder:
+
+caspol -m -ag 1 -url file://z:\* FullTrust -exclusive on

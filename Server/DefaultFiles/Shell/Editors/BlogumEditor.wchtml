@@ -1,0 +1,72 @@
+<? WebComponent("/Pages/header.webcomponent?Title=Blog%20Editor%20" . $_GETENCODE["FileName"]) ?>
+<? Scripts(/API/Prototype.js, <? $_GET["FileName"] ?>?Method=GetJavascriptWrapper&assignToVariable=Blogum) ?>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+<table><tr><td>
+
+<h1>Existing posts</h1>
+
+<script>
+
+   var posts = <? WebComponent($_GET["FileName"] . "?Method=GetRelatedFiles&relationship=post") ?>;
+
+   // Sort by creation date
+   posts.sort(function(a, b)
+   {
+      var aS = a.Created;
+      var bS = b.Created;
+
+      if (aS < bS)
+         return -1;
+      if (aS > bS)
+         return 1;
+
+      return 0;
+   });
+
+   posts.each(function(post, i)
+   {
+      document.write(
+         '<a href="' + post.Filename + '">' + post.Filename + '</a> (' + new Date(post.Created) + ')' +
+         ' <a href="' + post.Filename + '?Action=Edit">edit</a><br />');
+   });
+
+   function createpost()
+   {
+      Blogum.AddPost(
+         $("filename").value,
+         {},
+         function()
+         {
+            location.reload(true);
+         });
+   }
+
+</script>
+
+</td></tr><tr><td>
+<? WebComponent("/Shell/Security/NamedPermissions.webcomponent?FileName=" . $_GET["FileName"] . "&NamedPermission=post") ?>
+
+<p>Note:  Giving everyone, authenticated users, local users, ect, permission to post will make the blogum behave like a forum.
+Giving a limited group of people permission to post, such as administrators, or a few well-known people, will make the blogum
+behave like a blog.</p>
+
+</td></tr><tr><td>
+<? WebComponent("/Shell/Security/NamedPermissions.webcomponent?FileName=" . $_GET["FileName"] . "&NamedPermission=reply") ?>
+
+<p>Any user, group, or openId listed above can reply to any post or topic added to the blogum.</p>
+
+   <? WebComponent("/Shell/Security/PermissionInstructions.webcomponent") ?>
+
+
+</td></tr><tr><td>
+<h1>Add a post</h1>
+
+<p>Any kind of file that's in the same directory as this .blogum file can be added to the .blogum as a post.</p>
+
+Type in the File Name: <input type="text" id="filename" /> <input type="button" value="append post" onclick="createpost()" />
+
+</td></tr></table>
+
+<? WebComponent("/Pages/footer.webcomponent?Title=Blog%20Editor%20" . $_GETENCODE["FileName"]) ?>

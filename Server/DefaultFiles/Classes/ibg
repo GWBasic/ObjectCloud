@@ -1,0 +1,206 @@
+// Manipulations:
+
+function createVersionNumber()
+{
+   var toReturn = Math.round(Math.floor(Math.random()*100)) / 100;
+   return toReturn;
+}
+
+function updateVersionNumber(oldVersionNumber)
+{
+   var toReturn = oldVersionNumber + createVersionNumber();
+   return Math.round(toReturn * 100) / 100;
+}
+
+function throwExceptionOnForbiddenChange(node, newContents)
+{
+   if (0 == node.c.indexOf("@{"))
+     if (node.c != newContents)
+        throwWebResultOverrideException(403, "Can not change the contents of special objects:\n" + node.c + "\n" + newContents)
+}
+
+// updateNode
+
+updateNode.webCallable = "POST_application_x_www_form_urlencoded";
+updateNode.minimumWebPermission = "Write";
+updateNode.parser_id = "number";
+updateNode.webReturnConvention = "JavaScriptObject";
+function updateNode(id, version, contents, changetag)
+{
+   var nodeAsString;
+   elevate(function()
+   {
+      nodeAsString = base.Get(id);
+   });
+   
+   var node = eval('(' + nodeAsString + ')');
+
+   throwExceptionOnForbiddenChange(node, contents);
+
+   if (node.v != version)
+      throwWebResultOverrideException(400, "Wrong version");
+
+   if (node.c != contents)
+   {
+      node.c = contents;
+      node.v = updateVersionNumber(node.v);
+      node.t = changetag;
+
+      nodeAsString = JSON.stringify(node);
+      elevate(function()
+      {
+         base.Set(id, nodeAsString);
+      });
+   }
+
+   return node;
+}
+
+// Filters contents so that they can be properly inserted
+
+function filterForInsert(contents)
+{
+   if (0 == contents.indexOf("@{"))
+   {
+      contents = JSON.parse(contents.substring(1));
+
+      if ("usertimestamp" == contents.t)
+      {
+         contents.u = userMetadata.identity;
+         contents.d = (new Date()).getTime();
+      }
+
+      return "@" + JSON.stringify(contents);
+   }
+   
+   return contents;
+}
+
+// insertNode
+
+insertNode.webCallable = "POST_application_x_www_form_urlencoded";
+insertNode.minimumWebPermission = "Write";
+insertNode.parser_priorId = "number";
+insertNode.parser_newNodeId = "number";
+insertNode.webReturnConvention = "JavaScriptObject";
+function insertNode(priorId, priorNodeVersion, priorNodeContents, priorChangetag, newNodeContents, newNodeId, newChangetag)
+{
+   // Make sure that the node ID starts with "id"
+   if (!newNodeId)
+      throwWebResultOverrideException(400, "invalid newNodeId.  Use a sufficiently random id that starts with \"id\".");
+
+   if (0 != newNodeId.indexOf("id"))
+      throwWebResultOverrideException(400, "invalid newNodeId.  Use a sufficiently random id that starts with \"id\".");
+
+   var priorNodeAsString;
+   elevate(function()
+   {
+      priorNodeAsString = base.Get(priorId);
+   });
+   var priorNode = eval('(' + priorNodeAsString + ')');
+
+   throwExceptionOnForbiddenChange(priorNode, priorNodeContents);
+
+   if (priorNode.v != priorNodeVersion)
+      throwWebResultOverrideException(400, "Wrong version");
+
+   // Verify the newNodeId if specified, or create it if unspecified
+   elevate(function()
+   {
+      if (true == base.Contains(newNodeId))
+         throwWebResultOverrideException(400, "newNodeId is already in use.  Use a sufficiently random id that starts with \"id\".");
+   });
+
+   var newNode =
+   {
+      c: filterForInsert(newNodeContents),
+      v: createVersionNumber(),
+      n: priorNode.n,
+      t: newChangetag
+   };
+
+   priorNode.n = newNodeId;
+   priorNode.v = updateVersionNumber(priorNode.v);
+   priorNode.c = priorNodeContents;
+   priorNode.t = priorChangetag;
+
+   elevate(function()
+   {
+      priorNodeAsString = JSON.stringify(priorNode);
+      base.Set(priorId, priorNodeAsString);
+
+      var newNodeAsString = JSON.stringify(newNode);
+      base.Set(newNodeId, newNodeAsString);
+   });
+
+   var toReturn =
+   {
+      priorNode: priorNode,
+      newNode: newNode
+   };
+
+   return toReturn;
+}
+
+// deleteNode
+
+deleteNode.webCallable = "POST_application_x_www_form_urlencoded";
+deleteNode.minimumWebPermission = "Write";
+deleteNode.parser_priorId = "number";
+deleteNode.webReturnConvention = "JavaScriptObject";
+function deleteNode(priorId, priorNodeVersion, priorNodeContents, deletingNodeVersion, changetag)
+{
+   var priorNodeAsString;
+   elevate(function()
+   {
+      priorNodeAsString = base.Get(priorId);
+   });
+   var priorNode = eval('(' + priorNodeAsString + ')');
+
+   throwExceptionOnForbiddenChange(priorNode, priorNodeContents);
+
+   if (priorNode.v != priorNodeVersion)
+      throwWebResultOverrideException(400, "Wrong version for prior node");
+
+   var deletingNodeAsString = base.Get(priorNode.n);
+   var deletingNode = eval('(' + deletingNodeAsString + ')');
+
+   if (deletingNode.v != deletingNodeVersion)
+      throwWebResultOverrideException(400, "Wrong version for deleting node");
+
+   var deletingNodeId = priorNode.n;
+   priorNode.n = deletingNode.n;
+   priorNode.v = updateVersionNumber(priorNode.v);
+   priorNode.c = priorNodeContents;
+   priorNode.t = changetag;
+
+   priorNodeAsString = JSON.stringify(priorNode);
+   elevate(function()
+   {
+      base.Set(priorId, priorNodeAsString);
+      base.Delete(deletingNodeId);
+   });
+
+   return priorNode;
+}
+
+// getAll needs to eval() all data stored on disk prior to returning it
+
+GetAll.webCallable = "GET_application_x_www_form_urlencoded";
+GetAll.minimumWebPermission = "Read";
+GetAll.webReturnConvention = "JavaScriptObject";
+function GetAll()
+{
+   var toReturn;
+   elevate(function()
+   {
+      toReturn = base.GetAll();
+   });
+
+   for (var id in toReturn)
+   {
+      toReturn[id] = eval('(' + toReturn[id] + ')');
+   }
+
+   return toReturn;
+}

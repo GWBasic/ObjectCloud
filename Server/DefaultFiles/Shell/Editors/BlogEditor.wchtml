@@ -1,0 +1,53 @@
+<? WebComponent("/Pages/header.webcomponent?Title=Blog%20Editor%20" . $_GETENCODE["FileName"]) ?>
+<? Scripts(/API/Prototype.js, <? $_GET["FileName"] ?>?Method=GetJavascriptWrapper&assignToVariable=Blog) ?>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+<h1>Existing posts</h1>
+
+<script>
+
+   var posts = <? WebComponent($_GET["FileName"] . "?Method=ListFiles") ?>;
+
+   // Sort by name
+   posts.sort(function(a, b)
+   {
+      var aS = a.Created;
+      var bS = b.Created;
+
+      if (aS < bS)
+         return -1;
+      if (aS > bS)
+         return 1;
+
+      return 0;
+   });
+
+   posts.each(function(post, i)
+   {
+      document.write(
+         '<a href="' + Blog.Filename + '/' + post.Filename + '">' + post.Filename + '</a>' +
+         ' <a href="' + Blog.Filename + '/' + post.Filename + '/p.page?Action=Edit">edit</a>' +
+         ' <a href="/Shell/Security/Permissions.wchtml?FileName=' + Url.encode(Blog.FullPath + '/' + post.Filename) + '"> Permissions </a><br />');
+   });
+
+   function createpost()
+   {
+      Blog.CopyFile(
+         "/Templates/Blog Post Template.blogpost",
+         $("filename").value + ".blogpost",
+         {},
+         function()
+         {
+            alert($("filename").value + ".blogpost" + " created");
+            window.location.reload(true);
+         });
+   }
+
+</script>
+
+<h1>Create a post</h1>
+
+File Name: <input type="text" id="filename" /> <input type="button" value="create post" onclick="createpost()" />
+
+<? WebComponent("/Pages/footer.webcomponent?Title=Blog%20Editor%20" . $_GETENCODE["FileName"]) ?>

@@ -1,0 +1,165 @@
+body 
+{
+   color: #FFFFFF;
+   background: #9999FF;
+   font-size: 100%
+}
+
+a:link
+{ 
+   color: #4444aa;
+}
+
+a:visited
+{ 
+   color: #444477;
+}
+
+a:hover
+{
+   color: #9999FF;
+   background-color: #444477;
+}
+
+a:active
+{
+   color: #9999FF;
+   background-color: #444477;
+}
+
+table
+{
+   color: #000000;
+   background: #000000;
+}
+
+td
+{
+   background: #FFFFFF;
+}
+
+th
+{
+   background: #BBBBBB;
+}
+
+div.logocloud
+{
+   color: #CCCCFF;
+   font-size: 65%;
+   font-family: courier;
+}
+
+div.logotitle
+{
+   font-size: 4em;
+   font-family: courier;
+}
+
+div.logoslogan
+{
+   font-size: 2em;
+   font-family: courier;
+}
+
+div.contents
+{
+   color: black;
+   background: white;
+}
+
+.contents a:hover
+{
+   color: #ffffff;
+   background-color: #4444aa;
+}
+
+.contents a:active
+{
+   color: #000000;
+   background-color: #999999;
+}
+
+div.navbar
+{
+   background: #6666aa;
+}
+
+.navbar a:link
+{ 
+   color: #eeeeff;
+   background: #333377;
+   text-decoration: none;
+}
+
+.navbar a:visited
+{ 
+   color: #eeeeff;
+   background: #333377;
+   text-decoration: none;
+}
+
+.navbar a:hover
+{ 
+   color: #ccccee;
+   background-color: #222233;
+   text-decoration: none;
+}
+
+.navbar a:active
+{ 
+   background-color: #ccccee;
+   color: #222233;
+   text-decoration: none;
+}
+
+h1
+{
+   font-size: 1.5em;
+   font-weight: bold; 
+}
+
+h2
+{
+   font-size: 1.25em;
+   font-weight: bold; 
+}
+
+h3
+{
+   font-size: 1.1em;
+   font-weight: bold; 
+}
+
+h4
+{
+   font-size: 1em;
+   font-weight: bold; 
+}
+
+div.title
+{
+   font-size: 2em;
+   text-align: center;
+   font-weight: bold; 
+}
+
+.title a:link
+{ 
+   text-decoration: none;
+}
+
+.title a:visited
+{ 
+   text-decoration: none;
+}
+
+.title a:hover
+{ 
+   text-decoration: none;
+}
+
+.title a:active
+{ 
+   text-decoration: none;
+}

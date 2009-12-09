@@ -1,0 +1,7 @@
+Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Wave.ProtocolBuffers\bin\Debug\ObjectCloud.Wave.ProtocolBuffers.dll
+Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Wave.ProtocolBuffers\bin\Debug\ObjectCloud.Wave.ProtocolBuffers.pdb
+Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Wave.ProtocolBuffers\bin\Debug\protobuf-net.dll
+Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Wave.ProtocolBuffers\bin\Debug\protobuf-net.xml
+Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Wave.ProtocolBuffers\obj\Debug\ResolveAssemblyReference.cache
+Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Wave.ProtocolBuffers\obj\Debug\ObjectCloud.Wave.ProtocolBuffers.dll
+Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Wave.ProtocolBuffers\obj\Debug\ObjectCloud.Wave.ProtocolBuffers.pdb

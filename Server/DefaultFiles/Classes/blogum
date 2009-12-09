@@ -1,0 +1,80 @@
+GetPostsForDisplay.webCallable = "GET_application_x_www_form_urlencoded";
+GetPostsForDisplay.minimumWebPermission = "Read";
+GetPostsForDisplay.webReturnConvention = "JSON";
+GetPostsForDisplay.parser_newest = "number";
+GetPostsForDisplay.parser_oldest = "number";
+GetPostsForDisplay.parser_max = "number";
+function GetPostsForDisplay(newest, oldest, max)
+{
+   var replies = base.GetRelatedFiles(["post"], null, newest, oldest, max);
+
+   var toReturn = [];
+
+   for (var i = 0; i < replies.length; i++)
+      toReturn.push(
+      {
+         File: replies[i],
+         View: Shell_GET(replies[i].FullPath + "?Action=Preview")
+      });
+
+   return toReturn;
+}
+
+AddPost.webCallable = "POST_application_x_www_form_urlencoded";
+AddPost.namedPermissions = "post";
+function AddPost(filename)
+{
+   elevate(function()
+   {
+      base.AddRelatedFile(filename, "post");
+      base.AddRelatedFile(filename, "reply");
+
+      var parentDirectoryWrapper = getDefaultRelatedObjectDirectoryWrapper();
+      var replyFile = parentDirectoryWrapper(filename);
+      replyFile.AddRelatedFile(fileMetadata.filename, "root");
+   });
+}
+
+CanPost.webCallable = "GET";
+CanPost.minimumWebPermission = "Read";
+CanPost.webReturnConvention = "JavaScriptObject";
+function CanPost()
+{
+   if (base.GetPermissionAsJSON().CanWrite)
+      return true;
+
+   return base.HasNamedPermission("post");
+}
+
+AddPostWithContent.webCallable = "POST_application_x_www_form_urlencoded";
+AddPostWithContent.minimumWebPermission = "Write";
+AddPostWithContent.namedPermissions = "reply";
+AddPostWithContent.webReturnConvention = "Status";
+AddPostWithContent.parser_options = "JSON";
+function AddPostWithContent(title, replyText, options)
+{
+   callAsOwner(function()
+   {
+      elevate(function()
+      {
+         var parentDirectoryWrapper = getDefaultRelatedObjectDirectoryWrapper();
+
+         var now = new Date();
+         var replyFilename = fileMetadata.filename + "_post" + now.getTime() + ".page";
+
+         var replyFile = parentDirectoryWrapper.CreateFile(
+            replyFilename,
+            "text",
+            true);
+
+         replyFile.WriteAll('<div>' + sanitize(title) + '</div>' + sanitize(replyText));
+
+         replyFile.AddRelatedFile(fileMetadata.filename, "root");
+
+         replyFile.Chown(userMetadata.id);
+
+         base.AddRelatedFile(replyFilename, "post");
+         base.AddRelatedFile(replyFilename, "reply");
+      });
+   });
+}

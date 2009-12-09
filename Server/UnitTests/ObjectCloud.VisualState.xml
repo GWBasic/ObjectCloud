@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VisualState xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ShowCheckBoxes="false">
+  <TopNode>[0-1048]ObjectCloud.Disk.Test.FileDumperTest.TestDumpRestoreDirectoryWithPermissions</TopNode>
+  <SelectedNode>[0-1000]Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\UnitTests\ObjectCloud.nunit</SelectedNode>
+  <ExcludeCategories>false</ExcludeCategories>
+  <Nodes>
+    <Node UniqueName="[0-1000]Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\UnitTests\ObjectCloud.nunit" Expanded="true">
+      <Nodes>
+        <Node UniqueName="[0-1053]Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\UnitTests\bin\Debug\ObjectCloud.Disk.Test.dll" Expanded="true">
+          <Nodes>
+            <Node UniqueName="[0-1054]ObjectCloud" Expanded="true">
+              <Nodes>
+                <Node UniqueName="[0-1055]ObjectCloud.Disk" Expanded="true">
+                  <Nodes>
+                    <Node UniqueName="[0-1056]ObjectCloud.Disk.Test" Expanded="true">
+                      <Nodes>
+                        <Node UniqueName="[0-1042]ObjectCloud.Disk.Test.FileDumperTest" Expanded="true">
+                          <Nodes>
+                            <Node UniqueName="[0-1046]ObjectCloud.Disk.Test.FileDumperTest.TestAnonymousUserCantDumpUserDB" />
+                            <Node UniqueName="[0-1049]ObjectCloud.Disk.Test.FileDumperTest.TestDumpRestoreDatabase" />
+                            <Node UniqueName="[0-1047]ObjectCloud.Disk.Test.FileDumperTest.TestDumpRestoreDirectory" />
+                            <Node UniqueName="[0-1048]ObjectCloud.Disk.Test.FileDumperTest.TestDumpRestoreDirectoryWithPermissions" />
+                            <Node UniqueName="[0-1045]ObjectCloud.Disk.Test.FileDumperTest.TestDumpRestoreNameValuePairsFile" />
+                            <Node UniqueName="[0-1044]ObjectCloud.Disk.Test.FileDumperTest.TestDumpRestoreTextFile" />
+                            <Node UniqueName="[0-1043]ObjectCloud.Disk.Test.FileDumperTest.TestDumpSanity" />
+                          </Nodes>
+                        </Node>
+                        <Node UniqueName="[0-1001]ObjectCloud.Disk.Test.FileSystemResolverTest" Expanded="true">
+                          <Nodes>
+                            <Node UniqueName="[0-1004]ObjectCloud.Disk.Test.FileSystemResolverTest.TestCache" />
+                            <Node UniqueName="[0-1012]ObjectCloud.Disk.Test.FileSystemResolverTest.TestCloseBraceIsInvalid" />
+                            <Node UniqueName="[0-1017]ObjectCloud.Disk.Test.FileSystemResolverTest.TestCopyDirectory" />
+                            <Node UniqueName="[0-1023]ObjectCloud.Disk.Test.FileSystemResolverTest.TestCopyEmbeddedDatabase" />
+                            <Node UniqueName="[0-1007]ObjectCloud.Disk.Test.FileSystemResolverTest.TestCopyNameValuePairs" />
+                            <Node UniqueName="[0-1009]ObjectCloud.Disk.Test.FileSystemResolverTest.TestCopyText" />
+                            <Node UniqueName="[0-1015]ObjectCloud.Disk.Test.FileSystemResolverTest.TestCreateDuplicateFile" />
+                            <Node UniqueName="[0-1021]ObjectCloud.Disk.Test.FileSystemResolverTest.TestCreateEmbeddedDatabase" />
+                            <Node UniqueName="[0-1002]ObjectCloud.Disk.Test.FileSystemResolverTest.TestCreateFileSystemResolver" />
+                            <Node UniqueName="[0-1005]ObjectCloud.Disk.Test.FileSystemResolverTest.TestCreateSubdirectory" />
+                            <Node UniqueName="[0-1010]ObjectCloud.Disk.Test.FileSystemResolverTest.TestDefaultDirectorySetup" />
+                            <Node UniqueName="[0-1013]ObjectCloud.Disk.Test.FileSystemResolverTest.TestDelete" />
+                            <Node UniqueName="[0-1022]ObjectCloud.Disk.Test.FileSystemResolverTest.TestEmbeddedDatabaseRoundTrip" />
+                            <Node UniqueName="[0-1016]ObjectCloud.Disk.Test.FileSystemResolverTest.TestEnumerateFilesInDirectory" />
+                            <Node UniqueName="[0-1019]ObjectCloud.Disk.Test.FileSystemResolverTest.TestIsFileNotPresent" />
+                            <Node UniqueName="[0-1018]ObjectCloud.Disk.Test.FileSystemResolverTest.TestIsFilePresent" />
+                            <Node UniqueName="[0-1006]ObjectCloud.Disk.Test.FileSystemResolverTest.TestNameValuePairs" />
+                            <Node UniqueName="[0-1011]ObjectCloud.Disk.Test.FileSystemResolverTest.TestOpenBraceIsInvalid" />
+                            <Node UniqueName="[0-1014]ObjectCloud.Disk.Test.FileSystemResolverTest.TestRecursiveDelete" />
+                            <Node UniqueName="[0-1020]ObjectCloud.Disk.Test.FileSystemResolverTest.TestRename" />
+                            <Node UniqueName="[0-1003]ObjectCloud.Disk.Test.FileSystemResolverTest.TestRootDirectoryPresent" />
+                            <Node UniqueName="[0-1008]ObjectCloud.Disk.Test.FileSystemResolverTest.TestText" />
+                          </Nodes>
+                        </Node>
+                        <Node UniqueName="[0-1024]ObjectCloud.Disk.Test.PermissionsTest" Expanded="true">
+                          <Nodes>
+                            <Node UniqueName="[0-1025]ObjectCloud.Disk.Test.PermissionsTest.TestAddPermission" />
+                            <Node UniqueName="[0-1033]ObjectCloud.Disk.Test.PermissionsTest.TestAddUserToGroups" />
+                            <Node UniqueName="[0-1040]ObjectCloud.Disk.Test.PermissionsTest.TestCanNotAddUserToSystemGroup" />
+                            <Node UniqueName="[0-1030]ObjectCloud.Disk.Test.PermissionsTest.TestCannotCreateGroupWithSameNameAsUser" />
+                            <Node UniqueName="[0-1029]ObjectCloud.Disk.Test.PermissionsTest.TestCannotCreateUserWithSameNameAsGroup" />
+                            <Node UniqueName="[0-1039]ObjectCloud.Disk.Test.PermissionsTest.TestCanNotDeleteBuiltInGroup" />
+                            <Node UniqueName="[0-1038]ObjectCloud.Disk.Test.PermissionsTest.TestCanNotDeleteBuiltInUser" />
+                            <Node UniqueName="[0-1041]ObjectCloud.Disk.Test.PermissionsTest.TestCanNotRemoveUserFromSystemGroup" />
+                            <Node UniqueName="[0-1031]ObjectCloud.Disk.Test.PermissionsTest.TestCreateAndGetGroup" />
+                            <Node UniqueName="[0-1028]ObjectCloud.Disk.Test.PermissionsTest.TestDeleteAfterAddingPermissions" />
+                            <Node UniqueName="[0-1032]ObjectCloud.Disk.Test.PermissionsTest.TestDeleteGroup" />
+                            <Node UniqueName="[0-1027]ObjectCloud.Disk.Test.PermissionsTest.TestDeletePermission" />
+                            <Node UniqueName="[0-1035]ObjectCloud.Disk.Test.PermissionsTest.TestEverybodyInheritPermissions" />
+                            <Node UniqueName="[0-1037]ObjectCloud.Disk.Test.PermissionsTest.TestEverybodyReadUserWriteInheritPermissions" />
+                            <Node UniqueName="[0-1036]ObjectCloud.Disk.Test.PermissionsTest.TestEverybodyReadUserWritePermissions" />
+                            <Node UniqueName="[0-1034]ObjectCloud.Disk.Test.PermissionsTest.TestInheritPermissions" />
+                            <Node UniqueName="[0-1026]ObjectCloud.Disk.Test.PermissionsTest.TestUpdatePermission" />
+                          </Nodes>
+                        </Node>
+                        <Node UniqueName="[0-1050]ObjectCloud.Disk.Test.TestShell" Expanded="true">
+                          <Nodes>
+                            <Node UniqueName="[0-1052]ObjectCloud.Disk.Test.TestShell.TestAssociationHandleFalse" />
+                            <Node UniqueName="[0-1051]ObjectCloud.Disk.Test.TestShell.TestAssociationHandleTrue" />
+                          </Nodes>
+                        </Node>
+                      </Nodes>
+                    </Node>
+                  </Nodes>
+                </Node>
+              </Nodes>
+            </Node>
+          </Nodes>
+        </Node>
+        <Node UniqueName="[0-1061]Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\UnitTests\bin\Debug\ObjectCloud.ORM.DataAccess.SQLite.Test.dll">
+          <Nodes>
+            <Node UniqueName="[0-1062]ObjectCloud">
+              <Nodes>
+                <Node UniqueName="[0-1063]ObjectCloud.ORM">
+                  <Nodes>
+                    <Node UniqueName="[0-1064]ObjectCloud.ORM.DataAccess">
+                      <Nodes>
+                        <Node UniqueName="[0-1065]ObjectCloud.ORM.DataAccess.SQLite">
+                          <Nodes>
+                            <Node UniqueName="[0-1066]ObjectCloud.ORM.DataAccess.SQLite.Test">
+                              <Nodes>
+                                <Node UniqueName="[0-1057]ObjectCloud.ORM.DataAccess.SQLite.Test.ConcurrencyTest">
+                                  <Nodes>
+                                    <Node UniqueName="[0-1059]ObjectCloud.ORM.DataAccess.SQLite.Test.ConcurrencyTest.TestConcurrencyWhenOpeningMultipleDatabases" />
+                                    <Node UniqueName="[0-1060]ObjectCloud.ORM.DataAccess.SQLite.Test.ConcurrencyTest.TestConcurrencyWhenOpeningMultipleDatabasesAndDoingSomething" />
+                                    <Node UniqueName="[0-1058]ObjectCloud.ORM.DataAccess.SQLite.Test.ConcurrencyTest.TestConcurrencyWhenOpeningTwoDatabases" />
+                                  </Nodes>
+                                </Node>
+                              </Nodes>
+                            </Node>
+                          </Nodes>
+                        </Node>
+                      </Nodes>
+                    </Node>
+                  </Nodes>
+                </Node>
+              </Nodes>
+            </Node>
+          </Nodes>
+        </Node>
+        <Node UniqueName="[0-1125]Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\UnitTests\bin\Debug\ObjectCloud.WebServer.Test.dll" Expanded="true">
+          <Nodes>
+            <Node UniqueName="[0-1126]ObjectCloud" Expanded="true">
+              <Nodes>
+                <Node UniqueName="[0-1127]ObjectCloud.WebServer" Expanded="true">
+                  <Nodes>
+                    <Node UniqueName="[0-1128]ObjectCloud.WebServer.Test" Expanded="true">
+                      <Nodes>
+                        <Node UniqueName="[0-1116]ObjectCloud.WebServer.Test.EmbeddedDatabaseTest">
+                          <Nodes>
+                            <Node UniqueName="[0-1117]ObjectCloud.WebServer.Test.EmbeddedDatabaseTest.TestCreateEmbeddedDatabase" />
+                            <Node UniqueName="[0-1118]ObjectCloud.WebServer.Test.EmbeddedDatabaseTest.TestParameters" />
+                            <Node UniqueName="[0-1119]ObjectCloud.WebServer.Test.EmbeddedDatabaseTest.TestStoredProcedure" />
+                            <Node UniqueName="[0-1120]ObjectCloud.WebServer.Test.EmbeddedDatabaseTest.TestStoredProcedurePermissions" />
+                          </Nodes>
+                        </Node>
+                        <Node UniqueName="[0-1067]ObjectCloud.WebServer.Test.TestUserAndPermissions">
+                          <Nodes>
+                            <Node UniqueName="[0-1072]ObjectCloud.WebServer.Test.TestUserAndPermissions.TestAddUserToGroup" />
+                            <Node UniqueName="[0-1070]ObjectCloud.WebServer.Test.TestUserAndPermissions.TestCanCreateGroup" />
+                            <Node UniqueName="[0-1071]ObjectCloud.WebServer.Test.TestUserAndPermissions.TestCanDeleteGroup" />
+                            <Node UniqueName="[0-1068]ObjectCloud.WebServer.Test.TestUserAndPermissions.TestNewUser" />
+                            <Node UniqueName="[0-1069]ObjectCloud.WebServer.Test.TestUserAndPermissions.TestNewUserCanLogIn" />
+                            <Node UniqueName="[0-1073]ObjectCloud.WebServer.Test.TestUserAndPermissions.TestRemoveUserFromGroup" />
+                          </Nodes>
+                        </Node>
+                        <Node UniqueName="[0-1091]ObjectCloud.WebServer.Test.WebComponentTest">
+                          <Nodes>
+                            <Node UniqueName="[0-1095]ObjectCloud.WebServer.Test.WebComponentTest.TestWebComponent_COOKIE" />
+                            <Node UniqueName="[0-1093]ObjectCloud.WebServer.Test.WebComponentTest.TestWebComponent_GET" />
+                            <Node UniqueName="[0-1094]ObjectCloud.WebServer.Test.WebComponentTest.TestWebComponent_POST" />
+                            <Node UniqueName="[0-1096]ObjectCloud.WebServer.Test.WebComponentTest.TestWebComponent_REQUEST" />
+                            <Node UniqueName="[0-1092]ObjectCloud.WebServer.Test.WebComponentTest.TestWebComponentSanity" />
+                          </Nodes>
+                        </Node>
+                        <Node UniqueName="[0-1100]ObjectCloud.WebServer.Test.WebServerTest">
+                          <Nodes>
+                            <Node UniqueName="[0-1111]ObjectCloud.WebServer.Test.WebServerTest.Test404OnBadFile" />
+                            <Node UniqueName="[0-1108]ObjectCloud.WebServer.Test.WebServerTest.TestBadPassword" />
+                            <Node UniqueName="[0-1106]ObjectCloud.WebServer.Test.WebServerTest.TestCopyFile" />
+                            <Node UniqueName="[0-1101]ObjectCloud.WebServer.Test.WebServerTest.TestCreateDirectory" />
+                            <Node UniqueName="[0-1103]ObjectCloud.WebServer.Test.WebServerTest.TestCreateNameValuePairs" />
+                            <Node UniqueName="[0-1102]ObjectCloud.WebServer.Test.WebServerTest.TestCreateSubdirectory" />
+                            <Node UniqueName="[0-1110]ObjectCloud.WebServer.Test.WebServerTest.TestErrorWhenCreatingDuplicateFile" />
+                            <Node UniqueName="[0-1105]ObjectCloud.WebServer.Test.WebServerTest.TestGetSetAllNameValuePairs" />
+                            <Node UniqueName="[0-1113]ObjectCloud.WebServer.Test.WebServerTest.TestIsFilePresent" />
+                            <Node UniqueName="[0-1112]ObjectCloud.WebServer.Test.WebServerTest.TestListFilesInDirectory" />
+                            <Node UniqueName="[0-1107]ObjectCloud.WebServer.Test.WebServerTest.TestLoginLogout" />
+                            <Node UniqueName="[0-1115]ObjectCloud.WebServer.Test.WebServerTest.TestRename" />
+                            <Node UniqueName="[0-1114]ObjectCloud.WebServer.Test.WebServerTest.TestSetFilePermission" />
+                            <Node UniqueName="[0-1109]ObjectCloud.WebServer.Test.WebServerTest.TestUnknownUser" />
+                            <Node UniqueName="[0-1104]ObjectCloud.WebServer.Test.WebServerTest.TestUseNameValuePairs" />
+                          </Nodes>
+                        </Node>
+                        <Node UniqueName="[0-1129]ObjectCloud.WebServer.Test.WebServerTestClasses">
+                          <Nodes>
+                            <Node UniqueName="[0-1097]ObjectCloud.WebServer.Test.WebServerTestClasses.CreateFile">
+                              <Nodes>
+                                <Node UniqueName="[0-1098]ObjectCloud.WebServer.Test.WebServerTestClasses.CreateFile.TestCreateFileConcurrent" />
+                                <Node UniqueName="[0-1099]ObjectCloud.WebServer.Test.WebServerTestClasses.CreateFile.TestCreateMultipleFilesConcurrent" />
+                              </Nodes>
+                            </Node>
+                            <Node UniqueName="[0-1074]ObjectCloud.WebServer.Test.WebServerTestClasses.Delete">
+                              <Nodes>
+                                <Node UniqueName="[0-1075]ObjectCloud.WebServer.Test.WebServerTestClasses.Delete.TestDelete" />
+                                <Node UniqueName="[0-1076]ObjectCloud.WebServer.Test.WebServerTestClasses.Delete.TestDelete404OnMissing" />
+                                <Node UniqueName="[0-1077]ObjectCloud.WebServer.Test.WebServerTestClasses.Delete.TestDeleteConcurrent" />
+                              </Nodes>
+                            </Node>
+                            <Node UniqueName="[0-1121]ObjectCloud.WebServer.Test.WebServerTestClasses.Text">
+                              <Nodes>
+                                <Node UniqueName="[0-1122]ObjectCloud.WebServer.Test.WebServerTestClasses.Text.TestConcurrent" />
+                                <Node UniqueName="[0-1124]ObjectCloud.WebServer.Test.WebServerTestClasses.Text.TestLargeTextFile" />
+                                <Node UniqueName="[0-1123]ObjectCloud.WebServer.Test.WebServerTestClasses.Text.TestUseText" />
+                              </Nodes>
+                            </Node>
+                          </Nodes>
+                        </Node>
+                        <Node UniqueName="[0-1078]ObjectCloud.WebServer.Test.WebShellTest">
+                          <Nodes>
+                            <Node UniqueName="[0-1089]ObjectCloud.WebServer.Test.WebShellTest.TestBypassOfActionPermissions" />
+                            <Node UniqueName="[0-1090]ObjectCloud.WebServer.Test.WebShellTest.TestCanGetOpenIdLandingPage" />
+                            <Node UniqueName="[0-1087]ObjectCloud.WebServer.Test.WebShellTest.TestEnforcementOfActionPermissions" />
+                            <Node UniqueName="[0-1080]ObjectCloud.WebServer.Test.WebShellTest.TestErrorInShellSetting" />
+                            <Node UniqueName="[0-1088]ObjectCloud.WebServer.Test.WebShellTest.TestIgnoreUnknownActionPermissions" />
+                            <Node UniqueName="[0-1083]ObjectCloud.WebServer.Test.WebShellTest.TestMimeTypeHTM" />
+                            <Node UniqueName="[0-1084]ObjectCloud.WebServer.Test.WebShellTest.TestMimeTypeHTML" />
+                            <Node UniqueName="[0-1082]ObjectCloud.WebServer.Test.WebShellTest.TestMimeTypeTEXT" />
+                            <Node UniqueName="[0-1081]ObjectCloud.WebServer.Test.WebShellTest.TestMimeTypeTXT" />
+                            <Node UniqueName="[0-1085]ObjectCloud.WebServer.Test.WebShellTest.TestMimeTypeXHTML" />
+                            <Node UniqueName="[0-1086]ObjectCloud.WebServer.Test.WebShellTest.TestMimeTypeXML" />
+                            <Node UniqueName="[0-1079]ObjectCloud.WebServer.Test.WebShellTest.TestViewTextFile" />
+                          </Nodes>
+                        </Node>
+                      </Nodes>
+                    </Node>
+                  </Nodes>
+                </Node>
+              </Nodes>
+            </Node>
+          </Nodes>
+        </Node>
+      </Nodes>
+    </Node>
+  </Nodes>
+</VisualState>

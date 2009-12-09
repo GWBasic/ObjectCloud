@@ -1,0 +1,54 @@
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+<? Scripts(/API/Prototype.js, <? $_GET["FileName"] ?>?Method=GetJavascriptWrapper&assignToVariable=Blog) ?>
+
+<script>
+
+   function displayPosts(posts)
+   {
+      posts.each(function(post, i)
+      {
+         document.write('<div id="' + post.FileId + '"><h1 id="h' + post.FileId + '"></h1><span id="t' + post.FileId + '"></span><div id="c' + post.FileId + '"></div></div>');
+
+         Blog.Open(
+            post.Filename + "/p.page",
+            {},
+            function(pageWrapper)
+            {
+               pageWrapper.ReadAll(
+                  null,
+                  {},
+                  function(text)
+                  {
+                     var div = $("c" + post.FileId);
+                     div.innerHTML = text;
+                     var childElements = div.childElements();
+
+                     if (childElements.length > 0)
+                     {
+                        $('h' + post.FileId).innerHTML = '<a href="<? $_GET["FileName"] ?>/' + post.Filename + '">' + childElements[0].innerHTML + '</a>';
+                        $('t' + post.FileId).innerHTML = 'Written by ' + post.Owner + ' at ' + new Date(post.Created);
+                        childElements[0].remove();
+                     }
+
+                     if (div.innerHTML.length > 1500)
+                     {
+                        div.innerHTML = div.innerHTML.substring(0, 1500);
+                        div.innerHTML += "...";
+                     }
+
+                     if (childElements.length > 0)
+                        div.innerHTML += '<br /><a href="<? $_GET["FileName"] ?>/' + post.Filename + '">more...</a>';
+                  });
+            },
+            function(){},
+            function(){});
+      });
+
+   }
+
+   var posts = <? WebComponent($_GET["FileName"] . "?Method=ListNewestFiles&maxToReturn=10") ?>;
+
+   displayPosts(posts);
+
+</script>

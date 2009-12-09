@@ -1,0 +1,98 @@
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+   <script>
+      var <? $_GET["NamedPermission"] ?>_Permissions = <? WebComponent($_GET["FileName"] . "?Method=GetNamedPermissions&namedPermission=" . $_GET["NamedPermission"] ) ?>;
+
+      var <? $_GET["NamedPermission"] ?>_File = <? WebComponent($_GET["FileName"] . "?Method=GetJavascriptWrapper") ?>;
+
+      function <? $_GET["NamedPermission"] ?>_removePermission(userOrGroup)
+      {
+         <? $_GET["NamedPermission"] ?>_File.RemoveNamedPermission(
+            userOrGroup,
+            "<? $_GET["NamedPermission"] ?>",
+            {},
+            function(result)
+            {
+               <? $_GET["NamedPermission"] ?>_File.GetNamedPermissions(
+                  "<? $_GET["NamedPermission"] ?>",
+                  {},
+                  function(permissions)
+                  {
+                     <? $_GET["NamedPermission"] ?>_Permissions = permissions;
+                     <? $_GET["NamedPermission"] ?>_DisplayPermissions();
+                  });
+            });
+
+         return false;
+      }
+
+      function <? $_GET["NamedPermission"] ?>_DisplayPermissions()
+      {
+         var htmlBuilder = "<p>";
+
+         <? $_GET["NamedPermission"] ?>_Permissions.each(function(permission, i)
+         {
+            htmlBuilder += '<div id="user' + permission.UserOrGroupId + '">' + permission.UserOrGroup;
+            htmlBuilder += '<input type="button" value="Remove" onclick="<? $_GET["NamedPermission"] ?>_removePermission(' + "'" + permission.UserOrGroup + "'" + ');"></div>';
+         });
+
+         htmlBuilder = htmlBuilder + "</p>";
+
+         var permissionsDiv = $("<? $_GET["NamedPermission"] ?>_PermissionsDiv");
+         permissionsDiv.innerHTML = htmlBuilder;
+      }
+
+      function <? $_GET["NamedPermission"] ?>_addPermission()
+      {
+         var addForm = $("<? $_GET["NamedPermission"] ?>_addForm");
+         var userOrGroup = $("<? $_GET["NamedPermission"] ?>_UserOrGroupInput").value;
+
+         addForm.disable();
+
+         <? $_GET["NamedPermission"] ?>_File.SetNamedPermission(
+            userOrGroup,
+            "<? $_GET["NamedPermission"] ?>",
+            true,
+            {},
+            function(result)
+            {
+               <? $_GET["NamedPermission"] ?>_File.GetNamedPermissions(
+                  "<? $_GET["NamedPermission"] ?>",
+                  {},
+                  function(permissions)
+                  {
+                     <? $_GET["NamedPermission"] ?>_Permissions = permissions;
+                     <? $_GET["NamedPermission"] ?>_DisplayPermissions();
+                  });
+
+               addForm.enable();
+            },
+            function(transport)
+            {
+               alert(transport.responseText);
+               addForm.enable();
+            },
+            function(transport)
+            {
+               alert(transport.responseText);
+               addForm.enable();
+            });
+
+         return false;
+      }
+
+   </script>
+
+   <h2>Users, groups, and OpenIds that can <? $_GET["NamedPermission"] ?></h2>
+   <div id="<? $_GET["NamedPermission"] ?>_PermissionsDiv">Loading...</div>
+
+   <h2>Give a user, group, or OpenId permission to <? $_GET["NamedPermission"] ?></h2>
+   <form id="<? $_GET["NamedPermission"] ?>_addForm" onsubmit="return false" >
+      User, Group, or <img src="/Shell/OpenID/login-bg.gif" /> OpenID: <input type="text" id="<? $_GET["NamedPermission"] ?>_UserOrGroupInput" />
+      <input type="submit" value="add" onclick="<? $_GET["NamedPermission"] ?>_addPermission()" />
+   </form>
+
+   <script>
+      <? $_GET["NamedPermission"] ?>_DisplayPermissions();
+   </script>
+

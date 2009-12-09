@@ -1,0 +1,27 @@
+         </div></div>
+         <div class="navbar">
+            <script>
+               var version = <? WebComponent("/Shell/version.json") ?>;
+
+               document.write("ObjectCloud version " + version.Major + "." + version.Minor + ", " + version.State);
+
+               if (version.Release)
+                  document.write(":" + version.Release);
+
+               document.write(" " + version.Joke);
+
+               if (!version.Stable)
+                  document.write(" <em>WARNING!  THIS IS AN UNSTABLE RELEASE</em>");
+
+            </script>
+         </div>
+         <div class="footer">
+            <a href="http://objectcloud.com">
+               <img src="/Pages/powered-by-banner.png" alt="Powered by ObjectCloud" />
+            </a><br />
+            ObjectCloud is copyright 2009, <a href="http://andrewrondeau.com">Andrew Rondeau</a> and is released under an open-source license.  For more information, view <a href="/Docs/license.wchtml">/Docs/license.wchtml</a>
+         </div>
+      </div></div>
+      <div id="browserBar"><? WebComponent("/Shell/Navigation/SocialBar.webcomponent") ?></div>
+   </body>
+</html>

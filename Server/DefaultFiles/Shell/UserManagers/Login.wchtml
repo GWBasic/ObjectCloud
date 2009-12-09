@@ -1,0 +1,10 @@
+<? WebComponent("/Pages/header.webcomponent?Title=Login%20to%20ObjectCloud") ?>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+   <script>
+      // Basically, this is the default page, but we hack it to force displaying login stuff
+      $("Login_Forms").show();
+   </script>
+
+<? WebComponent("/Pages/footer.webcomponent") ?>

@@ -1,0 +1,442 @@
+<div>Particle notification design</div><p>This document contains the design for ObjectCloud's Particle
+notification system.</p>
+<h1 class="western">Overview</h1>
+<p>Every user will have an embedded database to store their
+notifications.  Scaling is handled by each user having their own
+separate database.</p>
+<p>The user object will handle the particle database.  Per the
+existing ObjectCloud design, the user object is:</p>
+<p style="margin-left: 0.49in;">/Users/TheUser.user</p>
+<h1 class="western">TODOs:</h1>
+<p>Notifying a user when another user shares a document with him or
+her is TODO, but part of this design.  (Base WebHandler needs to
+shell instead of directly calling the parent directory's webHandler. 
+Directory WebHandler will override the permission method and send
+notifications.)</p>
+<h1 class="western">Schema</h1>
+<p>Because Objectcloud's embedded databases are SQLite, the schema is
+designed around this database.</p>
+<p>The following tables are used in each user's Particle
+notifications database:</p>
+<ul><li><p><b>Notification</b>:  Stores each notification and its state,
+	except for changeData.  This is because large variable-length
+	strings can cause overhead.</p>
+	</li><li><p><b>ChangeData</b>:  Stores the changeData sent with each
+	notification, if included.</p>
+	</li><li><p><b>Sender</b>:  Stores information about senders.  Includes
+	block status and senderTokens.</p>
+	</li><li><p><b>Token</b>:  Stores information needed to establish trust.</p>
+	</li><li><p><b>Blocked</b>:  Blocked OpenID users and domains.</p>
+	</li><li><p><b>ObjectState</b>:  Stores information about objects through
+	their objectUrls.  Includes information about their ignore and
+	delete status.</p>
+	</li><li><p><b>Deleted</b>:  Stores information about recipients and
+	objects that they have requested not to receive notifications for.</p>
+</li></ul>
+<h2 class="western" style="font-weight: normal;">Notification Table</h2>
+<p>The notification table stores information about each notification
+and its state.</p>
+<p>Columns:</p>
+<ul><li><p class="numbering-1-western"><b>notificationId</b><span style="font-weight: normal;">:
+	 Primary numerical index.  Starts at 0 and automatically increments.</span></p>
+	</li><li><p class="numbering-1-western"><b>timeStamp</b><span style="font-weight: normal;">:
+	 The exact date/time that the row was created.  Not null, and if
+	possible, the schema should automatically create the timeStamp.</span></p>
+	</li><li><p class="numbering-1-western"><b>state</b><span style="font-weight: normal;">:
+	 “r” for read.  Any other value, including null, implies unread.</span></p>
+	</li><li><p class="numbering-1-western"><b>sender</b><span style="font-weight: normal;">:
+	 The notification's sender's OpenId.  Not null.</span></p>
+	</li><li><p class="numbering-1-western"><b>objectUrl</b><span style="font-weight: normal;">:
+	 The URL to the document.  Not null.</span></p>
+	</li><li><p class="numbering-1-western"><b>title</b><span style="font-weight: normal;">:
+	 The title of the document as of when the notification was sent. 
+	Not null.</span></p>
+	</li><li><p class="numbering-1-western"><b>documentType</b><span style="font-weight: normal;">:
+	 The document type.  Not null.</span></p>
+	</li><li><p class="numbering-1-western"><b>messageSummary</b><span style="font-weight: normal;">:
+	 A summary of the notification that will be displayed in the GUI. 
+	Not null.</span></p>
+</li></ul>
+<h2 class="western" style="font-weight: normal;">ChangeData Table</h2>
+<p style="font-weight: normal;">The ChangeData stores the ChangeData
+sent with each notification.  If a notification does not include
+changeData, then no entry is made.</p>
+<p style="font-weight: normal;">Columns:</p>
+<ul><li><p><b>notificationId</b><span style="font-weight: normal;">: 
+	Foreign key to Notification.notificationId.  If possible, the SQLite
+	schema should enable cascading deletes.</span></p>
+	</li><li><p><b>changeData</b><span style="font-weight: normal;">:  The
+	changeData sent with the notification.  Not Null.</span></p>
+</li></ul>
+<h2 class="western" style="font-weight: normal;">Sender Table</h2>
+<p style="font-weight: normal;">The sender table stores sender's
+OpenIDs and senderTokens.</p>
+<p style="font-weight: normal;">Columns:</p>
+<ul><li><p><b>openID</b><span style="font-weight: normal;">:  Sender's
+	OpenID</span></p>
+	</li><li><p><b>senderToken</b><span style="font-weight: normal;">:  The
+	randomly-generated senderToken that is used when the OpenID is the
+	sender and this user is the recipient.  Setting this to null implies
+	that the sender has to re-establish trust.</span></p>
+	</li><li><p><b>recipientToken</b><span style="font-weight: normal;">:  The
+	senderToken that the OpenID generated when it established trust as a
+	recipient.  This is null until trust is established.</span></p>
+</li></ul>
+<h2 class="western" style="font-weight: normal;">Token Table</h2>
+<p style="font-weight: normal;">The sender table stores sender's
+OpenIDs and tokens.  It is used for establishing trust.  Entries
+should be deleted after the senderToken is set.</p>
+<p style="font-weight: normal;">Columns:</p>
+<ul><li><p><b>openID</b><span style="font-weight: normal;">:  Sender's
+	OpenID, not null.</span></p>
+	</li><li><p><b>token</b><span style="font-weight: normal;">:  The
+	randomly-generated token used when establishing trust.  Not null.</span></p>
+	</li><li><p><b>created</b><span style="font-weight: normal;">:  Timestamp
+	when the entry was made.</span></p>
+</li></ul>
+<h2 class="western" style="font-weight: normal;">Blocked Table</h2>
+<p style="font-weight: normal;">Contains blocked OpenIDs and domains</p>
+<p style="font-weight: normal;">Columns:</p>
+<ul><li><p><b>openIDorDomain</b><span style="font-weight: normal;">:  An
+	OpenID or domain.  These are merged together because some OpenIDs
+	are domains.</span></p>
+</li></ul>
+<h2 class="western" style="font-weight: normal;">ObjectState</h2>
+<p style="font-weight: normal;">Stores information about the state of
+an object.  If the object has no entry in this table, then its state
+is unignore.</p>
+<p style="font-weight: normal;">Columns:</p>
+<ul><li><p><b>objectUrl</b><span style="font-weight: normal;">:  The
+	object's URL that is sent with a notification.  Not null.</span></p>
+	</li><li><p><b>objectState</b><span style="font-weight: normal;">:  Either
+	“i” for ignore, “d” for deleted, or “s” for silently
+	deleted.  Not null.</span></p>
+</li></ul>
+<p style="font-weight: normal;">If an object is to be unignored, then
+its entry is removed from the table.</p>
+<h2 class="western" style="font-weight: normal;">Deleted Table</h2>
+<p style="font-weight: normal;">The deleted table stores information
+about objects that recipients have requested not to receive future
+notifications.</p>
+<p style="font-weight: normal;">Columns:</p>
+<ul><li><p><b>objectUrl</b><span style="font-weight: normal;">:  The
+	object's url.  Not null.</span></p>
+	</li><li><p><b>openId</b><span style="font-weight: normal;">:  The OpenID
+	that requested that it no longer receive notifications about the
+	given object.</span></p>
+</li></ul>
+<h1 class="western" style="font-weight: normal;">OpenID Landing page</h1>
+<p style="font-weight: normal;">/Shell/OpenID/OpenIDLandingPage.wchtml
+will need to be updated to include references to the particle
+endpoints.</p>
+<h1 class="western" style="font-weight: normal;">Events and Handling
+them</h1>
+<p style="font-weight: normal;">The server-side Javascript will need
+to handle the following events:</p>
+<ul><li><p style="font-weight: normal;">Object created: Constructs the
+	schema</p>
+	</li><li><p style="font-weight: normal;">Javascript / schema updated:
+	Updates the schema, if needed</p>
+	</li><li><p style="font-weight: normal;">Finding endpoints</p>
+	</li><li><p style="font-weight: normal;">particle.establishTrust</p>
+	</li><li><p style="font-weight: normal;">Establishing Trust</p>
+	</li><li><p style="font-weight: normal;">particle.respondTrust</p>
+	</li><li><p style="font-weight: normal;">particle.receiveNotification</p>
+	</li><li><p style="font-weight: normal;">particle.establishSession</p>
+	</li><li><p style="font-weight: normal;">particle.getNotifications</p>
+	</li><li><p style="font-weight: normal;">particle.sendNotification</p>
+	</li><li><p style="font-weight: normal;">particle.updateNotificationState</p>
+	</li><li><p style="font-weight: normal;">particle.updateObjectState</p>
+	</li><li><p style="font-weight: normal;">particle.block</p>
+	</li><li><p style="font-weight: normal;">particle.unBlock</p>
+	</li><li><p style="margin-bottom: 0in; font-weight: normal;">particle.getBlocked</p>
+</li></ul>
+<h2 class="western" style="font-weight: normal;">Object created,
+Javascript / schema updated</h2>
+<p style="font-weight: normal;">This is implemented using setSchema. 
+The setSchema method handles versioning.</p>
+<h2 class="western" style="font-weight: normal;">Finding Endpoints</h2>
+<p style="font-weight: normal;">The server-side Javascript will hold
+endpoints in RAM instead of the database.  This is to increase speed
+and give a natural way for endpoints to be regularly refreshed. 
+Logic will exist to delete endpoints older then 24 hours.</p>
+<p style="font-weight: normal;">When any of the particle events need
+to use an endpoint, they will call the “GetEndpoints” server-side
+Javascript method.  It takes two arguments:</p>
+<ol><li><p><b>openID</b><span style="font-weight: normal;">:  The OpenID,
+	string.</span></p>
+	</li><li><p><b>forceRefresh</b><span style="font-weight: normal;">: 
+	Optional, a boolean, if set to true, then a refresh is forced.</span></p>
+</li></ol>
+<p style="font-weight: normal;">Internally, the following data
+structure is used:</p>
+<ul><li><p style="font-weight: normal;">Hash object, indexed by OpenID. 
+	For each OpenID:</p>
+	<ul><li><p><b>timestamp</b><span style="font-weight: normal;">:  When
+		the object endpoints were loaded, Javascript datetime stamp.</span></p>
+		</li><li><p><b>openID</b><span style="font-weight: normal;">:  The
+		OpenID, string.</span></p>
+		</li><li><p><b>endpoints</b><span style="font-weight: normal;">: 
+		Javascript hash with the following values</span></p>
+		<ul><li><p><b>establishTrust</b>:  The endpoint for
+			particle.establishTrust</p>
+			</li><li><p><b>callEstablishTrust</b>:  Calls the establishTrust
+			endpoint.</p>
+			</li><li><p><b>respondTrust</b>:  The endpoint for
+			particle.respondTrust</p>
+			</li><li><p><b>callRespondTrust</b>:  Calls the respondTrust endpoint.</p>
+			</li><li><p><b>ect</b>:  All other particle.* links from the OpenID
+			html page</p>
+			</li><li><p><b>call ect</b>:  Calls the other supported particle.*
+			links.</p>
+		</li></ul>
+	</li></ul>
+</li></ul>
+<p>The logic to determine if the endpoints need to be refreshed is:</p>
+<p style="margin-left: 0.49in;">if forceRefresh is present and set to
+true</p>
+<p style="margin-left: 0.98in;">refresh</p>
+<p style="margin-left: 0.49in;">if there are no cached endpoints</p>
+<p style="margin-left: 0.98in;">refresh</p>
+<p style="margin-left: 0.49in;">if there is a cached endpoint and it's
+more then 24 hours old</p>
+<p style="margin-left: 0.98in;">refresh</p>
+<h2 class="western" style="font-weight: normal;">particle.establishTrust</h2>
+<p style="font-weight: normal;">Implemented in the server-side
+Javascript “EstablishTrust” method.</p>
+<ol><li><p style="font-weight: normal;">The senders endpoints are found
+	by calling GetEndpoints for the given OpenID.</p>
+	</li><li><p style="font-weight: normal;">A new senderToken is randomly
+	generated.  It is verified to be unique.</p>
+	</li><li><p style="font-weight: normal;">The particle.respondTrust
+	endpoint is called.  The token value is passed directly without
+	modification, and the newly-generated senderToken is sent as well.</p>
+	</li><li><p style="font-weight: normal;">If respondTrust succeeds, then an
+	entry in the Sender table is either created or updated.</p>
+</li></ol>
+<p>For security reasons, the Sender table should only be updated if
+particle.respondTrust is successful.  This is to prevent malicious
+attacks that would invalidate senderTokens.</p>
+<h2 class="western" style="font-weight: normal;">Establishing Trust /
+Getting a senderToken.</h2>
+<p style="font-weight: normal;">This server-side Javascript method is
+used internally, such as when a notification is sent.  The method is
+named “GetSenderToken”.  It takes two arguments:</p>
+<ol><li value="1"><p><b>openID</b><span style="font-weight: normal;">:  The
+	OpenID, string.</span></p>
+	</li><li><p><b>forceRefresh</b><span style="font-weight: normal;">: 
+	Optional, a boolean, if set to true, then a refresh is forced.</span></p>
+</li></ol>
+<p style="font-weight: normal;">If forceRefresh is missing or false,
+and there is an entry in the Sender table with the given OpenID and
+its recipientToken isn't null, then the recipientToken is returned. 
+Elsewise, the method continues to establish trust with the given
+OpenID.</p>
+<p style="font-weight: normal;">To establish trust:</p>
+<ol><li><p style="font-weight: normal;">An entry is created in the sender
+	table if it is not there.</p>
+	</li><li><p style="font-weight: normal;">A randomly-generated token is
+	made.</p>
+	</li><li><p style="font-weight: normal;">The token is validated to make
+	sure it's unique.</p>
+	</li><li><p style="font-weight: normal;">An entry is made in the Token
+	table.</p>
+	</li><li><p style="font-weight: normal;">GetEndpoints is called to get the
+	endpoints.</p>
+	</li><li><p style="font-weight: normal;">The OpenID's establishTrust
+	endpoint is called.  The token and this user's OpenID are sent.</p>
+	</li><li><p style="font-weight: normal;">If it returns success, then
+	GetSenderToken recurses to re-load the recipientToken.  (It's
+	entered into the database because establishTrust blocks while the
+	new senderToken is sent to respondTrust.)  If failure is returned,
+	then an exception is thrown.</p>
+</li></ol>
+<p style="font-weight: normal;">Notes:</p>
+<p style="font-weight: normal;">Due to the design of establishing
+trust, the senderToken isn't returned by a call to establishTrust. 
+Instead, the recipient verifies that the sender is the OpenID that it
+claims to be by calling respondTrust.</p>
+<h2 class="western" style="font-weight: normal;">particle.respondTrust</h2>
+<p style="font-weight: normal;">When establishing trust with a
+recipient, the recipient calls this endpoint to verify that the
+sender is as claimed.  This is to prevent spoofing.  It is
+implemented in server-side Javascript as “RespondTrust”, and
+takes two arguments:</p>
+<ol><li><p><b>token</b><span style="font-weight: normal;">:  The token
+	that this user sent to the recipient.</span></p>
+	</li><li><p><b>senderToken</b><span style="font-weight: normal;">:  The
+	token that the recipient will use to identify this sender.</span></p>
+</li></ol>
+<p style="font-weight: normal;">The method has the following steps:</p>
+<ol><li><p style="font-weight: normal;">All entries in the Token table
+	that are older then 180 seconds are deleted.</p>
+	</li><li><p style="font-weight: normal;">An attempt is made to find the
+	OpenID from the sent token.  If there is no matching OpenID, then an
+	error is returned.</p>
+	</li><li><p style="font-weight: normal;">The Sender table's recipientToken
+	is updated in the row identified with the loaded OpenID.</p>
+	</li><li><p style="font-weight: normal;">The row from the Token table is
+	deleted.</p>
+</li></ol>
+<h2 class="western" style="font-weight: normal;">particle.receiveNotification</h2>
+<p style="font-weight: normal;">This endpoint is implemented as the
+“receiveNotification” server-side Javascript method.</p>
+<p style="font-weight: normal;">(See the particle notification spec
+for the arguments, no use copying)</p>
+<ol><li><p style="font-weight: normal;">The Sender table is queried to
+	find the OpenID from the senderToken.  If no matching senderToken is
+	found, then an HTTP status 424 (failed dependancy.) and the text
+	“senderToken” are returned.</p>
+	</li><li><p style="font-weight: normal;">The Blocked table is queried for
+	the OpenID.  If it is found, then a 202 is returned and the
+	notification discarded.</p>
+	</li><li><p style="font-weight: normal;">The Blocked table is queried for
+	the OpenID's domain and all parent domains.  If any are found, then
+	a 202 is returned and the notification discarded.</p>
+	</li><li><p style="font-weight: normal;">The ObjectState table is queried
+	for an entry with the objectUrl.</p>
+	</li><li><p style="font-weight: normal;">If the state is deleted, then the
+	450 (Blocked) HTTP status code is returned.  The ignored and silent
+	delete statuses cause a 202 status code to be returned.  (The method
+	returns in these cases and the rest of the steps are ignored.)</p>
+	</li><li><p style="font-weight: normal;">If the notification's objectUrl
+	is for a different server then where the OpenID is hosted, then a
+	406 (Not acceptable) is returned.  The server will also include a
+	message explaining the error.</p>
+	</li><li><p style="font-weight: normal;">The data is then entered into the
+	Notification table.</p>
+	</li><li><p style="font-weight: normal;">If there are blocked calls
+	GetNoficiation, they are unblocked.</p>
+</li></ol>
+<p style="font-weight: normal;">Note:  The senderToken is verified
+before any kind of state about the object is returned.  This is to
+prevent malicious entities from learning about private data.</p>
+<h2 class="western" style="font-weight: normal;">particle.establishSession</h2>
+<p style="font-weight: normal;">This is implemented as a Javascript
+method that shells to ObjectCloud's default login system.</p>
+<h2 class="western" style="font-weight: normal;">particle.getNotifications</h2>
+<p style="font-weight: normal;">This is implemented as a server-side
+Javascript method named getNotifications.  A session must be
+established with a user that has Read permission to this object.  A
+user can let other users read his/her notifcations by granting READ
+access to this object.  The method constructs a dynamic SQL query
+based on the user's arguments.</p>
+<p style="font-weight: normal;">(See the spec's section for this
+endpoint to see the arguments.)</p>
+<ol><li><p style="font-weight: normal;">The query is constructed:</p>
+	<ol><li><p style="font-weight: normal;">By default, the columns selected
+		are: notificationId, timeStamp, state, sender, objectUrl, title,
+		documentType, and messageSummary.  ChangeData is only included if
+		explicitly requested.</p>
+		</li><li><p style="font-weight: normal;">By default, only the
+		Notification table is used in the FROM clause.  If ChangeData is
+		present, then the ChangeData table is joined on the NotificationId.</p>
+		</li><li><p style="font-weight: normal;">The where clause is built using
+		newestNotificationId, oldestNotificationId, objectUrl, and sender.</p>
+		</li><li><p style="font-weight: normal;">The query is ordered by
+		NotificationId in a descending order.</p>
+		</li><li><p style="font-weight: normal;">If maxNotifications is sent,
+		then a “MAX” clause is appended.</p>
+	</li></ol>
+	</li><li><p style="font-weight: normal;">The results are returned.  As the
+	schema matches the standard, no object conversion needs to be made.</p>
+</li></ol>
+<h2 class="western" style="font-weight: normal;">particle.sendNotification</h2>
+<p style="font-weight: normal;">This endpoint requires that the client
+be authenticated and that the client's user has Write access to this
+object.  Typically, this will be the owner, although the owner can
+allow other people to pretend to be him / her by granting Write
+access to this object.  This is implemented as the server-side
+“SendNotification” method.</p>
+<p style="font-weight: normal;">(See the spec's section for this
+endpoint to see the arguments.)</p>
+<p style="font-weight: normal;">The additional optional arguments are
+supported:</p>
+<ul><li><p><b>forceRefreshSenderToken</b><span style="font-weight: normal;">:
+	 Forces a refresh of the senderToken, defaults to false.</span></p>
+	</li><li><p><b>forceRefreshEndpoints</b><span style="font-weight: normal;">:
+	 Forces a refresh of the endpoints, defaults to false.</span></p>
+	</li><li><p><b>maxRetries</b><span style="font-weight: normal;">: 
+	Defaults to 42.</span></p>
+	</li><li><p><b>transportErrorDelay</b><span style="font-weight: normal;">:
+	 The amount of time to wait if there is some kind of a transport
+	error.  Defaults to 1 minute.</span></p>
+</li></ul>
+<p style="font-weight: normal;">The function behaves as follows:</p>
+<ol><li><p style="font-weight: normal;">The Deleted table is checked for
+	the objectUrl and OpenID.  If a row with both are present, then a
+	403 (Forbidden) is returned indicating that the recipient asked not
+	to get any more notifications for this object.</p>
+	</li><li><p style="font-weight: normal;">Return a 202 (Accepted) and run
+	the following asynchronously:</p>
+	</li><li><p style="font-weight: normal;">If maxRetries is less then 0,
+	then the function returns and the notification is lost.</p>
+	</li><li><p style="font-weight: normal;">The passed in OpenID is sent to
+	GetSenderToken to get the senderToken.</p>
+	</li><li><p style="font-weight: normal;">The endpoints are loaded through
+	GetEndpoints</p>
+	</li><li><p style="font-weight: normal;">The destination's
+	receiveNotification endpoint is called.  All of the non-optional
+	arguments sent to SendNotification are passed, except senderToken is
+	used instead of OpenID.</p>
+	</li><li><p style="font-weight: normal;">If there is some kind of an error
+	finding or using the endpoints, then the function waits for the
+	transportErrorDelay and then recurses with forceRefreshEndpoints set
+	to true.  When recursing, maxRetries is decremented.</p>
+	</li><li><p style="font-weight: normal;">If receiveNotification returns a
+	412 and the text “SenderToken”, then the function recurses with
+	forceRefreshSenderToken set to true and maxRetries decremented.</p>
+	</li><li><p style="font-weight: normal;">If receiveNotification returns a
+	450 (Blocked), then an entry is made in the Deleted table.  The
+	client is not informed of this status until the next time it
+	attempts to send a notification to the same OpenID for the same
+	objectUrl.</p>
+</li></ol>
+<h2 class="western" style="font-weight: normal;">particle.updateNotificationState</h2>
+<p style="font-weight: normal;">(See the spec's section for this
+endpoint to see the arguments.)</p>
+<p style="font-weight: normal;">This is implemented as a Javascript
+function called “UpdateNotificationState”.  A session must be
+established where the user has WRITE access.  It uses an update query
+on the Notification table using the passed NotificationId to update
+the state column to r if read, or null if unread.</p>
+<p style="font-weight: normal;">All blocked calls to GetNotifications
+are unblocked.</p>
+<h2 class="western" style="font-weight: normal;">particle.updateObjectState</h2>
+<p style="font-weight: normal;">(See the spec's section for this
+endpoint to see the arguments.)</p>
+<p style="font-weight: normal;">Server-side javascript function named
+“UpdateObjectState”.  A session must be established where the
+user has ADMINISTER access.  An entry in the ObjectState table is
+either created or updated based on the passed-in state.</p>
+<p style="font-weight: normal;">If “delete” or “silentDelete”
+is passed in, then all notifications for the given object are
+deleted.</p>
+<h2 class="western" style="font-weight: normal;">particle.block</h2>
+<p style="font-weight: normal;">(See the spec's section for this
+endpoint to see the arguments.)</p>
+<p style="font-weight: normal;">Implemented as “Block”.  A session
+must be established where the user has ADMINISTER access.</p>
+<p><span style="font-weight: normal;">The toBlock argument is used to
+make an entry in the Blocked table.  OpenIDorDomain is set from
+toBlock.  OpenIDs (<a href="http://fdfsgvdsf/">http://fdfsgvdsf</a>)
+or domains (without http) can be sent.  No input validation is
+performed.</span></p>
+<p style="font-weight: normal;">A 202 (Accepted) error code is
+returned if there are no errors.</p>
+<h2 class="western" style="font-weight: normal;">particle.unBlock</h2>
+<p style="font-weight: normal;">(See the spec's section for this
+endpoint to see the arguments.)</p>
+<p style="font-weight: normal;">Implemented as “UnBlock”.  A
+session must be established where the user has ADMINISTER access.</p>
+<p style="font-weight: normal;">The toUnBlock argument is used to
+remove an entry in the Blocked table where OpenIDorDomain is
+toUnBlock.</p>
+<p style="font-weight: normal;">A 202 (Accepted) error code is
+returned if there are no errors.</p>
+<h2 class="western" style="font-weight: normal;">particle.getBlocked</h2>
+<p style="font-weight: normal;">(No arguments.)</p>
+<p style="font-weight: normal;">Implemented as “GetBlocked”.  A
+session must be established where the user has READ access.</p>
+<p style="font-weight: normal;">All blocked domains and endpoints are
+returned as a single Javascript array with a 200 (OK) success code.</p>

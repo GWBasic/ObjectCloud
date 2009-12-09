@@ -1,0 +1,45 @@
+// Scripts: /Tests/file.testliberalclass?Method=GetJavascriptWrapper&assignToVariable=testObject
+
+var unitTests =
+{
+   testHelloWorld : function(test)
+   {
+      testObject.HelloWorld(
+         {},
+         function(result)
+         {
+            if ("Hello from Javascript!" == result)
+               test.Pass();
+            else
+               test.Fail();
+         },
+         test.FailAJAX);
+   },
+
+   testCanCallBase : function(test)
+   {
+      testObject.WriteAll(
+         "Ooops",
+         test.Pass,
+         test.FailAJAX);
+   },
+
+   testCallBase : function(test)
+   {
+      testObject.SetAnonymousPermission(
+         "Read",
+         {},
+         function(result)
+         {
+            testObject.SetAnonymousPermission(
+               null,
+               {},
+               function(result)
+               {
+                  test.Pass();
+               },
+               test.FailAJAX);
+         },
+         test.FailAJAX);
+   }
+};

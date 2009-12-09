@@ -1,0 +1,113 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+   <head>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+      <? Scripts(/API/Prototype.js, <? $_GET["FileName"] ?>?Method=GetJavascriptWrapper&assignToVariable=Database) ?>
+      <title>Whisquil: <? $_GET["FileName"] ?></title>
+      <link href="/Pages/objectcloud.css" type="text/css" rel="stylesheet" />
+   </head>
+   <script>
+
+      function runQuery()
+      {
+         var query = $("query").value;
+
+         Database.PostQuery(query, {}, handleSuccessfulQuery, null, null, null, "&CallingFrom=Local");
+      }
+
+      function handleSuccessfulQuery(result)
+      {
+         var resultsElement = $("results");
+
+         if (!Object.isArray(result))
+         {
+            results.innerHTML = result + " ";
+            return;
+         }
+
+         var tableString = "";
+
+         result.each(function(subResult)
+         {
+            // If the subresult is an array, create a table
+            if (Object.isArray(subResult))
+            {
+               // Get all of the column names
+               var columnNames = {};
+               subResult.each(function(row, index)
+               {
+                  for (colName in row)
+                  {
+                     columnNames[colName] = "";
+                  }
+               });
+
+               // Create the top of the table
+               tableString = tableString + "<table><tr><th></th>";
+               for (colName in columnNames)
+               {
+                  tableString = tableString + "<th>" + colName + "</th>";
+               }
+               tableString = tableString + "</tr>";
+
+               // Write each row
+               var rowCtr = 0;
+
+               subResult.each(function(row)
+               {
+                  tableString = tableString + "<tr><td>" + rowCtr + "</td>";
+
+                  for (colName in columnNames)
+                  {
+                     tableString = tableString + "<td>" + row[colName] + "</th>";
+                  }
+
+                  tableString = tableString + "</tr>";
+
+                  rowCtr++;
+               });
+
+               tableString = tableString + "</table>";
+            }
+            else
+               tableString = tableString + Object.toJSON(subResult) + "<hr />";
+         });
+
+         resultsElement.innerHTML = tableString;
+      }
+
+      function setVersion()
+      {
+         var version = $("versionInput").value;
+
+         if ("" == version)
+            version = null;
+
+         Database.SetVersion(
+            version,
+            {},
+            function()
+            {
+               alert("updated");
+            });
+      }
+
+   </script>
+   <body>
+      Schema version: <input type="text" id="versionInput" value="<? WebComponent($_GET["FileName"] . "?Method=GetVersion&CallingFrom=Local") ?>"/>
+      <input type="button" value="update" onclick="setVersion()" /> 
+      <form>
+         <textarea name="query" id="query" style="width: 100%">select * from sqlite_master</textarea>
+         <input type="button" value="Run Query" onclick="runQuery()" ></input> <br />
+      </form>
+
+      <div id="results" />
+
+      <script>
+         runQuery();
+      </script>
+   </body>
+</html>

@@ -1,0 +1,159 @@
+<? WebComponent("/Pages/header.webcomponent?Title=Permissions%20For%20" .$_GETENCODE["FileName"]) ?>
+   <? Scripts(/API/Prototype.js) ?>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+   <script>
+      var Permissions = <? WebComponent($_GET["FileName"] . "?Method=GetPermissions") ?>;
+      var File = <? WebComponent($_GET["FileName"] . "?Method=GetJavascriptWrapper") ?>;
+
+      function UpdatePermission(userOrGroupId)
+      {
+         var permissionForm = $(userOrGroupId);
+
+         permissionForm.disable(permissionForm);
+
+         var permissionElement = $('FilePermission_' + userOrGroupId);
+         var permission = permissionElement.value;
+
+         var inheritElement = $('Inherit_' + userOrGroupId);
+         var inherit = inheritElement.checked;
+
+         var sendNotificationsElement = $('SendNotifications_' + userOrGroupId);
+         var sendNotifications = sendNotificationsElement.checked;
+
+         File.SetPermission(
+            userOrGroupId,
+            null,
+            permission,
+            inherit,
+            sendNotifications,
+            {},
+            function(transport)
+            {
+               permissionForm.enable(permissionForm);
+
+               if ("" == permission)
+                  permissionForm.remove();
+            });
+      }
+
+      function DisplayPermissions()
+      {
+         var htmlBuilder = "<p>";
+
+         Permissions.each(function(permission, i)
+         {
+            htmlBuilder = htmlBuilder + '<form id="' + permission.Id + '">' + permission.Name + ': ' + '<select id="FilePermission_' + permission.Id + '" ';
+            htmlBuilder = htmlBuilder + 'onchange="UpdatePermission(' + "'" + permission.Id + "'" + ')" >';
+                  
+            htmlBuilder = htmlBuilder + '<option value=""';
+            if ("Read" == permission.Permission)
+               htmlBuilder = htmlBuilder + ' selected';
+            htmlBuilder = htmlBuilder + ' >(Remove)</option>';
+                  
+            htmlBuilder = htmlBuilder + '<option value="Read"';
+            if ("Read" == permission.Permission)
+               htmlBuilder = htmlBuilder + ' selected';
+            htmlBuilder = htmlBuilder + ' >Read</option>';
+
+            htmlBuilder = htmlBuilder + '<option value="Write"';
+            if ("Write" == permission.Permission)
+               htmlBuilder = htmlBuilder + ' selected';
+            htmlBuilder = htmlBuilder + ' >Write</option>';
+
+            htmlBuilder = htmlBuilder + '<option value="Administer"';
+            if ("Administer" ==  permission.Permission)
+               htmlBuilder = htmlBuilder + ' selected';
+            htmlBuilder = htmlBuilder + ' >Administer</option>';
+
+            htmlBuilder = htmlBuilder + '</select>';
+
+            htmlBuilder = htmlBuilder + ' Inherit: <input type="checkbox" id="Inherit_' + permission.Id + '" ';
+            if (permission.Inherit)
+               htmlBuilder = htmlBuilder + 'checked="true" ';
+            htmlBuilder = htmlBuilder + '" onclick="UpdatePermission(' + "'" + permission.Id + "'" + ')" />';
+
+            htmlBuilder = htmlBuilder + ' Send Notifications: <input type="checkbox" id="SendNotifications_' + permission.Id + '" ';
+            if (permission.SendNotifications)
+               htmlBuilder = htmlBuilder + 'checked="true" ';
+            htmlBuilder = htmlBuilder + '" onclick="UpdatePermission(' + "'" + permission.Id + "'" + ')" />';
+
+            htmlBuilder = htmlBuilder + '</form>';
+         });
+
+         htmlBuilder = htmlBuilder + "</p>";
+
+         var permissionsDiv = $("PermissionsDiv");
+         permissionsDiv.innerHTML = htmlBuilder;
+      }
+
+      function addPermission()
+      {
+         var addForm = $("addForm");
+         var userOrGroup = $("UserOrGroupInput").value;
+         var filePermission = $("FilePermissionInput").value;
+         var inherit = true;
+         var sendNotifications = true == $("SendNotificationsInput").checked;
+
+         addForm.disable();
+
+         File.SetPermission(
+            null,
+            userOrGroup,
+            filePermission,
+            inherit,
+            sendNotifications,
+            {},
+            function(result)
+            {
+               File.GetPermissions(
+                  {},
+                  function(permissions)
+                  {
+                     Permissions = permissions;
+                     DisplayPermissions();
+                  });
+
+               alert(result);
+               $("UserOrGroupInput").value = "";
+
+               addForm.enable();
+            },
+            function(transport)
+            {
+               alert(transport.responseText);
+               addForm.enable();
+            },
+            function(transport)
+            {
+               alert(transport.responseText);
+               addForm.enable();
+            });
+
+         return false;
+      }
+
+   </script>
+
+   <h1>Permissions for <? $_GET["FileName"] ?></h1>
+   <div id="PermissionsDiv">Loading...</div>
+
+   <h1>Add a Permission</h1>
+   <form id="addForm" onsubmit="return false" >
+      User, Group, or <img src="/Shell/OpenID/login-bg.gif" /> OpenID: <input type="text" name="UserOrGroup" id="UserOrGroupInput" />
+      Level: <select name="FilePermission" id="FilePermissionInput" >
+         <option value="Read">Read</option>
+         <option value="Write">Write</option>
+         <option value="Administer">Administer</option>
+      </select>
+      Send Notifications: <input type="checkbox" name="SendNotifications" checked="true" id="SendNotificationsInput" />
+      <input type="submit" value="add" onclick="addPermission()" />
+   </form>
+
+   <? WebComponent("/Shell/Security/PermissionInstructions.webcomponent") ?>
+
+   <script>
+      DisplayPermissions();
+   </script>
+<? WebComponent("/Pages/footer.webcomponent") ?>

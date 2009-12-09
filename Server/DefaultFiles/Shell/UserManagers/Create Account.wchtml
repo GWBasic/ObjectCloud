@@ -1,0 +1,41 @@
+<? WebComponent("/Pages/header.webcomponent?Title=Create%20An%20Account") ?>
+<? Scripts(/API/Prototype.js, /Users/UserDB?Method=GetJavascriptWrapper&assignToVariable=UserDB) ?>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+   <script>
+      function createaccount()
+      {
+         var username = $("usernameInput").value;
+         var password = $("passwordInput").value;
+
+         UserDB.CreateUser(
+            username,
+            password,
+            {
+               assignSession: true
+            },
+            function(result)
+            {
+               alert(result);
+               window.location.reload(true);
+            });
+      }
+   </script>
+   <div id="generalpublic">
+      Username: <input type="text" name="username" id="usernameInput" /><br />
+      Password: <input type="password" name="password" id="passwordInput" /><br />
+      <input type="hidden" name="assignSession" value="true" />
+      <input type="submit" value="create account" onclick="createaccount()" />
+      <p>Note:  In order for the general public to be able to create an account, the "everyone" group must have Read access to this page, and Write access to /Users/UserDB.</p>
+   </div>
+   <script>
+      var userDBpermissions = <? WebComponent("/Users/UserDB?Method=GetPermissionAsJSON") ?>;
+
+      if (!userDBpermissions.CanWrite)
+      {
+         $("generalpublic").hide();
+         document.write("You do not have permission to create an account.  Please contact the system administrator to get access");
+      }
+   </script>
+<? WebComponent("/Pages/footer.webcomponent") ?>

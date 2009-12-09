@@ -1,0 +1,170 @@
+// Scripts: /System/Proxy?Method=GetServersideJavascriptWrapper&assignToVariable=Proxy
+
+HelloWorld.webCallable = "GET";
+function HelloWorld()
+{
+   return "Hello from Javascript!";
+}
+
+EchoWorld.webCallable = "GET_application_x_www_form_urlencoded";
+function EchoWorld(toEcho)
+{
+   return toEcho;
+}
+
+Divide.webCallable = "GET_application_x_www_form_urlencoded";
+Divide.parser_toDivide = "number";
+function Divide(toDivide)
+{
+   return (toDivide + 1) / 2;
+}
+
+TestBool.webCallable = "GET_application_x_www_form_urlencoded";
+TestBool.parser_boolValue = "bool";
+function TestBool(boolValue)
+{
+   if (boolValue)
+      return "Argument was true";
+   else
+      return "Argument was false";
+}
+
+GenerateWebResults.webCallable = "GET_application_x_www_form_urlencoded";
+function GenerateWebResults(status, message)
+{
+   return generateWebResult(status, message);
+}
+
+PostWorld.webCallable = "POST_application_x_www_form_urlencoded";
+function PostWorld(toEcho)
+{
+   return toEcho;
+}
+
+PostString.webCallable = "POST_string";
+function PostString(everything)
+{
+   return everything;
+}
+
+PostJSON.webCallable = "POST_application_x_www_form_urlencoded";
+PostJSON.parser_jsonObj = "JSON";
+function PostJSON(jsonObj)
+{
+   return jsonObj.A + " " + jsonObj.B;
+}
+
+ReturnJSON.webCallable = "GET";
+ReturnJSON.webReturnConvention = "JSON";
+function ReturnJSON()
+{
+   var toReturn =
+   {
+      A: 123,
+      B: false
+   };
+
+   return toReturn;
+}
+
+ShellGet.webCallable = "GET";
+ShellGet.webReturnConvention = "JSON";
+function ShellGet()
+{
+   return Shell_GET(
+      "/",
+      "IsFilePresent",
+      {
+         FileName: "API"
+      });
+}
+
+ShellPost_urlencoded.webCallable = "GET";
+ShellPost_urlencoded.webReturnConvention = "JSON";
+function ShellPost_urlencoded()
+{
+   return Shell_POST_urlencoded(
+      "/Tests/file.testclass",
+      "ShellPost_urlencoded_TARGET",
+      {
+         XXX: "API",
+         YYY: 567
+      });
+}
+
+ShellPost_urlencoded_TARGET.webCallable = "POST_application_x_www_form_urlencoded";
+ShellPost_urlencoded_TARGET.parser_YYY = "number";
+function ShellPost_urlencoded_TARGET(XXX, YYY)
+{
+   if ("API" == XXX)
+      if (567 == YYY)
+         return true;
+
+   return false;
+}
+
+ShellPost.webCallable = "GET";
+function ShellPost()
+{
+   return Shell_POST(
+      "/Tests/file.testclass",
+      "ShellPost_TARGET",
+      "???????").Content;
+}
+
+ShellPost_TARGET.webCallable = "POST_string";
+ShellPost_TARGET.minimumWebPermission = "Read";
+function ShellPost_TARGET(theArg)
+{
+   return theArg + "transmitted";
+}
+
+ReadAll.webCallable = "GET";
+function ReadAll()
+{
+   return base.ReadAll() + "wrapped";
+}
+
+WriteAll.webCallable = "POST_string";
+function WriteAll(toWrite)
+{
+   return base.WriteAll("wrapped" + toWrite);
+}
+
+SetAnonymousPermission.webCallable = "POST_application_x_www_form_urlencoded";
+function SetAnonymousPermission(permission)
+{
+   return base.SetPermission(null, "anonymous", permission);
+}
+
+TestWROE.webCallable = "GET";
+function TestWROE()
+{
+   throwWebResultOverrideException(404, "WROE");
+}
+
+TestElevateSanity.webCallable = "GET";
+function TestElevateSanity()
+{
+   elevate(function() {} );
+}
+
+TestElevateProxyGet.webCallable = "GET";
+function TestElevateProxyGet()
+{
+   return elevate(function()
+   {
+      return Proxy.GET("http://slashdot.org", {}).Content;
+   });
+}
+
+TestElevateProxyPost.webCallable = "GET";
+function TestElevateProxyPost()
+{
+   return elevate(function()
+   {
+      return Proxy.POST_urlencoded(
+         "http://" + hostMetadata.host + "/Tests/file.testclass?Method=ShellPost_TARGET",
+         {theArg: "frompost"}).Content;
+   });
+}

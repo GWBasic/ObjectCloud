@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<!--
+// Copyright 2009 Andrew Rondeau
+// This code is released under the LGPL license
+// For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
+
+-->
+
+<objects xmlns="http://www.springframework.net" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://www.springframework.net http://www.springframework.net/xsd/spring-objects-1.1.xsd">
+
+  <object id="EmbeddedDatabaseConnector" type="ObjectCloud.ORM.DataAccess.SQLite.PHX_SQLiteDatabaseConnector, ObjectCloud.ORM.DataAccess.SQLite" />
+
+  <!-- Bind data access to SQLite, this sets up all data-bound file types to use SQLite as their embedded DB -->
+
+  <object id="DirectoryDataAccessLocator" type="ObjectCloud.DataAccess.Directory.DataAccessLocator, ObjectCloud.DataAccess">
+    <property name="DatabaseCreator">
+      <object type="ObjectCloud.DataAccess.SQLite.Directory.EmbeddedDatabaseCreator, ObjectCloud.DataAccess.SQLite" id="Directory.EmbeddedDatabaseCreator">
+        <property name="EmbeddedDatabaseConnector" ref="EmbeddedDatabaseConnector" />
+      </object>
+    </property>
+    <property name="DatabaseConnectorFactory">
+      <object type="ObjectCloud.DataAccess.SQLite.Directory.DatabaseConnectorFactory, ObjectCloud.DataAccess.SQLite" id="Directory.DatabaseConnectorFactory">
+        <property name="EmbeddedDatabaseConnector" ref="EmbeddedDatabaseConnector" />
+      </object>
+    </property>
+  </object>
+
+  <object id="NameValuePairsDataAccessLocator" type="ObjectCloud.DataAccess.NameValuePairs.DataAccessLocator, ObjectCloud.DataAccess">
+    <property name="DatabaseCreator">
+      <object type="ObjectCloud.DataAccess.SQLite.NameValuePairs.EmbeddedDatabaseCreator, ObjectCloud.DataAccess.SQLite" id="NameValuePairs.EmbeddedDatabaseCreator">
+        <property name="EmbeddedDatabaseConnector" ref="EmbeddedDatabaseConnector" />
+      </object>
+    </property>
+    <property name="DatabaseConnectorFactory">
+      <object type="ObjectCloud.DataAccess.SQLite.NameValuePairs.DatabaseConnectorFactory, ObjectCloud.DataAccess.SQLite" id="NameValuePairs.DatabaseConnectorFactory">
+        <property name="EmbeddedDatabaseConnector" ref="EmbeddedDatabaseConnector" />
+      </object>
+    </property>
+  </object>
+
+  <object id="UserManagerDataAccessLocator" type="ObjectCloud.DataAccess.UserManager.DataAccessLocator, ObjectCloud.DataAccess">
+    <property name="DatabaseCreator">
+      <object type="ObjectCloud.DataAccess.SQLite.UserManager.EmbeddedDatabaseCreator, ObjectCloud.DataAccess.SQLite" id="UserManager.EmbeddedDatabaseCreator">
+        <property name="EmbeddedDatabaseConnector" ref="EmbeddedDatabaseConnector" />
+      </object>
+    </property>
+    <property name="DatabaseConnectorFactory">
+      <object type="ObjectCloud.DataAccess.SQLite.UserManager.DatabaseConnectorFactory, ObjectCloud.DataAccess.SQLite" id="UserManager.DatabaseConnectorFactory">
+        <property name="EmbeddedDatabaseConnector" ref="EmbeddedDatabaseConnector" />
+      </object>
+    </property>
+  </object>
+
+  <object id="SessionManagerDataAccessLocator" type="ObjectCloud.DataAccess.SessionManager.DataAccessLocator, ObjectCloud.DataAccess">
+    <property name="DatabaseCreator">
+      <object type="ObjectCloud.DataAccess.SQLite.SessionManager.EmbeddedDatabaseCreator, ObjectCloud.DataAccess.SQLite" id="SessionManager.EmbeddedDatabaseCreator">
+        <property name="EmbeddedDatabaseConnector" ref="EmbeddedDatabaseConnector" />
+      </object>
+    </property>
+    <property name="DatabaseConnectorFactory">
+      <object type="ObjectCloud.DataAccess.SQLite.SessionManager.DatabaseConnectorFactory, ObjectCloud.DataAccess.SQLite" id="SessionManager.DatabaseConnectorFactory">
+        <property name="EmbeddedDatabaseConnector" ref="EmbeddedDatabaseConnector" />
+      </object>
+    </property>
+  </object>
+
+  <object id="UserDataAccessLocator" type="ObjectCloud.DataAccess.User.DataAccessLocator, ObjectCloud.DataAccess">
+    <property name="DatabaseCreator">
+      <object type="ObjectCloud.DataAccess.SQLite.User.EmbeddedDatabaseCreator, ObjectCloud.DataAccess.SQLite" id="User.EmbeddedDatabaseCreator">
+        <property name="EmbeddedDatabaseConnector" ref="EmbeddedDatabaseConnector" />
+      </object>
+    </property>
+    <property name="DatabaseConnectorFactory">
+      <object type="ObjectCloud.DataAccess.SQLite.User.DatabaseConnectorFactory, ObjectCloud.DataAccess.SQLite" id="User.DatabaseConnectorFactory">
+        <property name="EmbeddedDatabaseConnector" ref="EmbeddedDatabaseConnector" />
+      </object>
+    </property>
+  </object>
+
+  <object id="LogDataAccessLocator" type="ObjectCloud.DataAccess.Log.DataAccessLocator, ObjectCloud.DataAccess">
+    <property name="DatabaseCreator">
+      <object type="ObjectCloud.DataAccess.SQLite.Log.EmbeddedDatabaseCreator, ObjectCloud.DataAccess.SQLite" id="Log.EmbeddedDatabaseCreator">
+        <property name="EmbeddedDatabaseConnector" ref="EmbeddedDatabaseConnector" />
+      </object>
+    </property>
+    <property name="DatabaseConnectorFactory">
+      <object type="ObjectCloud.DataAccess.SQLite.Log.DatabaseConnectorFactory, ObjectCloud.DataAccess.SQLite" id="Log.DatabaseConnectorFactory">
+        <property name="EmbeddedDatabaseConnector" ref="EmbeddedDatabaseConnector" />
+      </object>
+    </property>
+  </object>
+
+</objects>

@@ -1,0 +1,145 @@
+<? WebComponent("/Pages/header.webcomponent?Title=Unit%20Tests%20From%20" . $_GETENCODE["FileName"]) ?>
+      <? Scripts(/API/Prototype.js, <? $_GET["FileName"] ?>?Method=ReadAll ) ?>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+      <input type="button" value="Run All Tests" onclick="startRunAllTests()" />
+
+      <script>
+         function createTestToken(testname)
+         {
+            var toReturn =
+            {
+               resultsTag : $("results_" + testname),
+
+               traceContents : "",
+
+               /**
+                * Writes a message to the console
+                *
+                * @param message The message to display
+                */
+               Trace : function(message)
+               {
+                  toReturn.traceContents = toReturn.traceContents + message;
+                  toReturn.resultsTag.innerHTML = toReturn.traceContents;
+               },
+
+               /**
+                * Indicates that the test failed
+                *
+                * @param message The message to display.  This is optional
+                */
+               Fail : function(message)
+               {
+                  toReturn._SetStatus("Fail", message);
+               },
+
+               /**
+                * Helper function to indicate that a test failed on an AJAX error callback
+                *
+                * @param transport The AJAX transport object
+                */
+               FailAJAX : function(transport)
+               {
+                  if (transport.responseText)
+                     toReturn.Fail(transport.responseText);
+                  else
+                     toReturn.Fail(transport);
+               },
+
+               /**
+                * Indicates that the test passed.  If this function is not called, then the test is considered to be of an unknown status
+                *
+                * @param message The message to display.  This is optional
+                */
+               Pass : function(message)
+               {
+                  toReturn._SetStatus("Pass", message);
+               },
+
+               /**
+                * Helper function to indicate that a test passed on an AJAX success callback
+                *
+                * @param transport The AJAX transport object
+                */
+               PassAJAX : function(transport)
+               {
+                  toReturn.Pass(transport.responseText);
+               },
+
+               /**
+                * Helper function to set the status of a test
+                *
+                * @param status The status
+                * @param message The message to display.  This is optional
+                */
+               _SetStatus : function(status, message)
+               {
+                  var innerHTML = status;
+
+                  if (message)
+                     innerHTML = innerHTML + ": " + message;
+
+                  toReturn.resultsTag.innerHTML = innerHTML + "<br />" + toReturn.traceContents;
+               }
+            };
+
+            return toReturn;
+         }
+
+         function runTests()
+         {
+            for (name in unitTests)
+               if (0 == name.indexOf("test"))
+                  runTest(name);
+         }
+
+         function runTest(name)
+         {
+            var testToken = createTestToken(name);
+            testToken.resultsTag.innerHTML = "Running...";
+
+            try
+            {
+               unitTests[name](testToken);
+            }
+            catch (exception)
+            {
+               testToken.Fail(exception);
+            }
+         }
+
+         function runTestWithSetup(name)
+         {
+            var runTheTest = function()
+            {
+               runTest(name);
+            };
+
+            if (unitTests.setUp)
+               unitTests.setUp(runTheTest);
+            else
+               runTheTest();
+         }
+
+         for (name in unitTests)
+         {
+            if (0 == name.indexOf("test"))
+            {
+               document.write("<h1>" + name + "...</h1>");
+               document.write('<input type="button" value="Run" onclick="runTestWithSetup(\'' + name + '\')" />');
+               document.write('<div id="results_' + name + '">&nbsp;</div>');
+            }
+         }
+
+         function startRunAllTests()
+         {
+            if (unitTests.setUp)
+               unitTests.setUp(runTests);
+            else
+               runTests();
+         }
+
+     </script>
+<? WebComponent("/Pages/footer.webcomponent") ?>

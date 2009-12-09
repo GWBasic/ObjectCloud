@@ -1,0 +1,685 @@
+// Copyright 2009 Andrew Rondeau
+// This code is released under the LGPL license
+// For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
+
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Text;
+
+using Common.Logging;
+using ExtremeSwank.OpenId;
+
+using ObjectCloud.Common;
+using ObjectCloud.Interfaces.Disk;
+using ObjectCloud.Interfaces.Security;
+using ObjectCloud.Interfaces.WebServer;
+
+namespace ObjectCloud.Disk.WebHandlers
+{
+    /// <summary>
+    /// Web wrapper for the user database
+    /// </summary>
+    public class UserManagerWebHandler : DatabaseWebHandler<IUserManagerHandler, UserManagerWebHandler>
+    {
+		private static ILog log = LogManager.GetLogger(typeof(UserManagerWebHandler));
+		
+        /// <summary>
+        /// Logs in
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="username"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status)]
+        public IWebResults Login(IWebConnection webConnection, string username, string password)
+        {
+            try
+            {
+                IUser user = FileHandler.GetUser(username, password);
+                webConnection.Session.User = user;
+
+                // success
+                return WebResults.FromString(Status._202_Accepted, user.Name + " logged in");
+            }
+            catch (WrongPasswordException)
+            {
+                return WebResults.FromString(Status._401_Unauthorized, "Bad Password");
+            }
+            catch (UnknownUser)
+            {
+                return WebResults.FromString(Status._404_Not_Found, "Unknown user");
+            }
+        }
+
+        /// <summary>
+        /// Logs out
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status)]
+        public IWebResults Logout(IWebConnection webConnection)
+        {
+            FileHandlerFactoryLocator.SessionManagerHandler.EndSession(webConnection.Session.SessionId);
+            webConnection.Session = FileHandlerFactoryLocator.SessionManagerHandler.CreateSession();
+
+            return WebResults.FromString(Status._202_Accepted, "logged out");
+        }
+
+        /// <summary>
+        /// Creates the user
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="username"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Primitive, FilePermissionEnum.Write)]
+        public IWebResults CreateUser(IWebConnection webConnection, string username, string password)
+        {
+			bool assignSession = false;
+			if (webConnection.PostParameters.ContainsKey("assignSession"))
+				bool.TryParse(webConnection.PostParameters["assignSession"], out assignSession);
+
+            try
+            {
+                IUser user = FileHandler.CreateUser(username, password);
+				
+				if (assignSession)
+                	webConnection.Session.User = user;
+
+                return WebResults.FromString(Status._201_Created, user.Name + " created");
+            }
+            catch (UserAlreadyExistsException)
+            {
+                return WebResults.FromString(Status._409_Conflict, "Duplicate user");
+            }
+        }
+
+        /// <summary>
+        /// Creates the group
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="groupname"></param>
+        /// <param name="username"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Write)]
+        public IWebResults CreateGroup(IWebConnection webConnection, string groupname, string username)
+        {
+            if (webConnection.Session.User == FileHandlerFactoryLocator.UserFactory.AnonymousUser)
+                throw new WebResultsOverrideException(WebResults.FromString(Status._403_Forbidden, "You must be logged in to create a group"));
+
+            try
+            {
+                IUser user = webConnection.Session.User; ;
+				
+				// Allow users with administrative privilages to create groups owned by other people
+				if (null != username)
+                    if (username.Length > 0)
+                    {
+                        if (FilePermissionEnum.Administer == FileHandler.FileContainer.LoadPermission(
+                            webConnection.Session.User.Id))
+                            user = FileHandler.GetUser(username);
+                        else
+                            return WebResults.FromString(Status._401_Unauthorized, "You do not have permission to create groups owned by other people");
+                    }
+				
+				IGroup group = FileHandler.CreateGroup(groupname, user.Id);
+
+                return WebResults.FromString(Status._201_Created, group.Name + " created");
+            }
+            catch (UserAlreadyExistsException)
+            {
+                return WebResults.FromString(Status._409_Conflict, "Duplicate group");
+            }
+        }
+		
+        /// <summary>
+        /// Deletes the group
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="groupname"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Write)]
+        public IWebResults DeleteGroup(IWebConnection webConnection, string groupname)
+        {
+            try
+            {
+				IUserOrGroup groupObj = FileHandler.GetUserOrGroupOrOpenId(groupname);
+				
+				if (!(groupObj is IGroup))
+					return WebResults.FromString(Status._400_Bad_Request, groupname + " is not a group");
+				
+				IGroup group = (IGroup)groupObj;
+				
+				// Determine if the user has permission to delete this group
+				// The user must either own the group, or have administrative privilages in order to delete a group
+				bool userHasPermission = false;
+				
+				if (group.OwnerId == webConnection.Session.User.Id)
+					userHasPermission = true;
+				else if (FilePermissionEnum.Administer == FileHandler.FileContainer.LoadPermission(webConnection.Session.User.Id))
+					userHasPermission = true;
+				
+				if (!userHasPermission)
+					return WebResults.FromString(Status._401_Unauthorized, "You do not have permission to delete this group");
+				
+				FileHandler.DeleteGroup(group.Name);
+				
+				return WebResults.FromString(Status._200_OK, group.Name + " deleted");
+	        }
+            catch (UnknownUser)
+            {
+				return WebResults.FromString(Status._400_Bad_Request, groupname + " does not exist");
+            }
+        }
+
+        /// <summary>
+        /// Returns the group. Either groupname OR groupid must be specified
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="groupname"></param>
+        /// <param name="groupid"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JSON, FilePermissionEnum.Administer)]
+        public IWebResults GetGroup(IWebConnection webConnection, string groupname, string groupid)
+		{
+			IGroup group = GetGroupInt(webConnection, groupname, groupid);
+				
+			// Determine if the user has permission to delete this group
+			// The user must either own the group, or have administrative privilages in order to delete a group
+			bool userHasPermission = false;
+			
+			if (group.OwnerId == webConnection.Session.User.Id)
+				userHasPermission = true;
+			else if (FileHandler.FileContainer.LoadPermission(webConnection.Session.User.Id) >= FilePermissionEnum.Read)
+				userHasPermission = true;
+			
+			if (!userHasPermission)
+				return WebResults.FromString(Status._401_Unauthorized, "You do not have permission to view this group");
+			
+			return WebResults.ToJson(CreateJSONDictionary(group));
+		}
+
+		/// <summary>
+		/// Gets the group specified in the web connection 
+		/// </summary>
+		/// <param name="webConnection">
+		/// A <see cref="IWebConnection"/>
+		/// </param>
+		/// <returns>
+		/// A <see cref="IGroup"/>
+		/// </returns>
+        /// <param name="groupid"></param>
+        /// <param name="groupname"></param>
+		private IGroup GetGroupInt(IWebConnection webConnection, string groupname, string groupid)
+		{
+            if (null != groupname)
+                return FileHandler.GetGroup(groupname);
+            else if (null != groupid)
+            {
+                ID<IUserOrGroup, Guid> groupId = new ID<IUserOrGroup, Guid>(new Guid(groupid));
+                return FileHandler.GetGroup(groupId);
+            }
+            else
+                throw new WebResultsOverrideException(
+                    WebResults.FromString(Status._400_Bad_Request, "groupname or groupid must be provided"));
+		}
+		
+		/// <summary>
+		/// Gets the user specified in the web connection 
+		/// </summary>
+		/// <param name="webConnection">
+		/// A <see cref="IWebConnection"/>
+		/// </param>
+		/// <returns>
+		/// A <see cref="IUser"/>
+		/// </returns>
+        /// <param name="userid"></param>
+        /// <param name="username"></param>
+		private IUser GetUser(IWebConnection webConnection, string username, string userid)
+		{
+			if (null != username)
+				return FileHandler.GetUser(username);
+			else if (null != userid)
+			{
+				ID<IUserOrGroup, Guid> userId = new ID<IUserOrGroup, Guid>(new Guid(userid));
+				return FileHandler.GetUser(userId);
+			}
+            else
+                throw new WebResultsOverrideException(
+                    WebResults.FromString(Status._400_Bad_Request, "username or userid missing"));
+        }
+
+        /// <summary>
+        /// Returns the user name of the currently-logged in user.  This is preferable to querying the user's object due
+        /// to OpenID issues
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.GET, WebReturnConvention.Primitive, FilePermissionEnum.Read)]
+        public IWebResults GetUsername(IWebConnection webConnection)
+        {
+            return WebResults.FromString(Status._200_OK, webConnection.Session.User.Name);
+        }
+
+        /// <summary>
+        /// Returns the user open id of the currently-logged in user.
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.GET, WebReturnConvention.Primitive, FilePermissionEnum.Read)]
+        public IWebResults GetIdentity(IWebConnection webConnection)
+        {
+            return WebResults.FromString(Status._200_OK, webConnection.Session.User.Identity);
+        }
+
+        /// <summary>
+        /// Adds the user to the group.  Either groupname or groupid must be specified, OR, username or userid must be specified
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="groupname"></param>
+        /// <param name="groupid"></param>
+        /// <param name="username"></param>
+        /// <param name="userid"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Administer)]
+        public IWebResults AddUserToGroup(IWebConnection webConnection, string groupname, string groupid, string username, string userid)
+        {
+            IGroup group = GetGroupInt(webConnection, groupname, groupid);
+			IUser user = GetUser(webConnection, username, userid);
+			
+			// Determine if the user has permission to administer this group
+			// The user must either own the group, or have administrative privilages in order to delete a group
+			bool userHasPermission = false;
+			
+			if (group.OwnerId == webConnection.Session.User.Id)
+				userHasPermission = true;
+			else if (FilePermissionEnum.Administer == FileHandler.FileContainer.LoadPermission(webConnection.Session.User.Id))
+				userHasPermission = true;
+			
+			if (!userHasPermission)
+				return WebResults.FromString(Status._401_Unauthorized, "You do not have permission to add users to this group");
+
+			FileHandler.AddUserToGroup(user.Id, group.Id);
+			
+			return WebResults.FromString(Status._200_OK, user.Name + " added to " + group.Name);
+		}
+
+        /// <summary>
+        /// Removes the user from the group.  Either groupname or groupid must be specified, OR, username or userid must be specified
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="groupname"></param>
+        /// <param name="groupid"></param>
+        /// <param name="username"></param>
+        /// <param name="userid"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Administer)]
+        public IWebResults RemoveUserFromGroup(IWebConnection webConnection, string groupname, string groupid, string username, string userid)
+        {
+            IGroup group = GetGroupInt(webConnection, groupname, groupid);
+			IUser user = GetUser(webConnection, username, userid);
+			
+			// Determine if the user has permission to administer this group
+			// The user must either own the group, or have administrative privilages in order to delete a group
+			bool userHasPermission = false;
+			
+			if (group.OwnerId == webConnection.Session.User.Id)
+				userHasPermission = true;
+			else if (FilePermissionEnum.Administer == FileHandler.FileContainer.LoadPermission(webConnection.Session.User.Id))
+				userHasPermission = true;
+			
+			if (!userHasPermission)
+				return WebResults.FromString(Status._401_Unauthorized, "You do not have permission to add users to this group");
+
+			FileHandler.RemoveUserFromGroup(user.Id, group.Id);
+			
+			return WebResults.FromString(Status._200_OK, user.Name + " removed from " + group.Name);
+		}
+		
+        /// <summary>
+        /// Returns all of the groups that the user is in.  The caller must either be the user queried, be an administrator, or have administrative permission for the user
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="username"></param>
+        /// <param name="userid"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JSON)]
+        public IWebResults GetUsersGroups(IWebConnection webConnection, string username, string userid)
+		{
+			IUser user = GetUser(webConnection, username, userid);
+				
+			// Determine if the user has permission to view all of the groups that the requested user is a member of
+			// The user must either be the user in question, or have administrative privilages in order to delete a group
+			bool userHasPermission = false;
+			
+			if (user.Id == webConnection.Session.User.Id)
+				userHasPermission = true;
+			else if (FilePermissionEnum.Administer == FileHandler.FileContainer.LoadPermission(webConnection.Session.User.Id))
+				userHasPermission = true;
+			
+			if (!userHasPermission)
+				return WebResults.FromString(Status._401_Unauthorized, "You do not have permission to view the groups that this user is a member of");
+			
+			IEnumerable<IGroup> groups = FileHandler.GetGroupsThatUserIsIn(user.Id);
+			return ReturnAsJSON(groups);
+		}
+
+        /// <summary>
+        /// Returns all of the users in the group.  Either groupname or groupid must be specified
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="groupname"></param>
+        /// <param name="groupid"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JSON)]
+        public IWebResults GetUsersInGroup(IWebConnection webConnection, string groupname, string groupid)
+		{
+			IGroup group = GetGroupInt(webConnection, groupname, groupid);
+				
+			// Determine if the user has permission to administer this group
+			// The user must either own the group, or have read privilages in order to delete a group
+			bool userHasPermission = false;
+			
+			if (group.OwnerId == webConnection.Session.User.Id)
+				userHasPermission = true;
+			else if (FileHandler.FileContainer.LoadPermission(webConnection.Session.User.Id) >= FilePermissionEnum.Read)
+				userHasPermission = true;
+			
+			if (!userHasPermission)
+				return WebResults.FromString(Status._401_Unauthorized, "You do not have permission to view the users in a group");
+			
+			IEnumerable<IUser> users = FileHandler.GetUsersInGroup(group.Id);
+			return ReturnAsJSON(users);
+		}
+		
+		private IDictionary<string, object> CreateJSONDictionary(IUserOrGroup userOrGroup)
+		{
+			IDictionary<string, object> toReturn = new Dictionary<string, object>();
+
+			toReturn["Name"] = userOrGroup.Name;
+			toReturn["Id"] = userOrGroup.Id.Value;
+			toReturn["BuiltIn"] = userOrGroup.BuiltIn;
+			
+			return toReturn;
+		}
+		
+		private IDictionary<string, object> CreateJSONDictionary(IGroup group)
+		{
+			IDictionary<string, object> toReturn = CreateJSONDictionary(group as IUserOrGroup);
+
+			toReturn["OwnerId"] = null != group.OwnerId ? (object)group.OwnerId.Value : (object)null;
+			toReturn["Automatic"] = group.Automatic;
+			
+			return toReturn;
+		}
+
+		private IWebResults ReturnAsJSON(IEnumerable<IGroup> groups)
+		{
+			ArrayList groupsAL = new ArrayList();
+			foreach (IGroup group in groups)
+			{
+				IDictionary<string, object> groupDictionary = CreateJSONDictionary(group);
+				groupsAL.Add(groupDictionary);
+			}
+			
+			return WebResults.ToJson(groupsAL.ToArray());
+		}
+		
+		private IWebResults ReturnAsJSON(IEnumerable<IUser> users)
+		{
+			ArrayList usersAL = new ArrayList();
+			foreach (IUser user in users)
+			{
+				IDictionary<string, object> userDictionary = CreateJSONDictionary(user);
+				usersAL.Add(userDictionary);
+			}
+			
+			return WebResults.ToJson(usersAL.ToArray());
+		}
+
+        /// <summary>
+        /// Gets all of the groups that the current user can administer
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.GET, WebReturnConvention.JSON)]
+		public IWebResults GetGroupsThatCanBeAdministered(IWebConnection webConnection)
+		{
+			IEnumerable<IGroup> groups;
+			
+			if (FilePermissionEnum.Administer == FileHandler.FileContainer.LoadPermission(webConnection.Session.User.Id))
+				groups = FileHandler.GetAllGroups();
+			else
+				groups = FileHandler.GetGroupsThatUserOwns(webConnection.Session.User.Id);
+
+			return ReturnAsJSON(groups);
+		}
+		
+        /// <summary>
+        /// Starts the process of logging into this server using an OpenId.  The result is that the user will be rediected to a new page
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Naked)]
+		public IWebResults OpenIDLogin(IWebConnection webConnection)
+		{
+			string openIdIdentity = webConnection.PostArgumentOrException("openid_url");
+			
+			NameValueCollection openIdClientArgs = new NameValueCollection();
+			
+			OpenIdClient openIdClient = new OpenIdClient(openIdClientArgs);
+			openIdClient.Identity = openIdIdentity;
+			openIdClient.TrustRoot = null;
+			
+			// TODO:  Don't hardcode path when this object is able to know its own path
+            string returnUrl = "http://" + FileHandlerFactoryLocator.HostnameAndPort + "/Users/UserDB?Method=CompleteOpenIdLogin";
+
+            if (webConnection.PostParameters.ContainsKey("redirect"))
+                returnUrl = HTTPStringFunctions.AppendGetParameter(returnUrl, "redirect", webConnection.PostParameters["redirect"]);
+
+            openIdClient.ReturnUrl = new Uri(returnUrl);
+
+			Uri requestUri = openIdClient.CreateRequest(false, false);
+			
+			if (openIdClient.ErrorState == ErrorCondition.NoErrors)
+				return WebResults.Redirect(requestUri);
+			else
+			{
+				return WebResults.FromString(
+					Status._417_Expectation_Failed,
+				    "Error when logging in with OpenID: \"" + openIdIdentity + ":\" " + openIdClient.ErrorState.ToString());
+			}
+		}
+		
+        /// <summary>
+        /// Completes the process of a user logging into this web server with openId
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <returns></returns>
+		[WebCallable(WebCallingConvention.Naked, WebReturnConvention.Naked)]
+		public IWebResults CompleteOpenIdLogin(IWebConnection webConnection)
+		{
+			NameValueCollection openIdClientArgs = DictionaryFunctions.ToNameValueCollection(webConnection.GetParameters);
+			OpenIdClient openIdClient = new OpenIdClient(openIdClientArgs);
+			
+			OpenIdUser openIdUser = openIdClient.RetrieveUser();
+			
+			if (null == openIdUser)
+				throw new WebResultsOverrideException(
+					WebResults.FromString(Status._417_Expectation_Failed, "Could not get an OpenIdUser"));
+			
+			bool validResponse = openIdClient.ValidateResponse();
+			if (!validResponse)
+				throw new WebResultsOverrideException(
+					WebResults.FromString(Status._401_Unauthorized, "Invalid response"));
+			
+			string identity = webConnection.EitherArgumentOrException("openid.identity");
+
+			try
+			{
+				IUser user = FileHandler.GetOpenIdUser(identity);
+				webConnection.Session.User = user;
+
+                // success
+                if (webConnection.GetParameters.ContainsKey("redirect"))
+                    return WebResults.Redirect(webConnection.GetParameters["redirect"]);
+                else
+                    return WebResults.FromString(Status._202_Accepted, user.Name + " logged in");
+            }
+            catch (WrongPasswordException)
+            {
+                return WebResults.FromString(Status._401_Unauthorized, "Bad Password");
+            }
+            catch (UnknownUser)
+            {
+                return WebResults.FromString(Status._404_Not_Found, "Unknown user");
+            }
+		}
+
+        /// <summary>
+        /// Accepts the user's password when logging into another site with OpenID
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.Naked, WebReturnConvention.Naked)]
+		public IWebResults ProvideOpenID(IWebConnection webConnection)
+		{
+			string requestedIdentity = webConnection.PostArgumentOrException("openid.identity");
+			
+			// Make sure the user isn't trying to authenticate against the anonymous user
+			if (FileHandlerFactoryLocator.UserFactory.AnonymousUser.Identity == requestedIdentity)
+		        return WebResults.FromString(Status._403_Forbidden, "I'm not that stupid, you can't use the anonymous user as an OpenID identity.");
+			
+			IUser user;
+			
+			// if the user is trying to authenticate as a different user then what the current user is; (or the user
+			// isn't logged on,) then verify the password
+			if (webConnection.Session.User.Identity != requestedIdentity)
+			{
+				// First, the user name needs to be derrived from the open ID
+                string openIdPrefix = string.Format("http://{0}/Users/", FileHandlerFactoryLocator.HostnameAndPort);
+				
+				// Make sure the identiy is in a valid form
+				if (!(requestedIdentity.StartsWith(openIdPrefix)) && requestedIdentity.EndsWith(".user"))
+			        return WebResults.FromString(Status._400_Bad_Request, requestedIdentity + "is not a valid identity");
+				
+				string nameDotUser = requestedIdentity.Substring(openIdPrefix.Length);
+				string name = nameDotUser.Substring(0, nameDotUser.LastIndexOf('.'));
+				
+				if (log.IsInfoEnabled)
+					log.Info("Provided an OpenID identity for " + name);
+				
+				// Get the password
+				string password = webConnection.PostArgumentOrException("password");
+				
+				// Load the user and verify the password
+				try
+				{
+					user = FileHandler.GetUser(name, password);
+	            }
+	            catch (WrongPasswordException)
+	            {
+	                return WebResults.FromString(Status._401_Unauthorized, "Bad Password");
+	            }
+	            catch (UnknownUser)
+	            {
+	                return WebResults.FromString(Status._404_Not_Found, "Unknown user");
+	            }
+			}
+			else
+				user = webConnection.Session.User;
+			
+			IUserHandler userHandler = user.UserHandler;
+
+			// Extract out originating GET parameters that need to be passed through to the destination web site
+			Dictionary<string, string> getParametersToPass = new Dictionary<string, string>();
+			foreach (KeyValuePair<string, string> getParameter in webConnection.PostParameters)
+				if (!getParameter.Key.StartsWith("openid."))
+					if ("password" != getParameter.Key)
+						getParametersToPass.Add(getParameter.Key, getParameter.Value);
+			
+			// Delegate specific logic to the correct method based on openid.mode
+			string openIdMode = webConnection.PostArgumentOrException("openid.mode");
+			switch (openIdMode)
+			{
+				case("checkid_setup"):
+				{
+					return CheckID_Setup(webConnection, new ID<IUser, Guid>(user.Id.Value), userHandler, getParametersToPass);
+				}
+				default:
+				{
+			        return WebResults.FromString(Status._501_Not_Implemented, "openid.mode " + openIdMode + " Not Implemented");
+				}
+			}
+		}
+		
+		private IWebResults CheckID_Setup(IWebConnection webConnection, ID<IUser, Guid> userId, IUserHandler userHandler, IDictionary<string, string> getParametersToPass)
+		{
+			StringBuilder additionalGetParameters = new StringBuilder();
+			foreach (KeyValuePair<string, string> getParameter in getParametersToPass)
+				additionalGetParameters.AppendFormat(
+					"{0}={1}&",
+				    HTTPStringFunctions.EncodeRequestParametersForBrowser(getParameter.Key),
+				    HTTPStringFunctions.EncodeRequestParametersForBrowser(getParameter.Value));
+			
+			additionalGetParameters.AppendFormat(
+				"openid.signed=&openid.identity={0}&openid.return_to={1}&openid.assoc_handle={2}",
+			  	HTTPStringFunctions.EncodeRequestParametersForBrowser(webConnection.PostArgumentOrException("openid.identity")),
+			  	HTTPStringFunctions.EncodeRequestParametersForBrowser(webConnection.PostArgumentOrException("openid.return_to")),
+			  	HTTPStringFunctions.EncodeRequestParametersForBrowser(FileHandler.CreateAssociationHandle(userId)));
+
+			string redirectURL = webConnection.PostArgumentOrException("openid.return_to");
+			string toReturnTo;
+			if (redirectURL.Contains("?"))
+				toReturnTo = string.Format("{0}&{1}", redirectURL, additionalGetParameters.ToString());
+			else
+				toReturnTo = string.Format("{0}?{1}", redirectURL, additionalGetParameters.ToString());
+			
+			return WebResults.Redirect(toReturnTo);
+			
+			/*    4.3.2.2. Sent on Positive Assertion
+
+    * openid.identity
+
+          Value: Verified Identifier
+
+    * openid.assoc_handle
+
+          Value: Opaque association handle being used to fine the HMAC key for the signature.
+
+    * openid.return_to
+
+          Value: Verbatim copy of the return_to URL parameter sent in the request, before the Provider modified it.
+
+    * openid.signed
+
+          Value: Comma-seperated list of signed fields.
+
+          Note: Fields without the "openid." prefix that the signature covers. For example, "mode,identity,return_to".
+
+    * openid.sig
+
+          Value: base64(HMAC(secret(assoc_handle), token_contents)
+
+          Note: Where token_contents is a key-value format string of all the signed keys and values in this response. They MUST be in the same order as listed in the openid.signed field. Consumer SHALL recreate the token_contents string prior to checking the signature. See Appendix D (Limits).
+
+    * openid.invalidate_handle
+
+          Value: Optional; The association handle sent in the request if the Provider did not accept or recognize it.
+
+
+ TOC 
+4.3.3. Extra Notes
+
+    * In the response, the Identity Provider's signature MUST cover openid.identity and openid.return_to.
+    * In a lot of cases, the Consumer won't get a cancel mode; the End User will just quit or press back within their User-Agent. But if it is returned, the Consumer SHOULD return to what it was doing. In the case of a cancel mode, the rest of the response parameters will be absent.
+
+*/
+			
+			
+	        //return WebResults.FromString(Status._501_Not_Implemented, "Not Implemented");
+		}
+	}
+}

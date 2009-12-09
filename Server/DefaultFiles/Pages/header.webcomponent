@@ -1,0 +1,57 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+   <head>
+      <title><? $_GET["Title"] ?></title>
+      <meta http-equiv="X-UA-Compatible" content="chrome=1">
+      <link href="/Pages/objectcloud.css" type="text/css" rel="stylesheet" />
+      <link href="/API/proto.menu.css" type="text/css" rel="stylesheet" />
+      <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+
+      <? Scripts(/API/Prototype.js, /API/DetectMobile.js) ?>
+
+      <script>
+
+         function doresize()
+         {
+            if (!isMobile)
+            {
+               var mainDiv = $("mainDiv");
+               mainDiv.style.height = (window.innerHeight - $("browserBar").getHeight()) + "px";
+
+               // figure out scrollbar width
+               mainDiv.style.overflow = null;
+               var noScroll = mainDiv.getWidth();
+               mainDiv.style.overflow = 'auto';
+               var scroll = mainDiv.getWidth();
+
+               var scrollbarWidth = Math.abs(scroll - noScroll);
+
+               var innerMainDiv = $("innerMainDiv");
+               innerMainDiv.style.width = (window.innerWidth - 20 - (scrollbarWidth)) + "px";
+            }
+         }
+
+         function doload()
+         {
+            if (!isMobile)
+            {
+               $("body").style.overflow = "hidden";
+               $("body").style.margin = "0px";
+               doresize();
+            }
+         }
+
+      </script>
+   </head>
+
+   <body onresize="doresize()" onload="doload()" id="body">
+      <? WebComponent("/Shell/Legacy/PromptForChromeFrame.webcomponent") ?>
+      <div id="mainDiv"><div id="innerMainDiv" style="width: 100%; margin: 10px">
+         <div style="position: relative;">
+            <? WebComponent("/Pages/logo.webcomponent") ?>
+            <div style="clear: both"></div>
+         </div>
+         <? WebComponent("/Pages/navbar.webcomponent") ?>
+         <div class="contents"><div style="margin:20px">
+            <div class="title" id="title"><? $_GET["Title"] ?></div>

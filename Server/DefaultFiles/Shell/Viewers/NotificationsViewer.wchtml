@@ -1,0 +1,433 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+   <head>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+      <? Scripts(/API/Prototype.js, /Users/[name].user?Method=GetJavascriptWrapper&assignToVariable=NotificationsProxy, /Users/[name]?Method=GetJavascriptWrapper&assignToVariable=UserFolder, /API/File.js, /API/Url.js, /API/Comet/CometProtocol.js) ?>
+      <link href="/Pages/objectcloud.css" type="text/css" rel="stylesheet" />
+      <link href="/API/proto.menu.css" type="text/css" rel="stylesheet" />
+      <title><? WebComponent("/Users/UserDB?Method=GetUsername") ?>'s Notifications</title>
+   </head>
+
+   <script>
+
+      // Constants
+      var MAX_NOTIFICATIONS = 1000;
+
+      var newestNotificationIdToLoad = null;
+      var allNotificationsLoaded = false;
+      var oldestNotificationIdToLoad = (-1 * Infinity);
+      var url = Url.parseCurrent();
+
+      var menuDiv;
+      var objectsDiv;
+      var viewerDiv;
+      var subViewerDiv;
+      var permissionsLink;
+      var currentUrl;
+
+      function doOnload()
+      {
+         viewerDiv = $("Viewer");
+
+         // Prevent the anonymous user from viewing notifications.  (Untested with OpenID!!!)
+         if (("anonymous" == currentUserName) || (0 == currentUserName.indexOf("http://")))
+         {
+            viewerDiv.innerHTML = "<h1>You must be logged in as a local account in order to view notifications</h1>";
+            return;
+         }
+
+         objectsDiv = $("Notifications");
+         menuDiv = $("Menu");
+         subViewerDiv = $("SubViewer");
+         permissionsLink = $("permissionsLink");
+         currentUrl = Url.parseCurrent();
+
+         // Connect back to the server to get COMET updates when the page changes
+         CP_QualityReliable.connect(
+            '/Users/' + currentUserName + '.user?ChannelEndpoint=IncomingNotificationEvent',
+            {
+               handleIncomingData: function(data)
+               {
+                  displayNotifications([data]);
+               }
+            });
+
+         // start loading notifications
+         loadNotifications();
+         onresize();
+      }
+
+      function onresize()
+      {
+         // find the margin
+         var margin = objectsDiv.cumulativeOffset().left;
+
+         var windowHeight = window.innerHeight;
+
+         var height = (windowHeight - objectsDiv.cumulativeOffset().top - margin) + "px";
+
+         // Set the heights
+         objectsDiv.style.height = height;
+         viewerDiv.style.height = height;
+      }
+
+      // returns the element name for the element that handles the object that sent the notification
+      function getObjectElementName(notification)
+      {
+         return "ObjectElement_" + notification.objectUrl.escapeHTML();
+      }
+
+      function addAsUser(objectUrl)
+      {
+         if (-1 == objectUrl.indexOf("?"))
+            return objectUrl + "?AsUser=" + Url.encode("http://" + url.server + "/Users/" + currentUserName + ".user");
+         else
+            return objectUrl + "&AsUser=" + Url.encode("http://" + url.server + "/Users/" + currentUserName + ".user");
+      }
+
+      // Creates an element for handling the complete object that sent the notification
+      function createObjectElement(notification)
+      {
+         var objectElementName = getObjectElementName(notification);
+         var toReturn = new Element("div", {id: objectElementName});
+
+         // currentUserName
+         var objectUrlAndAsUser = addAsUser(notification.objectUrl);
+
+         toReturn.innerHTML =
+            '<a href="JavaScript: viewObject(' + "'" + notification.objectUrl + "','" + notification.documentType + "'" + ')"><span id="' + objectElementName + '_title" style="font-size: 150%"></span></a> ' + 
+            '<span id="' + objectElementName + '_timestamp"></span><br /><span id="' + objectElementName + '_messageSummary"></span><br />' +
+            '<span style="font-size: 50%">(<a href="' + objectUrlAndAsUser.escapeHTML() + '" target="_blank">' + notification.objectUrl + '</a>)</span>' +
+            '<input id="' + objectElementName + '_show" type="button" value="show all..." onClick="showNotifications(' +
+            "'" + objectElementName + "'" + ')") />' +
+            '<div id="' + objectElementName + '_notifications">' +
+            '<input type="button" value="hide" onClick="hideNotifications(' + "'" + objectElementName + "'" + ')") /></div><hr />';
+
+         // Set the newest timestamp to something arbitrarily low so that the rendering logic sees
+         // the creating notification as the newest
+         toReturn.notificationId = (-1 * Infinity);
+         return toReturn;
+      }
+
+      function displayNotifications(newNotifications)
+      {
+         newNotifications.each(function(notification)
+         {
+
+            var objectElementName = getObjectElementName(notification);
+
+            // Get or create the element for the Object
+            var objectElement = $(objectElementName);
+            if (null == objectElement)
+            {
+               objectElement = createObjectElement(notification);
+
+               // make sure the element is online and sub-notifications are hidden
+               objectsDiv.appendChild(objectElement);
+               hideNotifications(objectElementName);
+            }
+
+            // set the ID ranges for loading notifications and add the element
+
+            if (notification.notificationId <= newestNotificationIdToLoad)
+               newestNotificationIdToLoad = notification.notificationId - 1;
+
+            if (notification.notificationId >= oldestNotificationIdToLoad)
+               oldestNotificationIdToLoad = notification.notificationId + 1;
+
+            var timestamp = new Date(notification.timeStamp);
+
+            // Update the title and timestamp if this notification is newer
+            if (notification.notificationId >= objectElement.notificationId)
+            {
+               $(objectElementName + "_title").innerHTML = notification.title.escapeHTML();
+               $(objectElementName + "_timestamp").innerHTML = timestamp;
+               $(objectElementName + "_messageSummary").innerHTML = notification.messageSummary.escapeHTML();
+
+               objectElement.notificationId = notification.notificationId;
+            }
+
+            // determine where to place the object group based on how new its notification is
+            // find the objectElement with the next smallest newestNotificationId
+
+            var nextLowestNotificationIdObjectElement = null;
+
+            for (var ctr in objectsDiv.childNodes)
+            {
+               var elementToInspect = objectsDiv.childNodes[ctr];
+
+               if (elementToInspect.notificationId)
+                  if (elementToInspect.notificationId < notification.notificationId)
+                     if (null != nextLowestNotificationIdObjectElement)
+                     {
+                        if (nextLowestNotificationIdObjectElement.notificationId < elementToInspect.notificationId)
+                           nextLowestNotificationIdObjectElement = elementToInspect;
+                     }
+                     else
+                        nextLowestNotificationIdObjectElement = elementToInspect;
+            }
+
+            // If an appropriate insertion point was found, insert before it, else leave it as-is
+            if (null != nextLowestNotificationIdObjectElement)
+               objectsDiv.insertBefore(objectElement, nextLowestNotificationIdObjectElement);
+
+            // Get the div that holds this notification
+            var notificationsDiv = $(objectElementName + "_notifications");
+
+            // create an element specifically for this notification
+            var notificationElement = new Element("div", {id: objectElementName + "_" + notification.notificationId});
+
+            notificationElement.innerHTML = timestamp + ': ' + notification.messageSummary.escapeHTML()
+            if (null != notification.changeData)
+               notificationElement.innerHTML = notificationElement.innerHTML + 
+                  '<span id="' + objectElementName + "_" + notification.notificationId + "_CD" + '">' + notification.changeData.escapeHTML() +
+                  '</span>';
+
+            notificationElement.notificationId = notification.notificationId;
+
+            // find where to insert the element
+            var nextLowestNotificationElement = null;
+            for (var ctr in notificationsDiv.childNodes)
+            {
+               var elementToInspect = notificationsDiv.childNodes[ctr];
+
+               if (elementToInspect.notificationId)
+                  if (elementToInspect.notificationId < notification.notificationId)
+                     if (null != nextLowestNotificationIdObjectElement)
+                     {
+                        if (nextLowestNotificationIdObjectElement.notificationId < elementToInspect.notificationId)
+                           nextLowestNotificationElement = elementToInspect;
+                     }
+                     else
+                        nextLowestNotificationElement = elementToInspect;
+            }
+
+            if (null != nextLowestNotificationElement)
+               notificationsDiv.insertBefore(notificationElement, nextLowestNotificationElement);
+            else
+               notificationsDiv.appendChild(notificationElement);
+
+            // Instruct the object viewer that there was an incoming notification
+            if (currentObjectUrl == notification.objectUrl)
+            {
+               try
+               {
+                  currentObjectViewer.handleIncomingNotification(notification);
+               }
+               catch (exception)
+               {
+                  alert(exception);
+               }
+            }
+         });
+      }
+
+      // Hides an object's notifications
+      function hideNotifications(objectElementId)
+      {
+         $(objectElementId + '_notifications').hide();
+         $(objectElementId + '_show').show();
+      }
+
+      // Hides an object's notifications
+      function showNotifications(objectElementId)
+      {
+         $(objectElementId + '_notifications').show();
+         $(objectElementId + '_show').hide();
+      }
+
+      function handleGetNotificationsError(error)
+      {
+         //alert("Error loading notifications.  Refresh to continue.\n" + error.responseText);
+
+         // For now, if there is an error, just wait 10 seconds and continue loading
+         setTimeout("loadNewNotifications()", 10000);
+      }
+
+      // Keeps loading old notifications in a loop until they are all loaded
+      function loadNotifications()
+      {
+         NotificationsProxy.GetNotifications(
+            newestNotificationIdToLoad,
+            null,
+            MAX_NOTIFICATIONS,
+            null,
+            null,
+            "notificationId,timeStamp,state,sender,objectUrl,title,documentType,messageSummary,changeData,",
+            {},
+            function(newNotifications)
+            {
+               // In case the page is refreshed, this will prevent weirdo errors
+               if (!displayNotifications)
+                  return;
+
+               if (null == newestNotificationIdToLoad)
+                  newestNotificationIdToLoad = Infinity;
+
+               // display the new notifications
+               displayNotifications(newNotifications);
+
+               // Check if loading old notifications is complete
+               if (newNotifications.length < MAX_NOTIFICATIONS)
+                  allNotificationsLoaded = true;
+               else
+                  loadNotifications();
+            },
+            handleGetNotificationsError,
+            handleGetNotificationsError);
+      }
+
+      var currentObjectUrl = null;
+      var currentObjectViewer = {
+         handleIncomingNotification: function(notification)
+         {
+         }
+      };
+
+      var refreshViewerCommand = null;
+
+      function refreshViewer()
+      {
+         if (null != refreshViewerCommand)
+         {
+            currentObjectUrl = null;
+            refreshViewerCommand();
+         }
+      }
+
+      function viewObject(objectUrl, documentType, objectProxy)
+      {
+         if (currentObjectUrl == objectUrl)
+            return;
+
+         refreshViewerCommand = function()
+         {
+            viewObject(objectUrl, documentType, objectProxy);
+         }; 
+
+         var urlInfo = Url.parse(objectUrl);
+         permissionsLink.href = "http://" + urlInfo.server + "/Shell/Security/Permissions.wchtml?FileName=" + Url.encode(urlInfo.file);
+
+         // clear existing data
+         try
+         {
+            for (var innerElementIndex in subViewerDiv.childNodes)
+            {
+               var elementToDelete = subViewerDiv.childNodes[innerElementIndex];
+
+               // This roundabout technique is used incase Prototype isn't used with the inner element
+               if (elementToDelete)
+                  if (elementToDelete.id)
+                     try
+                     {
+                        $(elementToDelete.id).remove();
+                     }
+                     catch (exception)
+                     {
+                        alert(exception);
+                     }
+            }
+         }
+         catch (exception)
+         {
+            alert(exception);
+         }
+
+         subViewerDiv.innerHTML = "";
+         var hasViewer = false;
+
+         var onFailure = function()
+         {
+            currentObjectUrl = objectUrl;
+
+            subViewerDiv.innerHTML = '<iframe id="viewerIframe" style="width: 98%; height: 98%" src="' + addAsUser(objectUrl) + '" />';
+
+            currentObjectViewer =
+            {
+               viewerIframe: $("viewerIframe"),
+
+               handleIncomingNotification: function(notification)
+               {
+                  if (!hasViewer)
+                     this.viewerIframe.src = this.viewerIframe.src;
+               }
+            };
+         };
+
+         new Ajax.Request(
+            "/Shell/Viewers/NotificationsViewers/" + documentType + ".js",
+            {
+               onSuccess: function(transport)
+               {
+                  hasViewer = true;
+            
+                  // If the object is remote, use an iFrame
+                  if (urlInfo.server != currentUrl.server)
+                  {
+                     onFailure();
+                     return;
+                  }
+
+                  var viewerLoader;
+
+                  try
+                  {
+                     viewerLoader = eval('(' + transport.responseText + ')');
+                  }
+                  catch (exception)
+                  {
+                     alert(exception);
+                  }
+
+                  currentObjectUrl = objectUrl;
+
+                  if (objectProxy)
+                     currentObjectViewer = viewerLoader.load(subViewerDiv, objectUrl, objectProxy);
+                  else
+                  {
+                     File.Open(
+                        objectUrl,
+                        {},
+                        function(newObjectProxy)
+                        {
+                           objectProxy = newObjectProxy;
+                           currentObjectViewer = viewerLoader.load(subViewerDiv, objectUrl, objectProxy);
+                        },
+                        onFailure,
+                        function(error){});
+                  }
+               },
+               onFailure: onFailure
+            });
+      }
+
+      function createIBG()
+      {
+         // the filename is based on the clock.  This should be sufficiently unique
+         var filename = "IBG" + new Date().getTime() + ".ibg";
+
+         UserFolder.CopyFile(
+            "/Templates/Particle Template",
+            filename,
+            {},
+            function(ibgProxy)
+            {
+               viewObject(UserFolder.Url + "/" + filename, "ibg");
+            });
+      }
+
+   </script>
+
+   <body onload="doOnload()">
+      <? WebComponent("/Pages/navbar.webcomponent") ?>
+      <div id="Menu" style="width: 100%">ObjectCloud <input type="button" value="New" onClick="createIBG()") /></div>
+      <div id="Notifications" style="float: left; width: 34%; overflow: auto" ><hr /></div>
+      <div id="Viewer" style="width: 66%; overflow: auto">
+         <input type="button" value="Refresh" onClick="refreshViewer()") /> <a id="permissionsLink" target="_blank">Permissions...</a>
+         <div id="SubViewer" style="width: 98%; height: 98%">Select an object to view</div>
+      </div>
+   </body>
+</html>

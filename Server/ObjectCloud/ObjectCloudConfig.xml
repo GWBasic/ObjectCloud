@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ObjectCloudConfig>
+<!--
+Copyright 2009 Andrew Rondeau
+This code is released under the LGPL license
+For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
+-->
+
+	<FileSystem ConnectionString="./FileSystem" />
+
+  <!-- WARNING!!!  You REALLY need a working domain if you're using ANY OpenID-related functionality on the public internet!!!
+  If you do not have a domain on the public internet, but would like to experiment, you can get a free domain at dyndns.org -->
+  <!-- <FileHandlerFactoryLocator Hostname="somedomain.???"/> -->
+
+  <!-- As configured, ObjectCloud will redirect incoming requests to use the server's IP as the hostname.  This can cause problems
+  when trying to access ObjectCloud on the public internet if behind a firewall or NAT.  To fix this, either set the hostname (above)
+  or remove the RedirectIfRequestedHostIsDifferent="true" line. -->
+  <WebServer
+    Port="1080"
+    RedirectIfRequestedHostIsDifferent="true"
+    MinimizeJavascript="true"
+    CachingEnabled="true"
+    CheckDeadConnectionsFrequencySeconds="15"
+    MaxConnectionIdleSeconds="45"
+    />
+
+  <!-- When running a real server, this line should be deleted.  Writing to the console really kills performance -->
+  <LogHandlerFactory WriteToConsole="true" />
+  
+</ObjectCloudConfig>

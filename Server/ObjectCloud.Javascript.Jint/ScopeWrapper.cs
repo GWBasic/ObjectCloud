@@ -1,0 +1,334 @@
+// Copyright 2009 Andrew Rondeau
+// This code is released under the LGPL license
+// For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
+
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Text;
+using System.Threading;
+
+using Jint;
+using Jint.Native;
+using JsonFx.Json;
+
+using ObjectCloud.Common;
+using ObjectCloud.Interfaces.Disk;
+using ObjectCloud.Interfaces.Security;
+using ObjectCloud.Interfaces.WebServer;
+
+namespace ObjectCloud.Javascript.Jint
+{
+    /// <summary>
+    /// Wraps a Javascript scope on a per-user basis
+    /// </summary>
+    public class ScopeWrapper
+    {
+        public ScopeWrapper(FileHandlerFactoryLocator fileHandlerFactoryLocator, IWebConnection webConnection, string javascript, IFileContainer theObject)
+        {
+            _FileHandlerFactoryLocator = fileHandlerFactoryLocator;
+            _TheObject = theObject;
+
+            // Load static methods that are passed into the Javascript environment as-is
+            foreach (Type javascriptFunctionsType in GetTypesThatHaveJavascriptFunctions(theObject))
+            {
+                PropertyInfo DelegatesProperty = javascriptFunctionsType.GetProperty("Delegates", BindingFlags.Public | BindingFlags.Static);
+                IEnumerable<Delegate> delegates = (IEnumerable<Delegate>)DelegatesProperty.GetValue(null, null);
+
+                foreach (Delegate del in delegates)
+                    JintEngine.SetFunction(
+                        del.Method.Name, del);
+            }
+
+            StringBuilder scopeBuilder = new StringBuilder();
+
+            scopeBuilder.Append(@"
+var JSON =
+{
+   stringify: stringify,
+   parse: parse
+};
+
+");
+
+            List<string> requestedScripts = new List<string>();
+
+            // Find dependant scripts
+            if (javascript.StartsWith("// Scripts:"))
+            {
+                // get first line
+                string scriptsLine = javascript.Split('\n')[0];
+
+                foreach (string script in scriptsLine.Substring(11).Split(','))
+                    requestedScripts.Add(script.Trim());
+            }
+
+            IEnumerable<ScriptAndMD5> dependantScriptsAndMD5s = webConnection.WebServer.WebComponentResolver.DetermineDependantScripts(
+                requestedScripts, webConnection, new List<string>());
+
+            // TODO:  Need a Jint equivilent of a class shutter
+            //context.setClassShutter(RestriciveClassShutter.Instance);
+
+            // Load all dependant scripts
+            foreach (ScriptAndMD5 dependantScript in dependantScriptsAndMD5s)
+            {
+                string resolvedScript = Encoding.UTF8.GetString(webConnection.ShellTo(dependantScript.ScriptName).Body);
+                //JintEngine.Run(resolvedScript);
+
+                scopeBuilder.Append(resolvedScript);
+            }
+
+            AddMetadata(webConnection, scopeBuilder);
+
+            // Construct Javascript to shell to the "base" webHandler
+            string baseWrapper = theObject.WebHandler.GetJavascriptWrapperForBase(webConnection, "base");
+            scopeBuilder.Append(baseWrapper);
+
+            // Load the actual script
+
+            scopeBuilder.Append(javascript);
+            
+            //object globalScope = null;
+            FunctionCaller.UseTemporaryCaller(this, theObject, webConnection, delegate()
+            {
+                JintEngine.Run(scopeBuilder.ToString());
+            });
+
+            // Initialize each function caller
+            // Iterate over each global value
+            foreach (string globalKey in GlobalScope.GetKeys())
+            {
+                JsInstance globalValue = GlobalScope[globalKey];
+
+                // If the value is a Javascript function...
+                if (globalValue is JsFunction)
+                {
+                    string method = globalKey.ToString();
+                    JsFunction javascriptMethod = (JsFunction)globalValue;
+
+                    List<string> keys = new List<string>(javascriptMethod.GetKeys());
+                    List<JsInstance> values = new List<JsInstance>(javascriptMethod.GetValues());
+
+                    // ... and it's marked as webCallable, create a FunctionCaller
+                    if (javascriptMethod.HasProperty("webCallable"))
+                    {
+                        FunctionCaller functionCaller = new FunctionCaller(this, TheObject, method, javascriptMethod);
+
+                        // ... and if the function caller supports the calling convention, then cache it!
+
+                        if (null != functionCaller.WebDelegate)
+                            FunctionCallers[method] = functionCaller;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// The javascript execution engine
+        /// </summary>
+        public JintEngine JintEngine
+        {
+            get { return _JintEngine; }
+        }
+        private JintEngine _JintEngine = new JintEngine();
+
+        /// <summary>
+        /// The global scope
+        /// </summary>
+        public JsDictionaryObject GlobalScope
+        {
+            get { return _JintEngine.Visitor.GlobalScope; }
+        }
+
+        /// <summary>
+        /// The semaphore used to prevent concurrent access to the same JintEngine
+        /// </summary>
+        internal Semaphore Semaphore
+        {
+            get { return _Semaphore; }
+        }
+        private Semaphore _Semaphore = new Semaphore(1, 1);
+
+        /// <summary>
+        /// The function caller that's currently holding the semaphore and blocking everyone else
+        /// </summary>
+        internal FunctionCaller BlockingFunctionCaller = null;
+
+        /// <summary>
+        /// The WebConnection that's currently holding the semaphore and blocking everyone else
+        /// </summary>
+        internal IWebConnection BlockingWebConnection = null;
+
+        /// <summary>
+        /// Adds runtime metadata to the server-side javascript
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="context"></param>
+        private void AddMetadata(IWebConnection webConnection, StringBuilder scopeBuilder)
+        {
+            //Ability to know the following from within Javascript:  File name, file path, owner name, owner ID, connected user name, connected user id
+            Dictionary<string, object> fileMetadata = new Dictionary<string, object>();
+            fileMetadata["filename"] = TheObject.Filename;
+            fileMetadata["fullpath"] = TheObject.FullPath;
+            fileMetadata["url"] = TheObject.ObjectUrl;
+
+            if (null != TheObject.OwnerId)
+            {
+                fileMetadata["ownerId"] = TheObject.OwnerId.Value;
+
+                IUserOrGroup owner = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupNoException(TheObject.OwnerId.Value);
+                if (null != owner)
+                {
+                    fileMetadata["owner"] = owner.Name;
+
+                    if (owner is IUser)
+                        fileMetadata["ownerIdentity"] = ((IUser)owner).Identity;
+                }
+            }
+
+            AddObject("fileMetadata", fileMetadata, scopeBuilder);
+
+            Dictionary<string, object> userMetadata = new Dictionary<string, object>();
+            IUser user = webConnection.Session.User;
+            userMetadata["id"] = user.Id;
+            userMetadata["name"] = user.Name;
+            userMetadata["identity"] = user.Identity;
+
+            AddObject("userMetadata", userMetadata, scopeBuilder);
+
+            Dictionary<string, object> hostMetadata = new Dictionary<string, object>();
+            hostMetadata["host"] = FileHandlerFactoryLocator.HostnameAndPort;
+            hostMetadata["justHost"] = FileHandlerFactoryLocator.Hostname;
+            hostMetadata["port"] = FileHandlerFactoryLocator.WebServer.Port;
+
+            AddObject("hostMetadata", hostMetadata, scopeBuilder);
+        }
+		
+		/// <summary>
+		/// Returns the types that have static functions to assist with the given FileHandler based on its type 
+		/// </summary>
+		/// <param name="theObject">
+		/// A <see cref="IFileContainer"/>
+		/// </param>
+		/// <returns>
+		/// A <see cref="IEnumerable"/>
+		/// </returns>
+		private static IEnumerable<Type> GetTypesThatHaveJavascriptFunctions(IFileContainer theObject)
+		{
+			yield return typeof(JavascriptFunctions);
+			
+			IFileHandler fileHandler = theObject.FileHandler;
+			
+			if (fileHandler is IDatabaseHandler)
+				yield return typeof(JavascriptDatabaseFunctions);
+		}
+
+        /// <summary>
+        /// The FileHandlerFactoryLocator
+        /// </summary>
+        public FileHandlerFactoryLocator FileHandlerFactoryLocator
+        {
+            get { return _FileHandlerFactoryLocator; }
+        }
+        private readonly FileHandlerFactoryLocator _FileHandlerFactoryLocator;
+
+        /// <summary>
+        /// The Function callers, indexed by function name
+        /// </summary>
+        private readonly Dictionary<string, FunctionCaller> FunctionCallers = new Dictionary<string,FunctionCaller>();
+
+        /// <summary>
+        /// The wrapped object
+        /// </summary>
+        public IFileContainer TheObject
+        {
+            get { return _TheObject; }
+        }
+        private readonly IFileContainer _TheObject;
+
+        /*// <summary>
+        /// The function to parse JSON data
+        /// </summary>
+        public JsFunction JsonParseFunction
+        {
+            get { return _JsonParseFunction; }
+        }
+        private readonly JsFunction _JsonParseFunction = null;
+
+        /// <summary>
+        /// The function to stringify JSON data
+        /// </summary>
+        public JsFunction JsonStringifyFunction
+        {
+            get { return _JsonStringifyFunction; }
+        }
+        private readonly JsFunction _JsonStringifyFunction = null;*/
+
+        /// <summary>
+        /// Returns the appropriate delegate for the named method, or null if it doesn't exist
+        /// </summary>
+        /// <param name="method"></param>
+        /// <returns></returns>
+        public WebDelegate GetMethod(string method)
+        {
+            if (FunctionCallers.ContainsKey(method))
+                return FunctionCallers[method].WebDelegate;
+            else
+                return null;
+        }
+
+        /// <summary>
+        /// Generates a Javscript wrapper for the browser that calls functions in this javascript.  Assumes that the prototype AJAX library is present
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<string> GenerateJavascriptWrapper(WrapperCallsThrough wrapperCallsThrough)
+        {
+            foreach (string method in FunctionCallers.Keys)
+                yield return FunctionCallers[method].GenerateWrapper(wrapperCallsThrough);
+        }
+
+        /// <summary>
+        /// Converts an object from Javascript to a string.  Doubles, bools, and strings are returned via ToString, everything else is JSON-stringified
+        /// </summary>
+        /// <param name="fromJavascript"></param>
+        /// <returns></returns>
+        public string ConvertObjectFromJavascriptToString(object fromJavascript)
+        {
+            if (null == fromJavascript)
+                return null;
+
+            else if (fromJavascript is JsUndefined)
+                return null;
+
+            else if (fromJavascript is JsNumber)
+                return ((JsNumber)fromJavascript).ToNumber().ToString("R");
+
+            else if (fromJavascript is JsBoolean)
+                return ((JsBoolean)fromJavascript).ToBoolean().ToString();
+
+            else if (fromJavascript is JsString)
+                return fromJavascript.ToString();
+
+            else if (fromJavascript is JsDictionaryObject)
+            {
+                // The object isn't a known Javscript primitive.  Stringify it and return it as JSON
+                IDictionary<object, object> converted = DictionaryCreator.ToDictionary((JsObject)fromJavascript);
+                return JsonWriter.Serialize(converted);
+            }
+
+            throw new JavascriptException("Can not convert a " + fromJavascript.GetType().ToString() + " to a string");
+        }
+
+        /// <summary>
+        /// Adds an object to be accessible from within the scope
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="?"></param>
+        private void AddObject(string name, object toAdd, StringBuilder scopeBuilder)
+        {
+            string serialized = JsonWriter.Serialize(toAdd);
+
+            scopeBuilder.AppendFormat("{0} = {1};", name, serialized);
+        }
+    }
+}

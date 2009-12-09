@@ -1,0 +1,37 @@
+<script>
+   var currentUserName = "<? WebComponent("/Users/UserDB?Method=GetUsername") ?>";
+</script>
+<div class="navbar" id="navbar" style="position: relative;">
+   <br />&nbsp;
+   <span id="localonly">
+      <a href="/Shell/Viewers/NotificationsViewer.wchtml">Messages (Experimental)</a> 
+
+      <script>
+         // Write out user's links, if appropriate
+         if ((0 != currentUserName.indexOf("http://")) && ("anonymous" != currentUserName))
+         {
+            document.write('<a href="/Users/' + currentUserName + '">My Files</a> ');
+            document.write('<a href="/Users/' + currentUserName + '.user">My Account</a> ');
+         }
+      </script>
+   </span>
+
+   <script>
+      if (("anonymous" == currentUserName) || ("root" == currentUserName))
+      {
+         document.write('<a href="/Shell/UserManagers/Create%20Account.wchtml">Create Account</a> ');
+      }
+   </script>
+
+   <br />
+   <br />
+
+   <div style="position: absolute; bottom: 0; right:0;">
+      <? WebComponent("/Shell/UserManagers/Login.webcomponent" ?>
+   </div>
+   <div style="clear: both"></div>
+</div>
+<script>
+   if ((0 == currentUserName.indexOf("http://")) || ("anonymous" == currentUserName))
+      $("localonly").hide();
+</script>

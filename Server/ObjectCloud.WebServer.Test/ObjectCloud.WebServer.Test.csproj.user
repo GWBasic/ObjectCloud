@@ -1,0 +1,7 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <StartAction>Program</StartAction>
+    <StartProgram>C:\Program Files\NUnit 2.4.8\bin\nunit.exe</StartProgram>
+    <StartArguments>ObjectCloud.WebServer.Test.dll</StartArguments>
+  </PropertyGroup>
+</Project>

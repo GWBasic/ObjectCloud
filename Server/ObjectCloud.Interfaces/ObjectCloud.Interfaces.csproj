@@ -1,0 +1,166 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{DBA3E72A-7B35-4107-88EF-2BD8FB782BAC}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ObjectCloud.Interfaces</RootNamespace>
+    <AssemblyName>ObjectCloud.Interfaces</AssemblyName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Common.Logging, Version=2.0.0.0, Culture=neutral, PublicKeyToken=af08829b84f0328e">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependancies\Common.Logging.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Database\ISqlDatabaseConnector.cs" />
+    <Compile Include="Database\IEmbeddedDatabaseConnector.cs" />
+    <Compile Include="Disk\BadFileName.cs" />
+    <Compile Include="Disk\CanNotCreateFile.cs" />
+    <Compile Include="Disk\CanNotOpenFile.cs" />
+    <Compile Include="Disk\DiskException.cs" />
+    <Compile Include="Disk\DuplicateFile.cs" />
+    <Compile Include="Disk\FileContainerUtils.cs" />
+    <Compile Include="Disk\FileCreatorDelegate.cs" />
+    <Compile Include="Disk\FileDoesNotExist.cs" />
+    <Compile Include="Disk\FileHandler.cs" />
+    <Compile Include="Disk\FileHandlerFactoryLocator.cs" />
+    <Compile Include="Disk\FileIsNotADirectory.cs" />
+    <Compile Include="Disk\IBinaryHandler.cs" />
+    <Compile Include="Disk\IDirectoryHandler.cs" />
+    <Compile Include="Disk\IFileContainer.cs" />
+    <Compile Include="Disk\IFileHandler.cs" />
+    <Compile Include="Disk\IFileHandlerFactory.cs" />
+    <Compile Include="Disk\IFileSystem.cs" />
+    <Compile Include="Disk\IFileSystemResolver.cs" />
+    <Compile Include="Disk\INameValuePairsHandler.cs" />
+    <Compile Include="Disk\InvalidFileId.cs" />
+    <Compile Include="Disk\IRootDirectoryCreator.cs" />
+    <Compile Include="Disk\ISessionManagerHandler.cs" />
+    <Compile Include="Disk\ISystemFileHandlerFactory.cs" />
+    <Compile Include="Disk\ITextHandler.cs" />
+    <Compile Include="Disk\LoggingEvent.cs" />
+    <Compile Include="Disk\NotificationColumn.cs" />
+    <Compile Include="Disk\NotificationState.cs" />
+    <Compile Include="Disk\ParticleException.cs" />
+    <Compile Include="Disk\TooManyCometSessions.cs" />
+    <Compile Include="Javascript\IExecutionEnvironment.cs" />
+    <Compile Include="Javascript\IExecutionEnvironmentFactory.cs" />
+    <Compile Include="Security\CallingFrom.cs" />
+    <Compile Include="Security\FilePermissionEnum.cs" />
+    <Compile Include="Security\IUserFactory.cs" />
+    <Compile Include="Disk\IUserHandler.cs" />
+    <Compile Include="Disk\IUserManagerHandler.cs" />
+    <Compile Include="Disk\SecurityException.cs" />
+    <Compile Include="Disk\SystemFileException.cs" />
+    <Compile Include="Disk\UnknownFileType.cs" />
+    <Compile Include="Disk\UnknownUser.cs" />
+    <Compile Include="Disk\UserAlreadyExistsException.cs" />
+    <Compile Include="Disk\WrongFileType.cs" />
+    <Compile Include="Disk\WrongPasswordException.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Security\IUser.cs" />
+    <Compile Include="Security\IUserOrGroup.cs" />
+    <Compile Include="WebServer\BlockingShellWebConnection.cs" />
+    <Compile Include="WebServer\ChannelEndpointMinimumPermissionAttribute.cs" />
+    <Compile Include="WebServer\CookieToSet.cs" />
+    <Compile Include="WebServer\HasWebResultsException.cs" />
+    <Compile Include="WebServer\IChannelEventWebAdaptor.cs" />
+    <Compile Include="WebServer\ICometTransport.cs" />
+    <Compile Include="WebServer\IQueuingReliableCometTransport.cs" />
+    <Compile Include="WebServer\IWebAccessCodeGenerator.cs" />
+    <Compile Include="WebServer\IWebConnectionContent.cs" />
+    <Compile Include="WebServer\IHasWebResults.cs" />
+    <Compile Include="WebServer\ISession.cs" />
+    <Compile Include="WebServer\IWebComponentResolver.cs" />
+    <Compile Include="WebServer\IWebConnection.cs" />
+    <Compile Include="WebServer\IWebHandler.cs" />
+    <Compile Include="WebServer\IWebMethodCache.cs" />
+    <Compile Include="WebServer\IWebResults.cs" />
+    <Compile Include="WebServer\IWebServer.cs" />
+    <Compile Include="WebServer\MethodNameAndFileContainer.cs" />
+    <Compile Include="WebServer\NamedPermissionAttribute.cs" />
+    <Compile Include="WebServer\NonBlockingShellWebConnection.cs" />
+    <Compile Include="WebServer\QueuingReliableCometTransport.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="WebServer\ResultsAlreadySent.cs" />
+    <Compile Include="WebServer\Status.cs" />
+    <Compile Include="WebServer\WebCallableAttribute.cs" />
+    <Compile Include="WebServer\WebCallingConvention.cs" />
+    <Compile Include="WebServer\WebDelegate.cs" />
+    <Compile Include="WebServer\WebHandler.cs" />
+    <Compile Include="WebServer\WebMethod.cs" />
+    <Compile Include="WebServer\WebResults.cs" />
+    <Compile Include="Disk\IDatabaseHandler.cs" />
+    <Compile Include="WebServer\WebResultsOverrideException.cs" />
+    <Compile Include="Security\IGroup.cs" />
+    <Compile Include="Security\FilePermission.cs" />
+    <Compile Include="Disk\CanNotDeleteBuiltInUserOrGroup.cs" />
+    <Compile Include="Disk\CanNotEditMembershipOfSystemGroup.cs" />
+    <Compile Include="Disk\FileContainer.cs" />
+    <Compile Include="WebServer\WebResults\JSONWebResults.cs" />
+    <Compile Include="WebServer\WebResults\StreamWebResults.cs" />
+    <Compile Include="WebServer\WebResults\StringWebResults.cs" />
+    <Compile Include="WebServer\WebReturnConvention.cs" />
+    <Compile Include="WebServer\WebServerBase.cs" />
+    <Compile Include="WebServer\WebServerException.cs" />
+    <Compile Include="WebServer\WrapperCallsThrough.cs" />
+    <Compile Include="WebServer\WebConnectionBase.cs" />
+    <Compile Include="WebServer\ShellWebConnection.cs" />
+    <Compile Include="WebServer\WebConnectionContent.cs" />
+    <Compile Include="Disk\IObjectCloudLoggingFactoryAdapter.cs" />
+    <Compile Include="Disk\IObjectCloudLogHandler.cs" />
+    <Compile Include="Disk\LoggingLevel.cs" />
+    <Compile Include="WebServer\ChannelEventWebAdaptor.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\JsonFx.Json\JsonFx.Json.csproj">
+      <Project>{ABA23F14-7E47-43FE-A3E7-1FF97840C3FB}</Project>
+      <Name>JsonFx.Json</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ObjectCloud.Common\ObjectCloud.Common.csproj">
+      <Project>{4E351911-60AC-4BCE-99D7-066C3C9DA67E}</Project>
+      <Name>ObjectCloud.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ObjectCloud.ORM.DataAccess\ObjectCloud.ORM.DataAccess.csproj">
+      <Project>{516C38E4-D59A-41E0-893F-ADDF2E4DB5A6}</Project>
+      <Name>ObjectCloud.ORM.DataAccess</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

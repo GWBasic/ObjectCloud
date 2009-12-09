@@ -1,0 +1,219 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+   <head>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+      <? Scripts(/API/Prototype.js, /API/Filehandlers/Name-Value.js, /API/Filehandlers/Directory.js, /API/File.js, <? $_GET["FileName"] ?>?Method=GetJavascriptWrapper&assignToVariable=NVPs) ?>
+      <link href="/Pages/objectcloud.css" type="text/css" rel="stylesheet" />
+      <link href="/API/proto.menu.css" type="text/css" rel="stylesheet" />
+
+      <script>
+
+         var unsaved = false;
+
+         function updateTitle()
+         {
+            document.title = "Pears: " + $("filenameInput").value + (unsaved ? "*" : "");
+         }
+
+         var pairs = <? WebComponent($_GET["FileName"] . "?Method=GetAll") ?>;
+
+         // Resizes the inputs when the window size changes
+         function onresize()
+         {
+            var filenameInput = $("filenameInput");
+				
+            // find the margin
+            var margin = filenameInput.cumulativeOffset().left;
+
+            var saveButton = $("saveButton");
+            var filenameInputWidth = document.viewport.getWidth() - (5 * margin) - saveButton.offsetWidth;
+				
+            var filenameInput = $("filenameInput");
+            filenameInput.setStyle({"width": filenameInputWidth + "px"});
+         }
+
+         // Keep track of filename changes.  If the filename changes, then it might need to be created
+         var filenameChanged = false;
+
+         function onFilenameChanged()
+         {
+            filenameChanged = true;
+         }
+			
+         function save()
+         {
+            var filename = $("filenameInput").value;
+
+            if (filenameChanged)
+            {
+               // This is a new file, create it
+               // An assumption is that the folder path is valid...
+
+               var dirAndFile = File.SplitFullPath(filename);
+
+               File.Open(
+                  dirAndFile.Directory,
+                  {},
+                  function(dirWrapper)
+                  {
+                     dirWrapper.CreateFile(
+                        dirAndFile.Filename,
+                        "name-value",
+                        false,
+                        {},
+                        function(nvpWrapper) 
+                        {
+                           // Saving is finished through recursion
+                           NVPs = nvpWrapper;
+                           filenameChanged = false;
+                           save();
+                        });
+                  });
+            }
+            else
+            {
+               // This file already exists, just update it
+
+               // reset pairs
+               pairs = {};
+
+               var inputs = document.getElementsByTagName("input");
+
+               for ( var i in inputs )
+               {
+                  var input = inputs[i];
+
+                  if (input)
+                     if (input.id)
+                        if ("name_" == input.id.substring(0, 5))
+                        {
+                           var nameInput = input;
+
+                           var inputNum = input.id.substring(5);
+
+                           var name = nameInput.value;
+
+                           var valueInput = $("value_" + inputNum)
+                           var value = valueInput.value;
+
+                           if (name.length > 0 || value.length > 0)
+                              // TODO:  Warn if there is a duplicate pair!!!
+                              pairs[name] = value;
+
+                           // Removing empty inputs causes data loss...  TODO
+									/*else
+									{
+										nameInput.offsetParent.removeChild(nameInput);
+										valueInput.offsetParent.removeChild(valueInput);
+
+										var brTag = $("br_" + inputNum);
+										brTag.offsetParent.removeChild(brTag);
+									}*/
+                          }
+               }
+
+               NVPs.SetAllJson(
+                  pairs,
+                  function(transport)
+                  {
+                     unsaved = false;
+                     updateTitle();
+                     alert(transport.responseText);
+                  });
+            }
+         }
+
+         function onkeyup()
+         {
+            unsaved = true;
+            updateTitle();
+         }
+
+         window.onbeforeunload = function()
+         {
+            if (unsaved)
+               return "Changes to " + $("filenameInput").value + " are unsaved!  Are you sure you want to close Weco and loose the changes?";
+         }
+
+         // Adds the elements for a pair
+         function addPairInputs(pairCtr, name, value, addAnotherPairWhenEdited)
+         {
+            var body = $(document.getElementById("body"));
+
+            var newInput = $(document.createElement("input"));
+            newInput.setAttribute("id", "name_" + pairCtr);
+            newInput.setAttribute("type", "text");
+
+            if (addAnotherPairWhenEdited)
+               newInput.setAttribute("onchange", "onNewPair(" + pairCtr + ")");
+
+            newInput.setStyle({"width": "32%"});
+            newInput.setAttribute("value", name);
+            newInput.observe('keyup', onkeyup);
+            body.appendChild(newInput);
+
+            newInput = $(document.createElement("input"));
+            newInput.setAttribute("id", "value_" + pairCtr);
+            newInput.setAttribute("type", "text");
+            newInput.setStyle({"width": "65%"});
+            newInput.setAttribute("value", value);
+            newInput.observe('keyup', onkeyup);
+            body.appendChild(newInput);
+
+            newInput = document.createElement("br");
+            newInput.setAttribute("id", "br_" + pairCtr);
+            body.appendChild(newInput);
+         }
+
+         // Adds a set of empty inputs when the user types in a new pair
+         function onNewPair(pairCtr)
+         {
+            // Unregister old event handler
+            var oldInput = $("name_" + pairCtr);
+            oldInput.onchange = null;
+
+            pairCtr++;
+
+            addPairInputs(pairCtr, "", "", true);
+         }
+
+         // Renders the document
+         function Render()
+         {
+            var pairCtr = 0;
+
+            for ( var i in pairs )
+            {
+               var pair = pairs[i];
+               addPairInputs(pairCtr, i, pairs[i], false);
+               pairCtr++;
+            }
+
+            addPairInputs(pairCtr, "", "", true);
+         }
+
+      </script>
+   </head>
+   <body id="body" onload="Render()">
+      <? WebComponent("/Pages/navbar.webcomponent") ?>
+
+      <input 
+         type="text" 
+         name="filename" 
+         id="filenameInput" 
+         value="<? $_GET["FileName"] ?>" 
+         onchange="onFilenameChanged()" />
+
+      <input type="button" value="Save" id="saveButton" onclick="save()" ></input> <br />
+      To remove a pair, erase its name and value, and it will magically disappear!<br />
+		
+      <script>
+         updateTitle();
+         onresize();
+      </script>
+   </body>
+</html>
+                        

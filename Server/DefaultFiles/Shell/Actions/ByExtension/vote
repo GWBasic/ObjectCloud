@@ -1,0 +1,5 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<NameValuePairs>
+	<NameValuePair Name="View" Value="/Shell/Viewers/Goreal.wchtml?FileName=[Target]" />
+	<NameValuePair Name="Edit" Value="/Shell/Editors/Narl.wchtml?FileName=[Target]" />
+</NameValuePairs>

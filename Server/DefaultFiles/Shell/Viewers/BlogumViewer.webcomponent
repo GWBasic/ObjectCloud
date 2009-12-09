@@ -1,0 +1,149 @@
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+<? Scripts(/API/Prototype.js, <? $_GET["FileName"] ?>?Method=GetJavascriptWrapper&assignToVariable=Blog, /API/nicEdit.js, /API/Comet/CometProtocol.js) ?>
+
+<script>
+
+   var rpy_oldHTML;
+   var rpy_editor = null;
+
+   function addPost()
+   {
+      var replier = $("Replier");
+
+      rpy_oldHTML = replier.innerHTML;
+      replier.innerHTML = 'Title: <input type="text" style="width: 80%" id="Post_Title"></input><div id="Editor_Div"></div>';
+      replier.style.width="100%";
+
+      rpy_editor = new nicEditor(
+      {
+         fullPanel: true,
+         onSave : rpy_save,
+         style: "contents"
+      });
+
+      rpy_editor.panelInstance(
+         'Editor_Div',
+         {
+            hasPanel: true,
+            style: "contents"
+         });
+   }
+
+   function rpy_save(content, id, instance)
+   {
+      var replier = $("Replier");
+
+      if (null != rpy_editor)
+         rpy_editor.removeInstance('Editor_Div');
+
+      var title = $("Post_Title").value;
+
+      replier.innerHTML = 'Saving...<div class="title">' + title + '</div><div>' + content + '</div>';
+
+      Blog.AddPostWithContent(
+         title,
+         content,
+         {},
+         {},
+         function()
+         {
+            replier.innerHTML = rpy_oldHTML;
+         });
+   }
+
+   if (<? WebComponent( $_GET["FileName"] . "?Method=CanPost") ?>)
+   {
+      document.write('<div id="Replier">');
+      document.write('   <input type="button" value="Add a post" onclick="addPost()" />');
+      document.write('</div>');
+   }
+
+</script>
+
+<hr />
+
+<div id="posts"></div>
+
+<script>
+
+   var posts = <? WebComponent($_GET["FileName"] . "?Method=GetPostsForDisplay&max=" . $_GET["max"] . "&newest=" . $_GET["newest"]) ?>;
+   var postsElement = $("posts");
+
+   var oldestPostCreated = (new Date()).getTime();
+
+   function generatePostElement(post)
+   {
+      var replyHtml = '';
+
+      replyHtml +=
+         '<a href="' + post.File.OwnerIdentity + '">' + post.File.Owner + '</a>, at ';
+      replyHtml += new Date(post.File.Created) + ', says:';
+
+      var toReturn = $(document.createElement('div'));
+
+      var headerSpan = $(document.createElement('span'));
+      headerSpan.innerHTML = replyHtml;
+      toReturn.appendChild(headerSpan);
+
+      var contentDiv = $(document.createElement('div'));
+      contentDiv.innerHTML = post.View.Content;
+      toReturn.appendChild(contentDiv);
+
+      var linkDiv = $(document.createElement('span'));
+      linkDiv.innerHTML = '<a href="' + post.File.FullPath + '">View / Reply</a>';
+      toReturn.appendChild(linkDiv);
+
+      toReturn.appendChild(document.createElement('hr'));
+
+      var contentContents = contentDiv.childElements();
+      if (contentContents.length > 0)
+         contentContents[0].setAttribute("class", "title");
+
+      if (post.File.Created < oldestPostCreated)
+         oldestPostCreated = post.File.Created;
+
+      return toReturn;
+   }
+
+   posts.each(function(post)
+   {
+      var postElement = generatePostElement(post);
+      postsElement.appendChild(postElement);
+   });
+
+   if (posts.length == <? $_GET["max"] ?>)
+   {
+      var moreDiv = document.createElement('div');
+      moreDiv.innerHTML = '<a href="<? $_GET["FileName"] ?>?max=<? $_GET["max"] ?>&newest=' + (oldestPostCreated - 1) + '">more...</a>';
+      postsElement.appendChild(moreDiv);
+   }
+      
+
+   var rpy_lastUpdated = 0;
+
+   // Connect back to the server to get COMET updates when a reply is added
+   CP_QualityReliable.connect(
+      "<? $_GET["FileName"] ?>?ChannelEndpoint=RelationshipEvent",
+      {
+         handleIncomingData: function(data)
+         {
+            if (data.Timestamp > rpy_lastUpdated)
+            {
+               rpy_lastUpdated = data.Timestamp;
+
+               if ("post" == data.Relationship)
+               {
+                  var postElement = generatePostElement(data);
+                  var postsElementChilden = postsElement.childElements();
+
+                  if (0 == postsElementChilden.length)
+                     postsElement.appendChild(postElement);
+                  else
+                     postsElement.insertBefore(postElement, postsElementChilden[0]);
+               }
+            }
+         }
+      });
+
+</script>

@@ -1,0 +1,142 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+   <head>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+      <meta http-equiv="X-UA-Compatible" content="chrome=1">
+      <? Scripts(/API/Prototype.js, /API/File.js, <? $_GET["FileName"] ?>?Method=GetJavascriptWrapper&assignToVariable=TextFile) ?>
+      <link href="/Pages/objectcloud.css" type="text/css" rel="stylesheet" />
+      <link href="/API/proto.menu.css" type="text/css" rel="stylesheet" />
+      <script>
+
+         var unsaved = false;
+
+         function updateTitle()
+         {
+            document.title = "Weco: " + $("filenameInput").value + (unsaved ? "*" : "");
+         }
+
+         var stopResizing = false;
+
+         // Resizes the inputs when the window size changes
+         function onresize()
+         {
+            // hack to stop IE from crashing
+            if (stopResizing)
+               return;
+
+            var filenameInput = $("filenameInput");
+				
+            // find the margin
+            var margin = filenameInput.cumulativeOffset().left;
+
+            var windowHeight = window.innerHeight;
+				
+            var textarea = $("textarea");
+            var textareaTop = textarea.cumulativeOffset().top;
+
+            var desiredHeight = windowHeight - textareaTop - margin;
+
+            try
+            {				
+               textarea.style.height = desiredHeight + "px";
+            }
+            catch (exception)
+            {
+               textarea.rows = 100;
+               stopResizing = true;
+            }
+
+            var saveButton = $("saveButton");
+            var filenameInputWidth = document.viewport.getWidth() - (5 * margin) - saveButton.offsetWidth - 3;
+				
+            var filenameInput = $("filenameInput");
+            filenameInput.setStyle({"width": filenameInputWidth + "px"});
+         }
+
+         // Keep track of filename changes.  If the filename changes, then it might need to be created
+         var filenameChanged = false;
+
+         function onFilenameChanged()
+         {
+            filenameChanged = true;
+         }
+			
+         function save()
+         {
+            var filename = $("filenameInput").value;
+				
+            if (filenameChanged)
+            {
+               // This is a new file, create it
+               // An assumption is that the folder path is valid...
+
+               var dirAndFile = File.SplitFullPath(filename);
+
+               File.Open(
+                  dirAndFile.Directory,
+                  {},
+                  function(dirWrapper)
+                  {
+                     dirWrapper.CreateFile(
+                        dirAndFile.Filename,
+                        "text",
+                        false,
+                        {},
+                        function(textFileWrapper) 
+                        {
+                           // Saving is finished through recursion
+                           TextFile = textFileWrapper;
+                           filenameChanged = false;
+                           save();
+                        });
+                  });
+            }
+            else
+               // This file already exists, just update it
+               TextFile.WriteAll(
+                  $("textarea").value,
+                  function(transport)
+                  {
+                     unsaved = false;
+                     updateTitle();
+                     alert(transport.responseText);
+                  });
+         }
+
+         function onkeyup()
+         {
+            unsaved = true;
+            updateTitle();
+         }
+
+         window.onbeforeunload = function()
+         {
+            if (unsaved)
+               return "Changes to " + $("filenameInput").value + " are unsaved!  Are you sure you want to close Weco and loose the changes?";
+         }
+      </script>
+   </head>
+   <body>
+      <? WebComponent("/Shell/Legacy/PromptForChromeFrame.webcomponent") ?>
+      <? WebComponent("/Pages/navbar.webcomponent") ?>
+      <input 
+         type="text" 
+         name="filename" 
+         id="filenameInput" 
+         value="<? $_GET["FileName"] ?>" 
+         onchange="onFilenameChanged()" />
+
+      <input type="button" value="Save" id="saveButton" onclick="save()" ></input> <br />
+      <textarea name="textarea" style="width: 100%" id="textarea" ><? WebComponent($_GET["FileName"] . "?Method=ReadAll&EncodeFor=HTML") ?></textarea>
+		
+      <script>
+         onresize();
+         updateTitle();
+
+         $("textarea").observe('keyup', onkeyup);
+      </script>
+   </body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+   <head>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+      <link href="/Pages/objectcloud.css" type="text/css" rel="stylesheet" />
+      <link rel="openid.server" href="http://<? $_GET["Host"] ?><? $_GET["Target"] ?>?Method=DoOpenId" />
+
+      <!-- Particle Endpoints -->
+      <link rel="particle.establishTrust" href="http://<? $_GET["Host"] ?><? $_GET["Target"] ?>?Method=EstablishTrust" />
+      <link rel="particle.respondTrust" href="http://<? $_GET["Host"] ?><? $_GET["Target"] ?>?Method=RespondTrust" />
+      <link rel="particle.receiveNotification" href="http://<? $_GET["Host"] ?><? $_GET["Target"] ?>?Method=ReceiveNotification" />
+      <link rel="particle.establishSession" href="http://<? $_GET["Host"] ?><? $_GET["Target"] ?>?Method=EstablishSession" />
+      <link rel="particle.getNotifications" href="http://<? $_GET["Host"] ?><? $_GET["Target"] ?>?Method=GetNotifications" />
+      <link rel="particle.sendNotification" href="http://<? $_GET["Host"] ?><? $_GET["Target"] ?>?Method=SendNotification" />
+      <link rel="particle.updateNotificationState" href="http://<? $_GET["Host"] ?><? $_GET["Target"] ?>?Method=UpdateNotificationState" />
+      <link rel="particle.updateObjectState" href="http://<? $_GET["Host"] ?><? $_GET["Target"] ?>?Method=UpdateObjectState" />
+      <link rel="particle.block" href="http://<? $_GET["Host"] ?><? $_GET["Target"] ?>?Method=Block" />
+      <link rel="particle.unBlock" href="http://<? $_GET["Host"] ?><? $_GET["Target"] ?>?Method=UnBlock" />
+      <link rel="particle.getBlocked" href="http://<? $_GET["Host"] ?><? $_GET["Target"] ?>?Method=GetBlocked" />
+      <link rel="particle.incomingNotificationEvent" href="http://<? $_GET["Host"] ?><? $_GET["Target"] ?>?ChannelEndpoint=IncomingNotificationEvent" />
+
+      <title>http://<? $_GET["Host"] ?><? $_GET["Target"] ?></title>
+      <? Scripts(/API/Prototype.js, /API/Filehandlers/User.js) ?>
+
+      <script>
+         var target = "<? $_GET["Target"] ?>";
+         var username = target.substring(target.lastIndexOf("/") + 1, target.lastIndexOf("."));
+
+         var UserWrapper = User.Open(username);
+
+         function DoChangePassword()
+         {
+            UserWrapper.SetPassword(
+               $("OldPassword").value,
+               NewPasswordInput.value,
+               function(transport) { alert(transport.responseText); },
+               function(transport) { alert(transport.responseText); });
+         }
+      </script>
+
+   </head>
+   <body>
+      <? WebComponent("/Pages/logo.webcomponent") ?>
+      <? WebComponent("/Pages/navbar.webcomponent") ?>
+
+      <div class="contents">
+         <form onsubmit="return false;">
+            <h1>Change Password</h1>
+            Old Password: <input id="OldPassword" type="password" /><br />
+            New Password: <input id="NewPassword" type="password" onchange="VerifyNewPasswordsMatch()" /><br />
+            Verify Password: <input id="VerifyPassword" type="password" onchange="VerifyNewPasswordsMatch()" /><br />
+            <input id="ChangePasswordButton" type="submit" value="Change Password" onclick="DoChangePassword()" />&nbsp;
+            <span id="PasswordsDontMatch">Passwords do not match</span>
+
+            <script>
+               var ChangePasswordButton = $("ChangePasswordButton");
+               var PasswordsDontMatchSpan = $("PasswordsDontMatch");
+
+               var NewPasswordInput = $("NewPassword");
+               var VerifyPasswordInput = $("VerifyPassword");
+
+               function VerifyNewPasswordsMatch()
+               {
+                  if (NewPasswordInput.value.length > 0 && VerifyPasswordInput.value.length > 0)
+                     if (NewPasswordInput.value == VerifyPasswordInput.value)
+                     {
+                        ChangePasswordButton.enable();
+                        PasswordsDontMatchSpan.hide();
+                     }
+                     else
+                     {
+                        ChangePasswordButton.disable();
+                        PasswordsDontMatchSpan.show();
+                     }
+                  else
+                  {
+                     ChangePasswordButton.disable();
+                     PasswordsDontMatchSpan.hide();
+                  }
+               }
+
+               VerifyNewPasswordsMatch();
+
+            </script>
+         </form>
+      </div>
+<? WebComponent("/Pages/footer.webcomponent") ?>

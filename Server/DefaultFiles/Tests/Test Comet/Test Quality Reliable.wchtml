@@ -1,0 +1,40 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+   <head>
+      <? Scripts(/API/Prototype.js, /API/Comet/CometProtocol.js) ?>
+      <title>Test Quality and Reliable Comet Protocol</title>
+      <link href="/Pages/objectcloud.css" type="text/css" rel="stylesheet" />
+
+   <script>
+
+       var connection = CP_QualityReliable.connect(
+          "/System/Comet/LoopbackQuality",
+          {
+             handleIncomingData: function(data)
+             {
+                $("results").innerHTML = "<pre>" + Object.toJSON(data) + "</pre>" + $("results").innerHTML;
+             }
+          });
+
+       function send()
+       {
+          try
+          {
+             connection.send($("textarea").value, 0);
+          }
+          catch (exception)
+          {
+             alert(exception);
+          }
+       }
+
+   </script>
+
+   </head>
+   <body>
+      <textarea id="textarea"></textarea><input type="button" value="send" onclick="send()" /><br />
+      <input type="button" value="close" onclick="connection.close()" />
+      <div id="results"></div>
+   </body>
+</html>

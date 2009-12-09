@@ -1,0 +1,52 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+   <head>
+      <? Scripts(/API/Prototype.js, /API/Comet/CometTransport.js) ?>
+      <title>Test of the CometTransport</title>
+      <link href="/Pages/objectcloud.css" type="text/css" rel="stylesheet" />
+
+      <script>
+         var dataToSend = null;
+
+         var transport = CP_Transport.create(
+            "/System/Comet/Loopback",
+            {
+               getDataToSend: function()
+               {
+                  var myDataToSend = dataToSend;
+                  dataToSend = null;
+                  return myDataToSend;
+               },
+               handleIncomingData: function(incoming)
+               {
+                  $("results").innerHTML = Object.toJSON(incoming);
+               },
+               handleError: function(error) { $("status").innerHTML = "disconnected: " + error; },
+               flashSuccess: function(t, sendId) { $("status").innerHTML = "connected (SendId: " + sendId + ")"; },
+               flashError: function(t, sendId) { $("status").innerHTML = "attempting to reconnect (SendId: " + sendId + ")"; }
+            });
+
+         function send()
+         {
+            dataToSend = $("textarea").value;
+
+            try
+            {
+               transport.startSend();
+            }
+            catch (exception)
+            {
+               alert(exception);
+            }
+         }
+
+      </script>
+
+   </head>
+   <body onload="send()" >
+      <textarea id="textarea"></textarea><input type="button" value="send" onclick="send()" />
+      <pre id="results"></pre>
+      <pre id="status">Connecting</pre>
+   </body>
+</html>

@@ -1,0 +1,277 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<objects xmlns="http://www.springframework.net" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://www.springframework.net, http://www.springframework.net/xsd/spring-objects-1.1.xsd">
+
+<!--
+// Copyright 2009 Andrew Rondeau
+// This code is released under the LGPL license
+// For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
+
+-->
+
+  <!-- Instanciate the object that directly manages the file system -->
+
+  <object id="FileSystem" type="ObjectCloud.Disk.Factories.FileSystem, ObjectCloud.Disk.Factories" />
+
+  <object id="FileSystemResolver" type="ObjectCloud.Disk.Implementation.FileSystemResolver, ObjectCloud.Disk.Implementation">
+    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+    <property name="RootDirectoryId" value="0" />
+  </object>
+	
+	<!-- This creates the root directory if it is missing.  At some point, this wil be moved into some form of an installer -->
+	
+	<object id="RootDirectoryCreator" type="ObjectCloud.Disk.Implementation.RootDirectoryCreator, ObjectCloud.Disk.Implementation" >
+    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+    <property name="DefaultRootPassword" value="root" />
+	</object>
+	
+	<!-- The user factory contains built-in users that need to be hardcoded into the system.  Data for the built-in users is declared here -->
+	
+	<object id="UserFactory" type="ObjectCloud.Disk.Implementation.UserFactory, ObjectCloud.Disk.Implementation">
+    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+		<property name="_AnonymousUser">
+			<object type="ObjectCloud.Disk.Implementation.User, ObjectCloud.Disk.Implementation" factory-method="SpringContructor" id="anonymous">
+				<constructor-arg name="id" value="00000000000000000000000000000000" />
+				<constructor-arg name="name" value="anonymous" />
+        <constructor-arg name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+      </object>
+		</property>
+		<property name="_RootUser">
+			<object type="ObjectCloud.Disk.Implementation.User, ObjectCloud.Disk.Implementation" factory-method="SpringContructor" id="root">
+				<constructor-arg name="id" value="dddddddddddddddddddddddddddddddd" />
+				<constructor-arg name="name" value="root" />
+        <constructor-arg name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+      </object>
+		</property>
+		<property name="_Everybody">
+			<object type="ObjectCloud.Disk.Implementation.Group, ObjectCloud.Disk.Implementation" factory-method="SpringContructor" id="Everybody">
+				<constructor-arg name="id" value="eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" />
+				<constructor-arg name="name" value="Everybody" />
+				<constructor-arg name="automatic" value="true" />
+        <constructor-arg name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+      </object>
+		</property>
+		<property name="_AuthenticatedUsers">
+			<object type="ObjectCloud.Disk.Implementation.Group, ObjectCloud.Disk.Implementation" factory-method="SpringContructor" id="AuthenticatedUsers">
+				<constructor-arg name="id" value="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" />
+				<constructor-arg name="name" value="AuthenticatedUsers" />
+				<constructor-arg name="automatic" value="true" />
+        <constructor-arg name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+      </object>
+		</property>
+		<property name="_LocalUsers">
+			<object type="ObjectCloud.Disk.Implementation.Group, ObjectCloud.Disk.Implementation" factory-method="SpringContructor" id="LocalUsers">
+				<constructor-arg name="id" value="bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" />
+				<constructor-arg name="name" value="LocalUsers" />
+				<constructor-arg name="automatic" value="true" />
+        <constructor-arg name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+      </object>
+		</property>
+		<property name="_Administrators">
+			<object type="ObjectCloud.Disk.Implementation.Group, ObjectCloud.Disk.Implementation" factory-method="SpringContructor" id="Administrators">
+				<constructor-arg name="id" value="cccccccccccccccccccccccccccccccc" />
+				<constructor-arg name="name" value="Administrators" />
+				<constructor-arg name="automatic" value="false" />
+        <constructor-arg name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+      </object>
+		</property>
+	</object>
+
+	<!-- These are all of the factories for different file types -->
+
+  <object id="DirectoryHandlerFactory" type="ObjectCloud.Disk.Factories.DirectoryHandlerFactory, ObjectCloud.Disk.Factories">
+    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+    <property name="DataAccessLocator" ref="DirectoryDataAccessLocator" />
+  </object>
+	<object id="NameValuePairsHandlerFactory" type="ObjectCloud.Disk.Factories.NameValuePairsHandlerFactory, ObjectCloud.Disk.Factories">
+    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+    <property name="DataAccessLocator" ref="NameValuePairsDataAccessLocator" />
+  </object>
+  <object id="TextHandlerFactory" type="ObjectCloud.Disk.Factories.TextHandlerFactory, ObjectCloud.Disk.Factories">
+    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+  </object>
+  <object id="BinaryHandlerFactory" type="ObjectCloud.Disk.Factories.BinaryHandlerFactory, ObjectCloud.Disk.Factories">
+    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+  </object>
+  <object id="UserHandlerFactory" type="ObjectCloud.Disk.Factories.UserHandlerFactory, ObjectCloud.Disk.Factories">
+    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+    <property name="DataAccessLocator" ref="UserDataAccessLocator" />
+  </object>
+	<object id="UserManagerHandlerFactory" type="ObjectCloud.Disk.Factories.UserManagerHandlerFactory, ObjectCloud.Disk.Factories">
+    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+    <property name="DataAccessLocator" ref="UserManagerDataAccessLocator" />
+  </object>
+  <object id="DatabaseHandlerFactory" type="ObjectCloud.Disk.Factories.DatabaseHandlerFactory, ObjectCloud.Disk.Factories" >
+    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+    <property name="EmbeddedDatabaseConnector" ref="EmbeddedDatabaseConnector" />
+  </object>
+  <object id="SessionManagerHandlerFactory" type="ObjectCloud.Disk.Factories.SessionManagerHandlerFactory, ObjectCloud.Disk.Factories" >
+    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+    <property name="DataAccessLocator" ref="SessionManagerDataAccessLocator" />
+  </object>
+  <object id="FileHandlerFactory" type="ObjectCloud.Disk.Factories.FileHandlerFactory, ObjectCloud.Disk.Factories" >
+    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+  </object>
+  <object id="LogHandlerFactory" type="ObjectCloud.Disk.Factories.LogHandlerFactory, ObjectCloud.Disk.Factories" >
+    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+    <property name="DataAccessLocator" ref="LogDataAccessLocator" />
+  </object>
+
+  <!-- The FileHandlerFactoryLocator avoids the need for everyone to directly talk to Spring -->
+	
+	<object id="FileHandlerFactoryLocator" type="ObjectCloud.Interfaces.Disk.FileHandlerFactoryLocator, ObjectCloud.Interfaces">
+
+    <property name="WebMethodCache">
+      <object id="WebMethodCache" type="ObjectCloud.Disk.Implementation.MethodFinder.WebMethodCache, ObjectCloud.Disk.Implementation" />
+    </property>
+    
+		<property name="FileSystemResolver" ref="FileSystemResolver" />
+		<property name="DirectoryFactory" ref="DirectoryHandlerFactory" />
+		<property name="RootDirectoryCreator" ref="RootDirectoryCreator" />
+		<property name="UserHandlerFactory" ref="UserHandlerFactory" />
+		<property name="UserFactory" ref="UserFactory" />
+		<property name="UserManagerHandlerFactory" ref="UserManagerHandlerFactory" />
+    <property name="ExecutionEnvironmentFactory">
+      <object id="ExecutionEnvironmentFactory" type="ObjectCloud.Javascript.ExecutionEnvironmentFactory, ObjectCloud.Javascript" />
+    </property>
+		
+		<!-- FileHandlerFactories are loaded by reference -->
+		
+		<property name="fileHandlerFactories">
+			<dictionary key-type="String" value-type="ObjectCloud.Interfaces.Disk.IFileHandlerFactory, ObjectCloud.Interfaces">
+				<entry key="directory">
+					<ref object="DirectoryHandlerFactory" />
+				</entry>
+				<entry key="name-value">
+					<ref object="NameValuePairsHandlerFactory" />
+				</entry>
+        <entry key="text">
+          <ref object="TextHandlerFactory" />
+        </entry>
+        <entry key="binary">
+          <ref object="BinaryHandlerFactory" />
+        </entry>
+        <entry key="user">
+					<ref object="UserHandlerFactory" />
+				</entry>
+				<entry key="usermanager">
+					<ref object="UserManagerHandlerFactory" />
+				</entry>
+				<entry key="database">
+					<ref object="DatabaseHandlerFactory" />
+				</entry>
+        <entry key="sessionmanager">
+          <ref object="SessionManagerHandlerFactory" />
+        </entry>
+        <entry key="proxy">
+          <ref object="FileHandlerFactory" />
+        </entry>
+        <entry key="log">
+          <ref object="LogHandlerFactory" />
+        </entry>
+        <entry key="browserinfo">
+          <ref object="FileHandlerFactory" />
+        </entry>
+        <entry key="cometloopback">
+          <ref object="FileHandlerFactory" />
+        </entry>
+        <entry key="cometecho">
+          <ref object="FileHandlerFactory" />
+        </entry>
+        <entry key="cometmultiplex">
+          <ref object="FileHandlerFactory" />
+        </entry>
+        <entry key="cometloopbackqueuingreliable">
+          <ref object="FileHandlerFactory" />
+        </entry>
+      </dictionary>
+		</property>
+		
+		<!-- The WebHandlerClasses just have their classes declared in Spring -->
+		
+		<property name="webHandlerClasses">
+			<dictionary key-type="String" value-type="System.Type">
+				<entry key="directory">
+					<object type="System.Type" factory-method="GetType" id="directoryWebHandlerType">
+						<constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.DirectoryWebHandler, ObjectCloud.Disk.WebHandlers" />
+					</object>
+				</entry>
+				<entry key="name-value">
+					<object type="System.Type" factory-method="GetType" id="name-valueWebHandlerType">
+						<constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler, ObjectCloud.Disk.WebHandlers" />
+					</object>
+				</entry>
+        <entry key="text">
+          <object type="System.Type" factory-method="GetType" id="textWebHandlerType">
+            <constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.TextWebHandler, ObjectCloud.Disk.WebHandlers" />
+          </object>
+        </entry>
+        <entry key="binary">
+          <object type="System.Type" factory-method="GetType" id="binaryWebHandlerType">
+            <constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.BinaryWebHandler, ObjectCloud.Disk.WebHandlers" />
+          </object>
+        </entry>
+        <entry key="user">
+					<object type="System.Type" factory-method="GetType" id="userWebHandlerType">
+						<constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.UserWebHandler, ObjectCloud.Disk.WebHandlers" />
+					</object>
+				</entry>
+				<entry key="usermanager">
+					<object type="System.Type" factory-method="GetType" id="usermanagerWebHandlerType">
+						<constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.UserManagerWebHandler, ObjectCloud.Disk.WebHandlers" />
+					</object>
+				</entry>
+				<entry key="database">
+					<object type="System.Type" factory-method="GetType" id="databaseWebHandlerType">
+						<constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.DatabaseWebHandler, ObjectCloud.Disk.WebHandlers" />
+					</object>
+				</entry>
+        <entry key="sessionmanager">
+          <object type="System.Type" factory-method="GetType" id="sessionmanagerWebHandlerType">
+            <constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.SessionManagerWebHandler, ObjectCloud.Disk.WebHandlers" />
+          </object>
+        </entry>
+        <entry key="proxy">
+          <object type="System.Type" factory-method="GetType" id="proxyWebHandlerType">
+            <constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.HTTPWebProxy, ObjectCloud.Disk.WebHandlers" />
+          </object>
+        </entry>
+        <entry key="log">
+          <object type="System.Type" factory-method="GetType" id="logWebHandlerType">
+            <constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.LogWebHandler, ObjectCloud.Disk.WebHandlers" />
+          </object>
+        </entry>
+        <entry key="browserinfo">
+          <object type="System.Type" factory-method="GetType" id="browserinfoWebHandlerType">
+            <constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.BrowserInfoWebHandler, ObjectCloud.Disk.WebHandlers" />
+          </object>
+        </entry>
+        <entry key="cometloopback">
+          <object type="System.Type" factory-method="GetType" id="loopbackCometWebHandlerType">
+            <constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler, ObjectCloud.Disk.WebHandlers" />
+          </object>
+        </entry>
+        <entry key="cometecho">
+          <object type="System.Type" factory-method="GetType" id="echoCometWebHandlerType">
+            <constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.Comet.EchoCometWebHandler, ObjectCloud.Disk.WebHandlers" />
+          </object>
+        </entry>
+        <entry key="cometmultiplex">
+          <object type="System.Type" factory-method="GetType" id="multiplexingCometWebHandlerType">
+            <constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.Comet.MultiplexingCometWebHandler, ObjectCloud.Disk.WebHandlers" />
+          </object>
+        </entry>
+        <entry key="cometloopbackqueuingreliable">
+          <object type="System.Type" factory-method="GetType" id="loopbackqualityCometWebHandlerType">
+            <constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.Comet.LoopbackQueuingReliableWebHandler, ObjectCloud.Disk.WebHandlers" />
+          </object>
+        </entry>
+        
+      </dictionary>
+		</property>
+
+    <property name="FileSystem" ref="FileSystem" />
+	</object>
+</objects>

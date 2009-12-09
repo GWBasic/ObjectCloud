@@ -1,0 +1,12 @@
+<? WebComponent("/Pages/header.webcomponent?Title=Permission%20Denied") ?>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+   <script>
+
+      $("Login_Forms").show();
+
+      document.write("You do not have permission to access " + window.location.href + ".  Please log in if you would like to see it.");
+
+   </script>
+<? WebComponent("/Pages/footer.webcomponent") ?>

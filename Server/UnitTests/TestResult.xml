@@ -1,0 +1,1378 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!--This file represents the results of running a test suite-->
+<test-results name="Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\UnitTests\ObjectCloud.nunit" total="101" failures="101" not-run="0" date="2009-08-01" time="18:54:04">
+  <environment nunit-version="2.4.8.0" clr-version="2.0.50727.3082" os-version="Microsoft Windows NT 5.1.2600 Service Pack 3" platform="Win32NT" cwd="Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\UnitTests\bin\Debug" machine-name="WINDOWS-DESKTOP" user="Administrator" user-domain="WINDOWS-DESKTOP" />
+  <culture-info current-culture="en-US" current-uiculture="en-US" />
+  <test-suite name="Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\UnitTests\ObjectCloud.nunit" success="False" time="68.672" asserts="0">
+    <results>
+      <test-suite name="Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\UnitTests\bin\Debug\ObjectCloud.Disk.Test.dll" success="False" time="2.328" asserts="0">
+        <results>
+          <test-suite name="ObjectCloud" success="False" time="2.328" asserts="0">
+            <results>
+              <test-suite name="Disk" success="False" time="2.328" asserts="0">
+                <results>
+                  <test-suite name="Test" success="False" time="2.313" asserts="0">
+                    <results>
+                      <test-suite name="FileDumperTest" success="False" time="1.734" asserts="0">
+                        <failure>
+                          <message><![CDATA[System.IO.FileNotFoundException : Could not find file '\0'.]]></message>
+                          <stack-trace><![CDATA[at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+at System.IO.Directory.InternalCreateDirectory(String fullPath, String path, DirectorySecurity dirSecurity)
+at System.IO.Directory.CreateDirectory(String path, DirectorySecurity directorySecurity)
+at System.IO.Directory.CreateDirectory(String path)
+at ObjectCloud.Disk.Factories.DirectoryHandlerFactory.CreateFile(String path) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\DirectoryHandlerFactory.cs:line 17
+at ObjectCloud.Disk.Implementation.RootDirectoryCreator.CreateRootDirectoryHandler(String rootDirectoryDiskPath) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\RootDirectoryCreator.cs:line 17
+at ObjectCloud.Disk.Implementation.FileSystemResolver.get_RootDirectoryHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 86
+at ObjectCloud.Disk.Implementation.FileSystemResolver.ResolveFile(String fileName) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 189
+at ObjectCloud.Interfaces.Disk.FileHandlerFactoryLocator.get_UserManagerHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Interfaces\Disk\FileHandlerFactoryLocator.cs:line 113
+at ObjectCloud.Disk.Test.FileDumperTest.TestFixtureSetUp() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\FileDumperTest.cs:line 28
+]]></stack-trace>
+                        </failure>
+                        <results>
+                          <test-case name="ObjectCloud.Disk.Test.FileDumperTest.TestAnonymousUserCantDumpUserDB" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in FileDumperTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileDumperTest.TestDumpRestoreDatabase" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in FileDumperTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileDumperTest.TestDumpRestoreDirectory" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in FileDumperTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileDumperTest.TestDumpRestoreDirectoryWithPermissions" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in FileDumperTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileDumperTest.TestDumpRestoreNameValuePairsFile" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in FileDumperTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileDumperTest.TestDumpRestoreTextFile" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in FileDumperTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileDumperTest.TestDumpSanity" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in FileDumperTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                        </results>
+                      </test-suite>
+                      <test-suite name="FileSystemResolverTest" success="False" time="0.453" asserts="0">
+                        <results>
+                          <test-case name="ObjectCloud.Disk.Test.FileSystemResolverTest.TestCache" executed="True" success="False" time="0.031" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.IO.FileNotFoundException : Could not find file '\0'.]]></message>
+                              <stack-trace><![CDATA[at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+at System.IO.Directory.InternalCreateDirectory(String fullPath, String path, DirectorySecurity dirSecurity)
+at System.IO.Directory.CreateDirectory(String path, DirectorySecurity directorySecurity)
+at System.IO.Directory.CreateDirectory(String path)
+at ObjectCloud.Disk.Factories.DirectoryHandlerFactory.CreateFile(String path) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\DirectoryHandlerFactory.cs:line 17
+at ObjectCloud.Disk.Implementation.RootDirectoryCreator.CreateRootDirectoryHandler(String rootDirectoryDiskPath) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\RootDirectoryCreator.cs:line 17
+at ObjectCloud.Disk.Implementation.FileSystemResolver.get_RootDirectoryHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 86
+at ObjectCloud.Disk.Test.FileSystemResolverTest.TestCache() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\FileSystemResolverTest.cs:line 59
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileSystemResolverTest.TestCloseBraceIsInvalid" executed="True" success="False" time="0.016" asserts="0">
+                            <failure>
+                              <message><![CDATA[An unexpected exception type was thrown
+Expected: ObjectCloud.Interfaces.Disk.BadFileName
+ but was: System.IO.FileNotFoundException : Could not find file '\0'.]]></message>
+                              <stack-trace><![CDATA[at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+at System.IO.Directory.InternalCreateDirectory(String fullPath, String path, DirectorySecurity dirSecurity)
+at System.IO.Directory.CreateDirectory(String path, DirectorySecurity directorySecurity)
+at System.IO.Directory.CreateDirectory(String path)
+at ObjectCloud.Disk.Factories.DirectoryHandlerFactory.CreateFile(String path) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\DirectoryHandlerFactory.cs:line 17
+at ObjectCloud.Disk.Implementation.RootDirectoryCreator.CreateRootDirectoryHandler(String rootDirectoryDiskPath) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\RootDirectoryCreator.cs:line 17
+at ObjectCloud.Disk.Implementation.FileSystemResolver.get_RootDirectoryHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 86
+at ObjectCloud.Disk.Test.FileSystemResolverTest.TestCloseBraceIsInvalid() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\FileSystemResolverTest.cs:line 242
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileSystemResolverTest.TestCopyDirectory" executed="True" success="False" time="0.016" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.IO.FileNotFoundException : Could not find file '\0'.]]></message>
+                              <stack-trace><![CDATA[at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+at System.IO.Directory.InternalCreateDirectory(String fullPath, String path, DirectorySecurity dirSecurity)
+at System.IO.Directory.CreateDirectory(String path, DirectorySecurity directorySecurity)
+at System.IO.Directory.CreateDirectory(String path)
+at ObjectCloud.Disk.Factories.DirectoryHandlerFactory.CreateFile(String path) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\DirectoryHandlerFactory.cs:line 17
+at ObjectCloud.Disk.Implementation.RootDirectoryCreator.CreateRootDirectoryHandler(String rootDirectoryDiskPath) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\RootDirectoryCreator.cs:line 17
+at ObjectCloud.Disk.Implementation.FileSystemResolver.get_RootDirectoryHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 86
+at ObjectCloud.Disk.Test.FileSystemResolverTest.TestCopyDirectory() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\FileSystemResolverTest.cs:line 401
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileSystemResolverTest.TestCopyEmbeddedDatabase" executed="True" success="False" time="0.031" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.IO.FileNotFoundException : Could not find file '\0'.]]></message>
+                              <stack-trace><![CDATA[at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+at System.IO.Directory.InternalCreateDirectory(String fullPath, String path, DirectorySecurity dirSecurity)
+at System.IO.Directory.CreateDirectory(String path, DirectorySecurity directorySecurity)
+at System.IO.Directory.CreateDirectory(String path)
+at ObjectCloud.Disk.Factories.DirectoryHandlerFactory.CreateFile(String path) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\DirectoryHandlerFactory.cs:line 17
+at ObjectCloud.Disk.Implementation.RootDirectoryCreator.CreateRootDirectoryHandler(String rootDirectoryDiskPath) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\RootDirectoryCreator.cs:line 17
+at ObjectCloud.Disk.Implementation.FileSystemResolver.get_RootDirectoryHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 86
+at ObjectCloud.Disk.Test.FileSystemResolverTest.TestCopyEmbeddedDatabase() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\FileSystemResolverTest.cs:line 592
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileSystemResolverTest.TestCopyNameValuePairs" executed="True" success="False" time="0.016" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.IO.FileNotFoundException : Could not find file '\0'.]]></message>
+                              <stack-trace><![CDATA[at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+at System.IO.Directory.InternalCreateDirectory(String fullPath, String path, DirectorySecurity dirSecurity)
+at System.IO.Directory.CreateDirectory(String path, DirectorySecurity directorySecurity)
+at System.IO.Directory.CreateDirectory(String path)
+at ObjectCloud.Disk.Factories.DirectoryHandlerFactory.CreateFile(String path) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\DirectoryHandlerFactory.cs:line 17
+at ObjectCloud.Disk.Implementation.RootDirectoryCreator.CreateRootDirectoryHandler(String rootDirectoryDiskPath) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\RootDirectoryCreator.cs:line 17
+at ObjectCloud.Disk.Implementation.FileSystemResolver.get_RootDirectoryHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 86
+at ObjectCloud.Disk.Test.FileSystemResolverTest.TestCopyNameValuePairs() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\FileSystemResolverTest.cs:line 128
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileSystemResolverTest.TestCopyText" executed="True" success="False" time="0.016" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.IO.FileNotFoundException : Could not find file '\0'.]]></message>
+                              <stack-trace><![CDATA[at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+at System.IO.Directory.InternalCreateDirectory(String fullPath, String path, DirectorySecurity dirSecurity)
+at System.IO.Directory.CreateDirectory(String path, DirectorySecurity directorySecurity)
+at System.IO.Directory.CreateDirectory(String path)
+at ObjectCloud.Disk.Factories.DirectoryHandlerFactory.CreateFile(String path) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\DirectoryHandlerFactory.cs:line 17
+at ObjectCloud.Disk.Implementation.RootDirectoryCreator.CreateRootDirectoryHandler(String rootDirectoryDiskPath) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\RootDirectoryCreator.cs:line 17
+at ObjectCloud.Disk.Implementation.FileSystemResolver.get_RootDirectoryHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 86
+at ObjectCloud.Disk.Test.FileSystemResolverTest.TestCopyText() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\FileSystemResolverTest.cs:line 178
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileSystemResolverTest.TestCreateDuplicateFile" executed="True" success="False" time="0.031" asserts="0">
+                            <failure>
+                              <message><![CDATA[An unexpected exception type was thrown
+Expected: ObjectCloud.Interfaces.Disk.DuplicateFile
+ but was: System.IO.FileNotFoundException : Could not find file '\0'.]]></message>
+                              <stack-trace><![CDATA[at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+at System.IO.Directory.InternalCreateDirectory(String fullPath, String path, DirectorySecurity dirSecurity)
+at System.IO.Directory.CreateDirectory(String path, DirectorySecurity directorySecurity)
+at System.IO.Directory.CreateDirectory(String path)
+at ObjectCloud.Disk.Factories.DirectoryHandlerFactory.CreateFile(String path) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\DirectoryHandlerFactory.cs:line 17
+at ObjectCloud.Disk.Implementation.RootDirectoryCreator.CreateRootDirectoryHandler(String rootDirectoryDiskPath) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\RootDirectoryCreator.cs:line 17
+at ObjectCloud.Disk.Implementation.FileSystemResolver.get_RootDirectoryHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 86
+at ObjectCloud.Disk.Test.FileSystemResolverTest.TestCreateDuplicateFile() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\FileSystemResolverTest.cs:line 350
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileSystemResolverTest.TestCreateEmbeddedDatabase" executed="True" success="False" time="0.016" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.IO.FileNotFoundException : Could not find file '\0'.]]></message>
+                              <stack-trace><![CDATA[at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+at System.IO.Directory.InternalCreateDirectory(String fullPath, String path, DirectorySecurity dirSecurity)
+at System.IO.Directory.CreateDirectory(String path, DirectorySecurity directorySecurity)
+at System.IO.Directory.CreateDirectory(String path)
+at ObjectCloud.Disk.Factories.DirectoryHandlerFactory.CreateFile(String path) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\DirectoryHandlerFactory.cs:line 17
+at ObjectCloud.Disk.Implementation.RootDirectoryCreator.CreateRootDirectoryHandler(String rootDirectoryDiskPath) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\RootDirectoryCreator.cs:line 17
+at ObjectCloud.Disk.Implementation.FileSystemResolver.get_RootDirectoryHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 86
+at ObjectCloud.Disk.Test.FileSystemResolverTest.TestCreateEmbeddedDatabase() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\FileSystemResolverTest.cs:line 488
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileSystemResolverTest.TestCreateFileSystemResolver" executed="True" success="False" time="0.031" asserts="4">
+                            <failure>
+                              <message><![CDATA[  Expected: ".\FileSystem"
+  But was:  null
+]]></message>
+                              <stack-trace><![CDATA[at ObjectCloud.Disk.Test.FileSystemResolverTest.TestCreateFileSystemResolver() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\FileSystemResolverTest.cs:line 36
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileSystemResolverTest.TestCreateSubdirectory" executed="True" success="False" time="0.016" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.IO.FileNotFoundException : Could not find file '\0'.]]></message>
+                              <stack-trace><![CDATA[at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+at System.IO.Directory.InternalCreateDirectory(String fullPath, String path, DirectorySecurity dirSecurity)
+at System.IO.Directory.CreateDirectory(String path, DirectorySecurity directorySecurity)
+at System.IO.Directory.CreateDirectory(String path)
+at ObjectCloud.Disk.Factories.DirectoryHandlerFactory.CreateFile(String path) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\DirectoryHandlerFactory.cs:line 17
+at ObjectCloud.Disk.Implementation.RootDirectoryCreator.CreateRootDirectoryHandler(String rootDirectoryDiskPath) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\RootDirectoryCreator.cs:line 17
+at ObjectCloud.Disk.Implementation.FileSystemResolver.get_RootDirectoryHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 86
+at ObjectCloud.Disk.Test.FileSystemResolverTest.TestCreateSubdirectory() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\FileSystemResolverTest.cs:line 77
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileSystemResolverTest.TestDefaultDirectorySetup" executed="True" success="False" time="0.016" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.IO.FileNotFoundException : Could not find file '\0'.]]></message>
+                              <stack-trace><![CDATA[at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+at System.IO.Directory.InternalCreateDirectory(String fullPath, String path, DirectorySecurity dirSecurity)
+at System.IO.Directory.CreateDirectory(String path, DirectorySecurity directorySecurity)
+at System.IO.Directory.CreateDirectory(String path)
+at ObjectCloud.Disk.Factories.DirectoryHandlerFactory.CreateFile(String path) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\DirectoryHandlerFactory.cs:line 17
+at ObjectCloud.Disk.Implementation.RootDirectoryCreator.CreateRootDirectoryHandler(String rootDirectoryDiskPath) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\RootDirectoryCreator.cs:line 17
+at ObjectCloud.Disk.Implementation.FileSystemResolver.get_RootDirectoryHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 86
+at ObjectCloud.Disk.Implementation.FileSystemResolver.ResolveFile(String fileName) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 189
+at ObjectCloud.Disk.Test.FileSystemResolverTest.TestDefaultDirectorySetup() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\FileSystemResolverTest.cs:line 205
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileSystemResolverTest.TestDelete" executed="True" success="False" time="0.016" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.IO.FileNotFoundException : Could not find file '\0'.]]></message>
+                              <stack-trace><![CDATA[at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+at System.IO.Directory.InternalCreateDirectory(String fullPath, String path, DirectorySecurity dirSecurity)
+at System.IO.Directory.CreateDirectory(String path, DirectorySecurity directorySecurity)
+at System.IO.Directory.CreateDirectory(String path)
+at ObjectCloud.Disk.Factories.DirectoryHandlerFactory.CreateFile(String path) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\DirectoryHandlerFactory.cs:line 17
+at ObjectCloud.Disk.Implementation.RootDirectoryCreator.CreateRootDirectoryHandler(String rootDirectoryDiskPath) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\RootDirectoryCreator.cs:line 17
+at ObjectCloud.Disk.Implementation.FileSystemResolver.get_RootDirectoryHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 86
+at ObjectCloud.Disk.Test.FileSystemResolverTest.TestDelete() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\FileSystemResolverTest.cs:line 251
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileSystemResolverTest.TestEmbeddedDatabaseRoundTrip" executed="True" success="False" time="0.031" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.IO.FileNotFoundException : Could not find file '\0'.]]></message>
+                              <stack-trace><![CDATA[at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+at System.IO.Directory.InternalCreateDirectory(String fullPath, String path, DirectorySecurity dirSecurity)
+at System.IO.Directory.CreateDirectory(String path, DirectorySecurity directorySecurity)
+at System.IO.Directory.CreateDirectory(String path)
+at ObjectCloud.Disk.Factories.DirectoryHandlerFactory.CreateFile(String path) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\DirectoryHandlerFactory.cs:line 17
+at ObjectCloud.Disk.Implementation.RootDirectoryCreator.CreateRootDirectoryHandler(String rootDirectoryDiskPath) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\RootDirectoryCreator.cs:line 17
+at ObjectCloud.Disk.Implementation.FileSystemResolver.get_RootDirectoryHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 86
+at ObjectCloud.Disk.Test.FileSystemResolverTest.TestEmbeddedDatabaseRoundTrip() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\FileSystemResolverTest.cs:line 544
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileSystemResolverTest.TestEnumerateFilesInDirectory" executed="True" success="False" time="0.016" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.IO.FileNotFoundException : Could not find file '\0'.]]></message>
+                              <stack-trace><![CDATA[at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+at System.IO.Directory.InternalCreateDirectory(String fullPath, String path, DirectorySecurity dirSecurity)
+at System.IO.Directory.CreateDirectory(String path, DirectorySecurity directorySecurity)
+at System.IO.Directory.CreateDirectory(String path)
+at ObjectCloud.Disk.Factories.DirectoryHandlerFactory.CreateFile(String path) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\DirectoryHandlerFactory.cs:line 17
+at ObjectCloud.Disk.Implementation.RootDirectoryCreator.CreateRootDirectoryHandler(String rootDirectoryDiskPath) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\RootDirectoryCreator.cs:line 17
+at ObjectCloud.Disk.Implementation.FileSystemResolver.get_RootDirectoryHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 86
+at ObjectCloud.Disk.Test.FileSystemResolverTest.TestEnumerateFilesInDirectory() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\FileSystemResolverTest.cs:line 371
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileSystemResolverTest.TestIsFileNotPresent" executed="True" success="False" time="0.016" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.IO.FileNotFoundException : Could not find file '\0'.]]></message>
+                              <stack-trace><![CDATA[at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+at System.IO.Directory.InternalCreateDirectory(String fullPath, String path, DirectorySecurity dirSecurity)
+at System.IO.Directory.CreateDirectory(String path, DirectorySecurity directorySecurity)
+at System.IO.Directory.CreateDirectory(String path)
+at ObjectCloud.Disk.Factories.DirectoryHandlerFactory.CreateFile(String path) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\DirectoryHandlerFactory.cs:line 17
+at ObjectCloud.Disk.Implementation.RootDirectoryCreator.CreateRootDirectoryHandler(String rootDirectoryDiskPath) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\RootDirectoryCreator.cs:line 17
+at ObjectCloud.Disk.Implementation.FileSystemResolver.get_RootDirectoryHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 86
+at ObjectCloud.Disk.Test.FileSystemResolverTest.TestIsFileNotPresent() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\FileSystemResolverTest.cs:line 447
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileSystemResolverTest.TestIsFilePresent" executed="True" success="False" time="0.016" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.IO.FileNotFoundException : Could not find file '\0'.]]></message>
+                              <stack-trace><![CDATA[at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+at System.IO.Directory.InternalCreateDirectory(String fullPath, String path, DirectorySecurity dirSecurity)
+at System.IO.Directory.CreateDirectory(String path, DirectorySecurity directorySecurity)
+at System.IO.Directory.CreateDirectory(String path)
+at ObjectCloud.Disk.Factories.DirectoryHandlerFactory.CreateFile(String path) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\DirectoryHandlerFactory.cs:line 17
+at ObjectCloud.Disk.Implementation.RootDirectoryCreator.CreateRootDirectoryHandler(String rootDirectoryDiskPath) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\RootDirectoryCreator.cs:line 17
+at ObjectCloud.Disk.Implementation.FileSystemResolver.get_RootDirectoryHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 86
+at ObjectCloud.Disk.Test.FileSystemResolverTest.TestIsFilePresent() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\FileSystemResolverTest.cs:line 431
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileSystemResolverTest.TestNameValuePairs" executed="True" success="False" time="0.016" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.IO.FileNotFoundException : Could not find file '\0'.]]></message>
+                              <stack-trace><![CDATA[at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+at System.IO.Directory.InternalCreateDirectory(String fullPath, String path, DirectorySecurity dirSecurity)
+at System.IO.Directory.CreateDirectory(String path, DirectorySecurity directorySecurity)
+at System.IO.Directory.CreateDirectory(String path)
+at ObjectCloud.Disk.Factories.DirectoryHandlerFactory.CreateFile(String path) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\DirectoryHandlerFactory.cs:line 17
+at ObjectCloud.Disk.Implementation.RootDirectoryCreator.CreateRootDirectoryHandler(String rootDirectoryDiskPath) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\RootDirectoryCreator.cs:line 17
+at ObjectCloud.Disk.Implementation.FileSystemResolver.get_RootDirectoryHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 86
+at ObjectCloud.Disk.Test.FileSystemResolverTest.TestNameValuePairs() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\FileSystemResolverTest.cs:line 99
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileSystemResolverTest.TestOpenBraceIsInvalid" executed="True" success="False" time="0.016" asserts="0">
+                            <failure>
+                              <message><![CDATA[An unexpected exception type was thrown
+Expected: ObjectCloud.Interfaces.Disk.BadFileName
+ but was: System.IO.FileNotFoundException : Could not find file '\0'.]]></message>
+                              <stack-trace><![CDATA[at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+at System.IO.Directory.InternalCreateDirectory(String fullPath, String path, DirectorySecurity dirSecurity)
+at System.IO.Directory.CreateDirectory(String path, DirectorySecurity directorySecurity)
+at System.IO.Directory.CreateDirectory(String path)
+at ObjectCloud.Disk.Factories.DirectoryHandlerFactory.CreateFile(String path) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\DirectoryHandlerFactory.cs:line 17
+at ObjectCloud.Disk.Implementation.RootDirectoryCreator.CreateRootDirectoryHandler(String rootDirectoryDiskPath) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\RootDirectoryCreator.cs:line 17
+at ObjectCloud.Disk.Implementation.FileSystemResolver.get_RootDirectoryHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 86
+at ObjectCloud.Disk.Test.FileSystemResolverTest.TestOpenBraceIsInvalid() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\FileSystemResolverTest.cs:line 232
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileSystemResolverTest.TestRecursiveDelete" executed="True" success="False" time="0.031" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.IO.FileNotFoundException : Could not find file '\0'.]]></message>
+                              <stack-trace><![CDATA[at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+at System.IO.Directory.InternalCreateDirectory(String fullPath, String path, DirectorySecurity dirSecurity)
+at System.IO.Directory.CreateDirectory(String path, DirectorySecurity directorySecurity)
+at System.IO.Directory.CreateDirectory(String path)
+at ObjectCloud.Disk.Factories.DirectoryHandlerFactory.CreateFile(String path) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\DirectoryHandlerFactory.cs:line 17
+at ObjectCloud.Disk.Implementation.RootDirectoryCreator.CreateRootDirectoryHandler(String rootDirectoryDiskPath) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\RootDirectoryCreator.cs:line 17
+at ObjectCloud.Disk.Implementation.FileSystemResolver.get_RootDirectoryHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 86
+at ObjectCloud.Disk.Test.FileSystemResolverTest.TestRecursiveDelete() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\FileSystemResolverTest.cs:line 275
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileSystemResolverTest.TestRename" executed="True" success="False" time="0.016" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.IO.FileNotFoundException : Could not find file '\0'.]]></message>
+                              <stack-trace><![CDATA[at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+at System.IO.Directory.InternalCreateDirectory(String fullPath, String path, DirectorySecurity dirSecurity)
+at System.IO.Directory.CreateDirectory(String path, DirectorySecurity directorySecurity)
+at System.IO.Directory.CreateDirectory(String path)
+at ObjectCloud.Disk.Factories.DirectoryHandlerFactory.CreateFile(String path) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\DirectoryHandlerFactory.cs:line 17
+at ObjectCloud.Disk.Implementation.RootDirectoryCreator.CreateRootDirectoryHandler(String rootDirectoryDiskPath) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\RootDirectoryCreator.cs:line 17
+at ObjectCloud.Disk.Implementation.FileSystemResolver.get_RootDirectoryHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 86
+at ObjectCloud.Disk.Test.FileSystemResolverTest.TestRename() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\FileSystemResolverTest.cs:line 462
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileSystemResolverTest.TestRootDirectoryPresent" executed="True" success="False" time="0.016" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.IO.FileNotFoundException : Could not find file '\0'.]]></message>
+                              <stack-trace><![CDATA[at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+at System.IO.Directory.InternalCreateDirectory(String fullPath, String path, DirectorySecurity dirSecurity)
+at System.IO.Directory.CreateDirectory(String path, DirectorySecurity directorySecurity)
+at System.IO.Directory.CreateDirectory(String path)
+at ObjectCloud.Disk.Factories.DirectoryHandlerFactory.CreateFile(String path) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\DirectoryHandlerFactory.cs:line 17
+at ObjectCloud.Disk.Implementation.RootDirectoryCreator.CreateRootDirectoryHandler(String rootDirectoryDiskPath) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\RootDirectoryCreator.cs:line 17
+at ObjectCloud.Disk.Implementation.FileSystemResolver.get_RootDirectoryHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 86
+at ObjectCloud.Disk.Test.FileSystemResolverTest.TestRootDirectoryPresent() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\FileSystemResolverTest.cs:line 50
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.FileSystemResolverTest.TestText" executed="True" success="False" time="0.016" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.IO.FileNotFoundException : Could not find file '\0'.]]></message>
+                              <stack-trace><![CDATA[at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+at System.IO.Directory.InternalCreateDirectory(String fullPath, String path, DirectorySecurity dirSecurity)
+at System.IO.Directory.CreateDirectory(String path, DirectorySecurity directorySecurity)
+at System.IO.Directory.CreateDirectory(String path)
+at ObjectCloud.Disk.Factories.DirectoryHandlerFactory.CreateFile(String path) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\DirectoryHandlerFactory.cs:line 17
+at ObjectCloud.Disk.Implementation.RootDirectoryCreator.CreateRootDirectoryHandler(String rootDirectoryDiskPath) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\RootDirectoryCreator.cs:line 17
+at ObjectCloud.Disk.Implementation.FileSystemResolver.get_RootDirectoryHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 86
+at ObjectCloud.Disk.Test.FileSystemResolverTest.TestText() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\FileSystemResolverTest.cs:line 157
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                        </results>
+                      </test-suite>
+                      <test-suite name="PermissionsTest" success="False" time="0.063" asserts="0">
+                        <failure>
+                          <message><![CDATA[System.IO.FileNotFoundException : Could not find file '\0'.]]></message>
+                          <stack-trace><![CDATA[at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+at System.IO.Directory.InternalCreateDirectory(String fullPath, String path, DirectorySecurity dirSecurity)
+at System.IO.Directory.CreateDirectory(String path, DirectorySecurity directorySecurity)
+at System.IO.Directory.CreateDirectory(String path)
+at ObjectCloud.Disk.Factories.DirectoryHandlerFactory.CreateFile(String path) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\DirectoryHandlerFactory.cs:line 17
+at ObjectCloud.Disk.Implementation.RootDirectoryCreator.CreateRootDirectoryHandler(String rootDirectoryDiskPath) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\RootDirectoryCreator.cs:line 17
+at ObjectCloud.Disk.Implementation.FileSystemResolver.get_RootDirectoryHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 86
+at ObjectCloud.Disk.Test.PermissionsTest.SetUp() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\PermissionsTest.cs:line 24
+]]></stack-trace>
+                        </failure>
+                        <results>
+                          <test-case name="ObjectCloud.Disk.Test.PermissionsTest.TestAddPermission" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in PermissionsTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.PermissionsTest.TestAddUserToGroups" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in PermissionsTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.PermissionsTest.TestCanNotAddUserToSystemGroup" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in PermissionsTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.PermissionsTest.TestCannotCreateGroupWithSameNameAsUser" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in PermissionsTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.PermissionsTest.TestCannotCreateUserWithSameNameAsGroup" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in PermissionsTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.PermissionsTest.TestCanNotDeleteBuiltInGroup" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in PermissionsTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.PermissionsTest.TestCanNotDeleteBuiltInUser" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in PermissionsTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.PermissionsTest.TestCanNotRemoveUserFromSystemGroup" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in PermissionsTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.PermissionsTest.TestCreateAndGetGroup" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in PermissionsTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.PermissionsTest.TestDeleteAfterAddingPermissions" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in PermissionsTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.PermissionsTest.TestDeleteGroup" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in PermissionsTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.PermissionsTest.TestDeletePermission" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in PermissionsTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.PermissionsTest.TestEverybodyInheritPermissions" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in PermissionsTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.PermissionsTest.TestEverybodyReadUserWriteInheritPermissions" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in PermissionsTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.PermissionsTest.TestEverybodyReadUserWritePermissions" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in PermissionsTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.PermissionsTest.TestInheritPermissions" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in PermissionsTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.PermissionsTest.TestUpdatePermission" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in PermissionsTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                        </results>
+                      </test-suite>
+                      <test-suite name="TestShell" success="False" time="0.047" asserts="0">
+                        <results>
+                          <test-case name="ObjectCloud.Disk.Test.TestShell.TestAssociationHandleFalse" executed="True" success="False" time="0.016" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.IO.FileNotFoundException : Could not find file '\0'.]]></message>
+                              <stack-trace><![CDATA[at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+at System.IO.Directory.InternalCreateDirectory(String fullPath, String path, DirectorySecurity dirSecurity)
+at System.IO.Directory.CreateDirectory(String path, DirectorySecurity directorySecurity)
+at System.IO.Directory.CreateDirectory(String path)
+at ObjectCloud.Disk.Factories.DirectoryHandlerFactory.CreateFile(String path) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\DirectoryHandlerFactory.cs:line 17
+at ObjectCloud.Disk.Implementation.RootDirectoryCreator.CreateRootDirectoryHandler(String rootDirectoryDiskPath) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\RootDirectoryCreator.cs:line 17
+at ObjectCloud.Disk.Implementation.FileSystemResolver.get_RootDirectoryHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 86
+at ObjectCloud.Disk.Implementation.FileSystemResolver.ResolveFile(String fileName) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 189
+at ObjectCloud.Interfaces.Disk.FileHandlerFactoryLocator.get_UserManagerHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Interfaces\Disk\FileHandlerFactoryLocator.cs:line 113
+at ObjectCloud.Disk.Test.TestShell.TestAssociationHandleFalse() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\TestShell.cs:line 32
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.Disk.Test.TestShell.TestAssociationHandleTrue" executed="True" success="False" time="0.016" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.IO.FileNotFoundException : Could not find file '\0'.]]></message>
+                              <stack-trace><![CDATA[at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+at System.IO.Directory.InternalCreateDirectory(String fullPath, String path, DirectorySecurity dirSecurity)
+at System.IO.Directory.CreateDirectory(String path, DirectorySecurity directorySecurity)
+at System.IO.Directory.CreateDirectory(String path)
+at ObjectCloud.Disk.Factories.DirectoryHandlerFactory.CreateFile(String path) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\DirectoryHandlerFactory.cs:line 17
+at ObjectCloud.Disk.Implementation.RootDirectoryCreator.CreateRootDirectoryHandler(String rootDirectoryDiskPath) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\RootDirectoryCreator.cs:line 17
+at ObjectCloud.Disk.Implementation.FileSystemResolver.get_RootDirectoryHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 86
+at ObjectCloud.Disk.Implementation.FileSystemResolver.ResolveFile(String fileName) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Implementation\FileSystemResolver.cs:line 189
+at ObjectCloud.Interfaces.Disk.FileHandlerFactoryLocator.get_UserManagerHandler() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Interfaces\Disk\FileHandlerFactoryLocator.cs:line 113
+at ObjectCloud.Disk.Test.TestShell.TestAssociationHandleTrue() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Test\TestShell.cs:line 22
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                        </results>
+                      </test-suite>
+                    </results>
+                  </test-suite>
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite name="Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\UnitTests\bin\Debug\ObjectCloud.ORM.DataAccess.SQLite.Test.dll" success="False" time="0.078" asserts="0">
+        <results>
+          <test-suite name="ObjectCloud" success="False" time="0.078" asserts="0">
+            <results>
+              <test-suite name="ORM" success="False" time="0.078" asserts="0">
+                <results>
+                  <test-suite name="DataAccess" success="False" time="0.063" asserts="0">
+                    <results>
+                      <test-suite name="SQLite" success="False" time="0.063" asserts="0">
+                        <results>
+                          <test-suite name="Test" success="False" time="0.063" asserts="0">
+                            <results>
+                              <test-suite name="ConcurrencyTest" success="False" time="0.063" asserts="0">
+                                <failure>
+                                  <message><![CDATA[System.Exception : Can not start Spring.
+  ----> Spring.Context.ApplicationContextException : Existing context 'Spring.Context.Support.XmlApplicationContext' already registered under name 'spring.root'.]]></message>
+                                  <stack-trace><![CDATA[at ObjectCloud.ORM.DataAccess.SQLite.Test.TestBase..ctor() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.ORM.DataAccess.SQLite.Test\TestBase.cs:line 35
+at ObjectCloud.ORM.DataAccess.SQLite.Test.ConcurrencyTest..ctor() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.ORM.DataAccess.SQLite.Test\ConcurrencyTest.cs:line 18
+--ApplicationContextException
+at Spring.Context.Support.ContextRegistry.RegisterContext(IApplicationContext context)
+at ObjectCloud.ORM.DataAccess.SQLite.Test.TestBase..ctor() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.ORM.DataAccess.SQLite.Test\TestBase.cs:line 29
+]]></stack-trace>
+                                </failure>
+                                <results>
+                                  <test-case name="ObjectCloud.ORM.DataAccess.SQLite.Test.ConcurrencyTest.TestConcurrencyWhenOpeningMultipleDatabases" executed="True" success="False" time="0.000" asserts="0">
+                                    <failure>
+                                      <message><![CDATA[TestFixtureSetUp failed in ConcurrencyTest]]></message>
+                                      <stack-trace />
+                                    </failure>
+                                  </test-case>
+                                  <test-case name="ObjectCloud.ORM.DataAccess.SQLite.Test.ConcurrencyTest.TestConcurrencyWhenOpeningMultipleDatabasesAndDoingSomething" executed="True" success="False" time="0.000" asserts="0">
+                                    <failure>
+                                      <message><![CDATA[TestFixtureSetUp failed in ConcurrencyTest]]></message>
+                                      <stack-trace />
+                                    </failure>
+                                  </test-case>
+                                  <test-case name="ObjectCloud.ORM.DataAccess.SQLite.Test.ConcurrencyTest.TestConcurrencyWhenOpeningTwoDatabases" executed="True" success="False" time="0.000" asserts="0">
+                                    <failure>
+                                      <message><![CDATA[TestFixtureSetUp failed in ConcurrencyTest]]></message>
+                                      <stack-trace />
+                                    </failure>
+                                  </test-case>
+                                </results>
+                              </test-suite>
+                            </results>
+                          </test-suite>
+                        </results>
+                      </test-suite>
+                    </results>
+                  </test-suite>
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite name="Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\UnitTests\bin\Debug\ObjectCloud.WebServer.Test.dll" success="False" time="66.266" asserts="0">
+        <results>
+          <test-suite name="ObjectCloud" success="False" time="66.266" asserts="0">
+            <results>
+              <test-suite name="WebServer" success="False" time="66.266" asserts="0">
+                <results>
+                  <test-suite name="Test" success="False" time="66.266" asserts="0">
+                    <results>
+                      <test-suite name="EmbeddedDatabaseTest" success="False" time="0.172" asserts="0">
+                        <failure>
+                          <message><![CDATA[System.Exception : Can not start Spring.
+  ----> Spring.Context.ApplicationContextException : Existing context 'Spring.Context.Support.XmlApplicationContext' already registered under name 'spring.root'.]]></message>
+                          <stack-trace><![CDATA[at ObjectCloud.WebServer.Test.WebServerTestBase..ctor() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 46
+at ObjectCloud.WebServer.Test.EmbeddedDatabaseTest..ctor()
+--ApplicationContextException
+at Spring.Context.Support.ContextRegistry.RegisterContext(IApplicationContext context)
+at ObjectCloud.WebServer.Test.WebServerTestBase..ctor() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 40
+]]></stack-trace>
+                        </failure>
+                        <results>
+                          <test-case name="ObjectCloud.WebServer.Test.EmbeddedDatabaseTest.TestCreateEmbeddedDatabase" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in EmbeddedDatabaseTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.EmbeddedDatabaseTest.TestParameters" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in EmbeddedDatabaseTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.EmbeddedDatabaseTest.TestStoredProcedure" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in EmbeddedDatabaseTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.EmbeddedDatabaseTest.TestStoredProcedurePermissions" executed="True" success="False" time="0.000" asserts="0">
+                            <failure>
+                              <message><![CDATA[TestFixtureSetUp failed in EmbeddedDatabaseTest]]></message>
+                              <stack-trace />
+                            </failure>
+                          </test-case>
+                        </results>
+                      </test-suite>
+                      <test-suite name="TestUserAndPermissions" success="False" time="17.250" asserts="0">
+                        <results>
+                          <test-case name="ObjectCloud.WebServer.Test.TestUserAndPermissions.TestAddUserToGroup" executed="True" success="False" time="1.281" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.TestUserAndPermissions.TestAddUserToGroup() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\TestUserAndPermissions.cs:line 131
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.TestUserAndPermissions.TestCanCreateGroup" executed="True" success="False" time="1.047" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.TestUserAndPermissions.TestCanCreateGroup() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\TestUserAndPermissions.cs:line 93
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.TestUserAndPermissions.TestCanDeleteGroup" executed="True" success="False" time="1.094" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.TestUserAndPermissions.TestCanDeleteGroup() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\TestUserAndPermissions.cs:line 109
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.TestUserAndPermissions.TestNewUser" executed="True" success="False" time="0.984" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.TestUserAndPermissions.TestNewUser() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\TestUserAndPermissions.cs:line 28
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.TestUserAndPermissions.TestNewUserCanLogIn" executed="True" success="False" time="0.984" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.TestUserAndPermissions.TestNewUserCanLogIn() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\TestUserAndPermissions.cs:line 51
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.TestUserAndPermissions.TestRemoveUserFromGroup" executed="True" success="False" time="1.094" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.TestUserAndPermissions.TestRemoveUserFromGroup() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\TestUserAndPermissions.cs:line 179
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                        </results>
+                      </test-suite>
+                      <test-suite name="WebComponentTest" success="False" time="6.422" asserts="0">
+                        <results>
+                          <test-case name="ObjectCloud.WebServer.Test.WebComponentTest.TestWebComponent_COOKIE" executed="True" success="False" time="1.016" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebComponentTest.TestWebComponent_COOKIE() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebComponentTest.cs:line 262
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebComponentTest.TestWebComponent_GET" executed="True" success="False" time="1.094" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebComponentTest.TestWebComponent_GET() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebComponentTest.cs:line 107
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebComponentTest.TestWebComponent_POST" executed="True" success="False" time="1.094" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebComponentTest.TestWebComponent_POST() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebComponentTest.cs:line 185
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebComponentTest.TestWebComponent_REQUEST" executed="True" success="False" time="1.094" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebComponentTest.TestWebComponent_REQUEST() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebComponentTest.cs:line 343
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebComponentTest.TestWebComponentSanity" executed="True" success="False" time="0.984" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebComponentTest.TestWebComponentSanity() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebComponentTest.cs:line 30
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                        </results>
+                      </test-suite>
+                      <test-suite name="WebServerTest" success="False" time="16.719" asserts="0">
+                        <results>
+                          <test-case name="ObjectCloud.WebServer.Test.WebServerTest.Test404OnBadFile" executed="True" success="False" time="0.938" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebServerTest.Test404OnBadFile() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTest.cs:line 362
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebServerTest.TestBadPassword" executed="True" success="False" time="1.094" asserts="1">
+                            <failure>
+                              <message><![CDATA[  Wrong status
+  Expected: ProtocolError
+  But was:  ConnectFailure
+]]></message>
+                              <stack-trace><![CDATA[at ObjectCloud.WebServer.Test.WebServerTest.TestBadPassword() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTest.cs:line 297
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebServerTest.TestCopyFile" executed="True" success="False" time="1.094" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebServerTest.TestCopyFile() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTest.cs:line 200
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebServerTest.TestCreateDirectory" executed="True" success="False" time="0.984" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebServerTest.TestCreateDirectory() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTest.cs:line 31
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebServerTest.TestCreateNameValuePairs" executed="True" success="False" time="0.984" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebServerTest.TestCreateNameValuePairs() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTest.cs:line 94
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebServerTest.TestCreateSubdirectory" executed="True" success="False" time="1.094" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebServerTest.TestCreateSubdirectory() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTest.cs:line 49
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebServerTest.TestErrorWhenCreatingDuplicateFile" executed="True" success="False" time="1.094" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebServerTest.TestErrorWhenCreatingDuplicateFile() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTest.cs:line 337
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebServerTest.TestGetSetAllNameValuePairs" executed="True" success="False" time="1.094" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebServerTest.TestGetSetAllNameValuePairs() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTest.cs:line 161
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebServerTest.TestIsFilePresent" executed="True" success="False" time="0.984" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebServerTest.TestIsFilePresent() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTest.cs:line 455
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebServerTest.TestListFilesInDirectory" executed="True" success="False" time="0.984" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebServerTest.TestListFilesInDirectory() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTest.cs:line 377
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebServerTest.TestLoginLogout" executed="True" success="False" time="1.094" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.NullReferenceException : Object reference not set to an instance of an object.]]></message>
+                              <stack-trace><![CDATA[at ObjectCloud.Common.HttpResponseHandler.get_StatusCode() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpResponseHandler.cs:line 35
+at ObjectCloud.WebServer.Test.WebServerTest.TestLoginLogout() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTest.cs:line 255
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebServerTest.TestRename" executed="True" success="False" time="1.094" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebServerTest.TestRename() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTest.cs:line 566
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebServerTest.TestSetFilePermission" executed="True" success="False" time="1.094" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebServerTest.TestSetFilePermission() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTest.cs:line 489
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebServerTest.TestUnknownUser" executed="True" success="False" time="0.984" asserts="1">
+                            <failure>
+                              <message><![CDATA[  Wrong status
+  Expected: ProtocolError
+  But was:  ConnectFailure
+]]></message>
+                              <stack-trace><![CDATA[at ObjectCloud.WebServer.Test.WebServerTest.TestUnknownUser() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTest.cs:line 322
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebServerTest.TestUseNameValuePairs" executed="True" success="False" time="0.984" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebServerTest.TestUseNameValuePairs() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTest.cs:line 112
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                        </results>
+                      </test-suite>
+                      <test-suite name="WebServerTestClasses" success="False" time="12.156" asserts="0">
+                        <results>
+                          <test-suite name="CreateFile" success="False" time="3.641" asserts="0">
+                            <results>
+                              <test-case name="ObjectCloud.WebServer.Test.WebServerTestClasses.CreateFile.TestCreateFileConcurrent" executed="True" success="False" time="1.281" asserts="0">
+                                <failure>
+                                  <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                                  <stack-trace><![CDATA[at ObjectCloud.WebServer.Test.WebServerTestClasses.CreateFile.TestCreateFileConcurrent() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestClasses\CreateFile.cs:line 98
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                                </failure>
+                              </test-case>
+                              <test-case name="ObjectCloud.WebServer.Test.WebServerTestClasses.CreateFile.TestCreateMultipleFilesConcurrent" executed="True" success="False" time="1.219" asserts="0">
+                                <failure>
+                                  <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                                  <stack-trace><![CDATA[at ObjectCloud.WebServer.Test.WebServerTestClasses.CreateFile.TestCreateMultipleFilesConcurrent() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestClasses\CreateFile.cs:line 148
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                                </failure>
+                              </test-case>
+                            </results>
+                          </test-suite>
+                          <test-suite name="Delete" success="False" time="4.375" asserts="0">
+                            <results>
+                              <test-case name="ObjectCloud.WebServer.Test.WebServerTestClasses.Delete.TestDelete" executed="True" success="False" time="1.031" asserts="0">
+                                <failure>
+                                  <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                                  <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebServerTestClasses.Delete.TestDelete() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestClasses\Delete.cs:line 32
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                                </failure>
+                              </test-case>
+                              <test-case name="ObjectCloud.WebServer.Test.WebServerTestClasses.Delete.TestDelete404OnMissing" executed="True" success="False" time="1.094" asserts="0">
+                                <failure>
+                                  <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                                  <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebServerTestClasses.Delete.TestDelete404OnMissing() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestClasses\Delete.cs:line 65
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                                </failure>
+                              </test-case>
+                              <test-case name="ObjectCloud.WebServer.Test.WebServerTestClasses.Delete.TestDeleteConcurrent" executed="True" success="False" time="1.094" asserts="0">
+                                <failure>
+                                  <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                                  <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebServerTestClasses.Delete.TestDeleteConcurrent() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestClasses\Delete.cs:line 144
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                                </failure>
+                              </test-case>
+                            </results>
+                          </test-suite>
+                          <test-suite name="Text" success="False" time="4.141" asserts="0">
+                            <results>
+                              <test-case name="ObjectCloud.WebServer.Test.WebServerTestClasses.Text.TestConcurrent" executed="True" success="False" time="0.922" asserts="0">
+                                <failure>
+                                  <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                                  <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebServerTestClasses.Text.TestConcurrent() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestClasses\Text.cs:line 36
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                                </failure>
+                              </test-case>
+                              <test-case name="ObjectCloud.WebServer.Test.WebServerTestClasses.Text.TestLargeTextFile" executed="True" success="False" time="0.984" asserts="0">
+                                <failure>
+                                  <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                                  <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebServerTestClasses.Text.TestLargeTextFile() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestClasses\Text.cs:line 219
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                                </failure>
+                              </test-case>
+                              <test-case name="ObjectCloud.WebServer.Test.WebServerTestClasses.Text.TestUseText" executed="True" success="False" time="1.078" asserts="0">
+                                <failure>
+                                  <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                                  <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebServerTestClasses.Text.TestUseText() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestClasses\Text.cs:line 175
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                                </failure>
+                              </test-case>
+                            </results>
+                          </test-suite>
+                        </results>
+                      </test-suite>
+                      <test-suite name="WebShellTest" success="False" time="13.547" asserts="0">
+                        <results>
+                          <test-case name="ObjectCloud.WebServer.Test.WebShellTest.TestBypassOfActionPermissions" executed="True" success="False" time="0.938" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.NullReferenceException : Object reference not set to an instance of an object.]]></message>
+                              <stack-trace><![CDATA[at ObjectCloud.Common.HttpResponseHandler.get_StatusCode() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpResponseHandler.cs:line 35
+at ObjectCloud.WebServer.Test.WebShellTest.TestBypassOfActionPermissions() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebShellTest.cs:line 198
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebShellTest.TestCanGetOpenIdLandingPage" executed="True" success="False" time="0.969" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.NullReferenceException : Object reference not set to an instance of an object.]]></message>
+                              <stack-trace><![CDATA[at ObjectCloud.Common.HttpResponseHandler.get_StatusCode() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpResponseHandler.cs:line 35
+at ObjectCloud.WebServer.Test.WebShellTest.TestCanGetOpenIdLandingPage() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebShellTest.cs:line 209
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebShellTest.TestEnforcementOfActionPermissions" executed="True" success="False" time="1.094" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.NullReferenceException : Object reference not set to an instance of an object.]]></message>
+                              <stack-trace><![CDATA[at ObjectCloud.Common.HttpResponseHandler.get_StatusCode() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpResponseHandler.cs:line 35
+at ObjectCloud.WebServer.Test.WebShellTest.TestEnforcementOfActionPermissions() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebShellTest.cs:line 174
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebShellTest.TestErrorInShellSetting" executed="True" success="False" time="1.125" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebShellTest.TestErrorInShellSetting() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebShellTest.cs:line 71
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebShellTest.TestIgnoreUnknownActionPermissions" executed="True" success="False" time="1.063" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.NullReferenceException : Object reference not set to an instance of an object.]]></message>
+                              <stack-trace><![CDATA[at ObjectCloud.Common.HttpResponseHandler.get_StatusCode() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpResponseHandler.cs:line 35
+at ObjectCloud.WebServer.Test.WebShellTest.TestIgnoreUnknownActionPermissions() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebShellTest.cs:line 186
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebShellTest.TestMimeTypeHTM" executed="True" success="False" time="1.094" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebShellTest.TestMimeType(String mimeType, String extension) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebShellTest.cs:line 93
+at ObjectCloud.WebServer.Test.WebShellTest.TestMimeTypeHTM() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebShellTest.cs:line 145
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebShellTest.TestMimeTypeHTML" executed="True" success="False" time="0.984" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebShellTest.TestMimeType(String mimeType, String extension) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebShellTest.cs:line 93
+at ObjectCloud.WebServer.Test.WebShellTest.TestMimeTypeHTML() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebShellTest.cs:line 151
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebShellTest.TestMimeTypeTEXT" executed="True" success="False" time="0.984" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebShellTest.TestMimeType(String mimeType, String extension) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebShellTest.cs:line 93
+at ObjectCloud.WebServer.Test.WebShellTest.TestMimeTypeTEXT() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebShellTest.cs:line 139
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebShellTest.TestMimeTypeTXT" executed="True" success="False" time="1.094" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebShellTest.TestMimeType(String mimeType, String extension) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebShellTest.cs:line 93
+at ObjectCloud.WebServer.Test.WebShellTest.TestMimeTypeTXT() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebShellTest.cs:line 133
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebShellTest.TestMimeTypeXHTML" executed="True" success="False" time="1.094" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebShellTest.TestMimeType(String mimeType, String extension) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebShellTest.cs:line 93
+at ObjectCloud.WebServer.Test.WebShellTest.TestMimeTypeXHTML() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebShellTest.cs:line 157
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebShellTest.TestMimeTypeXML" executed="True" success="False" time="0.984" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebShellTest.TestMimeType(String mimeType, String extension) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebShellTest.cs:line 93
+at ObjectCloud.WebServer.Test.WebShellTest.TestMimeTypeXML() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebShellTest.cs:line 163
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                          <test-case name="ObjectCloud.WebServer.Test.WebShellTest.TestViewTextFile" executed="True" success="False" time="0.984" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Net.WebException : Unable to connect to the remote server
+  ----> System.Net.Sockets.SocketException : No connection could be made because the target machine actively refused it 127.0.0.1:1080]]></message>
+                              <stack-trace><![CDATA[at System.Net.HttpWebRequest.GetRequestStream()
+at ObjectCloud.Common.HttpWebClient.Post(String url, ICollection`1 arguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 96
+at ObjectCloud.Common.HttpWebClient.Post(String url, KeyValuePair`2[] getArguments) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Common\HttpWebClient.cs:line 109
+at ObjectCloud.WebServer.Test.WebServerTestBase.LoginAsRoot(HttpWebClient httpWebClient) in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebServerTestBase.cs:line 73
+at ObjectCloud.WebServer.Test.WebShellTest.TestViewTextFile() in Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.WebServer.Test\WebShellTest.cs:line 28
+--SocketException
+at System.Net.Sockets.Socket.DoConnect(EndPoint endPointSnapshot, SocketAddress socketAddress)
+at System.Net.Sockets.Socket.InternalConnect(EndPoint remoteEP)
+at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                        </results>
+                      </test-suite>
+                    </results>
+                  </test-suite>
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+    </results>
+  </test-suite>
+</test-results>

@@ -1,0 +1,99 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+   <head>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+      <? Scripts(/API/Prototype.js, /API/File.js, /API/Url.js, /API/Comet/CometProtocol.js) ?>
+      <script src="<? WebComponent("/Users/UserDB?Method=GetIdentity") ?>?Method=GetJavascriptWrapper&assignToVariable=NotificationsProxy"></script>
+      <link href="/Pages/objectcloud.css" type="text/css" rel="stylesheet" />
+      <link href="/API/proto.menu.css" type="text/css" rel="stylesheet" />
+      <title><? $_GET["FileName"] ?></title>
+      <script>
+         var  currentObjectViewer;
+
+         function doOnload()
+         {
+            var filename = "<? $_GET["FileName"] ?>";
+
+            var url = Url.parseCurrent();
+            var objectUrl = "http://" + url.server + url.file;
+
+            var newestNotificationId = null;
+            var notificationsProxy = NotificationsProxy;
+
+
+            // Connect back to the server to get COMET updates when the page changes
+            CP_QualityReliable.connect(
+               '<? WebComponent("/Users/UserDB?Method=GetIdentity") ?>?ChannelEndpoint=IncomingNotificationEvent',
+               {
+                  handleIncomingData: function(data)
+                  {
+                     if (currentObjectViewer)
+                           currentObjectViewer.handleIncomingNotification(data);
+                  }
+               });
+
+            NotificationsProxy.GetNotifications(
+               null,
+               null,
+               null,
+               objectUrl,
+               null,
+               "notificationId,timeStamp,state,sender,objectUrl,title,documentType,messageSummary,changeData,",
+               {},
+               function(notifications)
+               {
+                  notifications.each(function(notification)
+                  {
+                     try
+                     {
+                        if (currentObjectViewer)
+                           currentObjectViewer.handleIncomingNotification(notification);
+                     }
+                     catch (exception)
+                     {
+                        alert(exception);
+                     }
+                  });
+               });
+
+            new Ajax.Request(
+               "/Shell/Viewers/NotificationsViewers/ibg.js",
+               {
+                  method: "get",
+                  onSuccess: function(transport)
+                  {
+                     var viewerLoader;
+
+                     try
+                     {
+                        viewerLoader = eval('(' + transport.responseText + ')');
+                     }
+                     catch (exception)
+                     {
+                        alert(exception);
+                     }
+
+                     File.Open(
+                        filename,
+                        {},
+                        function(newObjectProxy)
+                        {
+                           currentObjectViewer = viewerLoader.load($("thediv"), filename, newObjectProxy);
+                        });
+                  },
+                  onFailure: function(transport)
+                  {
+                     alert(transport.responseText);
+                  }
+               });
+
+         }
+      </script>
+   </head>
+   <body onload="doOnload()">
+   <div id="thediv" style="width: 100%; height: 100%"></div>
+   </body>
+</html>

@@ -1,0 +1,113 @@
+<? WebComponent("/Pages/header.webcomponent?Title=Editing: <? WebComponent($_GET["FileName"] . "?Method=getTitle") ?>") ?>
+<? Scripts(/API/Prototype.js, <? $_GET["FileName"] ?>?Method=GetJavascriptWrapper&assignToVariable=VotingBooth, /API/nicEdit.js) ?>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+<script>
+   var pollInfo = <? WebComponent($_GET["FileName"] . "?Method=getQuestionsAndOptions") ?>;
+   var options = pollInfo.options;
+   var questions = pollInfo.questions;
+
+   function updateOptions()
+   {
+      $("OptionsEditor").disable();
+
+      var question = $("question").innerHTML;
+
+      VotingBooth.setOptions(
+         $("canChangeVote").checked,
+         $("canSeeResultsWithoutVoting").checked,
+         question,
+         $("q_title").value,
+         {},
+         function()
+         {
+            $("OptionsEditor").enable();
+            options.question = question;
+         });
+   }
+</script>
+
+<form id="OptionsEditor">
+   Title:  <input type="text" id="q_title" onchange="updateOptions()" ></input><br />
+   Question:  <br /><div id="question" style="width: 100%" ></div><br />
+   Users can change their votes: <input type="checkbox" id="canChangeVote" onclick="updateOptions()" /><br />
+   Users can see results without voting: <input type="checkbox" id="canSeeResultsWithoutVoting" onclick="updateOptions()" />
+</form>
+
+<script>
+
+   $("q_title").value = options.title;
+   $("question").innerHTML = options.question;
+   $("canChangeVote").checked = options.canChangeVote;
+   $("canSeeResultsWithoutVoting").checked = options.canSeeResultsWithoutVoting;
+
+   var editor = new nicEditor(
+   {
+      fullPanel: true,
+      style: "contents"
+   });
+
+   var questionEditor = editor.panelInstance(
+      'question',
+      {
+         hasPanel: true,
+         style: "contents"
+      });
+
+   questionEditor.addEvent('blur',
+      function()
+      {
+         var newQuestion = nicEditors.findEditor('question').getContent();
+         $("question").innerHTML = newQuestion;
+
+         if (options.question != newQuestion)
+            updateOptions();
+      });
+
+</script>
+
+<div id="questions">
+</div>
+
+<script>
+
+   function updateQuestion(qId)
+   {
+      var text = $("q" + qId).value;
+      VotingBooth.updateQuestion(
+         qId,
+         text,
+         {},
+         function(question)
+         {
+            $("q" + qId).value = question.text;
+         });
+   }
+
+   function displayQuestion(question)
+   {
+      $("questions").innerHTML += 
+         '<input type="text" value="' + question.text + '" id="q' + question.qId + '" />' +
+         '<input type="button" value="update" onclick="updateQuestion(' + question.qId + ')" /><br />';
+   }
+
+   questions.each(displayQuestion);
+
+   function addQuestion()
+   {
+      var newQuestion = $("AddQuestionInput").value;
+      $("AddQuestionInput").value = "";
+
+      VotingBooth.addQuestion(
+         newQuestion,
+         {},
+         displayQuestion);
+   }
+
+</script>
+
+Add an option: <input type="text" id="AddQuestionInput" />
+<input type="submit" value="Add" onclick="addQuestion()" />
+
+<? WebComponent("/Pages/footer.webcomponent") ?>

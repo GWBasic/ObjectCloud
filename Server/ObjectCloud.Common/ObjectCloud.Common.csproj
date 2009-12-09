@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{4E351911-60AC-4BCE-99D7-066C3C9DA67E}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ObjectCloud.Common</RootNamespace>
+    <AssemblyName>ObjectCloud.Common</AssemblyName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Common.Logging, Version=2.0.0.0, Culture=neutral, PublicKeyToken=af08829b84f0328e">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependancies\Common.Logging.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Array.cs" />
+    <Compile Include="DelegateQueue.cs" />
+    <Compile Include="Enumerable.cs" />
+    <Compile Include="EventArgs.cs" />
+    <Compile Include="EventBus.cs" />
+    <Compile Include="GuidFunctions.cs" />
+    <Compile Include="MimeReader.cs" />
+    <Compile Include="MulticastEventWithTimeout.cs" />
+    <Compile Include="MultiStream.cs" />
+    <Compile Include="NonBlockingConsoleWriter.cs" />
+    <Compile Include="Set.cs" />
+    <Compile Include="StreamFunctions.cs" />
+    <Compile Include="StringGenerator.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Cache.cs" />
+    <Compile Include="Enum.cs" />
+    <Compile Include="HttpResponseHandler.cs" />
+    <Compile Include="HTTPStringFunctions.cs" />
+    <Compile Include="HttpWebClient.cs" />
+    <Compile Include="ID.cs" />
+    <Compile Include="IID.cs" />
+    <Compile Include="JavaScriptMinifier.cs" />
+    <Compile Include="ReadOnlyDictionaryWrapper.cs" />
+    <Compile Include="RequestParameters.cs" />
+    <Compile Include="Returns.cs" />
+    <Compile Include="SRandom.cs" />
+    <Compile Include="DictionaryFunctions.cs" />
+    <Compile Include="StringParser.cs" />
+    <Compile Include="ThreadPoolInstance.cs" />
+    <Compile Include="TimedLock.cs" />
+    <Compile Include="Timeout.cs" />
+    <Compile Include="TypeFunctions.cs" />
+    <Compile Include="CommonDelegates.cs" />
+    <Compile Include="Shared.cs" />
+    <Compile Include="SubProcess.cs" />
+    <Compile Include="IRunnable.cs" />
+    <Compile Include="CookiesFromBrowser.cs" />
+    <Compile Include="InterrupThread.cs" />
+    <Compile Include="Wrapped.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\JsonFx.Json\JsonFx.Json.csproj">
+      <Project>{ABA23F14-7E47-43FE-A3E7-1FF97840C3FB}</Project>
+      <Name>JsonFx.Json</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

@@ -1,0 +1,66 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+   <head>
+      <? Scripts(/API/Prototype.js, /API/Url.js, /API/Comet/CometProtocol.js, <? $_GET["Filename"] ?>?Method=GetJavascriptWrapper&assignToVariable=File) ?>
+      <title>ObjectCloud Bus tester</title>
+      <link href="/Pages/objectcloud.css" type="text/css" rel="stylesheet" />
+   </head>
+
+   <script>
+
+      var url = Url.parseCurrent();
+      var filename = url.arguments.Filename;
+
+      if (null == filename)
+         alert("Please add ?Filename=... to the URL to continue");
+
+      var connection = CP_QualityReliable.connect(
+         filename + "?ChannelEndpoint=Bus",
+         {
+            handleIncomingData: function(data)
+            {
+               $("results").innerHTML = "<pre>" + new Date(data.Timestamp) + ": " + Object.toJSON(data) + "</pre>" + $("results").innerHTML;
+            }
+         });
+
+       function send()
+       {
+          try
+          {
+             connection.send($("textarea").value, 0);
+          }
+          catch (exception)
+          {
+             alert(exception);
+          }
+       }
+
+       function sendWrite()
+       {
+          File.PostBusAsWrite(Object.toJSON($("textarea").value));
+       }
+
+       function sendAdminister()
+       {
+          File.PostBusAsAdminister(Object.toJSON($("textarea").value));
+       }
+
+   </script>
+
+   <body>
+      <textarea id="textarea"></textarea>
+      <input type="button" value="send" onclick="send()" />
+      <input type="button" value="sendWrite" onclick="sendWrite()" />
+      <input type="button" value="sendAdminister" onclick="sendAdminister()" />
+      <br />
+
+      <input type="button" value="close" onclick="connection.close()" />
+      <div id="results"></div>
+
+      Users connected when page opened:
+      <pre>
+         <? WebComponent($_GET["Filename"] . "?Method=GetConnectedUsers") ?>
+      </pre>
+   </body>
+</html>

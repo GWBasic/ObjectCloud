@@ -1,0 +1,9 @@
+<? WebComponent("/Pages/header.webcomponent?Title=" . $_GETENCODE["FileName"]) ?>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+<? WebComponent("/Shell/Viewers/EditAdministerDisplay.webcomponent?FileName=" . $_GET["FileName"]) ?>
+
+<? WebComponent("/Shell/Viewers/BlogumViewer.webcomponent?FileName=" . $_GET["FileName"] . "&max=" . $_GET["max"] . "&newest=" . $_GET["newest"]) ?>
+
+<? WebComponent("/Pages/footer.webcomponent?Title=Blog%20Editor%20" . $_GETENCODE["FileName"]) ?>

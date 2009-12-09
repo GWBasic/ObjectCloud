@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Directory>
+	<File
+		Name="ibg.js"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+			Level="Read"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
+</Directory>

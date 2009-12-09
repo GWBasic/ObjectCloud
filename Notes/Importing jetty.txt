@@ -1,0 +1,13 @@
+Command to convert jetty to a dll:
+
+Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Dependancies\Sources\ikvm-0.40.0.1\bin>ikvmc -out:jetty.dll -target:library ..\..\jetty-distri
+bution-7.0.0.v20091005\lib\jetty-ajp-7.0.0.v20091005.jar ..\..\jetty-distribution-7.0.0.v20091005\lib\jetty-annotations-7.0.0.v20091005.jar ..\..\jetty-distribu
+tion-7.0.0.v20091005\lib\jetty-client-7.0.0.v20091005.jar ..\..\jetty-distribution-7.0.0.v20091005\lib\jetty-continuation-7.0.0.v20091005.jar ..\..\jetty-distri
+bution-7.0.0.v20091005\lib\jetty-deploy-7.0.0.v20091005.jar ..\..\jetty-distribution-7.0.0.v20091005\lib\jetty-http-7.0.0.v20091005.jar ..\..\jetty-distribution
+-7.0.0.v20091005\lib\jetty-io-7.0.0.v20091005.jar ..\..\jetty-distribution-7.0.0.v20091005\lib\jetty-jmx-7.0.0.v20091005.jar ..\..\jetty-distribution-7.0.0.v200
+91005\lib\jetty-jndi-7.0.0.v20091005.jar ..\..\jetty-distribution-7.0.0.v20091005\lib\jetty-plus-7.0.0.v20091005.jar ..\..\jetty-distribution-7.0.0.v20091005\li
+b\jetty-policy-7.0.0.v20091005.jar ..\..\jetty-distribution-7.0.0.v20091005\lib\jetty-rewrite-7.0.0.v20091005.jar ..\..\jetty-distribution-7.0.0.v20091005\lib\j
+etty-security-7.0.0.v20091005.jar ..\..\jetty-distribution-7.0.0.v20091005\lib\jetty-server-7.0.0.v20091005.jar ..\..\jetty-distribution-7.0.0.v20091005\lib\jet
+ty-servlet-7.0.0.v20091005.jar ..\..\jetty-distribution-7.0.0.v20091005\lib\jetty-servlets-7.0.0.v20091005.jar ..\..\jetty-distribution-7.0.0.v20091005\lib\jett
+y-util-7.0.0.v20091005.jar ..\..\jetty-distribution-7.0.0.v20091005\lib\jetty-webapp-7.0.0.v20091005.jar ..\..\jetty-distribution-7.0.0.v20091005\lib\jetty-xml-
+7.0.0.v20091005.jar ..\..\jetty-distribution-7.0.0.v20091005\lib\servlet-api-2.5.jar

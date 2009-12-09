@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ObjectCloudConfig>
+  <FileSystem ConnectionString="./FileSystem" />
+  <FileHandlerFactoryLocator Hostname="localhost"/>
+
+  <!-- When running a real server, this line should be deleted.  Writing to the console really kills performance -->
+  <LogHandlerFactory WriteToConsole="true" />
+</ObjectCloudConfig>

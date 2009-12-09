@@ -1,0 +1,20 @@
+<? WebComponent("/Pages/header.webcomponent?Title=Reply%20Permissions%20For%20" .$_GETENCODE["FileName"]) ?>
+   <? Scripts(/API/Prototype.js) ?>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+   <h1>Users and Groups who can reply to <? $_GET["FileName"] ?></h1>
+
+   <? WebComponent("/Shell/Security/NamedPermissions.webcomponent?FileName=" . $_GET["FileName"] . "&NamedPermission=reply") ?>
+
+   <p>
+   Note:  The following built-in groups are supported:
+   <ul>
+      <li><em>everybody</em>: Grants everyone access to the file, including people from the general public who aren't logged in.
+      <li><em>authenticatedusers</em>: Grants everyone access to the file, as long as they are logged in through a local or OpenID account.
+      <li><em>localusers</em>: Grants access only to users local to this instance of ObjectCloud, but not to OpenID users.
+      <li><em>administrators</em>: Grants access only to administrators.
+   </ul>
+   </p>
+
+<? WebComponent("/Pages/footer.webcomponent") ?>

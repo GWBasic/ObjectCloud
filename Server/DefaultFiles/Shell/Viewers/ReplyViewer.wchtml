@@ -1,0 +1,13 @@
+<? WebComponent("/Pages/header.webcomponent?Title=" . $_GETENCODE["FileName"]) ?>
+<? Scripts(/API/Prototype.js, /API/Comet/CometProtocol.js, <? $_GET["FileName"] ?>?Method=GetJavascriptWrapper&assignToVariable=Page) ?>
+
+<? WebComponent("/Shell/Viewers/EditAdministerDisplay.webcomponent?FileName=" . $_GET["FileName"]) ?>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+<div id="pagecontents" style="position: relative">
+   <? WebComponent($_GET["FileName"] . "?Method=ReadAll") ?>
+</div>
+
+<? WebComponent("/Shell/Communication/Replier.webcomponent?ObjectName=Page&FileName=" . $_GET["FileName"]) ?>
+<? WebComponent("/Pages/footer.webcomponent") ?>

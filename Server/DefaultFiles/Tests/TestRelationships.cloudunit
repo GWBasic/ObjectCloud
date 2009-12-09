@@ -1,0 +1,86 @@
+// Scripts: /API/File.js
+
+var unitTests =
+{
+   TestDirectory : null,
+
+   setUp : function(runTests)
+   {
+      var me = this;
+
+      File.Open(
+         "/Users/[name]",
+         {},
+         function(myDirectory)
+         {
+            myDirectory.CreateFile(
+               "TestRelationships" + Math.floor(Math.random() * 10000),
+               "directory",
+               false,
+               {},
+               function(testDirectoryWrapper) 
+               {
+                  me.TestDirectory = testDirectoryWrapper;
+                  runTests();
+               });
+         });
+   },
+
+   testAddRelationship : function(testToken)
+   {
+      var me = this;
+
+      me.TestDirectory.CreateFile(
+         "parentFile.txt",
+         "text",
+         false,
+         {},
+         function(parentFile)
+         {
+            me.TestDirectory.CreateFile(
+               "relatedFile.txt",
+               "text",
+               false,
+               {},
+               function(relatedFile)
+               {
+                  parentFile.AddRelatedFile(
+                     "relatedFile.txt",
+                     "test",
+                     {},
+                     function()
+                     {
+                        parentFile.GetRelatedFiles(
+                           null,
+                           null,
+                           null,
+                           null,
+                           null,
+                           {},
+                           function(relationships)
+                           {
+                              try
+                              {
+                                 if (1 == relationships.length)
+                                    if ("relatedFile.txt" == relationships[0].Name)
+                                    {
+                                       testToken.Pass();
+                                       return;
+                                    }
+
+                                 testToken.Fail();
+                              }
+                              catch (exception)
+                              {
+                                 testToken.fail(exception);
+                              }
+                           },
+                           testToken.FailAJAX);
+                     },
+                     testToken.FailAJAX);
+               },
+               testToken.FailAJAX);
+         },
+         testToken.FailAJAX);
+   }
+};

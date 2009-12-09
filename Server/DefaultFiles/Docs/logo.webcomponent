@@ -1,0 +1,24 @@
+<div class="logo" style="float: left;">
+   <div class="logocloud" style="float: left; margin-right: -20em">
+      <pre>
+                      0011 000
+                    11000 11000
+   0010      0110      0000 11        010
+  001011   11100011 10   1110   000  11111 11
+ 1 11001110000   111010        1110 0000 00001
+ 0001110011001111000000      000 00111 1001 00
+  111 00  000111 11 11         000 001100 101
+   1111    0000   000         11111 00011101
+                                 110011  00
+      </pre>
+   </div>
+   <div style="float: left;">
+      <br />
+      <div class="logotitle">
+         &nbsp;ObjectCloud
+      </div>
+      <div class="logoslogan">
+         &nbsp;Own your data
+      </div>
+   </div>
+</div>

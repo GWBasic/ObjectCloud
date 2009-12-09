@@ -1,0 +1,31 @@
+<? WebComponent("/Pages/header.webcomponent?Title=Login%20for%20" . $_GETENCODE["openid.identity"]) ?>
+      <? Scripts(/API/Url.js) ?>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+      <script>
+         var getArguments = <? $_GET["OriginalParameters"] ?>;
+      </script>
+
+      <form method="POST" action="/Users/UserDB?Method=ProvideOpenID">
+         <script>
+
+            var openId = getArguments["openid.identity"];
+
+            var needPassword = openId !=
+               "<? WebComponent("/Users/[name].user?Method=GetOpenId") ?>";
+
+            if (needPassword)
+               document.write('<input type="password" name="password" /><br />');
+
+            for (argname in getArguments)
+            {
+               if (argname != "Method")
+                  document.write('<input type="hidden" name="' + argname + '" value="' + getArguments[argname] + '" />');
+            }
+         </script>
+         <input type="submit" value="Login with OpenID" />
+      </form>
+   </body>
+</html>
+<? WebComponent("/Pages/footer.webcomponent") ?>
