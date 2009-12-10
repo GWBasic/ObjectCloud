@@ -23,7 +23,7 @@
       <link rel="particle.incomingNotificationEvent" href="http://<? $_GET["Host"] ?><? $_GET["Target"] ?>?ChannelEndpoint=IncomingNotificationEvent" />
 
       <title>http://<? $_GET["Host"] ?><? $_GET["Target"] ?></title>
-      <? Scripts(/API/Prototype.js, /API/Filehandlers/User.js) ?>
+      <? Scripts(/API/Prototype.js, /API/Filehandlers/User.js, /Users/UserDB?Method=GetJSW&assignToVariable=userDB) ?>
 
       <script>
          var target = "<? $_GET["Target"] ?>";
@@ -39,11 +39,35 @@
                function(transport) { alert(transport.responseText); },
                function(transport) { alert(transport.responseText); });
          }
+
+         function createGroup()
+         {
+            var groupName = $("CreateGroup_Name").value;
+            userDB.CreateGroup(
+            {
+               groupname: groupName
+            },
+            function(transport)
+            {
+               window.location.reload(true);
+            });
+         }
+
+         function deleteGroup(groupId)
+         {
+            userDB.DeleteGroup(
+            {
+               groupId: groupId
+            },
+            function(transport)
+            {
+               window.location.reload(true);
+            });
+         }
       </script>
 
    </head>
    <body>
-      <? WebComponent("/Pages/logo.webcomponent") ?>
       <? WebComponent("/Pages/navbar.webcomponent") ?>
 
       <div class="contents">
@@ -86,5 +110,34 @@
 
             </script>
          </form>
+         <div>
+            <h1>Your Groups</h1>
+            <script>
+
+               var groups = <? WebComponent("/Users/UserDB?Method=GetGroupsThatCanBeAdministered") ?>;
+               groups.each(function(group, i)
+               {
+                  document.write('<a href="/Shell/UserManagers/GroupEditor.wchtml?groupname=' + Url.encode(group.Name) + '" >' + group.Name + '</a> ');
+         
+                  if (!group.BuiltIn)
+                     document.write('<input type="button" value="Delete" onclick="deleteGroup(' + "'" + group.Id + "'" + ')" />');
+
+                  document.write('<br />');
+               });
+
+            </script>
+
+            <h2>Create a group</h2>
+            Group Name: <input type="text" name="groupname" id="CreateGroup_Name" /><br />
+            <input type="submit" value="Create Group" onclick="createGroup();" />
+
+            <script>
+               var permissionsToUserDB = <? WebComponent("/Users/UserDB?Method=GetPermissionAsJSON") ?>;
+
+               if (!permissionsToUserDB.CanWrite)
+                  $("CreateGroup").hide();
+
+            </script>
+         </div>
       </div>
 <? WebComponent("/Pages/footer.webcomponent") ?>
