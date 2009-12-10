@@ -15,6 +15,24 @@ namespace ObjectCloud.DataAccess.SQLite.UserManager
     {
         public void DoUpgradeIfNeeded(DbConnection connection)
         {
+            DbCommand command;
+
+            command = connection.CreateCommand();
+            command.CommandText = "PRAGMA user_version;";
+
+            object versionObject = command.ExecuteScalar();
+            int version = Convert.ToInt32(versionObject);
+
+            if (version < 3)
+            {
+                command = connection.CreateCommand();
+                command.CommandText =
+@"alter table Groups add column Type integer not null default 2;
+
+PRAGMA user_version = 3;";
+
+                command.ExecuteNonQuery();
+            }
         }
     }
 }

@@ -42,10 +42,17 @@
 
          function createGroup()
          {
+            var groupType = "";
+            var groupTypeInputs = $("GroupType").childElements();
+            for (var i = 0; i < groupTypeInputs.length; i++)
+               if (groupTypeInputs[i].checked)
+                  groupType = groupTypeInputs[i].value;
+
             var groupName = $("CreateGroup_Name").value;
             userDB.CreateGroup(
             {
-               groupname: groupName
+               groupname: groupName,
+               grouptype: groupType
             },
             function(transport)
             {
@@ -129,13 +136,20 @@
 
             <h2>Create a group</h2>
             Group Name: <input type="text" name="groupname" id="CreateGroup_Name" /><br />
+
+            <span id="GroupType">
+               <input type="radio" name="GroupType" checked="true" value="Personal" /> Personal  (This group is only visible to you)<br />
+               <input type="radio" name="GroupType" value="Private" /> Private  (Other people can see the group, but only you can add/remove members)<br />
+               <input type="radio" name="GroupType" value="Public" /> Public  (Anyone can see and join the group)<br />
+            </span>
+
             <input type="submit" value="Create Group" onclick="createGroup();" />
 
             <script>
                var permissionsToUserDB = <? WebComponent("/Users/UserDB?Method=GetPermissionAsJSON") ?>;
 
                if (!permissionsToUserDB.CanWrite)
-                  $("CreateGroup").hide();
+                  $("GroupType").hide();
 
             </script>
          </div>

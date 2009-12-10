@@ -181,7 +181,7 @@ namespace ObjectCloud.WebAccessCodeGenerators
 
    for (argName in parameters)
    {
-      if (parameters.length > 0)
+      if (encodedParameters.length > 0)
          encodedParameters += '&';
 
       var arg = parameters[argName];

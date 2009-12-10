@@ -49,10 +49,10 @@ namespace ObjectCloud.Disk.Implementation
 			    true);
 			
 			// Create groups
-			IGroup everybody = userManager.CreateGroup(userFactory.Everybody.Name, null, userFactory.Everybody.Id, true, true);
-			userManager.CreateGroup(userFactory.AuthenticatedUsers.Name, null, userFactory.AuthenticatedUsers.Id, true, true);
-			userManager.CreateGroup(userFactory.LocalUsers.Name, null, userFactory.LocalUsers.Id, true, true);
-			IGroup administrators = userManager.CreateGroup(userFactory.Administrators.Name, null, userFactory.Administrators.Id, true, false);
+			IGroup everybody = userManager.CreateGroup(userFactory.Everybody.Name, null, userFactory.Everybody.Id, true, true, GroupType.Private);
+            userManager.CreateGroup(userFactory.AuthenticatedUsers.Name, null, userFactory.AuthenticatedUsers.Id, true, true, GroupType.Private);
+            userManager.CreateGroup(userFactory.LocalUsers.Name, null, userFactory.LocalUsers.Id, true, true, GroupType.Private);
+            IGroup administrators = userManager.CreateGroup(userFactory.Administrators.Name, null, userFactory.Administrators.Id, true, false, GroupType.Private);
 			
 			// Add root user to administrators
 			userManager.AddUserToGroup(rootUser.Id, administrators.Id);

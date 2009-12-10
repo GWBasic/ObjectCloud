@@ -43,10 +43,21 @@ namespace ObjectCloud.Common
         /// </summary>
         /// <param name="value"></param>
         /// <param name="target"></param>
-        public static void TryParse(string value, ref TEnum target)
+        public static bool TryParse(string value, out TEnum target)
         {
-            if (Enum.IsDefined(typeof(TEnum), value))
-                target= Parse(value);
+            if (null == value)
+            {
+                target = default(TEnum);
+                return false;
+            }
+            else if (Enum.IsDefined(typeof(TEnum), value))
+            {
+                target = Parse(value);
+                return true;
+            }
+
+            target = default(TEnum);
+            return false;
         }
 
         /// <summary>

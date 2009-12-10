@@ -134,7 +134,7 @@ namespace ObjectCloud.Disk.Test
             IUser user1 = FileHandlerFactoryLocator.UserManagerHandler.CreateUser("User" + SRandom.Next<uint>().ToString(), "pw");
             IUser user2 = FileHandlerFactoryLocator.UserManagerHandler.CreateUser("User" + SRandom.Next<uint>().ToString(), "pw");
             IUser user3 = FileHandlerFactoryLocator.UserManagerHandler.CreateUser("User" + SRandom.Next<uint>().ToString(), "pw");
-            IGroup group = FileHandlerFactoryLocator.UserManagerHandler.CreateGroup("Group" + SRandom.Next<uint>().ToString(), null);
+            IGroup group = FileHandlerFactoryLocator.UserManagerHandler.CreateGroup("Group" + SRandom.Next<uint>().ToString(), null, GroupType.Private);
             FileHandlerFactoryLocator.UserManagerHandler.AddUserToGroup(user1.Id, group.Id);
 
             directory.SetPermission(null, related1Container.Filename, user1.Id, FilePermissionEnum.Read, false, false);

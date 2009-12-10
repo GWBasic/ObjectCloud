@@ -441,7 +441,7 @@ namespace ObjectCloud.Interfaces.WebServer
                     Session.User.Id,
                     WebServer.FileHandlerFactoryLocator.UserFactory.Administrators.Id))
                 {
-                    Enum<CallingFrom>.TryParse(GetParameters["CallingFrom"], ref _CallingFrom);
+                    Enum<CallingFrom>.TryParse(GetParameters["CallingFrom"], out _CallingFrom);
                 }
 
             string requestedFile = ResolveUserVariables(_RequestedFile);

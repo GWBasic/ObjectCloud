@@ -21,6 +21,7 @@
       <h2>Create a group</h2>
       Group Name: <input type="text" name="groupname" /><br />
       <span id="CreateGroup_Owner">Owner: <input type="text" name="username" /><br /></span>
+      <input type="hidden" name="grouptype" value="Private" />
       <input type="submit" value="Create Group" />
    </form>
    <script>

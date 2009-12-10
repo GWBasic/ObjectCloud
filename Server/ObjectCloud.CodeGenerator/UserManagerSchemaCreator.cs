@@ -37,7 +37,8 @@ namespace ObjectCloud.CodeGenerator
                         new Column("ID", IDColumn<IUserOrGroup, Guid>.NotNullColumnType, ColumnOption.Indexed | ColumnOption.Unique),
                         new Column("OwnerID", IDColumn<IUserOrGroup, Guid>.NullColumnType),
                         new Column("BuiltIn", NotNull.Bool),
-                        new Column("Automatic", NotNull.Bool)
+                        new Column("Automatic", NotNull.Bool),
+                        new Column("Type", EnumColumn<GroupType>.NotNullColumnType)
                     }));
 
             database.Tables.Add(
@@ -59,7 +60,7 @@ namespace ObjectCloud.CodeGenerator
 						new Column("Timestamp", NotNull.TimeStamp)
                     }));
 
-            database.Version = 2;
+            database.Version = 3;
 
             return database;
         }

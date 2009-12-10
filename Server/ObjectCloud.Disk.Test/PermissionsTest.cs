@@ -29,9 +29,9 @@ namespace ObjectCloud.Disk.Test
 
             TestUser_1 = userManagerHandler.CreateUser("user1", "user1");
             TestUser_2 = userManagerHandler.CreateUser("user2", "user2");
-			
-			TestGroup_1 = userManagerHandler.CreateGroup("group1", TestUser_1.Id);
-			TestGroup_2 = userManagerHandler.CreateGroup("group2", TestUser_2.Id);
+
+            TestGroup_1 = userManagerHandler.CreateGroup("group1", TestUser_1.Id, GroupType.Private);
+            TestGroup_2 = userManagerHandler.CreateGroup("group2", TestUser_2.Id, GroupType.Private);
         }
 
         protected override void DoAdditionalTearDown()
@@ -125,7 +125,7 @@ namespace ObjectCloud.Disk.Test
 			string name = "DuplicateUser" + SRandom.Next<long>().ToString();
 			
 			userManagerHandler.CreateUser(name, "123");
-			userManagerHandler.CreateGroup(name, FileHandlerFactoryLocator.UserManagerHandler.Root.Id);
+            userManagerHandler.CreateGroup(name, FileHandlerFactoryLocator.UserManagerHandler.Root.Id, GroupType.Private);
 		}
 		
 		[Test]
@@ -135,8 +135,8 @@ namespace ObjectCloud.Disk.Test
 			IUserManagerHandler userManagerHandler = FileHandlerFactoryLocator.UserManagerHandler;
 			
 			string name = "DuplicateGroup" + SRandom.Next<long>().ToString();
-			
-			userManagerHandler.CreateGroup(name, FileHandlerFactoryLocator.UserManagerHandler.Root.Id);
+
+            userManagerHandler.CreateGroup(name, FileHandlerFactoryLocator.UserManagerHandler.Root.Id, GroupType.Private);
 			userManagerHandler.CreateUser(name, "123");
 		}
 		
@@ -147,8 +147,8 @@ namespace ObjectCloud.Disk.Test
 			
 			string name = "Group" + SRandom.Next<long>().ToString();
 			ID<IUserOrGroup, Guid> groupId = new ID<IUserOrGroup, Guid>(Guid.NewGuid());
-			
-			userManagerHandler.CreateGroup(name, TestUser_1.Id, groupId, false, false);
+
+            userManagerHandler.CreateGroup(name, TestUser_1.Id, groupId, false, false, GroupType.Private);
 			
 			IUserOrGroup groupObj = userManagerHandler.GetUserOrGroupOrOpenId(name);
 			
@@ -169,8 +169,8 @@ namespace ObjectCloud.Disk.Test
 			
 			string name = "GroupToDelete" + SRandom.Next<long>().ToString();
 			ID<IUserOrGroup, Guid> groupId = new ID<IUserOrGroup, Guid>(Guid.NewGuid());
-			
-			userManagerHandler.CreateGroup(name, TestUser_1.Id, groupId, false, false);
+
+            userManagerHandler.CreateGroup(name, TestUser_1.Id, groupId, false, false, GroupType.Private);
 			
 			IUserOrGroup groupObj = userManagerHandler.GetUserOrGroupOrOpenId(name);
 			

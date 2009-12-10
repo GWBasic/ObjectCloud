@@ -75,6 +75,7 @@
     <Compile Include="Javascript\IExecutionEnvironmentFactory.cs" />
     <Compile Include="Security\CallingFrom.cs" />
     <Compile Include="Security\FilePermissionEnum.cs" />
+    <Compile Include="Security\GroupType.cs" />
     <Compile Include="Security\IUserFactory.cs" />
     <Compile Include="Disk\IUserHandler.cs" />
     <Compile Include="Disk\IUserManagerHandler.cs" />

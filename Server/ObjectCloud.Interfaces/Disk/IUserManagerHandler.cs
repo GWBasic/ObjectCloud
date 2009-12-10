@@ -42,7 +42,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="ownerId">The user that owns the group</param>
         /// <returns></returns>
         /// <exception cref="UserAlreadyExistsException">Thrown if the group already exists</exception>
-        IGroup CreateGroup(string name, ID<IUserOrGroup, Guid>? ownerId);
+        IGroup CreateGroup(string name, ID<IUserOrGroup, Guid>? ownerId, GroupType groupType);
 
 		/// <summary>
         /// Creates a group with the given name
@@ -54,7 +54,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="automatic">Implies that membership in the group is automatically determined at runtime and can not be modified.</param>
         /// <returns></returns>
         /// <exception cref="UserAlreadyExistsException">Thrown if the group already exists</exception>
-        IGroup CreateGroup(string name, ID<IUserOrGroup, Guid>? ownerId, ID<IUserOrGroup, Guid> groupId, bool builtIn, bool automatic);
+        IGroup CreateGroup(string name, ID<IUserOrGroup, Guid>? ownerId, ID<IUserOrGroup, Guid> groupId, bool builtIn, bool automatic, GroupType groupType);
 
         /// <summary>
         /// Gets the user with the given name

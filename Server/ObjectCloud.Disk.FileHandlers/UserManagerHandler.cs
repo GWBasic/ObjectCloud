@@ -110,12 +110,21 @@ namespace ObjectCloud.Disk.FileHandlers
             return userObj;
         }
 
-        public IGroup CreateGroup(string name, ID<IUserOrGroup, Guid>? ownerId)
+        public IGroup CreateGroup(
+            string name,
+            ID<IUserOrGroup, Guid>? ownerId,
+            GroupType groupType)
         {
-            return CreateGroup(name, ownerId, new ID<IUserOrGroup, Guid>(Guid.NewGuid()), false, false);
+            return CreateGroup(name, ownerId, new ID<IUserOrGroup, Guid>(Guid.NewGuid()), false, false, groupType);
         }
 
-        public IGroup CreateGroup(string name, ID<IUserOrGroup, Guid>? ownerId, ID<IUserOrGroup, Guid> groupId, bool builtIn, bool automatic)
+        public IGroup CreateGroup(
+            string name,
+            ID<IUserOrGroup, Guid>? ownerId,
+            ID<IUserOrGroup, Guid> groupId,
+            bool builtIn,
+            bool automatic,
+            GroupType groupType)
         {
             name = name.ToLowerInvariant();
 
@@ -133,6 +142,7 @@ namespace ObjectCloud.Disk.FileHandlers
                     group.OwnerID = ownerId;
                     group.BuiltIn = builtIn;
                     group.Automatic = automatic;
+                    group.Type = groupType;
                 });
 
                 try

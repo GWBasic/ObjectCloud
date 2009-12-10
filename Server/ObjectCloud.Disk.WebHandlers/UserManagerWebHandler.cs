@@ -102,12 +102,22 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="webConnection"></param>
         /// <param name="groupname"></param>
         /// <param name="username"></param>
+        /// <param name="grouptype"></param>
         /// <returns></returns>
-        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Write)]
-        public IWebResults CreateGroup(IWebConnection webConnection, string groupname, string username)
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Read)]
+        public IWebResults CreateGroup(IWebConnection webConnection, string groupname, string username, string grouptype)
         {
             if (webConnection.Session.User == FileHandlerFactoryLocator.UserFactory.AnonymousUser)
                 throw new WebResultsOverrideException(WebResults.FromString(Status._403_Forbidden, "You must be logged in to create a group"));
+
+            GroupType groupType;
+            if (!Enum<GroupType>.TryParse(grouptype, out groupType))
+                throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, grouptype + " is not a valid group type"));
+
+            // Write permission is needed to add non-personal groups
+            if (groupType > GroupType.Personal)
+                if (FileContainer.LoadPermission(webConnection.Session.User.Id) < FilePermissionEnum.Write)
+                    throw new WebResultsOverrideException(WebResults.FromString(Status._401_Unauthorized, "You must have write permission to create non-personal groups"));
 
             try
             {
@@ -124,7 +134,7 @@ namespace ObjectCloud.Disk.WebHandlers
                             return WebResults.FromString(Status._401_Unauthorized, "You do not have permission to create groups owned by other people");
                     }
 				
-				IGroup group = FileHandler.CreateGroup(groupname, user.Id);
+				IGroup group = FileHandler.CreateGroup(groupname, user.Id, groupType);
 
                 return WebResults.FromString(Status._201_Created, group.Name + " created");
             }
