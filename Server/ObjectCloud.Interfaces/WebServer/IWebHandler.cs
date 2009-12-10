@@ -41,11 +41,18 @@ namespace ObjectCloud.Interfaces.WebServer
         string ImplicitAction { get; }
 
         /// <summary>
-        /// This should return a Javascript object that can perform all calls to all methods marked as WebCallable through AJAX.
+        /// This should return a Javascript object that can perform all calls to all methods marked as WebCallable through AJAX.  This is being depricated
         /// </summary>
         /// <param name="webConnection"></param>
         /// <returns></returns>
         IWebResults GetJavascriptWrapper(IWebConnection webConnection, string assignToVariable);
+
+        /// <summary>
+        /// This should return a Javascript object that can perform all calls to all methods marked as WebCallable through AJAX.
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <returns></returns>
+        IWebResults GetJSW(IWebConnection webConnection, string assignToVariable);
 
         /// <summary>
         /// Returns Javascript for running on the server-side that only exposes access to the WebHandler

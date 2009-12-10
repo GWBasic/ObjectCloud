@@ -729,7 +729,7 @@ namespace ObjectCloud.Javascript
         /// <returns></returns>
         private string GenerateClientWrapper_GET_application_x_www_form_urlencoded(WrapperCallsThrough wrapperCallsThrough) 
         {
-            return JavascriptWrapperGenerator.GenerateGET_urlencoded(
+            return JavascriptWrapperGenerator.GenerateLegacyGET_urlencoded(
                 Method,
                 new List<string>(ArgnameToIndex.Keys),
                 WebReturnConvention,
@@ -742,7 +742,7 @@ namespace ObjectCloud.Javascript
         /// <returns></returns>
         private string GenerateClientWrapper_POST_application_x_www_form_urlencoded(WrapperCallsThrough wrapperCallsThrough)
         {
-            return JavascriptWrapperGenerator.GeneratePOST_urlencoded(
+            return JavascriptWrapperGenerator.GenerateLegacyPOST_urlencoded(
                 Method,
                 new List<string>(ArgnameToIndex.Keys),
                 WebReturnConvention,
@@ -755,7 +755,7 @@ namespace ObjectCloud.Javascript
         /// <returns></returns>
         private string GenerateClientWrapper_POST_string(WrapperCallsThrough wrapperCallsThrough)
         {
-            return JavascriptWrapperGenerator.GeneratePOST(
+            return JavascriptWrapperGenerator.GenerateLegacyPOST(
                 Method,
                 new List<string>(ArgnameToIndex.Keys),
                 WebReturnConvention,

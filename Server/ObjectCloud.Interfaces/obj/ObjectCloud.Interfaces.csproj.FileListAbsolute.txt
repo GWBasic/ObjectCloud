@@ -26,3 +26,17 @@ Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectC
 Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Interfaces\obj\Debug\ResolveAssemblyReference.cache
 Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Interfaces\obj\Debug\ObjectCloud.Interfaces.dll
 Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Interfaces\obj\Debug\ObjectCloud.Interfaces.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Interfaces\bin\Debug\License.txt
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Interfaces\bin\Debug\Readme.txt
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Interfaces\bin\Debug\ObjectCloud.Interfaces.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Interfaces\bin\Debug\ObjectCloud.Interfaces.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Interfaces\bin\Debug\Common.Logging.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Interfaces\bin\Debug\JsonFx.Json.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Interfaces\bin\Debug\ObjectCloud.Common.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Interfaces\bin\Debug\ObjectCloud.ORM.DataAccess.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Interfaces\bin\Debug\JsonFx.Json.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Interfaces\bin\Debug\ObjectCloud.Common.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Interfaces\bin\Debug\ObjectCloud.ORM.DataAccess.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Interfaces\obj\Debug\ResolveAssemblyReference.cache
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Interfaces\obj\Debug\ObjectCloud.Interfaces.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Interfaces\obj\Debug\ObjectCloud.Interfaces.pdb

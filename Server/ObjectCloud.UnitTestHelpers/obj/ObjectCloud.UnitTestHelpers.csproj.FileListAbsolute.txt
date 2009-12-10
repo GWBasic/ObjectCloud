@@ -31,3 +31,20 @@ Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectC
 Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.UnitTestHelpers\obj\Debug\ResolveAssemblyReference.cache
 Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.UnitTestHelpers\obj\Debug\ObjectCloud.UnitTestHelpers.dll
 Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.UnitTestHelpers\obj\Debug\ObjectCloud.UnitTestHelpers.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.UnitTestHelpers\bin\Debug\ObjectCloud.UnitTestHelpers.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.UnitTestHelpers\bin\Debug\ObjectCloud.UnitTestHelpers.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.UnitTestHelpers\bin\Debug\nunit.core.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.UnitTestHelpers\bin\Debug\nunit.framework.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.UnitTestHelpers\bin\Debug\ObjectCloud.Common.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.UnitTestHelpers\bin\Debug\ObjectCloud.Spring.Config.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.UnitTestHelpers\bin\Debug\Spring.Core.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.UnitTestHelpers\bin\Debug\antlr.runtime.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.UnitTestHelpers\bin\Debug\nunit.core.interfaces.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.UnitTestHelpers\bin\Debug\Common.Logging.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.UnitTestHelpers\bin\Debug\JsonFx.Json.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.UnitTestHelpers\bin\Debug\ObjectCloud.Spring.Config.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.UnitTestHelpers\bin\Debug\JsonFx.Json.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.UnitTestHelpers\bin\Debug\ObjectCloud.Common.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.UnitTestHelpers\obj\Debug\ResolveAssemblyReference.cache
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.UnitTestHelpers\obj\Debug\ObjectCloud.UnitTestHelpers.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.UnitTestHelpers\obj\Debug\ObjectCloud.UnitTestHelpers.pdb

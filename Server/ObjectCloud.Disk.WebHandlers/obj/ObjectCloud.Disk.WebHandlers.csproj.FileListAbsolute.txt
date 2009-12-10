@@ -44,3 +44,28 @@ Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectC
 Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.WebHandlers\obj\Debug\ResolveAssemblyReference.cache
 Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.WebHandlers\obj\Debug\ObjectCloud.Disk.WebHandlers.dll
 Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.WebHandlers\obj\Debug\ObjectCloud.Disk.WebHandlers.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.WebHandlers\bin\Debug\sqlite3.def
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.WebHandlers\bin\Debug\sqlite3.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.WebHandlers\bin\Debug\License.txt
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.WebHandlers\bin\Debug\Readme.txt
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.WebHandlers\bin\Debug\Database.xml
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.WebHandlers\bin\Debug\ObjectCloud.Disk.WebHandlers.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.WebHandlers\bin\Debug\ObjectCloud.Disk.WebHandlers.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.WebHandlers\bin\Debug\Common.Logging.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.WebHandlers\bin\Debug\ExtremeSwank.OpenId.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.WebHandlers\bin\Debug\JsonFx.Json.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.WebHandlers\bin\Debug\ObjectCloud.Common.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.WebHandlers\bin\Debug\ObjectCloud.Interfaces.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.WebHandlers\bin\Debug\ObjectCloud.ORM.DataAccess.SQLite.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.WebHandlers\bin\Debug\System.Data.SQLite.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.WebHandlers\bin\Debug\ObjectCloud.ORM.DataAccess.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.WebHandlers\bin\Debug\System.Data.SQLite.xml
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.WebHandlers\bin\Debug\ObjectCloud.ORM.DataAccess.SQLite.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.WebHandlers\bin\Debug\JsonFx.Json.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.WebHandlers\bin\Debug\ObjectCloud.Common.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.WebHandlers\bin\Debug\ObjectCloud.Interfaces.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.WebHandlers\bin\Debug\ObjectCloud.ORM.DataAccess.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.WebHandlers\obj\Debug\ResolveAssemblyReference.cache
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.WebHandlers\obj\Debug\ObjectCloud.Disk.WebHandlers.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.WebHandlers\obj\Debug\ObjectCloud.Disk.WebHandlers.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.WebHandlers\bin\Debug\ObjectCloud.Disk.WebHandlers.XML

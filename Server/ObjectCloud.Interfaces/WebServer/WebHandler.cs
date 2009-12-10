@@ -131,7 +131,7 @@ namespace ObjectCloud.Interfaces.WebServer
         Dictionary<WrapperCallsThrough, string> JavascriptWrappers = new Dictionary<WrapperCallsThrough, string>();
 
         /// <summary>
-        /// This should return a Javascript object that can perform all calls to all methods marked as WebCallable through AJAX.
+        /// This should return a Javascript object that can perform all calls to all methods marked as WebCallable through AJAX.  This convention is depricated
         /// </summary>
         /// <param name="webConnection"></param>
         /// <param name="assignToVariable">The variable to assign the wrapper object to</param>
@@ -144,6 +144,51 @@ namespace ObjectCloud.Interfaces.WebServer
             javascriptToReturn = "// Scripts: /API/Prototype.js\n" + javascriptToReturn;
 
             IWebResults toReturn = WebResults.FromString(Status._200_OK, javascriptToReturn);
+            toReturn.ContentType = "application/javascript";
+            return toReturn;
+        }
+
+        /// <summary>
+        /// The cached in-browser JavaScript wrapper
+        /// </summary>
+        private string cachedInBrowserJSWrapper = null;
+
+        /// <summary>
+        /// This should return a Javascript object that can perform all calls to all methods marked as WebCallable through AJAX.
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="assignToVariable">The variable to assign the wrapper object to</param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Read)]
+        public IWebResults GetJSW(IWebConnection webConnection, string assignToVariable)
+        {
+            // Not worth syncronizing, nothing bad will happen if multiple threads enter this block at the same time
+            if (null == cachedInBrowserJSWrapper)
+            {
+                string javascriptWrapper = StringGenerator.GenerateSeperatedList(
+                    FileHandlerFactoryLocator.WebServer.JavascriptWebAccessCodeGenerator.GenerateWrapper(GetType()), ",\n");
+
+                // Replace some key constants
+                javascriptWrapper = javascriptWrapper.Replace("{0}", FileContainer.FullPath);
+                javascriptWrapper = javascriptWrapper.Replace("{1}", FileContainer.Filename);
+                cachedInBrowserJSWrapper = javascriptWrapper.Replace("{2}", "http://" + FileHandlerFactoryLocator.HostnameAndPort + FileContainer.FullPath);
+            }
+
+            string javascriptToReturn = cachedInBrowserJSWrapper;
+
+            // Insert the user's permission to the file
+            javascriptToReturn = javascriptToReturn.Replace("{3}", FileContainer.LoadPermission(webConnection.Session.User.Id).ToString());
+
+            // Enclose the functions with { .... }
+            javascriptToReturn = "{\n" + javascriptToReturn + "\n}";
+
+            if (null != assignToVariable)
+                javascriptToReturn = string.Format("var {0} = {1};", assignToVariable, javascriptToReturn);
+
+            IWebResults toReturn = WebResults.FromString(
+                Status._200_OK,
+                "// Scripts: /API/AJAX.js, /API/json2.js\n" + javascriptToReturn);
+
             toReturn.ContentType = "application/javascript";
             return toReturn;
         }
@@ -187,7 +232,7 @@ namespace ObjectCloud.Interfaces.WebServer
             if (!JavascriptWrappers.ContainsKey(wrapperCallsThrough))
             {
                 string javascriptWrapper = StringGenerator.GenerateSeperatedList(
-                    FileHandlerFactoryLocator.WebServer.JavascriptWebAccessCodeGenerator.GenerateWrapper(GetType(), wrapperCallsThrough), ",\n");
+                    FileHandlerFactoryLocator.WebServer.JavascriptWebAccessCodeGenerator.GenerateLegacyWrapper(GetType(), wrapperCallsThrough), ",\n");
 
                 // Replace some key constants
                 javascriptWrapper = javascriptWrapper.Replace("{0}", FileContainer.FullPath);

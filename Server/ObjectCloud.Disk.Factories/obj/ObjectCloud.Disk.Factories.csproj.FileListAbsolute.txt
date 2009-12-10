@@ -57,3 +57,34 @@ Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectC
 Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\obj\Debug\ResolveAssemblyReference.cache
 Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\obj\Debug\ObjectCloud.Disk.Factories.dll
 Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.Disk.Factories\obj\Debug\ObjectCloud.Disk.Factories.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\sqlite3.def
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\sqlite3.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\License.txt
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\Readme.txt
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\Disk.xml
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\Database.xml
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\ObjectCloud.Disk.Factories.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\ObjectCloud.Disk.Factories.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\Common.Logging.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\ExtremeSwank.OpenId.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\JsonFx.Json.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\ObjectCloud.Common.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\ObjectCloud.DataAccess.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\ObjectCloud.Disk.FileHandlers.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\ObjectCloud.Disk.Implementation.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\ObjectCloud.Interfaces.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\ObjectCloud.ORM.DataAccess.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\ObjectCloud.ORM.DataAccess.SQLite.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\System.Data.SQLite.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\ObjectCloud.Interfaces.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\JsonFx.Json.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\ObjectCloud.Disk.FileHandlers.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\System.Data.SQLite.xml
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\ObjectCloud.DataAccess.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\ObjectCloud.Common.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\ObjectCloud.ORM.DataAccess.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\ObjectCloud.ORM.DataAccess.SQLite.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\bin\Debug\ObjectCloud.Disk.Implementation.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\obj\Debug\ResolveAssemblyReference.cache
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\obj\Debug\ObjectCloud.Disk.Factories.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.Disk.Factories\obj\Debug\ObjectCloud.Disk.Factories.pdb

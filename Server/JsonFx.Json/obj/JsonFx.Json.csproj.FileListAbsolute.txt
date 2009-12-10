@@ -14,3 +14,11 @@ Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\JsonFx.
 Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\JsonFx.Json\obj\Debug\JsonFx.Scripts.json2.js
 Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\JsonFx.Json\obj\Debug\JsonFx.Json.dll
 Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\JsonFx.Json\obj\Debug\JsonFx.Json.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\JsonFx.Json\bin\Debug\License.txt
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\JsonFx.Json\bin\Debug\Readme.txt
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\JsonFx.Json\bin\Debug\JsonFx.Json.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\JsonFx.Json\bin\Debug\JsonFx.Json.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\JsonFx.Json\obj\Debug\ResolveAssemblyReference.cache
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\JsonFx.Json\obj\Debug\JsonFx.Scripts.json2.js
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\JsonFx.Json\obj\Debug\JsonFx.Json.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\JsonFx.Json\obj\Debug\JsonFx.Json.pdb

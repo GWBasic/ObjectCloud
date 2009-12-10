@@ -35,6 +35,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="JavascriptWrapperGenerator.cs" />
+    <Compile Include="JavascriptWrapperGenerator_Legacy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

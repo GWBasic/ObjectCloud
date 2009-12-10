@@ -139,16 +139,32 @@ namespace ObjectCloud.Disk.WebHandlers
         /// </summary>
         /// <param name="webConnection"></param>
         /// <param name="groupname"></param>
+        /// <param name="groupId"></param>
         /// <returns></returns>
         [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Write)]
-        public IWebResults DeleteGroup(IWebConnection webConnection, string groupname)
+        public IWebResults DeleteGroup(IWebConnection webConnection, string groupname, Guid? groupId)
         {
             try
             {
-				IUserOrGroup groupObj = FileHandler.GetUserOrGroupOrOpenId(groupname);
-				
+                IUserOrGroup groupObj;
+
+                try
+                {
+                    if (null != groupId)
+                    {
+                        ID<IUserOrGroup, Guid> groupIdTyped = new ID<IUserOrGroup, Guid>(groupId.Value);
+                        groupObj = FileHandler.GetUserOrGroup(groupIdTyped);
+                    }
+                    else
+                        groupObj = FileHandler.GetUserOrGroupOrOpenId(groupname);
+                }
+                catch (UnknownUser)
+                {
+                    throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, "Group does not exist"));
+                }
+
 				if (!(groupObj is IGroup))
-					return WebResults.FromString(Status._400_Bad_Request, groupname + " is not a group");
+					throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, "Specified object is a user"));
 				
 				IGroup group = (IGroup)groupObj;
 				

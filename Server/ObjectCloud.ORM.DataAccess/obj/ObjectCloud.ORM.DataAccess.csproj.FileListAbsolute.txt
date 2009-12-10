@@ -18,3 +18,13 @@ Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectC
 Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.ORM.DataAccess\obj\Debug\ResolveAssemblyReference.cache
 Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.ORM.DataAccess\obj\Debug\ObjectCloud.ORM.DataAccess.dll
 Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\Server\ObjectCloud.ORM.DataAccess\obj\Debug\ObjectCloud.ORM.DataAccess.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.ORM.DataAccess\bin\Debug\ObjectCloud.ORM.DataAccess.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.ORM.DataAccess\bin\Debug\ObjectCloud.ORM.DataAccess.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.ORM.DataAccess\bin\Debug\ObjectCloud.Common.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.ORM.DataAccess\bin\Debug\Common.Logging.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.ORM.DataAccess\bin\Debug\JsonFx.Json.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.ORM.DataAccess\bin\Debug\ObjectCloud.Common.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.ORM.DataAccess\bin\Debug\JsonFx.Json.pdb
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.ORM.DataAccess\obj\Debug\ResolveAssemblyReference.cache
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.ORM.DataAccess\obj\Debug\ObjectCloud.ORM.DataAccess.dll
+C:\Documents and Settings\Administrator\My Documents\Mercurial\objectcloud\Server\ObjectCloud.ORM.DataAccess\obj\Debug\ObjectCloud.ORM.DataAccess.pdb

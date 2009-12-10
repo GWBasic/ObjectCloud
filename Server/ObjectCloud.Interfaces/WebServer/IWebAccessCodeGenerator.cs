@@ -18,6 +18,13 @@ namespace ObjectCloud.Interfaces.WebServer
         /// </summary>
         /// <typeparam name="TWebHandler"></typeparam>
         /// <returns>Enumerable of the "string" of each function.  These will need to be enclosed in { funcA, funcB, ... funcZ } </returns>
-        IEnumerable<string> GenerateWrapper(Type webHandlerType, WrapperCallsThrough wrapperCallsThrough);
+        IEnumerable<string> GenerateLegacyWrapper(Type webHandlerType, WrapperCallsThrough wrapperCallsThrough);
+
+        /// <summary>
+        /// Returns an AJAX wrapper for the specific WebHandler type
+        /// </summary>
+        /// <typeparam name="TWebHandler"></typeparam>
+        /// <returns>Enumerable of the "string" of each function.  These will need to be enclosed in { funcA, funcB, ... funcZ } </returns>
+        IEnumerable<string> GenerateWrapper(Type webHandlerType);
     }
 }
