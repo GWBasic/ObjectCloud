@@ -696,7 +696,7 @@ namespace ObjectCloud.Javascript
                 switch (WebCallingConvention.Value)
                 {
                     case ObjectCloud.Interfaces.WebServer.WebCallingConvention.GET:
-                        WrapperCache = GenerateClientWrapper_GET_application_x_www_form_urlencoded();
+                        WrapperCache = GenerateClientWrapper_GET();
                         break;
 
                     case ObjectCloud.Interfaces.WebServer.WebCallingConvention.GET_application_x_www_form_urlencoded:
