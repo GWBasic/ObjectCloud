@@ -1,0 +1,70 @@
+// Scripts: /Users/UserDB?Method=GetServersideJavascriptWrapper&assignToVariable=UserDB
+
+var groupName = fileMetadata.filename.substring(0, fileMetadata.filename.lastIndexOf("."));
+
+getMembers.webCallable = "GET";
+getMembers.minimumWebPermission = "Read";
+function getMembers()
+{
+   var toReturn;
+
+   callAsOwner(function()
+   {
+      toReturn = UserDB.GetUsersInGroup(groupName);
+   });
+
+   return toReturn;
+}
+
+getGroup.webCallable = "GET";
+getGroup.minimumWebPermission = "Read";
+function getGroup()
+{
+   var toReturn;
+
+   callAsOwner(function()
+   {
+      toReturn = UserDB.GetGroup(groupName);
+   });
+
+   return toReturn;
+}
+
+joinGroup.webCallable = "POST_application_x_www_form_urlencoded";
+joinGroup.minimumWebPermission = "Read";
+function joinGroup()
+{
+   var group = getGroup();
+
+   // Only let people join if the group is public
+   if (group.Type != "Public")
+      throwWebResultOverrideException(403, "This group is not public.  Contact the owner to join.");
+
+   var toReturn;
+
+   callAsOwner(function()
+   {
+      toReturn = UserDB.AddUserToGroup(null, group.Id, null, userMetadata.id);
+   });
+
+   return toReturn;
+}
+leaveGroup.webCallable = "POST_application_x_www_form_urlencoded";
+leaveGroup.minimumWebPermission = "Read";
+function leaveGroup()
+{
+   var group = getGroup();
+
+   // Only let people join if the group is public
+   if (group.Type != "Public")
+      throwWebResultOverrideException(403, "This group is not public.  Contact the owner to leave.");
+
+   var toReturn;
+
+   callAsOwner(function()
+   {
+      toReturn = UserDB.RemoveUserFromGroup(null, group.Id, null, userMetadata.id);
+   });
+
+   return toReturn;
+}

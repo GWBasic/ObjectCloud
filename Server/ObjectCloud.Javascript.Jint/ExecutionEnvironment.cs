@@ -300,7 +300,7 @@ namespace ObjectCloud.Javascript.Jint
         /// Generates a Javscript wrapper for the browser that calls functions in this javascript.  Assumes that the prototype AJAX library is present
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<string> GenerateJavascriptWrapper(IWebConnection webConnection, WrapperCallsThrough wrapperCallsThrough)
+        public IEnumerable<string> GenerateLegacyJavascriptWrapper(IWebConnection webConnection, WrapperCallsThrough wrapperCallsThrough)
         {
             return GetOrCreateScope(webConnection).GenerateJavascriptWrapper(wrapperCallsThrough);
         }

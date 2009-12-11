@@ -19,8 +19,12 @@ namespace ObjectCloud.Disk.Implementation
             ID<IUserOrGroup, Guid> id,
             string name,
             bool builtIn,
+            bool local,
             FileHandlerFactoryLocator fileHandlerFactoryLocator)
-            : base(id, name, builtIn, fileHandlerFactoryLocator) { }
+            : base(id, name, builtIn, fileHandlerFactoryLocator) 
+        {
+            _Local = local;
+        }
 
 		/// <summary>
 		/// Helper to allow built-in users to be declared in Spring
@@ -36,7 +40,7 @@ namespace ObjectCloud.Disk.Implementation
 		/// </returns>
         public static User SpringContructor(string id, string name, FileHandlerFactoryLocator fileHandlerFactoryLocator)
 		{
-			return new User(new ID<IUserOrGroup, Guid>(new Guid(id)), name, true, fileHandlerFactoryLocator);
+			return new User(new ID<IUserOrGroup, Guid>(new Guid(id)), name, true, true, fileHandlerFactoryLocator);
 		}
 
         public string Identity
@@ -71,6 +75,12 @@ namespace ObjectCloud.Disk.Implementation
         	}
 		}
 		private IUserHandler _UserHandler = null;
+
+        public bool Local
+        {
+            get { return _Local; }
+        }
+        private readonly bool _Local;
 
         public override string ToString()
         {

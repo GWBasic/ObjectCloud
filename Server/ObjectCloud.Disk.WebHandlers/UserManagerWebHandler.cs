@@ -107,6 +107,11 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Read)]
         public IWebResults CreateGroup(IWebConnection webConnection, string groupname, string username, string grouptype)
         {
+            // TODO:  If it's a personal group, uniqueify the name.  Personal groups shouldn't have global names
+
+            if (!webConnection.Session.User.Local)
+                throw new WebResultsOverrideException(WebResults.FromString(Status._401_Unauthorized, "Sorry, only local users can create groups"));
+
             if (webConnection.Session.User == FileHandlerFactoryLocator.UserFactory.AnonymousUser)
                 throw new WebResultsOverrideException(WebResults.FromString(Status._403_Forbidden, "You must be logged in to create a group"));
 
@@ -207,7 +212,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="groupname"></param>
         /// <param name="groupid"></param>
         /// <returns></returns>
-        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JSON, FilePermissionEnum.Administer)]
+        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JSON, FilePermissionEnum.Read)]
         public IWebResults GetGroup(IWebConnection webConnection, string groupname, string groupid)
 		{
 			IGroup group = GetGroupInt(webConnection, groupname, groupid);
@@ -419,24 +424,36 @@ namespace ObjectCloud.Disk.WebHandlers
 			IEnumerable<IUser> users = FileHandler.GetUsersInGroup(group.Id);
 			return ReturnAsJSON(users);
 		}
-		
-		private IDictionary<string, object> CreateJSONDictionary(IUserOrGroup userOrGroup)
-		{
-			IDictionary<string, object> toReturn = new Dictionary<string, object>();
 
-			toReturn["Name"] = userOrGroup.Name;
-			toReturn["Id"] = userOrGroup.Id.Value;
-			toReturn["BuiltIn"] = userOrGroup.BuiltIn;
-			
-			return toReturn;
-		}
-		
-		private IDictionary<string, object> CreateJSONDictionary(IGroup group)
+        private IDictionary<string, object> CreateJSONDictionary(IUserOrGroup userOrGroup)
+        {
+            IDictionary<string, object> toReturn = new Dictionary<string, object>();
+
+            toReturn["Name"] = userOrGroup.Name;
+            toReturn["Id"] = userOrGroup.Id.Value;
+            toReturn["BuiltIn"] = userOrGroup.BuiltIn;
+
+            return toReturn;
+        }
+
+        private IDictionary<string, object> CreateJSONDictionary(IUser user)
+        {
+            IDictionary<string, object> toReturn = CreateJSONDictionary(user as IUserOrGroup);
+
+            toReturn["Identity"] = user.Identity;
+
+            return toReturn;
+        }
+
+        private IDictionary<string, object> CreateJSONDictionary(IGroup group)
 		{
 			IDictionary<string, object> toReturn = CreateJSONDictionary(group as IUserOrGroup);
 
-			toReturn["OwnerId"] = null != group.OwnerId ? (object)group.OwnerId.Value : (object)null;
-			toReturn["Automatic"] = group.Automatic;
+            toReturn["OwnerId"] = null != group.OwnerId ? (object)group.OwnerId.Value : (object)null;
+            toReturn["Owner"] = null != group.OwnerId ? FileHandler.GetUser(group.OwnerId.Value).Name : (object)null;
+            toReturn["OwnerIdentity"] = null != group.OwnerId ? FileHandler.GetUser(group.OwnerId.Value).Identity : (object)null;
+            toReturn["Automatic"] = group.Automatic;
+            toReturn["Type"] = group.Type.ToString();
 			
 			return toReturn;
 		}

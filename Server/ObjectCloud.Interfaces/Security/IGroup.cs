@@ -22,5 +22,10 @@ namespace ObjectCloud.Interfaces.Security
 		/// True if membership in the group is determined automatically by ObjectCloud.  This means that no one can be added or removed to the group; membership is determined at runtime 
 		/// </value>
 		bool Automatic { get; }
+
+        /// <summary>
+        /// The group type
+        /// </summary>
+        GroupType Type { get; }
 	}
 }

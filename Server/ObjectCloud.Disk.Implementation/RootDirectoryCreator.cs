@@ -382,6 +382,14 @@ namespace ObjectCloud.Disk.Implementation
                     true,
                     false);
             }
+
+            IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
+            string groupFileName = FileHandlerFactoryLocator.UserFactory.Administrators.Name.ToLower() + ".group";
+            if (!usersDirectory.IsFilePresent(groupFileName))
+            {
+                usersDirectory.CreateFile(groupFileName, "database", null);
+                usersDirectory.SetPermission(null, groupFileName, FileHandlerFactoryLocator.UserFactory.Administrators.Id, FilePermissionEnum.Read, true, true);
+            }
         }
 
         /// <summary>

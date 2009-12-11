@@ -160,6 +160,28 @@ namespace ObjectCloud.Disk.FileHandlers
                 transaction.Commit();
             });
 
+            IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
+            string groupFileName = name + ".group";
+
+            // Non-automatic, non-personal groups get their own system-visible object
+            if (!automatic)
+                if (groupType > GroupType.Personal)
+                {
+                    usersDirectory.CreateFile(groupFileName, "database", ownerId);
+                    usersDirectory.SetPermission(ownerId, groupFileName, groupId, FilePermissionEnum.Read, true, true);
+
+                    // Everyone can read a public group
+                    if (GroupType.Public == groupType)
+                        usersDirectory.SetPermission(ownerId, groupFileName, FileHandlerFactoryLocator.UserFactory.Everybody.Id, FilePermissionEnum.Read, true, false);
+                }
+                else if (null != ownerId)
+                {
+                    IUser owner = FileHandlerFactoryLocator.UserManagerHandler.GetUser(ownerId.Value);
+                    IDirectoryHandler userDirectory = usersDirectory.OpenFile(owner.Name).CastFileHandler<IDirectoryHandler>();
+
+                    userDirectory.CreateFile(groupFileName, "database", ownerId);
+                }
+
             return groupObj;
         }
 
@@ -418,7 +440,7 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <returns></returns>
         private IUser CreateUserObject(IUsers_Readable userFromDB)
         {
-            IUser toReturn = new User(userFromDB.ID, userFromDB.Name, userFromDB.BuiltIn, FileHandlerFactoryLocator);
+            IUser toReturn = new User(userFromDB.ID, userFromDB.Name, userFromDB.BuiltIn, !("openid".Equals(userFromDB.PasswordMD5)), FileHandlerFactoryLocator);
 
             return toReturn;
         }
@@ -430,7 +452,7 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <returns></returns>
         private IGroup CreateGroupObject(IGroups_Readable groupFromDB)
         {
-            IGroup toReturn = new Group(groupFromDB.OwnerID, groupFromDB.ID, groupFromDB.Name, groupFromDB.BuiltIn, groupFromDB.Automatic, FileHandlerFactoryLocator);
+            IGroup toReturn = new Group(groupFromDB.OwnerID, groupFromDB.ID, groupFromDB.Name, groupFromDB.BuiltIn, groupFromDB.Automatic, groupFromDB.Type, FileHandlerFactoryLocator);
 
             return toReturn;
         }
@@ -473,6 +495,9 @@ namespace ObjectCloud.Disk.FileHandlers
 
                 if (group.BuiltIn)
                     throw new CanNotDeleteBuiltInUserOrGroup();
+
+                IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
+                usersDirectory.DeleteFile(null, name + ".group");
 
                 DatabaseConnection.Groups.Delete(Groups_Table.ID == group.ID);
 
@@ -572,7 +597,7 @@ namespace ObjectCloud.Disk.FileHandlers
 
                     transaction.Commit();
 
-                    IUser toReturn = new User(userId, openIdIdentity, false, FileHandlerFactoryLocator);
+                    IUser toReturn = new User(userId, openIdIdentity, false, false, FileHandlerFactoryLocator);
 
                     return toReturn;
                 }

@@ -179,6 +179,25 @@ namespace ObjectCloud.Interfaces.WebServer
             // Insert the user's permission to the file
             javascriptToReturn = javascriptToReturn.Replace("{3}", FileContainer.LoadPermission(webConnection.Session.User.Id).ToString());
 
+            // Insert the server-side Javascript wrappers
+            try
+            {
+                IExecutionEnvironment executionEnvironment = GetOrCreateExecutionEnvironment();
+                if (null != executionEnvironment)
+                {
+                    string serversideJavscriptWrapper = StringGenerator.GenerateCommaSeperatedList(
+                        executionEnvironment.GenerateJavascriptWrapper(webConnection));
+
+                    serversideJavscriptWrapper = serversideJavscriptWrapper.Replace("{0}", FileContainer.FullPath);
+
+                    javascriptToReturn = javascriptToReturn + ",\n" + serversideJavscriptWrapper;
+                }
+            }
+            catch (Exception e)
+            {
+                log.ErrorFormat("Exception occured when trying to generate a Javascript wrapper for server-side Javascript", e);
+            }
+
             // Enclose the functions with { .... }
             javascriptToReturn = "{\n" + javascriptToReturn + "\n}";
 
@@ -252,7 +271,7 @@ namespace ObjectCloud.Interfaces.WebServer
                     if (null != executionEnvironment)
                     {
                         string serversideJavscriptWrapper = StringGenerator.GenerateCommaSeperatedList(
-                            executionEnvironment.GenerateJavascriptWrapper(webConnection, wrapperCallsThrough));
+                            executionEnvironment.GenerateLegacyJavascriptWrapper(webConnection, wrapperCallsThrough));
 
                         serversideJavscriptWrapper = serversideJavscriptWrapper.Replace("{0}", FileContainer.FullPath);
 

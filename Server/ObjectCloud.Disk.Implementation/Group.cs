@@ -21,6 +21,7 @@ namespace ObjectCloud.Disk.Implementation
 		    string name,
 		    bool builtIn,
             bool automatic,
+            GroupType type,
             FileHandlerFactoryLocator fileHandlerFactoryLocator)
             : base(id, name, builtIn, fileHandlerFactoryLocator)
 		{
@@ -28,19 +29,22 @@ namespace ObjectCloud.Disk.Implementation
 			_Id = id;
 			_Name = name;
 			_Automatic = automatic;
+            _Type = type;
 		}
 		
 		public Group(ID<IUserOrGroup, Guid> id,
 		    string name,
 		    bool builtIn,
             bool automatic,
+            GroupType type,
             FileHandlerFactoryLocator fileHandlerFactoryLocator)
             : base(id, name, builtIn, fileHandlerFactoryLocator)
 		{
 			_Id = id;
 			_Name = name;
 			_Automatic = automatic;
-		}
+            _Type = type;
+        }
 		
 		/// <summary>
 		/// Helper to allow built-in users to be declared in Spring
@@ -56,7 +60,7 @@ namespace ObjectCloud.Disk.Implementation
 		/// </returns>
         public static Group SpringContructor(string id, string name, bool automatic, FileHandlerFactoryLocator fileHandlerFactoryLocator)
 		{
-			return new Group(new ID<IUserOrGroup, Guid>(new Guid(id)), name, true, automatic, fileHandlerFactoryLocator);
+			return new Group(new ID<IUserOrGroup, Guid>(new Guid(id)), name, true, automatic, GroupType.Private, fileHandlerFactoryLocator);
 		}
 
 		public ID<IUserOrGroup, Guid>? OwnerId 
@@ -70,5 +74,11 @@ namespace ObjectCloud.Disk.Implementation
 			get { return _Automatic; }
 		}
 		private bool _Automatic;
-	}
+
+        public GroupType Type
+        {
+            get { return _Type; }
+        }
+        private readonly GroupType _Type;
+    }
 }

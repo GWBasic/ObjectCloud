@@ -301,13 +301,23 @@ namespace ObjectCloud.Javascript
         }
 
         /// <summary>
+        /// Generates a Javscript wrapper for the browser that calls functions in this javascript
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<string> GenerateJavascriptWrapper()
+        {
+            foreach (string method in FunctionCallers.Keys)
+                yield return FunctionCallers[method].GenerateWrapper();
+        }
+
+        /// <summary>
         /// Generates a Javscript wrapper for the browser that calls functions in this javascript.  Assumes that the prototype AJAX library is present
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<string> GenerateJavascriptWrapper(WrapperCallsThrough wrapperCallsThrough)
+        public IEnumerable<string> GenerateLegacyJavascriptWrapper(WrapperCallsThrough wrapperCallsThrough)
         {
             foreach (string method in FunctionCallers.Keys)
-                yield return FunctionCallers[method].GenerateWrapper(wrapperCallsThrough);
+                yield return FunctionCallers[method].GenerateLegacyWrapper(wrapperCallsThrough);
         }
 
         /// <summary>

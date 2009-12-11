@@ -33,6 +33,17 @@ PRAGMA user_version = 3;";
 
                 command.ExecuteNonQuery();
             }
+
+            if (version < 4)
+            {
+                command = connection.CreateCommand();
+                command.CommandText =
+@"Create unique index UserInGroups_UserID_GroupID on UserInGroups (UserID, GroupID);
+
+PRAGMA user_version = 4;";
+
+                command.ExecuteNonQuery();
+            }
         }
     }
 }

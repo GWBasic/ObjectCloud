@@ -38,13 +38,13 @@ namespace ObjectCloud.WebAccessCodeGenerators
             {
                 switch (methodAndWCA.WebCallableAttribute.WebCallingConvention)
                 {
-                    /*case WebCallingConvention.GET:
-                        javascriptMethods.Add(GenerateLegacyGET_urlencoded(methodAndWCA, WrapperCallsThrough.AJAX));
+                    case WebCallingConvention.GET:
+                        javascriptMethods.Add(GenerateGET(methodAndWCA));
                         break;
 
                     case WebCallingConvention.GET_application_x_www_form_urlencoded:
-                        javascriptMethods.Add(GenerateLegacyGET_urlencoded(methodAndWCA, WrapperCallsThrough.AJAX));
-                        break;*/
+                        javascriptMethods.Add(GenerateGET_urlencoded(methodAndWCA));
+                        break;
 
                     case WebCallingConvention.POST_application_x_www_form_urlencoded:
                         javascriptMethods.Add(GeneratePOST_urlencoded(methodAndWCA));
@@ -126,17 +126,108 @@ namespace ObjectCloud.WebAccessCodeGenerators
         }
 
         /// <summary>
+        /// Generates a POST wrapper for non-urlencoded queries
+        /// </summary>
+        /// <param name="methodAndWCA"></param>
+        /// <returns></returns>
+        private static string GenerateGET(MethodAndWebCallableAttribute methodAndWCA)
+        {
+            return GenerateGET(
+                methodAndWCA.MethodInfo.Name,
+                methodAndWCA.WebCallableAttribute.WebReturnConvention);
+        }
+
+        /// <summary>
         /// Generates a POST wrapper for urlencoded queries
+        /// </summary>
+        /// <param name="methodAndWCA"></param>
+        /// <returns></returns>
+        public static string GenerateGET(string methodName, WebReturnConvention webReturnConvention)
+        {
+            // Create the funciton declaration
+            StringBuilder toReturn = new StringBuilder(string.Format("\"{0}\"", methodName));
+            toReturn.Append(@" : function(parameters, onSuccess, onFailure, urlPostfix)
+{
+   var parameters = {};
+");
+            toReturn.Append(FunctionBegin);
+
+            // Create a urlEncoded string for all of the parameters
+            toReturn.AppendFormat("   parameters.Method='{0}';\n", methodName);
+            toReturn.Append(CreateEncodedParameters);
+
+            // Create the AJAX request
+            toReturn.Append(CreateAJAXRequest);
+
+            // Open the AJAX request
+            toReturn.Append("   httpRequest.open('GET', '{0}?' + encodedParameters, true);\n");
+            toReturn.Append("   httpRequest.send(null);\n");
+            toReturn.Append('}');
+
+            return toReturn.ToString();
+        }
+
+        /// <summary>
+        /// Generates a POST wrapper for non-urlencoded queries
+        /// </summary>
+        /// <param name="methodAndWCA"></param>
+        /// <returns></returns>
+        private static string GenerateGET_urlencoded(MethodAndWebCallableAttribute methodAndWCA)
+        {
+            return GenerateGET_urlencoded(
+                methodAndWCA.MethodInfo.Name,
+                methodAndWCA.WebCallableAttribute.WebReturnConvention);
+        }
+
+        /// <summary>
+        /// Generates a POST wrapper for urlencoded queries
+        /// </summary>
+        /// <param name="methodAndWCA"></param>
+        /// <returns></returns>
+        public static string GenerateGET_urlencoded(string methodName, WebReturnConvention webReturnConvention)
+        {
+            // Create the funciton declaration
+            StringBuilder toReturn = new StringBuilder(string.Format("\"{0}\"", methodName));
+            toReturn.Append(FunctionDeclaration);
+            toReturn.Append(FunctionBegin);
+
+            // Create a urlEncoded string for all of the parameters
+            toReturn.AppendFormat("   parameters.Method='{0}';\n", methodName);
+            toReturn.Append(CreateEncodedParameters);
+
+            // Create the AJAX request
+            toReturn.Append(CreateAJAXRequest);
+
+            // Open the AJAX request
+            toReturn.Append("   httpRequest.open('GET', '{0}?' + encodedParameters, true);\n");
+            toReturn.Append("   httpRequest.send(null);\n");
+            toReturn.Append('}');
+
+            return toReturn.ToString();
+        }
+
+        /// <summary>
+        /// Generates a POST wrapper for non-urlencoded queries
         /// </summary>
         /// <param name="methodAndWCA"></param>
         /// <returns></returns>
         private static string GeneratePOST_urlencoded(MethodAndWebCallableAttribute methodAndWCA)
         {
-            string methodName = methodAndWCA.MethodInfo.Name;
-            WebReturnConvention webReturnConvention = methodAndWCA.WebCallableAttribute.WebReturnConvention;
+            return GeneratePOST_urlencoded(
+                methodAndWCA.MethodInfo.Name,
+                methodAndWCA.WebCallableAttribute.WebReturnConvention);
+        }
 
+        /// <summary>
+        /// Generates a POST wrapper for urlencoded queries
+        /// </summary>
+        /// <param name="methodAndWCA"></param>
+        /// <returns></returns>
+        public static string GeneratePOST_urlencoded(string methodName, WebReturnConvention webReturnConvention)
+        {
             // Create the funciton declaration
             StringBuilder toReturn = new StringBuilder(string.Format("\"{0}\"", methodName));
+            toReturn.Append(FunctionDeclaration);
             toReturn.Append(FunctionBegin);
 
             // Create a urlEncoded string for all of the parameters
@@ -157,10 +248,16 @@ namespace ObjectCloud.WebAccessCodeGenerators
         /// <summary>
         /// The beginning of each function wrapper, declares all of the default arguments and default error handlers
         /// </summary>
-        private const string FunctionBegin =
+        private const string FunctionDeclaration =
 @" : function(parameters, onSuccess, onFailure, urlPostfix)
 {
-   if (!onSuccess)
+";
+
+        /// <summary>
+        /// The beginning of each function wrapper, declares all of the default arguments and default error handlers
+        /// </summary>
+        private const string FunctionBegin =
+@"   if (!onSuccess)
       onSuccess = function(transport)
       {
          alert(transport.responseText);

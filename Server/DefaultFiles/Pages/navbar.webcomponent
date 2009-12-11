@@ -11,18 +11,19 @@
          if ((0 != currentUserName.indexOf("http://")) && ("anonymous" != currentUserName))
          {
             document.write('<a href="/Users/' + currentUserName + '">My Files</a> ');
-            document.write('<a href="/Users/' + currentUserName + '.user">My Account</a> ');
+            document.write('<a href="/Users/' + currentUserName + '.user">Profile</a> ');
+            document.write('<a href="/Shell/UserManagers/UserManager.wchtml?Target=/Users/' + currentUserName + '.user">My Account</a> ');
          }
       </script>
    </span>
 
    <script>
       if (("anonymous" == currentUserName) || ("root" == currentUserName))
-      {
          document.write('<a href="/Shell/UserManagers/Create%20Account.wchtml">Create Account</a> ');
-      }
+
    </script>
 
+   <a href="/Shell/UserManagers/GroupManager.wchtml">Groups</a>
    <br />
    <br />
 

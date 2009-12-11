@@ -29,6 +29,10 @@
 		TypeId="name-value"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 	<File
+		Name="group"
+		TypeId="name-value"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
 		Name="htm"
 		TypeId="name-value"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />

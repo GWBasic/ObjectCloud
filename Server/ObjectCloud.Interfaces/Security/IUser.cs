@@ -26,5 +26,10 @@ namespace ObjectCloud.Interfaces.Security
 		/// The user handler
 		/// </value>
 		IUserHandler UserHandler { get; }
+
+        /// <summary>
+        /// True if the user is local, false if the user is logged in through OpenID
+        /// </summary>
+        bool Local { get; }
     }
 }

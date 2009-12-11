@@ -313,12 +313,21 @@ namespace ObjectCloud.Javascript
         }
 
         /// <summary>
+        /// Generates a Javscript wrapper for the browser that calls functions in this javascript
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<string> GenerateJavascriptWrapper(IWebConnection webConnection)
+        {
+            return GetOrCreateScope(webConnection).GenerateJavascriptWrapper();
+        }
+
+        /// <summary>
         /// Generates a Javscript wrapper for the browser that calls functions in this javascript.  Assumes that the prototype AJAX library is present
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<string> GenerateJavascriptWrapper(IWebConnection webConnection, WrapperCallsThrough wrapperCallsThrough)
+        public IEnumerable<string> GenerateLegacyJavascriptWrapper(IWebConnection webConnection, WrapperCallsThrough wrapperCallsThrough)
         {
-            return GetOrCreateScope(webConnection).GenerateJavascriptWrapper(wrapperCallsThrough);
+            return GetOrCreateScope(webConnection).GenerateLegacyJavascriptWrapper(wrapperCallsThrough);
         }
 
         /// <summary>
@@ -333,7 +342,11 @@ namespace ObjectCloud.Javascript
         public bool IsBlockWebMethodsEnabled(IWebConnection webConnection)
         {
             ScopeWrapper scopeWrapper = GetOrCreateScope(webConnection);
-            return scopeWrapper.BlockWebMethods;
+
+            if (null != scopeWrapper)
+                return scopeWrapper.BlockWebMethods;
+            else
+                return false;
         }
     }
 }

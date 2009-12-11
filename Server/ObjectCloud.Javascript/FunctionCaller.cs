@@ -690,44 +690,115 @@ namespace ObjectCloud.Javascript
         /// </summary>
         /// <param name="wrapperCallsThrough"></param>
         /// <returns></returns>
-        public string GenerateWrapper(WrapperCallsThrough wrapperCallsThrough)
+        public string GenerateWrapper()
         {
-            if (!WrapperCache.ContainsKey(wrapperCallsThrough))
+            if (null == WrapperCache)
                 switch (WebCallingConvention.Value)
                 {
                     case ObjectCloud.Interfaces.WebServer.WebCallingConvention.GET:
-                        WrapperCache[wrapperCallsThrough] = GenerateClientWrapper_GET_application_x_www_form_urlencoded(wrapperCallsThrough);
+                        WrapperCache = GenerateClientWrapper_GET_application_x_www_form_urlencoded();
                         break;
 
                     case ObjectCloud.Interfaces.WebServer.WebCallingConvention.GET_application_x_www_form_urlencoded:
-                        WrapperCache[wrapperCallsThrough] = GenerateClientWrapper_GET_application_x_www_form_urlencoded(wrapperCallsThrough);
+                        WrapperCache = GenerateClientWrapper_GET_application_x_www_form_urlencoded();
                         break;
 
                     case ObjectCloud.Interfaces.WebServer.WebCallingConvention.POST_application_x_www_form_urlencoded:
-                        WrapperCache[wrapperCallsThrough] = GenerateClientWrapper_POST_application_x_www_form_urlencoded(wrapperCallsThrough);
+                        WrapperCache = GenerateClientWrapper_POST_application_x_www_form_urlencoded();
+                        break;
+
+                    /*case ObjectCloud.Interfaces.WebServer.WebCallingConvention.POST_string:
+                        WrapperCache[wrapperCallsThrough] = GenerateLegacyClientWrapper_POST_string(wrapperCallsThrough);
+                        break;*/
+
+                    default:
+                        return null;
+                }
+
+            return WrapperCache;
+        }
+
+        /// <summary>
+        /// The generated wrapper for the function
+        /// </summary>
+        private string WrapperCache = null;
+
+        /// <summary>
+        /// Generates a clent-side Javascript wrapper as if this is a GET request without urlencoded arguments
+        /// </summary>
+        /// <returns></returns>
+        private string GenerateClientWrapper_GET()
+        {
+            return JavascriptWrapperGenerator.GenerateGET(
+                Method,
+                WebReturnConvention);
+        }
+
+        /// <summary>
+        /// Generates a clent-side Javascript wrapper as if this is a GET request with urlencoded arguments
+        /// </summary>
+        /// <returns></returns>
+        private string GenerateClientWrapper_GET_application_x_www_form_urlencoded()
+        {
+            return JavascriptWrapperGenerator.GenerateGET_urlencoded(
+                Method,
+                WebReturnConvention);
+        }
+
+        /// <summary>
+        /// Generates a clent-side Javascript wrapper as if this is a POST request with urlencoded arguments
+        /// </summary>
+        /// <returns></returns>
+        private string GenerateClientWrapper_POST_application_x_www_form_urlencoded()
+        {
+            return JavascriptWrapperGenerator.GeneratePOST_urlencoded(
+                Method,
+                WebReturnConvention);
+        }
+
+        /// <summary>
+        /// Generates the wrapper for the given calling source
+        /// </summary>
+        /// <param name="wrapperCallsThrough"></param>
+        /// <returns></returns>
+        public string GenerateLegacyWrapper(WrapperCallsThrough wrapperCallsThrough)
+        {
+            if (!LegacyWrapperCache.ContainsKey(wrapperCallsThrough))
+                switch (WebCallingConvention.Value)
+                {
+                    case ObjectCloud.Interfaces.WebServer.WebCallingConvention.GET:
+                        LegacyWrapperCache[wrapperCallsThrough] = GenerateLegacyClientWrapper_GET_application_x_www_form_urlencoded(wrapperCallsThrough);
+                        break;
+
+                    case ObjectCloud.Interfaces.WebServer.WebCallingConvention.GET_application_x_www_form_urlencoded:
+                        LegacyWrapperCache[wrapperCallsThrough] = GenerateLegacyClientWrapper_GET_application_x_www_form_urlencoded(wrapperCallsThrough);
+                        break;
+
+                    case ObjectCloud.Interfaces.WebServer.WebCallingConvention.POST_application_x_www_form_urlencoded:
+                        LegacyWrapperCache[wrapperCallsThrough] = GenerateLegacyClientWrapper_POST_application_x_www_form_urlencoded(wrapperCallsThrough);
                         break;
 
                     case ObjectCloud.Interfaces.WebServer.WebCallingConvention.POST_string:
-                        WrapperCache[wrapperCallsThrough] = GenerateClientWrapper_POST_string(wrapperCallsThrough);
+                        LegacyWrapperCache[wrapperCallsThrough] = GenerateLegacyClientWrapper_POST_string(wrapperCallsThrough);
                         break;
 
                     default:
                         return null;
                 }
 
-            return WrapperCache[wrapperCallsThrough];
+            return LegacyWrapperCache[wrapperCallsThrough];
         }
 
         /// <summary>
         /// Cache of pre-generated wrappers
         /// </summary>
-        private Dictionary<WrapperCallsThrough, string> WrapperCache = new Dictionary<WrapperCallsThrough, string>();
+        private Dictionary<WrapperCallsThrough, string> LegacyWrapperCache = new Dictionary<WrapperCallsThrough, string>();
 
         /// <summary>
         /// Generates a client-side Javascript wrapper as if this is a GET request with urlencoded or no arguments
         /// </summary>
         /// <returns></returns>
-        private string GenerateClientWrapper_GET_application_x_www_form_urlencoded(WrapperCallsThrough wrapperCallsThrough) 
+        private string GenerateLegacyClientWrapper_GET_application_x_www_form_urlencoded(WrapperCallsThrough wrapperCallsThrough) 
         {
             return JavascriptWrapperGenerator.GenerateLegacyGET_urlencoded(
                 Method,
@@ -740,7 +811,7 @@ namespace ObjectCloud.Javascript
         /// Generates a clent-side Javascript wrapper as if this is a POST request with urlencoded arguments
         /// </summary>
         /// <returns></returns>
-        private string GenerateClientWrapper_POST_application_x_www_form_urlencoded(WrapperCallsThrough wrapperCallsThrough)
+        private string GenerateLegacyClientWrapper_POST_application_x_www_form_urlencoded(WrapperCallsThrough wrapperCallsThrough)
         {
             return JavascriptWrapperGenerator.GenerateLegacyPOST_urlencoded(
                 Method,
@@ -753,7 +824,7 @@ namespace ObjectCloud.Javascript
         /// Generates a clent-side Javascript wrapper as if this is a POST request that just takes a string
         /// </summary>
         /// <returns></returns>
-        private string GenerateClientWrapper_POST_string(WrapperCallsThrough wrapperCallsThrough)
+        private string GenerateLegacyClientWrapper_POST_string(WrapperCallsThrough wrapperCallsThrough)
         {
             return JavascriptWrapperGenerator.GenerateLegacyPOST(
                 Method,

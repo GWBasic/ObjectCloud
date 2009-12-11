@@ -41,14 +41,17 @@ namespace ObjectCloud.CodeGenerator
                         new Column("Type", EnumColumn<GroupType>.NotNullColumnType)
                     }));
 
-            database.Tables.Add(
-                new Table(
+            Table userInGroupsTable = new Table(
                     "UserInGroups",
                     new Column[]
                     {
                         new Column("UserID", IDColumn<IUserOrGroup, Guid>.NotNullColumnType, ColumnOption.Indexed),
                         new Column("GroupID", IDColumn<IUserOrGroup, Guid>.NotNullColumnType, ColumnOption.Indexed)
-                    }));
+                    });
+
+            userInGroupsTable.CompoundIndexes.Add(new Index(userInGroupsTable.Columns, true));
+
+            database.Tables.Add(userInGroupsTable);
 
             database.Tables.Add(
                 new Table(
@@ -60,7 +63,7 @@ namespace ObjectCloud.CodeGenerator
 						new Column("Timestamp", NotNull.TimeStamp)
                     }));
 
-            database.Version = 3;
+            database.Version = 4;
 
             return database;
         }
