@@ -41,10 +41,6 @@
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 	<File
-		Name="UserDB.wchtml"
-		TypeId="text"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
-	<File
 		Name="UserManager.wchtml"
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
