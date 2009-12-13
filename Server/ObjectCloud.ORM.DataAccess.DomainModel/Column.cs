@@ -30,6 +30,13 @@ namespace ObjectCloud.ORM.DataAccess.DomainModel
             _ColumnOptions = columnOptions;
         }
 
+        public Column(string name, ColumnType type, ColumnOption columnOptions, Table foriegnKeyTable, Column foriegnKeyColumn)
+            : this(name, type, columnOptions)
+        {
+            _ForiegnKeyColumn = foriegnKeyColumn;
+            _ForiegnKeyTable = foriegnKeyTable;
+        }
+
         /// <summary>
         /// The name of the column
         /// </summary>
@@ -103,16 +110,6 @@ namespace ObjectCloud.ORM.DataAccess.DomainModel
         private ColumnOption _ColumnOptions;
 
         /// <summary>
-        /// When this property is not null, then this column is a foriegn key to the table's primary key
-        /// </summary>
-        public Table ForiegnKeyTable
-        {
-            get { return _ForiegnKeyToPrimaryKey; }
-            set { _ForiegnKeyToPrimaryKey = value; }
-        }
-        private Table _ForiegnKeyToPrimaryKey = null;
-
-        /// <summary>
         /// True if the column should try to automatically populate its value.  This currently is only supported for "PK" primary keys
         /// </summary>
         public bool Auto
@@ -121,5 +118,23 @@ namespace ObjectCloud.ORM.DataAccess.DomainModel
             set { _Auto = value; }
         }
         private bool _Auto = false;
+
+        /// <summary>
+        /// The table that this column is a forien key into
+        /// </summary>
+        public Table ForiegnKeyTable
+        {
+            get { return _ForiegnKeyTable; }
+        }
+        private readonly Table _ForiegnKeyTable;
+
+        /// <summary>
+        /// The column that this column is a forien key into
+        /// </summary>
+        public Column ForiegnKeyColumn
+        {
+            get { return _ForiegnKeyColumn; }
+        }
+        private readonly Column _ForiegnKeyColumn;
     }
 }

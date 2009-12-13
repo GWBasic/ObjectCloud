@@ -81,4 +81,29 @@ namespace ObjectCloud.Disk.Implementation
         }
         private readonly GroupType _Type;
     }
+
+    /// <summary>
+    /// Container for a group and alias
+    /// </summary>
+    public class GroupAndAlias : Group, IGroupAndAlias
+    {
+        public GroupAndAlias(ID<IUserOrGroup, Guid>? ownerId,
+            ID<IUserOrGroup, Guid> id,
+            string name,
+            bool builtIn,
+            bool automatic,
+            GroupType type,
+            string alias,
+            FileHandlerFactoryLocator fileHandlerFactoryLocator)
+            : base(ownerId, id, name, builtIn, automatic, type, fileHandlerFactoryLocator)
+        {
+            _Alias = alias;
+        }
+
+        public string Alias
+        {
+            get { return _Alias; }
+        }
+        private readonly string _Alias;
+    }
 }

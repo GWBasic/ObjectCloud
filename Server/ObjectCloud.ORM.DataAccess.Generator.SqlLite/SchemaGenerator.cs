@@ -89,7 +89,7 @@ namespace ObjectCloud.ORM.DataAccess.Generator.SqLite
                 toReturn = new StringBuilder(string.Format("{0}\t\t\t{1}", column.Name, sqlColumnType));
 
             if (null != column.ForiegnKeyTable)
-                toReturn.AppendFormat(" references {0}({1})", column.ForiegnKeyTable.Name, column.ForiegnKeyTable.PrimaryKey.Name);
+                toReturn.AppendFormat(" references {0}({1})", column.ForiegnKeyTable.Name, column.ForiegnKeyColumn.Name);
 
             if (column.Unique)
                 toReturn.Append(" unique");

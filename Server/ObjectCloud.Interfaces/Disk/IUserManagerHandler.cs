@@ -252,7 +252,7 @@ namespace ObjectCloud.Interfaces.Disk
 		/// <returns>
 		/// A <see cref="IEnumerable"/>
 		/// </returns>
-		IEnumerable<IGroup> GetGroupsThatUserIsIn(ID<IUserOrGroup, Guid> userId);
+        IEnumerable<IGroupAndAlias> GetGroupsThatUserIsIn(ID<IUserOrGroup, Guid> userId);
 		
 		/// <summary>
 		/// Returns all groups in the system 
@@ -271,7 +271,7 @@ namespace ObjectCloud.Interfaces.Disk
 		/// <returns>
 		/// A <see cref="IEnumerable"/>
 		/// </returns>
-		IEnumerable<IGroup> GetGroupsThatUserOwns(ID<IUserOrGroup, Guid> userId);
+        IEnumerable<IGroupAndAlias> GetGroupsThatUserOwns(ID<IUserOrGroup, Guid> userId);
 		
 		/// <summary>
 		/// Returns all of the users in a group 
@@ -298,5 +298,13 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="userId"></param>
         /// <param name="password"></param>
         void SetPassword(ID<IUserOrGroup, Guid> userId, string password);
+
+        /// <summary>
+        /// Sets the user's alias for the group.  If alias is null, deletes the alias.
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="groupId"></param>
+        /// <param name="alias"></param>
+        void SetGroupAlias(ID<IUserOrGroup, Guid> userId, ID<IUserOrGroup, Guid> groupId, string alias);
     }
 }

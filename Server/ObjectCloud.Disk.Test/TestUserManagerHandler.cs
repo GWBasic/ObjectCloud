@@ -35,5 +35,38 @@ namespace ObjectCloud.Disk.Test
 
             Assert.IsNotNull(testUser, "Error re-loading user with changed password");
         }
+
+        [Test]
+        public void TestGroupAliases()
+        {
+            IUserManagerHandler userManager = FileHandlerFactoryLocator.UserManagerHandler;
+
+            IUser testUser = userManager.CreateUser("TestGroupAliases" + SRandom.Next<long>().ToString(), "password");
+
+            IGroup groupA = userManager.CreateGroup("TestGroupAliases_A_" + SRandom.Next<long>().ToString(), testUser.Id, GroupType.Public);
+            userManager.AddUserToGroup(testUser.Id, groupA.Id);
+            IGroup groupB = userManager.CreateGroup("TestGroupAliases_B_" + SRandom.Next<long>().ToString(), testUser.Id, GroupType.Public);
+            userManager.AddUserToGroup(testUser.Id, groupB.Id);
+            IGroup groupC = userManager.CreateGroup("TestGroupAliases_C_" + SRandom.Next<long>().ToString(), testUser.Id, GroupType.Public);
+            userManager.AddUserToGroup(testUser.Id, groupC.Id);
+
+            userManager.SetGroupAlias(testUser.Id, groupB.Id, "TheAlias");
+
+            foreach (IGroupAndAlias groupAndAlias in userManager.GetGroupsThatUserIsIn(testUser.Id))
+                if (groupAndAlias.Id == groupB.Id)
+                    Assert.AreEqual("TheAlias", groupAndAlias.Alias, "Alias set incorrectly");
+
+            userManager.SetGroupAlias(testUser.Id, groupB.Id, "SecondAlias");
+
+            foreach (IGroupAndAlias groupAndAlias in userManager.GetGroupsThatUserIsIn(testUser.Id))
+                if (groupAndAlias.Id == groupB.Id)
+                    Assert.AreEqual("SecondAlias", groupAndAlias.Alias, "Alias set incorrectly");
+
+            userManager.SetGroupAlias(testUser.Id, groupB.Id, null);
+
+            foreach (IGroupAndAlias groupAndAlias in userManager.GetGroupsThatUserIsIn(testUser.Id))
+                if (groupAndAlias.Id == groupB.Id)
+                    Assert.AreEqual(null, groupAndAlias.Alias, "Alias set incorrectly");
+        }
     }
 }

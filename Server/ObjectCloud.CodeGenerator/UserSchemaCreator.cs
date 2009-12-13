@@ -46,13 +46,11 @@ namespace ObjectCloud.CodeGenerator
             Table ChangeDataTable =
                 new Table(
                     "ChangeData",
-                    new Column("NotificationId", NotNull.Long),
+                    new Column("NotificationId", NotNull.Long, ColumnOption.None, NotificationTable, NotificationTable.PrimaryKey),
                     new Column[]
                     {
                         new Column("ChangeData", NotNull.String),
                     });
-
-            ChangeDataTable.PrimaryKey.ForiegnKeyTable = NotificationTable;
 
             database.Tables.Add(ChangeDataTable);
 

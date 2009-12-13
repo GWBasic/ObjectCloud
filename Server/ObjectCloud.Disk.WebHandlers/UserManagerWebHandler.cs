@@ -393,7 +393,7 @@ namespace ObjectCloud.Disk.WebHandlers
 			if (!userHasPermission)
 				return WebResults.FromString(Status._401_Unauthorized, "You do not have permission to view the groups that this user is a member of");
 			
-			IEnumerable<IGroup> groups = FileHandler.GetGroupsThatUserIsIn(user.Id);
+			IEnumerable<IGroupAndAlias> groups = FileHandler.GetGroupsThatUserIsIn(user.Id);
 			return ReturnAsJSON(groups);
 		}
 
@@ -445,30 +445,51 @@ namespace ObjectCloud.Disk.WebHandlers
             return toReturn;
         }
 
+        private IDictionary<string, object> CreateJSONDictionary(IGroupAndAlias group)
+        {
+            IDictionary<string, object> toReturn = CreateJSONDictionary(group as IGroup);
+
+            toReturn["Alias"] = group.Alias;
+
+            return toReturn;
+        }
+
         private IDictionary<string, object> CreateJSONDictionary(IGroup group)
-		{
-			IDictionary<string, object> toReturn = CreateJSONDictionary(group as IUserOrGroup);
+        {
+            IDictionary<string, object> toReturn = CreateJSONDictionary(group as IUserOrGroup);
 
             toReturn["OwnerId"] = null != group.OwnerId ? (object)group.OwnerId.Value : (object)null;
             toReturn["Owner"] = null != group.OwnerId ? FileHandler.GetUser(group.OwnerId.Value).Name : (object)null;
             toReturn["OwnerIdentity"] = null != group.OwnerId ? FileHandler.GetUser(group.OwnerId.Value).Identity : (object)null;
             toReturn["Automatic"] = group.Automatic;
             toReturn["Type"] = group.Type.ToString();
-			
-			return toReturn;
-		}
 
-		private IWebResults ReturnAsJSON(IEnumerable<IGroup> groups)
-		{
-			ArrayList groupsAL = new ArrayList();
-			foreach (IGroup group in groups)
-			{
-				IDictionary<string, object> groupDictionary = CreateJSONDictionary(group);
-				groupsAL.Add(groupDictionary);
-			}
-			
-			return WebResults.ToJson(groupsAL.ToArray());
-		}
+            return toReturn;
+        }
+
+        private IWebResults ReturnAsJSON(IEnumerable<IGroupAndAlias> groups)
+        {
+            ArrayList groupsAL = new ArrayList();
+            foreach (IGroupAndAlias group in groups)
+            {
+                IDictionary<string, object> groupDictionary = CreateJSONDictionary(group);
+                groupsAL.Add(groupDictionary);
+            }
+
+            return WebResults.ToJson(groupsAL.ToArray());
+        }
+
+        private IWebResults ReturnAsJSON(IEnumerable<IGroup> groups)
+        {
+            ArrayList groupsAL = new ArrayList();
+            foreach (IGroup group in groups)
+            {
+                IDictionary<string, object> groupDictionary = CreateJSONDictionary(group);
+                groupsAL.Add(groupDictionary);
+            }
+
+            return WebResults.ToJson(groupsAL.ToArray());
+        }
 		
 		private IWebResults ReturnAsJSON(IEnumerable<IUser> users)
 		{
@@ -490,14 +511,18 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.GET, WebReturnConvention.JSON)]
 		public IWebResults GetGroupsThatCanBeAdministered(IWebConnection webConnection)
 		{
-			IEnumerable<IGroup> groups;
-			
-			if (FilePermissionEnum.Administer == FileHandler.FileContainer.LoadPermission(webConnection.Session.User.Id))
-				groups = FileHandler.GetAllGroups();
-			else
-				groups = FileHandler.GetGroupsThatUserOwns(webConnection.Session.User.Id);
-
-			return ReturnAsJSON(groups);
+            if (FilePermissionEnum.Administer == FileHandler.FileContainer.LoadPermission(webConnection.Session.User.Id))
+            {
+                IEnumerable<IGroup> groups;
+                groups = FileHandler.GetAllGroups();
+                return ReturnAsJSON(groups);
+            }
+            else
+            {
+                IEnumerable<IGroupAndAlias> groupAndAliases;
+                groupAndAliases = FileHandler.GetGroupsThatUserOwns(webConnection.Session.User.Id);
+                return ReturnAsJSON(groupAndAliases);
+            }
 		}
 		
         /// <summary>

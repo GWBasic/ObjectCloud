@@ -452,9 +452,32 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <returns></returns>
         private IGroup CreateGroupObject(IGroups_Readable groupFromDB)
         {
-            IGroup toReturn = new Group(groupFromDB.OwnerID, groupFromDB.ID, groupFromDB.Name, groupFromDB.BuiltIn, groupFromDB.Automatic, groupFromDB.Type, FileHandlerFactoryLocator);
+            return new Group(
+                groupFromDB.OwnerID,
+                groupFromDB.ID,
+                groupFromDB.Name,
+                groupFromDB.BuiltIn,
+                groupFromDB.Automatic,
+                groupFromDB.Type,
+                FileHandlerFactoryLocator);
+        }
 
-            return toReturn;
+        /// <summary>
+        /// Creates the group object
+        /// </summary>
+        /// <param name="groupFromDB"></param>
+        /// <returns></returns>
+        private IGroupAndAlias CreateGroupAndAliasObject(IGroups_Readable groupFromDB, IGroupAliases_Readable groupAliasFromDB)
+        {
+            return new GroupAndAlias(
+                groupFromDB.OwnerID,
+                groupFromDB.ID,
+                groupFromDB.Name,
+                groupFromDB.BuiltIn,
+                groupFromDB.Automatic,
+                groupFromDB.Type,
+                groupAliasFromDB != null ? groupAliasFromDB.Alias : null,
+                FileHandlerFactoryLocator);
         }
 
         public void DeleteUser(string name)
@@ -476,6 +499,8 @@ namespace ObjectCloud.Disk.FileHandlers
                 usersDirectory.DeleteFile(null, name + ".user");
                 usersDirectory.DeleteFile(null, name);
 
+                DatabaseConnection.GroupAliases.Delete(GroupAliases_Table.UserID == user.ID);
+                DatabaseConnection.UserInGroups.Delete(UserInGroups_Table.UserID == user.ID);
                 DatabaseConnection.Users.Delete(Users_Table.ID == user.ID);
 
                 transaction.Commit();
@@ -499,6 +524,8 @@ namespace ObjectCloud.Disk.FileHandlers
                 IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
                 usersDirectory.DeleteFile(null, name + ".group");
 
+                DatabaseConnection.GroupAliases.Delete(GroupAliases_Table.GroupID == group.ID);
+                DatabaseConnection.UserInGroups.Delete(UserInGroups_Table.GroupID == group.ID);
                 DatabaseConnection.Groups.Delete(Groups_Table.ID == group.ID);
 
                 transaction.Commit();
@@ -722,10 +749,26 @@ namespace ObjectCloud.Disk.FileHandlers
             return GroupIdsThatUserIsInCache[userId];
         }
 
-        public IEnumerable<IGroup> GetGroupsThatUserIsIn(ID<IUserOrGroup, Guid> userId)
+        public IEnumerable<IGroupAndAlias> GetGroupsThatUserIsIn(ID<IUserOrGroup, Guid> userId)
         {
-            foreach (IGroups_Readable group in DatabaseConnection.Groups.Select(Groups_Table.ID.In(GroupIdsThatUserIsInCache[userId])))
-                yield return CreateGroupObject(group);
+            List<IGroups_Readable> groupsFromDB = new List<IGroups_Readable>();
+            Dictionary<ID<IUserOrGroup, Guid>, IGroupAliases_Readable> groupAliasesFromDB = new Dictionary<ID<IUserOrGroup, Guid>, IGroupAliases_Readable>();
+
+            DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
+            {
+                groupsFromDB.AddRange(DatabaseConnection.Groups.Select(Groups_Table.ID.In(GroupIdsThatUserIsInCache[userId])));
+
+                foreach (IGroupAliases_Readable groupAliasFromDB in DatabaseConnection.GroupAliases.Select(GroupAliases_Table.UserID == userId))
+                    groupAliasesFromDB[groupAliasFromDB.GroupID] = groupAliasFromDB;
+            });
+
+            foreach (IGroups_Readable groupfromDB in groupsFromDB)
+            {
+                IGroupAliases_Readable groupAliasFromDB = null;
+                groupAliasesFromDB.TryGetValue(groupfromDB.ID, out groupAliasFromDB);
+
+                yield return CreateGroupAndAliasObject(groupfromDB, groupAliasFromDB);
+            }
         }
 
         public IEnumerable<IGroup> GetAllGroups()
@@ -734,10 +777,33 @@ namespace ObjectCloud.Disk.FileHandlers
                 yield return CreateGroupObject(group);
         }
 
-        public IEnumerable<IGroup> GetGroupsThatUserOwns(ID<IUserOrGroup, Guid> userId)
+        public IEnumerable<IGroupAndAlias> GetGroupsThatUserOwns(ID<IUserOrGroup, Guid> userId)
         {
-            foreach (IGroups_Readable group in DatabaseConnection.Groups.Select(Groups_Table.OwnerID == userId))
-                yield return CreateGroupObject(group);
+            List<IGroups_Readable> groupsFromDB = new List<IGroups_Readable>();
+            Dictionary<ID<IUserOrGroup, Guid>, IGroupAliases_Readable> groupAliasesFromDB = new Dictionary<ID<IUserOrGroup, Guid>, IGroupAliases_Readable>();
+
+            DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
+            {
+                groupsFromDB.AddRange(DatabaseConnection.Groups.Select(Groups_Table.OwnerID == userId));
+
+                List<ID<IUserOrGroup, Guid>> groupIds = new List<ID<IUserOrGroup, Guid>>();
+                foreach (IGroups_Readable groupFromDB in groupsFromDB)
+                    groupIds.Add(groupFromDB.ID);
+
+                foreach (IGroupAliases_Readable groupAliasFromDB in DatabaseConnection.GroupAliases.Select(
+                    GroupAliases_Table.GroupID.In(groupIds) & GroupAliases_Table.UserID == userId))
+                {
+                    groupAliasesFromDB[groupAliasFromDB.GroupID] = groupAliasFromDB;
+                }
+            });
+
+            foreach (IGroups_Readable groupfromDB in groupsFromDB)
+            {
+                IGroupAliases_Readable groupAliasFromDB = null;
+                groupAliasesFromDB.TryGetValue(groupfromDB.ID, out groupAliasFromDB);
+
+                yield return CreateGroupAndAliasObject(groupfromDB, groupAliasFromDB);
+            }
         }
 
         public IEnumerable<IUser> GetUsersInGroup(ID<IUserOrGroup, Guid> groupId)
@@ -770,6 +836,33 @@ namespace ObjectCloud.Disk.FileHandlers
         public bool IsUserInGroup(ID<IUserOrGroup, Guid> userId, ID<IUserOrGroup, Guid> groupId)
         {
             return GroupIdsThatUserIsInCache[userId].Contains(groupId);
+        }
+
+        public void SetGroupAlias(ID<IUserOrGroup, Guid> userId, ID<IUserOrGroup, Guid> groupId, string alias)
+        {
+            // update or insert if the alias isn't null
+            if (null != alias)
+                DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
+                {
+                    if (null == DatabaseConnection.GroupAliases.SelectSingle(GroupAliases_Table.UserID == userId & GroupAliases_Table.GroupID == groupId))
+                        DatabaseConnection.GroupAliases.Insert(delegate(IGroupAliases_Writable groupAliasWritable)
+                        {
+                            groupAliasWritable.Alias = alias;
+                            groupAliasWritable.GroupID = groupId;
+                            groupAliasWritable.UserID = userId;
+                        });
+                    else
+                        DatabaseConnection.GroupAliases.Update(
+                            GroupAliases_Table.UserID == userId & GroupAliases_Table.GroupID == groupId,
+                            delegate(IGroupAliases_Writable groupAliasWritable)
+                            {
+                                groupAliasWritable.Alias = alias;
+                            });
+
+                    transaction.Commit();
+                });
+            else
+                DatabaseConnection.GroupAliases.Delete(GroupAliases_Table.UserID == userId & GroupAliases_Table.GroupID == groupId);
         }
     }
 }

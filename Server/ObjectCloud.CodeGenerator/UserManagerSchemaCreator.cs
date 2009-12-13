@@ -17,36 +17,42 @@ namespace ObjectCloud.CodeGenerator
         {
             Database database = new Database();
 
-            database.Tables.Add(
-                new Table(
+            Column userIdColumn = new Column("ID", IDColumn<IUserOrGroup, Guid>.NotNullColumnType, ColumnOption.Indexed | ColumnOption.Unique);
+
+            Table userTable = new Table(
                     "Users",
                     new Column("Name", NotNull.String),
                     new Column[]
                     {
                         new Column("PasswordMD5", NotNull.String),
-                        new Column("ID", IDColumn<IUserOrGroup, Guid>.NotNullColumnType, ColumnOption.Indexed | ColumnOption.Unique),
+                        userIdColumn,
                         new Column("BuiltIn", NotNull.Bool)
-                    }));
+                    });
 
-            database.Tables.Add(
-                new Table(
+            database.Tables.Add(userTable);
+
+            Column groupIdColumn = new Column("ID", IDColumn<IUserOrGroup, Guid>.NotNullColumnType, ColumnOption.Indexed | ColumnOption.Unique);
+
+            Table groupsTable = new Table(
                     "Groups",
                     new Column("Name", NotNull.String),
                     new Column[]
                     {
-                        new Column("ID", IDColumn<IUserOrGroup, Guid>.NotNullColumnType, ColumnOption.Indexed | ColumnOption.Unique),
-                        new Column("OwnerID", IDColumn<IUserOrGroup, Guid>.NullColumnType),
+                        groupIdColumn,
+                        new Column("OwnerID", IDColumn<IUserOrGroup, Guid>.NullColumnType, ColumnOption.Indexed, userTable, userIdColumn),
                         new Column("BuiltIn", NotNull.Bool),
                         new Column("Automatic", NotNull.Bool),
                         new Column("Type", EnumColumn<GroupType>.NotNullColumnType)
-                    }));
+                    });
+
+            database.Tables.Add(groupsTable);
 
             Table userInGroupsTable = new Table(
                     "UserInGroups",
                     new Column[]
                     {
-                        new Column("UserID", IDColumn<IUserOrGroup, Guid>.NotNullColumnType, ColumnOption.Indexed),
-                        new Column("GroupID", IDColumn<IUserOrGroup, Guid>.NotNullColumnType, ColumnOption.Indexed)
+                        new Column("UserID", IDColumn<IUserOrGroup, Guid>.NotNullColumnType, ColumnOption.Indexed, userTable, userIdColumn),
+                        new Column("GroupID", IDColumn<IUserOrGroup, Guid>.NotNullColumnType, ColumnOption.Indexed, groupsTable, groupIdColumn)
                     });
 
             userInGroupsTable.CompoundIndexes.Add(new Index(userInGroupsTable.Columns, true));
@@ -63,7 +69,25 @@ namespace ObjectCloud.CodeGenerator
 						new Column("Timestamp", NotNull.TimeStamp)
                     }));
 
-            database.Version = 4;
+            Column groupAliasesUserIDColumn = new Column("UserID", IDColumn<IUserOrGroup, Guid>.NotNullColumnType, ColumnOption.Indexed, userTable, userIdColumn);
+            Column groupAliasesGroupIDColumn = new Column("GroupID", IDColumn<IUserOrGroup, Guid>.NotNullColumnType, ColumnOption.Indexed, groupsTable, groupIdColumn);
+            Column groupAliasesAliasColumn = new Column("Alias", NotNull.String);
+
+            Table groupAliasesTable = new Table(
+                    "GroupAliases",
+                    new Column[]
+                    {
+                        groupAliasesUserIDColumn,
+                        groupAliasesGroupIDColumn,
+                        groupAliasesAliasColumn
+                    });
+
+            groupAliasesTable.CompoundIndexes.Add(new Index(new Column[] { groupAliasesGroupIDColumn, groupAliasesUserIDColumn }, true));
+            groupAliasesTable.CompoundIndexes.Add(new Index(new Column[] { groupAliasesUserIDColumn, groupAliasesAliasColumn }, true));
+
+            database.Tables.Add(groupAliasesTable);
+
+            database.Version = 5;
 
             return database;
         }

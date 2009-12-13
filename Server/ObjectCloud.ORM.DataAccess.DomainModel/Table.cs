@@ -104,8 +104,7 @@ namespace ObjectCloud.ORM.DataAccess.DomainModel
             if (null == PrimaryKey)
                 throw new PrimaryKeyCanNotBeNull("The primary key can not be null when creating a foriegn key column");
 
-            Column toReturn = new Column(columnName, PrimaryKey.Type);
-            toReturn.ForiegnKeyTable = this;
+            Column toReturn = new Column(columnName, PrimaryKey.Type, ColumnOption.None, this, PrimaryKey);
 
             return toReturn;
         }

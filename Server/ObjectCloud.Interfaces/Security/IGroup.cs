@@ -28,4 +28,15 @@ namespace ObjectCloud.Interfaces.Security
         /// </summary>
         GroupType Type { get; }
 	}
+
+    /// <summary>
+    /// Represents a group and a possible alias that a user assigned to that group
+    /// </summary>
+    public interface IGroupAndAlias : IGroup
+    {
+        /// <summary>
+        /// The alias that the current user assigned to the group, or null if the user doesn't use an alias
+        /// </summary>
+        string Alias { get; }
+    }
 }

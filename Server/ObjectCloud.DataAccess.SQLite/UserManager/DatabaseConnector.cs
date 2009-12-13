@@ -44,6 +44,25 @@ PRAGMA user_version = 4;";
 
                 command.ExecuteNonQuery();
             }
+
+            if (version < 5)
+            {
+                command = connection.CreateCommand();
+                command.CommandText =
+@"create table GroupAliases 
+(
+	UserID			guid not null references Users(ID),
+	GroupID			guid not null references Groups(ID),
+	Alias			string not null
+);Create index GroupAliases_UserID on GroupAliases (UserID);
+Create index GroupAliases_GroupID on GroupAliases (GroupID);
+Create unique index GroupAliases_GroupID_UserID on GroupAliases (GroupID, UserID);
+Create unique index GroupAliases_UserID_Alias on GroupAliases (UserID, Alias);
+
+PRAGMA user_version = 5;";
+
+                command.ExecuteNonQuery();
+            }
         }
     }
 }
