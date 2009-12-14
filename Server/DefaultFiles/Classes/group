@@ -1,7 +1,5 @@
 // Scripts: /Users/UserDB?Method=GetServersideJavascriptWrapper&assignToVariable=UserDB
 
-var groupName = fileMetadata.filename.substring(0, fileMetadata.filename.lastIndexOf("."));
-
 getMembers.webCallable = "GET";
 getMembers.minimumWebPermission = "Read";
 function getMembers()
@@ -10,7 +8,8 @@ function getMembers()
 
    callAsOwner(function()
    {
-      toReturn = UserDB.GetUsersInGroup(groupName);
+      var groupId = base.PostQuery("select Value from metadata where Name='GroupId'")[0][0].Value;
+      toReturn = UserDB.GetUsersInGroup(null, groupId);
    });
 
    return toReturn;
@@ -24,7 +23,8 @@ function getGroup()
 
    callAsOwner(function()
    {
-      toReturn = UserDB.GetGroup(groupName);
+      var groupId = base.PostQuery("select Value from metadata where Name='GroupId'")[0][0].Value;
+      toReturn = UserDB.GetGroup(null, groupId);
    });
 
    return toReturn;

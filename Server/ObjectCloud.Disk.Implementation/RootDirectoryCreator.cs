@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.IO;
 using System.Text;
 using System.Xml;
@@ -52,7 +53,7 @@ namespace ObjectCloud.Disk.Implementation
 			IGroup everybody = userManager.CreateGroup(userFactory.Everybody.Name, null, userFactory.Everybody.Id, true, true, GroupType.Private);
             userManager.CreateGroup(userFactory.AuthenticatedUsers.Name, null, userFactory.AuthenticatedUsers.Id, true, true, GroupType.Private);
             userManager.CreateGroup(userFactory.LocalUsers.Name, null, userFactory.LocalUsers.Id, true, true, GroupType.Private);
-            IGroup administrators = userManager.CreateGroup(userFactory.Administrators.Name, null, userFactory.Administrators.Id, true, false, GroupType.Private);
+            IGroup administrators = userManager.CreateGroup(userFactory.Administrators.Name, rootUser.Id, userFactory.Administrators.Id, true, false, GroupType.Private);
 			
 			// Add root user to administrators
 			userManager.AddUserToGroup(rootUser.Id, administrators.Id);
@@ -387,8 +388,38 @@ namespace ObjectCloud.Disk.Implementation
             string groupFileName = FileHandlerFactoryLocator.UserFactory.Administrators.Name.ToLower() + ".group";
             if (!usersDirectory.IsFilePresent(groupFileName))
             {
-                usersDirectory.CreateFile(groupFileName, "database", null);
-                usersDirectory.SetPermission(null, groupFileName, FileHandlerFactoryLocator.UserFactory.Administrators.Id, FilePermissionEnum.Read, true, true);
+                IDatabaseHandler groupDB = usersDirectory.CreateFile(
+                    groupFileName, 
+                    "database",
+                    FileHandlerFactoryLocator.UserFactory.RootUser.Id).FileContainer.CastFileHandler<IDatabaseHandler>();
+                
+                usersDirectory.SetPermission(
+                    null, 
+                    groupFileName, 
+                    FileHandlerFactoryLocator.UserFactory.Administrators.Id, 
+                    FilePermissionEnum.Read, 
+                    true, 
+                    true);
+
+                using (DbCommand command = groupDB.Connection.CreateCommand())
+                {
+                    command.CommandText =
+@"create table Metadata 
+(
+	Value			string not null,
+	Name			string not null	primary key
+);
+Create index Metadata_Name on Metadata (Name);
+insert into Metadata (Name, Value) values ('GroupId', @groupId);
+";
+
+                    DbParameter parameter = command.CreateParameter();
+                    parameter.ParameterName = "@groupId";
+                    parameter.Value = FileHandlerFactoryLocator.UserFactory.Administrators.Id;
+                    command.Parameters.Add(parameter);
+
+                    command.ExecuteNonQuery();
+                }
             }
         }
 

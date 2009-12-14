@@ -6,6 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Data.Common;
 using System.Security.Cryptography;
 using System.Text;
 using System.Xml;
@@ -163,24 +164,45 @@ namespace ObjectCloud.Disk.FileHandlers
             IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
             string groupFileName = name + ".group";
 
-            // Non-automatic, non-personal groups get their own system-visible object
             if (!automatic)
-                if (groupType > GroupType.Personal)
-                {
-                    usersDirectory.CreateFile(groupFileName, "database", ownerId);
-                    usersDirectory.SetPermission(ownerId, groupFileName, groupId, FilePermissionEnum.Read, true, true);
-
-                    // Everyone can read a public group
-                    if (GroupType.Public == groupType)
-                        usersDirectory.SetPermission(ownerId, groupFileName, FileHandlerFactoryLocator.UserFactory.Everybody.Id, FilePermissionEnum.Read, true, false);
-                }
-                else if (null != ownerId)
+            {
+                // Decide where the object goes, for personal groups in the user's directory, for system groups in the users directory
+                IDirectoryHandler groupObjectDestinationDirectory;
+                if (groupType == GroupType.Personal)
                 {
                     IUser owner = FileHandlerFactoryLocator.UserManagerHandler.GetUser(ownerId.Value);
-                    IDirectoryHandler userDirectory = usersDirectory.OpenFile(owner.Name).CastFileHandler<IDirectoryHandler>();
-
-                    userDirectory.CreateFile(groupFileName, "database", ownerId);
+                    groupObjectDestinationDirectory = usersDirectory.OpenFile(owner.Name).CastFileHandler<IDirectoryHandler>();
                 }
+                else
+                    groupObjectDestinationDirectory = usersDirectory;
+
+                IDatabaseHandler groupDB = usersDirectory.CreateFile(groupFileName, "database", ownerId).FileContainer.CastFileHandler<IDatabaseHandler>(); ;
+                usersDirectory.SetPermission(ownerId, groupFileName, groupId, FilePermissionEnum.Read, true, true);
+
+                // Everyone can read a public group
+                if (GroupType.Public == groupType)
+                    usersDirectory.SetPermission(ownerId, groupFileName, FileHandlerFactoryLocator.UserFactory.Everybody.Id, FilePermissionEnum.Read, true, false);
+
+                using (DbCommand command = groupDB.Connection.CreateCommand())
+                {
+                    command.CommandText =
+@"create table Metadata 
+(
+	Value			string not null,
+	Name			string not null	primary key
+);
+Create index Metadata_Name on Metadata (Name);
+insert into Metadata (Name, Value) values ('GroupId', @groupId);
+";
+
+                    DbParameter parameter = command.CreateParameter();
+                    parameter.ParameterName = "@groupId";
+                    parameter.Value = groupId;
+                    command.Parameters.Add(parameter);
+
+                    command.ExecuteNonQuery();
+                }
+            }
 
             return groupObj;
         }
