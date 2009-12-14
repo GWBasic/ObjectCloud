@@ -130,4 +130,8 @@
 
       </script>
 
+   <form action="UserSearch.wchtml">
+      <input type="textbox" name="query">
+   </form>
+
 <? WebComponent("/Pages/footer.webcomponent") ?>

@@ -253,6 +253,13 @@ namespace ObjectCloud.Interfaces.Disk
 		/// A <see cref="IEnumerable"/>
 		/// </returns>
         IEnumerable<IGroupAndAlias> GetGroupsThatUserIsIn(ID<IUserOrGroup, Guid> userId);
+
+        /// <summary>
+        /// Searches for users and groups that match the query.  This behavior is implementation dependant
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        IEnumerable<IUserOrGroup> SearchUsersAndGroups(string query, uint? max);
 		
 		/// <summary>
 		/// Returns all groups in the system 

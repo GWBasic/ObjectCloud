@@ -18,6 +18,7 @@ using ObjectCloud.Disk.Implementation;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
 using ObjectCloud.Interfaces.WebServer;
+using ObjectCloud.ORM.DataAccess.WhereConditionals;
 
 namespace ObjectCloud.Disk.FileHandlers
 {
@@ -855,8 +856,15 @@ namespace ObjectCloud.Disk.FileHandlers
                 // update or insert if the alias isn't null
                 if (null != alias)
                 {
-                    if (null == DatabaseConnection.UserInGroups.SelectSingle(UserInGroups_Table.GroupID == groupId & UserInGroups_Table.UserID == userId))
-                        throw new SecurityException("User is not in group");
+                    // Make sure that the user has permission to set the alias
+                    bool hasPermission = false;
+                    if (null != DatabaseConnection.UserInGroups.Select(UserInGroups_Table.UserID == userId & UserInGroups_Table.GroupID == groupId))
+                        hasPermission = true;
+                    else if (null != DatabaseConnection.Groups.Select(Groups_Table.ID == groupId & Groups_Table.Type != GroupType.Personal))
+                        hasPermission = true;
+
+                    if (!hasPermission)
+                        throw new SecurityException("Invalid group");
 
                     if (null == DatabaseConnection.GroupAliases.SelectSingle(GroupAliases_Table.UserID == userId & GroupAliases_Table.GroupID == groupId))
                         DatabaseConnection.GroupAliases.Insert(delegate(IGroupAliases_Writable groupAliasWritable)
@@ -878,6 +886,41 @@ namespace ObjectCloud.Disk.FileHandlers
 
                 transaction.Commit();
             });
+        }
+
+        public IEnumerable<IUserOrGroup> SearchUsersAndGroups(string query, uint? max)
+        {
+            uint returned = 0;
+
+            foreach (IUsers_Readable userFromDB in DatabaseConnection.Users.Select(Users_Table.Name.Like(query), max, ObjectCloud.ORM.DataAccess.OrderBy.Asc))
+            {
+                returned++;
+                yield return CreateUserObject(userFromDB);
+            }
+
+            if (null != max)
+                max = max.Value - returned;
+
+            Dictionary<ID<IUserOrGroup, Guid>, IGroupAliases_Readable> groupsIdsMatchedByAlias = new Dictionary<ID<IUserOrGroup, Guid>, IGroupAliases_Readable>();
+            foreach (IGroupAliases_Readable groupAliasFromDB in DatabaseConnection.GroupAliases.Select(GroupAliases_Table.Alias.Like(query)))
+                groupsIdsMatchedByAlias[groupAliasFromDB.GroupID] = groupAliasFromDB;
+
+            Dictionary<ID<IUserOrGroup, Guid>, IGroups_Readable> groupsFromDBMatchingQuery = new Dictionary<ID<IUserOrGroup, Guid>, IGroups_Readable>();
+
+            foreach (IGroups_Readable groupFromDB in DatabaseConnection.Groups.Select(
+                (Groups_Table.Type != GroupType.Personal & Groups_Table.Name.Like(query)) | (Groups_Table.ID.In(groupsIdsMatchedByAlias.Keys)), max, ObjectCloud.ORM.DataAccess.OrderBy.Asc))
+                groupsFromDBMatchingQuery[groupFromDB.ID] = groupFromDB;
+
+            foreach (IGroupAliases_Readable groupAliasFromDB in DatabaseConnection.GroupAliases.Select(GroupAliases_Table.GroupID.In(groupsFromDBMatchingQuery.Keys)))
+                groupsIdsMatchedByAlias[groupAliasFromDB.GroupID] = groupAliasFromDB;
+
+            foreach (IGroups_Readable groupFromDB in groupsFromDBMatchingQuery.Values)
+            {
+                IGroupAliases_Readable groupAliasFromDB = null;
+                groupsIdsMatchedByAlias.TryGetValue(groupFromDB.ID, out groupAliasFromDB);
+
+                yield return CreateGroupAndAliasObject(groupFromDB, groupAliasFromDB);
+            }
         }
     }
 }

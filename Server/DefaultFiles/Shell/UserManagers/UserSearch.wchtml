@@ -1,0 +1,65 @@
+<? WebComponent("/Pages/header.webcomponent?Title=Users%20and%20Groups") ?>
+<? Scripts(/API/Prototype.js, /API/Url.js, /Users/UserDB?Method=GetJSW&assignToVariable=userDB) ?>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+   <script>
+
+         function clearGroupAlias(groupId)
+         {
+            $("Alias_" + groupId).value = "";
+            setGroupAlias(groupId);
+         }
+
+         function setGroupAlias(groupId)
+         {
+            userDB.SetGroupAlias(
+            {
+               groupId: groupId,
+               alias: $("Alias_" + groupId).value
+            },
+            function(transport)
+            {
+               window.location.reload(true);
+            });
+         }
+   </script>
+
+   <script>
+      var usersAndgroups = <? WebComponent("/Users/UserDB?Method=SearchUsersAndGroups&query=" . $_GET["query"]) ?>;
+      usersAndgroups.each(function(userOrGroup, i)
+      {
+         if ("Group" == userOrGroup.UserOrGroup)
+         {
+            var group = userOrGroup;
+
+            if (!group.Automatic)
+            {
+               var groupPage = "/Users/" + encodeURIComponent(group.Name) + ".group";
+               var alias = null != group.Alias ? group.Alias : group.Name;
+
+               document.write('<input type="textbox" value="' + alias + '" id="Alias_' + group.Id + '" onchange="setGroupAlias(' + "'" + group.Id + "'" + ')" > ');
+
+               if (alias != group.Name)
+                  document.write('<input type="button" value="Clear" onclick="clearGroupAlias(' + "'" + group.Id + "'" + ')" > ');
+
+               document.write('<a href="' + groupPage + '" >' + group.Name + '</a>');
+            }
+        }
+        else
+        {
+           var user = userOrGroup;
+
+           var userPage = "/Users/" + encodeURIComponent(user.Name) + ".user";
+           document.write('<a href="' + userPage + '" >' + user.Name + '</a>');
+        }
+
+        document.write('<br />');
+     });
+   </script>
+
+   <form action="UserSearch.wchtml">
+      <input type="textbox" name="query">
+   </form>
+
+<? WebComponent("/Pages/footer.webcomponent") ?>
