@@ -398,6 +398,31 @@ namespace ObjectCloud.Disk.WebHandlers
 		}
 
         /// <summary>
+        /// Sets the user's alias for the group
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="groupId"></param>
+        /// <param name="alias"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Read)]
+        public IWebResults SetGroupAlias(IWebConnection webConnection, Guid groupId, string alias)
+        {
+            if (0 == alias.Length)
+                alias = null;
+
+            try
+            {
+                FileHandler.SetGroupAlias(webConnection.Session.User.Id, new ID<IUserOrGroup, Guid>(groupId), alias);
+            }
+            catch (SecurityException)
+            {
+                throw new WebResultsOverrideException(WebResults.FromString(Status._401_Unauthorized, "User is not a member of the group"));
+            }
+
+            return WebResults.FromStatus(Status._202_Accepted);
+        }
+
+        /// <summary>
         /// Returns all of the users in the group.  Either groupname or groupid must be specified
         /// </summary>
         /// <param name="webConnection"></param>
@@ -509,21 +534,30 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="webConnection"></param>
         /// <returns></returns>
         [WebCallable(WebCallingConvention.GET, WebReturnConvention.JSON)]
-		public IWebResults GetGroupsThatCanBeAdministered(IWebConnection webConnection)
-		{
+        public IWebResults GetGroupsThatCanBeAdministered(IWebConnection webConnection)
+        {
+            IEnumerable<IGroup> groups;
+
             if (FilePermissionEnum.Administer == FileHandler.FileContainer.LoadPermission(webConnection.Session.User.Id))
-            {
-                IEnumerable<IGroup> groups;
                 groups = FileHandler.GetAllGroups();
-                return ReturnAsJSON(groups);
-            }
+
             else
-            {
-                IEnumerable<IGroupAndAlias> groupAndAliases;
-                groupAndAliases = FileHandler.GetGroupsThatUserOwns(webConnection.Session.User.Id);
-                return ReturnAsJSON(groupAndAliases);
-            }
-		}
+                groups = FileHandler.GetGroupsThatUserOwns(webConnection.Session.User.Id);
+
+            return ReturnAsJSON(groups);
+        }
+
+        /// <summary>
+        /// Gets all of the groups that the current user is in
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.GET, WebReturnConvention.JSON)]
+        public IWebResults GetGroupsThatUserIsIn(IWebConnection webConnection)
+        {
+            IEnumerable<IGroupAndAlias> groupAndAliases = FileHandler.GetGroupsThatUserIsIn(webConnection.Session.User.Id);
+            return ReturnAsJSON(groupAndAliases);
+        }
 		
         /// <summary>
         /// Starts the process of logging into this server using an OpenId.  The result is that the user will be rediected to a new page

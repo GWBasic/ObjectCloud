@@ -762,13 +762,15 @@ namespace ObjectCloud.Disk.FileHandlers
                     groupAliasesFromDB[groupAliasFromDB.GroupID] = groupAliasFromDB;
             });
 
+            // Only return non-personal groups
             foreach (IGroups_Readable groupfromDB in groupsFromDB)
-            {
-                IGroupAliases_Readable groupAliasFromDB = null;
-                groupAliasesFromDB.TryGetValue(groupfromDB.ID, out groupAliasFromDB);
+                if (groupfromDB.Type > GroupType.Personal)
+                {
+                    IGroupAliases_Readable groupAliasFromDB = null;
+                    groupAliasesFromDB.TryGetValue(groupfromDB.ID, out groupAliasFromDB);
 
-                yield return CreateGroupAndAliasObject(groupfromDB, groupAliasFromDB);
-            }
+                    yield return CreateGroupAndAliasObject(groupfromDB, groupAliasFromDB);
+                }
         }
 
         public IEnumerable<IGroup> GetAllGroups()
@@ -777,9 +779,12 @@ namespace ObjectCloud.Disk.FileHandlers
                 yield return CreateGroupObject(group);
         }
 
-        public IEnumerable<IGroupAndAlias> GetGroupsThatUserOwns(ID<IUserOrGroup, Guid> userId)
+        public IEnumerable<IGroup> GetGroupsThatUserOwns(ID<IUserOrGroup, Guid> userId)
         {
-            List<IGroups_Readable> groupsFromDB = new List<IGroups_Readable>();
+            foreach (IGroups_Readable groupFromDB in DatabaseConnection.Groups.Select(Groups_Table.OwnerID == userId))
+                yield return CreateGroupObject(groupFromDB);
+
+            /*List<IGroups_Readable> groupsFromDB = new List<IGroups_Readable>();
             Dictionary<ID<IUserOrGroup, Guid>, IGroupAliases_Readable> groupAliasesFromDB = new Dictionary<ID<IUserOrGroup, Guid>, IGroupAliases_Readable>();
 
             DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
@@ -803,7 +808,7 @@ namespace ObjectCloud.Disk.FileHandlers
                 groupAliasesFromDB.TryGetValue(groupfromDB.ID, out groupAliasFromDB);
 
                 yield return CreateGroupAndAliasObject(groupfromDB, groupAliasFromDB);
-            }
+            }*/
         }
 
         public IEnumerable<IUser> GetUsersInGroup(ID<IUserOrGroup, Guid> groupId)
@@ -840,10 +845,19 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public void SetGroupAlias(ID<IUserOrGroup, Guid> userId, ID<IUserOrGroup, Guid> groupId, string alias)
         {
-            // update or insert if the alias isn't null
-            if (null != alias)
-                DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
+            DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
+            {
+                // Setting the alias to be the same as the group name should delete it
+                IGroup group = GetGroup(groupId);
+                if (alias == group.Name)
+                    alias = null;
+
+                // update or insert if the alias isn't null
+                if (null != alias)
                 {
+                    if (null == DatabaseConnection.UserInGroups.SelectSingle(UserInGroups_Table.GroupID == groupId & UserInGroups_Table.UserID == userId))
+                        throw new SecurityException("User is not in group");
+
                     if (null == DatabaseConnection.GroupAliases.SelectSingle(GroupAliases_Table.UserID == userId & GroupAliases_Table.GroupID == groupId))
                         DatabaseConnection.GroupAliases.Insert(delegate(IGroupAliases_Writable groupAliasWritable)
                         {
@@ -858,11 +872,12 @@ namespace ObjectCloud.Disk.FileHandlers
                             {
                                 groupAliasWritable.Alias = alias;
                             });
+                }
+                else
+                    DatabaseConnection.GroupAliases.Delete(GroupAliases_Table.UserID == userId & GroupAliases_Table.GroupID == groupId);
 
-                    transaction.Commit();
-                });
-            else
-                DatabaseConnection.GroupAliases.Delete(GroupAliases_Table.UserID == userId & GroupAliases_Table.GroupID == groupId);
+                transaction.Commit();
+            });
         }
     }
 }

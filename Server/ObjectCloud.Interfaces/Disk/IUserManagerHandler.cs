@@ -271,7 +271,7 @@ namespace ObjectCloud.Interfaces.Disk
 		/// <returns>
 		/// A <see cref="IEnumerable"/>
 		/// </returns>
-        IEnumerable<IGroupAndAlias> GetGroupsThatUserOwns(ID<IUserOrGroup, Guid> userId);
+        IEnumerable<IGroup> GetGroupsThatUserOwns(ID<IUserOrGroup, Guid> userId);
 		
 		/// <summary>
 		/// Returns all of the users in a group 

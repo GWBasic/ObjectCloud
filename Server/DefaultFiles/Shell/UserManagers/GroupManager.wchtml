@@ -37,11 +37,53 @@
             });
          }
 
+         function clearGroupAlias(groupId)
+         {
+            $("Alias_" + groupId).value = "";
+            setGroupAlias(groupId);
+         }
+
+         function setGroupAlias(groupId)
+         {
+            userDB.SetGroupAlias(
+            {
+               groupId: groupId,
+               alias: $("Alias_" + groupId).value
+            },
+            function(transport)
+            {
+               window.location.reload(true);
+            });
+         }
+
       var administerableGroups = <? WebComponent("/Users/UserDB?Method=GetGroupsThatCanBeAdministered") ?>;
       var permissionsToUserDB = <? WebComponent("/Users/UserDB?Method=GetPermissionAsJSON") ?>;
    </script>
 
-   <h1>Your Groups</h1>
+   <h1>Groups that you are a member of</h1>
+
+   <script>
+      var groupsThatIAmIn = <? WebComponent("/Users/UserDB?Method=GetGroupsThatUserIsIn") ?>;
+      groupsThatIAmIn.each(function(group, i)
+      {
+         if (!group.Automatic)
+         {
+            var groupPage = "/Users/" + encodeURIComponent(group.Name) + ".group";
+            var alias = null != group.Alias ? group.Alias : group.Name;
+
+            document.write('<input type="textbox" value="' + alias + '" id="Alias_' + group.Id + '" onchange="setGroupAlias(' + "'" + group.Id + "'" + ')" > ');
+
+            if (alias != group.Name)
+               document.write('<input type="button" value="Clear" onclick="clearGroupAlias(' + "'" + group.Id + "'" + ')" > ');
+
+            document.write('<a href="' + groupPage + '" >' + group.Name + '</a>');
+
+            document.write('<br />');
+         }
+     });
+   </script>
+
+   <h1>Groups that you can administer</h1>
 
    <script>
 
