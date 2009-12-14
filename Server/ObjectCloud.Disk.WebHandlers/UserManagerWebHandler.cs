@@ -407,6 +407,9 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Read)]
         public IWebResults SetGroupAlias(IWebConnection webConnection, Guid groupId, string alias)
         {
+            if (webConnection.Session.User == FileHandlerFactoryLocator.UserFactory.AnonymousUser)
+                throw new WebResultsOverrideException(WebResults.FromString(Status._403_Forbidden, "You must be logged in to set an alias"));
+
             if (0 == alias.Length)
                 alias = null;
 
@@ -416,7 +419,7 @@ namespace ObjectCloud.Disk.WebHandlers
             }
             catch (SecurityException)
             {
-                throw new WebResultsOverrideException(WebResults.FromString(Status._401_Unauthorized, "User is not a member of the group"));
+                throw new WebResultsOverrideException(WebResults.FromString(Status._403_Forbidden, "Permission Denied"));
             }
 
             return WebResults.FromStatus(Status._202_Accepted);
@@ -429,7 +432,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="groupname"></param>
         /// <param name="groupid"></param>
         /// <returns></returns>
-        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JSON)]
+        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JSON, FilePermissionEnum.Read)]
         public IWebResults GetUsersInGroup(IWebConnection webConnection, string groupname, string groupid)
 		{
 			IGroup group = GetGroupInt(webConnection, groupname, groupid);
@@ -466,6 +469,7 @@ namespace ObjectCloud.Disk.WebHandlers
             IDictionary<string, object> toReturn = CreateJSONDictionary(user as IUserOrGroup);
 
             toReturn["Identity"] = user.Identity;
+            toReturn["UserOrGroup"] = "User";
 
             return toReturn;
         }
@@ -488,6 +492,7 @@ namespace ObjectCloud.Disk.WebHandlers
             toReturn["OwnerIdentity"] = null != group.OwnerId ? FileHandler.GetUser(group.OwnerId.Value).Identity : (object)null;
             toReturn["Automatic"] = group.Automatic;
             toReturn["Type"] = group.Type.ToString();
+            toReturn["UserOrGroup"] = "Group";
 
             return toReturn;
         }
@@ -545,6 +550,47 @@ namespace ObjectCloud.Disk.WebHandlers
                 groups = FileHandler.GetGroupsThatUserOwns(webConnection.Session.User.Id);
 
             return ReturnAsJSON(groups);
+        }
+
+        /// <summary>
+        /// Returns all public groups.  On systems with large amounts of groups; this should be somehow disabled, or 
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="max"></param>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JSON)]
+        public IWebResults SearchUsersAndGroups(IWebConnection webConnection, string query, uint? max)
+        {
+            List<object> toReturn = new List<object>();
+
+            // Prevent too large maxes unless the user has admin privileges
+            bool fixMax = false;
+            if (null == max)
+                fixMax = true;
+            else if (max.Value < 50)
+                fixMax = true;
+
+            if (fixMax)
+                if (FilePermissionEnum.Administer != FileContainer.LoadPermission(webConnection.Session.User.Id))
+                    max = 50;
+
+            foreach (IUserOrGroup userOrGroup in FileHandler.SearchUsersAndGroups(query, max))
+            {
+                if (userOrGroup is IUser)
+                    toReturn.Add(CreateJSONDictionary(userOrGroup as IUser));
+
+                else if (userOrGroup is IGroupAndAlias)
+                    toReturn.Add(CreateJSONDictionary(userOrGroup as IGroupAndAlias));
+
+                else if (userOrGroup is IGroup)
+                    toReturn.Add(CreateJSONDictionary(userOrGroup as IGroup));
+
+                else // if userOrGroup is something else, make a best effort and keep going
+                    toReturn.Add(userOrGroup);
+            }
+
+            return WebResults.ToJson(toReturn);
         }
 
         /// <summary>
