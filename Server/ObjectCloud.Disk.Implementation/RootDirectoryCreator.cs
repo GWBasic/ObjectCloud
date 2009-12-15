@@ -42,6 +42,8 @@ namespace ObjectCloud.Disk.Implementation
 			    "",
 			    userFactory.AnonymousUser.Id,
 			    true);
+
+            usersDirectory.DeleteFile(null, "anonymous");
 			    
             IUser rootUser = userManager.CreateUser(
             	"root",
