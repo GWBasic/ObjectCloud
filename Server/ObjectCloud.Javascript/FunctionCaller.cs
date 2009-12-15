@@ -696,20 +696,28 @@ namespace ObjectCloud.Javascript
                 switch (WebCallingConvention.Value)
                 {
                     case ObjectCloud.Interfaces.WebServer.WebCallingConvention.GET:
-                        WrapperCache = GenerateClientWrapper_GET();
+                        WrapperCache = JavascriptWrapperGenerator.GenerateGET(
+			                Method,
+			                WebReturnConvention);
                         break;
 
                     case ObjectCloud.Interfaces.WebServer.WebCallingConvention.GET_application_x_www_form_urlencoded:
-                        WrapperCache = GenerateClientWrapper_GET_application_x_www_form_urlencoded();
+                        WrapperCache = JavascriptWrapperGenerator.GenerateGET_urlencoded(
+			                Method,
+			                WebReturnConvention);
                         break;
 
                     case ObjectCloud.Interfaces.WebServer.WebCallingConvention.POST_application_x_www_form_urlencoded:
-                        WrapperCache = GenerateClientWrapper_POST_application_x_www_form_urlencoded();
+                        WrapperCache = JavascriptWrapperGenerator.GeneratePOST_urlencoded(
+			                Method,
+			                WebReturnConvention);
                         break;
 
-                    /*case ObjectCloud.Interfaces.WebServer.WebCallingConvention.POST_string:
-                        WrapperCache[wrapperCallsThrough] = GenerateLegacyClientWrapper_POST_string(wrapperCallsThrough);
-                        break;*/
+                    case ObjectCloud.Interfaces.WebServer.WebCallingConvention.POST_string:
+                        WrapperCache = JavascriptWrapperGenerator.GeneratePOST(
+			                Method,
+			                WebReturnConvention);
+                        break;
 
                     default:
                         return null;
@@ -722,39 +730,6 @@ namespace ObjectCloud.Javascript
         /// The generated wrapper for the function
         /// </summary>
         private string WrapperCache = null;
-
-        /// <summary>
-        /// Generates a clent-side Javascript wrapper as if this is a GET request without urlencoded arguments
-        /// </summary>
-        /// <returns></returns>
-        private string GenerateClientWrapper_GET()
-        {
-            return JavascriptWrapperGenerator.GenerateGET(
-                Method,
-                WebReturnConvention);
-        }
-
-        /// <summary>
-        /// Generates a clent-side Javascript wrapper as if this is a GET request with urlencoded arguments
-        /// </summary>
-        /// <returns></returns>
-        private string GenerateClientWrapper_GET_application_x_www_form_urlencoded()
-        {
-            return JavascriptWrapperGenerator.GenerateGET_urlencoded(
-                Method,
-                WebReturnConvention);
-        }
-
-        /// <summary>
-        /// Generates a clent-side Javascript wrapper as if this is a POST request with urlencoded arguments
-        /// </summary>
-        /// <returns></returns>
-        private string GenerateClientWrapper_POST_application_x_www_form_urlencoded()
-        {
-            return JavascriptWrapperGenerator.GeneratePOST_urlencoded(
-                Method,
-                WebReturnConvention);
-        }
 
         /// <summary>
         /// Generates the wrapper for the given calling source

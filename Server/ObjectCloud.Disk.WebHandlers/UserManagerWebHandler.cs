@@ -538,7 +538,7 @@ namespace ObjectCloud.Disk.WebHandlers
             return WebResults.ToJson(groupsAL.ToArray());
         }
 
-        private IWebResults ReturnAsJSON(IEnumerable<IGroup> groups)
+        /*private IWebResults ReturnAsJSON(IEnumerable<IGroup> groups)
         {
             ArrayList groupsAL = new ArrayList();
             foreach (IGroup group in groups)
@@ -548,7 +548,7 @@ namespace ObjectCloud.Disk.WebHandlers
             }
 
             return WebResults.ToJson(groupsAL.ToArray());
-        }
+        }*/
 		
 		private IWebResults ReturnAsJSON(IEnumerable<IUser> users)
 		{

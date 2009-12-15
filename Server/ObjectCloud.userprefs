@@ -3,17 +3,11 @@
   <MonoDevelop.Ide.DebuggingService>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService>
-  <MonoDevelop.Ide.Workbench ActiveDocument="ObjectCloud.Interfaces/WebServer/WebHandler.cs" ctype="Workbench">
-    <Files>
-      <File FileName="ObjectCloud.Interfaces/WebServer/WebHandler.cs" Line="1" Column="1" />
-    </Files>
+  <MonoDevelop.Ide.Workbench ctype="Workbench">
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="ObjectCloud" selected="True" />
-          <Node name="ObjectCloud.Interfaces" expanded="True">
-            <Node name="WebServer" expanded="True" />
-          </Node>
         </State>
       </Pad>
       <Pad Id="ClassPad">

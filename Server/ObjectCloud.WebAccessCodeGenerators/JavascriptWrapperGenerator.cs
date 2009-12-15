@@ -50,21 +50,21 @@ namespace ObjectCloud.WebAccessCodeGenerators
                         javascriptMethods.Add(GeneratePOST_urlencoded(methodAndWCA));
                         break;
 
-                    /*case WebCallingConvention.POST_JSON:
-                        javascriptMethods.Add(GenerateLegacyPOST_JSON(methodAndWCA, WrapperCallsThrough.AJAX));
+                    case WebCallingConvention.POST_JSON:
+                        javascriptMethods.Add(GeneratePOST_JSON(methodAndWCA));
                         break;
 
                     case WebCallingConvention.POST_string:
-                        javascriptMethods.Add(GenerateLegacyPOST(methodAndWCA, WrapperCallsThrough.AJAX));
+                        javascriptMethods.Add(GeneratePOST(methodAndWCA));
                         break;
 
                     case WebCallingConvention.POST_bytes:
-                        javascriptMethods.Add(GenerateLegacyPOST(methodAndWCA, WrapperCallsThrough.AJAX));
+                        javascriptMethods.Add(GeneratePOST(methodAndWCA));
                         break;
 
                     case WebCallingConvention.POST_stream:
-                        javascriptMethods.Add(GenerateLegacyPOST(methodAndWCA, WrapperCallsThrough.AJAX));
-                        break;*/
+                        javascriptMethods.Add(GeneratePOST(methodAndWCA));
+                        break;
 
                     // For now everything else is unsupported
                 }
@@ -244,6 +244,79 @@ namespace ObjectCloud.WebAccessCodeGenerators
 
             return toReturn.ToString();
         }
+
+        /// <summary>
+        /// Generates a POST wrapper for non-urlencoded queries
+        /// </summary>
+        /// <param name="methodAndWCA"></param>
+        /// <returns></returns>
+        private static string GeneratePOST(MethodAndWebCallableAttribute methodAndWCA)
+        {
+            return GeneratePOST(
+                methodAndWCA.MethodInfo.Name,
+                methodAndWCA.WebCallableAttribute.WebReturnConvention);
+        }
+
+        /// <summary>
+        /// Generates a POST wrapper for urlencoded queries
+        /// </summary>
+        /// <param name="methodAndWCA"></param>
+        /// <returns></returns>
+        public static string GeneratePOST(string methodName, WebReturnConvention webReturnConvention)
+        {
+            return GeneratePOST(
+                methodName,
+                webReturnConvention,
+			    "   httpRequest.send(parameters);\n");
+		}
+		
+        /// <summary>
+        /// Generates a POST wrapper for urlencoded queries
+        /// </summary>
+        /// <param name="methodAndWCA"></param>
+        /// <returns></returns>
+        public static string GeneratePOST(string methodName, WebReturnConvention webReturnConvention, string sendString)
+        {
+            // Create the funciton declaration
+            StringBuilder toReturn = new StringBuilder(string.Format("\"{0}\"", methodName));
+            toReturn.Append(FunctionDeclaration);
+            toReturn.Append(FunctionBegin);
+
+            // Create the AJAX request
+            toReturn.Append(CreateAJAXRequest);
+
+            // Open the AJAX request
+            toReturn.Append("   httpRequest.open('POST', '{0}?Method=" + methodName + "', true);\n");
+            toReturn.Append(sendString);
+            toReturn.Append('}');
+
+            return toReturn.ToString();
+        }
+
+        /// <summary>
+        /// Generates a POST wrapper for non-urlencoded queries
+        /// </summary>
+        /// <param name="methodAndWCA"></param>
+        /// <returns></returns>
+        private static string GeneratePOST_JSON(MethodAndWebCallableAttribute methodAndWCA)
+        {
+            return GeneratePOST_JSON(
+                methodAndWCA.MethodInfo.Name,
+                methodAndWCA.WebCallableAttribute.WebReturnConvention);
+        }
+
+        /// <summary>
+        /// Generates a POST wrapper for urlencoded queries
+        /// </summary>
+        /// <param name="methodAndWCA"></param>
+        /// <returns></returns>
+        public static string GeneratePOST_JSON(string methodName, WebReturnConvention webReturnConvention)
+		{
+			return GeneratePOST(
+				methodName,
+			    webReturnConvention,
+			    "   httpRequest.send(JSON.stringify(parameters));\n");
+		}
 
         /// <summary>
         /// The beginning of each function wrapper, declares all of the default arguments and default error handlers
