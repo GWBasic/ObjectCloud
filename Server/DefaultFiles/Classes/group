@@ -19,15 +19,14 @@ getGroup.webCallable = "GET";
 getGroup.minimumWebPermission = "Read";
 function getGroup()
 {
-   var toReturn;
+   var groupId;
 
    callAsOwner(function()
    {
-      var groupId = base.PostQuery("select Value from metadata where Name='GroupId'")[0][0].Value;
-      toReturn = UserDB.GetGroup(null, groupId);
+      groupId = base.PostQuery("select Value from metadata where Name='GroupId'")[0][0].Value;
    });
 
-   return toReturn;
+   return UserDB.GetGroupAndAlias(groupId);
 }
 
 joinGroup.webCallable = "POST_application_x_www_form_urlencoded";

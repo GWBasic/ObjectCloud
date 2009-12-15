@@ -130,6 +130,9 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             name = name.ToLowerInvariant();
 
+            if (GroupType.Personal == groupType && null == ownerId)
+                throw new ArgumentException("Personal groups must have a declared owner");
+
             IGroup groupObj = null;
 
             DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
@@ -139,13 +142,25 @@ namespace ObjectCloud.Disk.FileHandlers
 
                 DatabaseConnection.Groups.Insert(delegate(IGroups_Writable group)
                 {
-                    group.Name = name;
+                    if (groupType > GroupType.Personal)
+                        group.Name = name;
+                    else
+                        group.Name = groupId.ToString();
+
                     group.ID = groupId;
                     group.OwnerID = ownerId;
                     group.BuiltIn = builtIn;
                     group.Automatic = automatic;
                     group.Type = groupType;
                 });
+
+                if (GroupType.Personal == groupType)
+                    DatabaseConnection.GroupAliases.Insert(delegate(IGroupAliases_Writable groupAlias)
+                    {
+                        groupAlias.Alias = name;
+                        groupAlias.GroupID = groupId;
+                        groupAlias.UserID = ownerId.Value;
+                    });
 
                 try
                 {
@@ -177,8 +192,8 @@ namespace ObjectCloud.Disk.FileHandlers
                 else
                     groupObjectDestinationDirectory = usersDirectory;
 
-                IDatabaseHandler groupDB = usersDirectory.CreateFile(groupFileName, "database", ownerId).FileContainer.CastFileHandler<IDatabaseHandler>(); ;
-                usersDirectory.SetPermission(ownerId, groupFileName, groupId, FilePermissionEnum.Read, true, true);
+                IDatabaseHandler groupDB = groupObjectDestinationDirectory.CreateFile(groupFileName, "database", ownerId).FileContainer.CastFileHandler<IDatabaseHandler>(); ;
+                groupObjectDestinationDirectory.SetPermission(ownerId, groupFileName, groupId, FilePermissionEnum.Read, true, true);
 
                 // Everyone can read a public group
                 if (GroupType.Public == groupType)
@@ -310,12 +325,19 @@ insert into Metadata (Name, Value) values ('GroupId', @groupId);
 
         public IGroup GetGroup(ID<IUserOrGroup, Guid> groupId)
         {
+            IGroups_Readable group = GetGroupInt(ref groupId);
+
+            return CreateGroupObject(group);
+        }
+
+        private IGroups_Readable GetGroupInt(ref ID<IUserOrGroup, Guid> groupId)
+        {
             IGroups_Readable group = DatabaseConnection.Groups.SelectSingle(Groups_Table.ID == groupId.Value);
 
             if (null == group)
                 throw new UnknownUser("Unknown group");
 
-            return CreateGroupObject(group);
+            return group;
         }
 
         public IUserOrGroup GetUserOrGroup(ID<IUserOrGroup, Guid> userOrGroupId)
@@ -802,12 +824,41 @@ insert into Metadata (Name, Value) values ('GroupId', @groupId);
                 yield return CreateGroupObject(group);
         }
 
-        public IEnumerable<IGroup> GetGroupsThatUserOwns(ID<IUserOrGroup, Guid> userId)
+        public IEnumerable<IGroupAndAlias> GetAllGroups(ID<IUserOrGroup, Guid> userId)
         {
-            foreach (IGroups_Readable groupFromDB in DatabaseConnection.Groups.Select(Groups_Table.OwnerID == userId))
-                yield return CreateGroupObject(groupFromDB);
+            List<IGroups_Readable> groupsFromDB = new List<IGroups_Readable>();
+            Dictionary<ID<IUserOrGroup, Guid>, IGroupAliases_Readable> groupAliasesFromDB = new Dictionary<ID<IUserOrGroup, Guid>, IGroupAliases_Readable>();
 
-            /*List<IGroups_Readable> groupsFromDB = new List<IGroups_Readable>();
+            DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
+            {
+                groupsFromDB.AddRange(DatabaseConnection.Groups.Select());
+
+                List<ID<IUserOrGroup, Guid>> groupIds = new List<ID<IUserOrGroup, Guid>>();
+                foreach (IGroups_Readable groupFromDB in groupsFromDB)
+                    groupIds.Add(groupFromDB.ID);
+
+                foreach (IGroupAliases_Readable groupAliasFromDB in DatabaseConnection.GroupAliases.Select(
+                    GroupAliases_Table.GroupID.In(groupIds) & GroupAliases_Table.UserID == userId))
+                {
+                    groupAliasesFromDB[groupAliasFromDB.GroupID] = groupAliasFromDB;
+                }
+            });
+
+            foreach (IGroups_Readable groupfromDB in groupsFromDB)
+            {
+                IGroupAliases_Readable groupAliasFromDB = null;
+                groupAliasesFromDB.TryGetValue(groupfromDB.ID, out groupAliasFromDB);
+
+                yield return CreateGroupAndAliasObject(groupfromDB, groupAliasFromDB);
+            }
+        }
+
+        public IEnumerable<IGroupAndAlias> GetGroupsThatUserOwns(ID<IUserOrGroup, Guid> userId)
+        {
+            /*foreach (IGroups_Readable groupFromDB in DatabaseConnection.Groups.Select(Groups_Table.OwnerID == userId))
+                yield return CreateGroupObject(groupFromDB);*/
+
+            List<IGroups_Readable> groupsFromDB = new List<IGroups_Readable>();
             Dictionary<ID<IUserOrGroup, Guid>, IGroupAliases_Readable> groupAliasesFromDB = new Dictionary<ID<IUserOrGroup, Guid>, IGroupAliases_Readable>();
 
             DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
@@ -831,7 +882,7 @@ insert into Metadata (Name, Value) values ('GroupId', @groupId);
                 groupAliasesFromDB.TryGetValue(groupfromDB.ID, out groupAliasFromDB);
 
                 yield return CreateGroupAndAliasObject(groupfromDB, groupAliasFromDB);
-            }*/
+            }
         }
 
         public IEnumerable<IUser> GetUsersInGroup(ID<IUserOrGroup, Guid> groupId)
@@ -908,6 +959,16 @@ insert into Metadata (Name, Value) values ('GroupId', @groupId);
 
                 transaction.Commit();
             });
+        }
+
+        public IGroupAndAlias GetGroupAndAlias(ID<IUserOrGroup, Guid> userId, ID<IUserOrGroup, Guid> groupId)
+        {
+            IGroupAliases_Readable groupAliasFromDB =
+                DatabaseConnection.GroupAliases.SelectSingle(GroupAliases_Table.UserID == userId & GroupAliases_Table.GroupID == groupId);
+
+            IGroups_Readable groupFromDB = DatabaseConnection.Groups.SelectSingle(Groups_Table.ID == groupId);
+
+            return CreateGroupAndAliasObject(groupFromDB, groupAliasFromDB);
         }
 
         public IEnumerable<IUserOrGroup> SearchUsersAndGroups(string query, uint? max)

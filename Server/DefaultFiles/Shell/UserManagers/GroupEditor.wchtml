@@ -1,20 +1,21 @@
-<? WebComponent("/Pages/header.webcomponent?Title=" . $_GETENCODE["groupname"]) ?>
+<? WebComponent("/Pages/header.webcomponent?Title=Group%20Editor") ?>
 
 <!-- This code is released under the LGPL, See /Docs/license.wchtml -->
 
       <? Scripts(/API/Prototype.js, /API/Url.js) ?>
       <script>
-         var usersInGroup = <? WebComponent("/Users/UserDB?Method=GetUsersInGroup&groupname=" . $_GET["groupname"]) ?>;
-         var group= <? WebComponent("/Users/UserDB?Method=GetGroup&groupname=" . $_GET["groupname"]) ?>;
+         var usersInGroup = <? WebComponent("/Users/UserDB?Method=GetUsersInGroup&groupid=" . $_GET["groupId"]) ?>;
+         var group= <? WebComponent("/Users/UserDB?Method=GetGroupAndAlias&groupid=" . $_GET["groupId"]) ?>;
+
+         $("title").innerHTML = group.NameOrAlias;
 
          if (group.Automatic)
-            document.write('Membership in ' + group.Name + ' is automatically managed by ObjectCloud.  No one can be added or removed.');
+            document.write('Membership in ' + group.NameOrAlias + ' is automatically managed by ObjectCloud.  No one can be added or removed.');
          else
          {
             usersInGroup.each(function(user, i)
             {
                document.write(user.Name);
-               //document.write('<a href="/Users/UserDB?Method=RemoveUserFromGroup&groupid=' + group.Id + '&userid=' + user.Id + '" target="_blank" onclick="setTimeout(' + "'window.location.reload(true)', 2500)" + '"> remove </a><br />');
                document.write('<form action="/Users/UserDB?Method=RemoveUserFromGroup" method="post" ><input type=hidden name="groupid" value="' + group.Id + '" /><input type=hidden name="userid" value="' + user.Id + '" /><input type="submit" value="Remove" /></form>');
 
             });
@@ -25,10 +26,7 @@
          <h2>Add a user:</h2>
          <form action="/Users/UserDB?Method=AddUserToGroup" method="post" target="_blank">
             Username: <input name="username" type="text" />
-
-            <script>
-               document.write('<input name="groupid" type="hidden" value="' + group.Id + '" />');
-            </script>
+            <input name="groupid" type="hidden" value="<? $_GET["groupId"] ?>" />
 
             <input type="submit" value="add" onclick="setTimeout('window.location.reload(true)', 2500)" />
          </form>

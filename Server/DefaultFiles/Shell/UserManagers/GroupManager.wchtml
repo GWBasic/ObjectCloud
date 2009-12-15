@@ -94,13 +94,13 @@
          {
             var groupPage;
             if ("Personal" == group.Type)
-               groupPage = "/Users/" + encodeURIComponent(group.Owner) + "/" + encodeURIComponent(group.Name) + ".group";
+               groupPage = "/Users/" + encodeURIComponent(group.Owner) + "/" + encodeURIComponent(group.Alias) + ".group";
             else
                groupPage = "/Users/" + encodeURIComponent(group.Name) + ".group";
 
-            var membershipPage = "/Shell/UserManagers/GroupEditor.wchtml?groupname=" + group.Name;
+            var membershipPage = "/Shell/UserManagers/GroupEditor.wchtml?groupId=" + group.Id;
 
-            document.write('<a href="' + groupPage + '" >' + group.Name + '</a> <a href="' + membershipPage + '">members</a>');
+            document.write('<a href="' + groupPage + '" >' + group.NameOrAlias + '</a> <a href="' + membershipPage + '">members</a>');
          
             if (!group.BuiltIn)
                document.write('<input type="button" value="Delete" onclick="deleteGroup(' + "'" + group.Id + "'" + ')" />');

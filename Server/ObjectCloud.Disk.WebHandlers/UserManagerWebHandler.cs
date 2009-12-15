@@ -112,7 +112,7 @@ namespace ObjectCloud.Disk.WebHandlers
             if (!webConnection.Session.User.Local)
                 throw new WebResultsOverrideException(WebResults.FromString(Status._401_Unauthorized, "Sorry, only local users can create groups"));
 
-            if (webConnection.Session.User == FileHandlerFactoryLocator.UserFactory.AnonymousUser)
+            if (webConnection.Session.User.Id == FileHandlerFactoryLocator.UserFactory.AnonymousUser.Id)
                 throw new WebResultsOverrideException(WebResults.FromString(Status._403_Forbidden, "You must be logged in to create a group"));
 
             GroupType groupType;
@@ -212,25 +212,53 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="groupname"></param>
         /// <param name="groupid"></param>
         /// <returns></returns>
-        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JSON, FilePermissionEnum.Read)]
+        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JSON)]
         public IWebResults GetGroup(IWebConnection webConnection, string groupname, string groupid)
-		{
-			IGroup group = GetGroupInt(webConnection, groupname, groupid);
-				
-			// Determine if the user has permission to delete this group
-			// The user must either own the group, or have administrative privilages in order to delete a group
-			bool userHasPermission = false;
-			
-			if (group.OwnerId == webConnection.Session.User.Id)
-				userHasPermission = true;
-			else if (FileHandler.FileContainer.LoadPermission(webConnection.Session.User.Id) >= FilePermissionEnum.Read)
-				userHasPermission = true;
-			
-			if (!userHasPermission)
-				return WebResults.FromString(Status._401_Unauthorized, "You do not have permission to view this group");
-			
-			return WebResults.ToJson(CreateJSONDictionary(group));
-		}
+        {
+            IGroup group = GetGroupInt(webConnection, groupname, groupid);
+
+            // Determine if the user has permission to delete this group
+            // The user must either own the group, or have administrative privilages in order to delete a group
+            bool userHasPermission = false;
+
+            if (group.OwnerId == webConnection.Session.User.Id)
+                userHasPermission = true;
+            else if (FileHandler.FileContainer.LoadPermission(webConnection.Session.User.Id) >= FilePermissionEnum.Read)
+                userHasPermission = true;
+
+            if (!userHasPermission)
+                return WebResults.FromString(Status._401_Unauthorized, "You do not have permission to view this group");
+
+            return WebResults.ToJson(CreateJSONDictionary(group));
+        }
+
+        /// <summary>
+        /// Returns the user's alias for the group
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="groupid"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JSON)]
+        public IWebResults GetGroupAndAlias(IWebConnection webConnection, Guid groupid)
+        {
+            IGroupAndAlias groupAndAlias = FileHandler.GetGroupAndAlias(
+                webConnection.Session.User.Id,
+                new ID<IUserOrGroup, Guid>(groupid));
+
+            // Determine if the user has permission to delete this group
+            // The user must either own the group, or have administrative privilages in order to delete a group
+            bool userHasPermission = false;
+
+            if (groupAndAlias.OwnerId == webConnection.Session.User.Id)
+                userHasPermission = true;
+            else if (FileHandler.FileContainer.LoadPermission(webConnection.Session.User.Id) >= FilePermissionEnum.Read)
+                userHasPermission = true;
+
+            if (!userHasPermission)
+                return WebResults.FromString(Status._401_Unauthorized, "You do not have permission to view this group");
+
+            return WebResults.ToJson(CreateJSONDictionary(groupAndAlias));
+        }
 
 		/// <summary>
 		/// Gets the group specified in the web connection 
@@ -479,6 +507,7 @@ namespace ObjectCloud.Disk.WebHandlers
             IDictionary<string, object> toReturn = CreateJSONDictionary(group as IGroup);
 
             toReturn["Alias"] = group.Alias;
+            toReturn["NameOrAlias"] = group.Alias != null ? group.Alias : group.Name;
 
             return toReturn;
         }
@@ -541,15 +570,15 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.GET, WebReturnConvention.JSON)]
         public IWebResults GetGroupsThatCanBeAdministered(IWebConnection webConnection)
         {
-            IEnumerable<IGroup> groups;
+            IEnumerable<IGroupAndAlias> groupAndAliases;
 
             if (FilePermissionEnum.Administer == FileHandler.FileContainer.LoadPermission(webConnection.Session.User.Id))
-                groups = FileHandler.GetAllGroups();
+                groupAndAliases = FileHandler.GetAllGroups(webConnection.Session.User.Id);
 
             else
-                groups = FileHandler.GetGroupsThatUserOwns(webConnection.Session.User.Id);
+                groupAndAliases = FileHandler.GetGroupsThatUserOwns(webConnection.Session.User.Id);
 
-            return ReturnAsJSON(groups);
+            return ReturnAsJSON(groupAndAliases);
         }
 
         /// <summary>

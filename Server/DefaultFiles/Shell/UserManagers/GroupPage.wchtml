@@ -33,9 +33,9 @@
          var group= <? WebComponent($_GET["FileName"] . "?Method=getGroup") ?>;
 
          if (null != group.Owner)
-            document.write('<p>' + group.Name + ' is owned by <a href="' + group.OwnerIdentity + '">' + group.Owner + '</a></p>');
+            document.write('<p>' + group.NameOrAlias + ' is owned by <a href="' + group.OwnerIdentity + '">' + group.Owner + '</a></p>');
 
-         var membershipPage = "/Shell/UserManagers/GroupEditor.wchtml?groupname=" + group.Name;
+         var membershipPage = "/Shell/UserManagers/GroupEditor.wchtml?groupId=" + group.Id;
 
          document.write('<a href="' + membershipPage + '">Update Members</a><br />');
 
