@@ -5,10 +5,6 @@
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 	<File
-		Name="BlogEditor.wchtml"
-		TypeId="text"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
-	<File
 		Name="BlogumEditor.wchtml"
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
