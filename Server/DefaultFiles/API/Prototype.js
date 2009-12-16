@@ -1,3 +1,6 @@
+// Note:  Some changes to Prototype are introduced as part of ObjectCloud to work around some bugs in Prototype
+// These are placed at the end of the file and are released under Prototype's license
+
 /*  Prototype JavaScript framework, version 1.6.0.3
  *  (c) 2005-2008 Sam Stephenson
  *
@@ -4318,3 +4321,9 @@ Object.extend(Element.ClassNames.prototype, Enumerable);
 /*--------------------------------------------------------------------------*/
 
 Element.addMethods();
+
+// ---- These changes are part of ObjectCloud and are released under Prototype's original license
+// In summary, Prototype introduces toJSON functions that interfere with json2.js and the JSON namespace
+
+var JSON = JSON || {};
+JSON.stringify =Object.toJSON;

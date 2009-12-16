@@ -1,4 +1,4 @@
-// Scripts: /API/Prototype.js
+// Scripts: /API/AJAX.js, /API/json2.js
 
 var CP_Transport =
 {
@@ -78,63 +78,67 @@ var CP_Transport =
             var me = this;
             me.isNew = false;
 
-            new Ajax.Request(
-               url,
+            var transport = CreateHttpRequest();
+            transport.onreadystatechange = function()
+            {
+               if (4 == transport.readyState)
                {
-                  method: 'post',
-                  postBody: Object.toJSON(body),
-                  onComplete: function(transport)
+                  if (200 == transport.status)
                   {
-                     if (200 == transport.status)
-                     {
-                        if (transport.responseText.length > 0)
-                           try
-                           {
-                              var incomingData = eval('(' + transport.responseText + ')');
-                              me.callbacks.handleIncomingData(incomingData);
-                           }
-                           catch (exception)
-                           {
-                              me.callbacks.handleError(exception);
-                              me.throwErrorOnSend = true;
-                              return;
-                           }
+                     if (transport.responseText.length > 0)
+                        try
+                        {
+                           var incomingData = eval('(' + transport.responseText + ')');
+                           me.callbacks.handleIncomingData(incomingData);
+                        }
+                        catch (exception)
+                        {
+                           me.callbacks.handleError(exception);
+                           me.throwErrorOnSend = true;
+                           return;
+                        }
 
-                        me.longPoll = 2 * me.longPoll;
-                        if (me.longPoll > me.maxLongPoll)
-                           me.longPoll = me.maxLongPoll;
+                     me.longPoll = 2 * me.longPoll;
+                     if (me.longPoll > me.maxLongPoll)
+                        me.longPoll = me.maxLongPoll;
 
-                        // If the sendId has changed, it means that someone else queued another send
-                        if (queuedSendId == me.sendId - 1)
-                           me.startSend(0);
+                     // If the sendId has changed, it means that someone else queued another send
+                     if (queuedSendId == me.sendId - 1)
+                        me.startSend(0);
 
-                        me.callbacks.flashSuccess(transport, me.sendId);
-                     }
-                     else if (409 == transport.status)
-                     {
-                        me.isNew = true;
-
-                        // If the sendId has changed, it means that someone else queued another send
-                        if (queuedSendId == me.sendId - 1)
-                           me.startSend(0);
-                     }
-                     else if (transport.status >= 400 && transport.status <= 599)
-                     {
-                        me.throwErrorOnSend = true;
-                        me.callbacks.handleError(transport.status + ", transport dropped");
-                     }
-                     else
-                     {
-                        me.longPoll = 1000;
-
-                        // If the sendId has changed, it means that someone else queued another send
-                        if (queuedSendId == me.sendId - 1)
-                           me.startSend(2500);
-
-                        me.callbacks.flashError(transport, me.sendId);
-                     }
+                     me.callbacks.flashSuccess(transport, me.sendId);
                   }
-               });
+                  else if (409 == transport.status)
+                  {
+                     me.isNew = true;
+
+                     // If the sendId has changed, it means that someone else queued another send
+                     if (queuedSendId == me.sendId - 1)
+                        me.startSend(0);
+                  }
+                 else if (transport.status >= 400 && transport.status <= 599)
+                  {
+                     me.throwErrorOnSend = true;
+                     me.callbacks.handleError(transport.status + ", transport dropped");
+                  }
+                  else
+                  {
+                     me.longPoll = 1000;
+
+                     // If the sendId has changed, it means that someone else queued another send
+                     if (queuedSendId == me.sendId - 1)
+                        me.startSend(2500);
+
+                     me.callbacks.flashError(transport, me.sendId);
+                  }
+               }
+            }
+
+            transport.open('POST', url, true);
+            //var bodyToSend = Object.toJSON(body);
+            //var bodyToSend = DeepJSON.stringify(body);
+            var bodyToSend = JSON.stringify(body);
+            transport.send(bodyToSend);
          }
       };
 

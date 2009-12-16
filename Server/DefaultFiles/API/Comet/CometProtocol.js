@@ -1,4 +1,4 @@
-// Scripts:  /API/Prototype.js, /API/Comet/CometTransport.js
+// Scripts:  /API/Comet/CometTransport.js
 
 var CP_Multiplex =
 {
@@ -334,7 +334,6 @@ var CP_QualityReliable =
       return toReturn;
    }
 }
-
 
 
 

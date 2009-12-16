@@ -149,7 +149,19 @@ namespace ObjectCloud.Disk.WebHandlers.Comet
                 if (!GetDataMutex.WaitOne(50))
                 {
                     // If the mutex can't be grabbed, keep trying to process the data in a non-blocking way
-                    ThreadPool.QueueUserWorkItem(HandleIncomingData, incoming);
+                    ThreadPool.QueueUserWorkItem(
+                        delegate(object state)
+                        {
+                            try
+                            {
+                                HandleIncomingData(state);
+                            }
+                            catch (Exception e)
+                            {
+                                log.Error("Exception when handling incoming data on a sub-thread", e);
+                            }
+                        },
+                        incoming);
                     return;
                 }
 
