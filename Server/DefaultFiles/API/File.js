@@ -1,4 +1,4 @@
-// Scripts: /API/Prototype.js
+// Scripts: /API/Prototype.js, /API/AJAX.js
 
 // This code is released under the LGPL
 // See /Docs/license.wchtml
@@ -9,6 +9,61 @@ JavaScript wrapper for opening files
 
 var File =
 {
+   /**
+    * Gets an object that allows for calling the given file
+    *
+    * @param filename The filename to manipulate
+    * @param onSuccess Callback for success
+    * @param onFailure Callback for failure
+    * @param onException Callback for a transport exception
+    */
+   GetWrapper : function(filename, onSuccess, onFailure)
+   {
+      if (!onFailure)
+         onFailure = function(transport)
+         {
+            alert("Error opening " + filename + ": " + transport.responseText);
+         };
+
+      if (onSuccess)
+      {
+         var passedOnSuccess = onSuccess;
+         onSuccess = function(transport)
+         {
+            var js;
+
+            try
+            {
+               js = eval('(' + transport.responseText + ')');
+            }
+            catch (error)
+            {
+               alert('Error evaluating response from opening ' + filename + ': ' + error);
+            }
+
+            if (js)
+               passedOnSuccess(js, transport);
+         };
+      }
+      else
+         onSuccess = function(transport)
+         {
+            eval('(' + transport.responseText + ')');
+         };
+
+      var httpRequest = CreateHttpRequest();
+      httpRequest.onreadystatechange = function()
+      {
+         if (4 == httpRequest.readyState)
+            if ((httpRequest.status >= 200) && (httpRequest.status < 300))
+               onSuccess(httpRequest);
+            else
+               onFailure(httpRequest);
+      }
+      httpRequest.open('GET', filename +  '?Method=GetJSW', true);
+      httpRequest.send(null);
+   },
+
    /**
     * Gets an object that allows for calling the given file
     *

@@ -11,6 +11,5 @@
    {"Template":"/Templates/Medium Image Template.png","Extension":".png","Display":"Medium Image (Experimental)"},
    {"Template":"/Templates/Large Image Template.png","Extension":".png","Display":"Large Image (Experimental)"},
    {"Template":"/Templates/Voting Booth Template.vote","Extension":".vote","Display":"Voting Booth (Experimental)"},
-   {"Template":"/Templates/Blog Template.blog","Extension":".blog","Display":"Blog (Depricated)"},
    {"Template":"/Templates/Blogum Template.blogum","Extension":".blogum","Display":"Blogum (Experimental)"}
 ]

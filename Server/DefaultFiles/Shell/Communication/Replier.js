@@ -42,9 +42,9 @@ function rpy_save(content, id, instance)
    replier.innerHTML = "Saving...<div>" + content + "</div>";
 
    rpy_object.Replier_AddReply(
-      content,
-      {},
-      {},
+      {
+         replyText: content
+      },
       function()
       {
          replier.innerHTML = rpy_oldHTML;

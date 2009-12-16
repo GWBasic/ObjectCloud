@@ -1,5 +1,5 @@
 <? WebComponent("/Pages/header.webcomponent?Title=ObjectCloud%20Log%20Editor" ?>
-<? Scripts(/API/Prototype.js, /System/Log?Method=GetJavascriptWrapper&assignToVariable=Log) ?>
+<? Scripts(/API/Prototype.js, /System/Log?Method=GetJSW&assignToVariable=Log) ?>
 
 <a href="/Shell/Editors/Whisquil.wchtml?FileName=/System/Log">Access Log as a Database</a>
 
@@ -50,8 +50,9 @@ LOG FROM BLAMMO
       $("submitButton").disable();
 
       Log.SetDeleteTimespans(
-         deleteTimespans,
-         {},
+         {
+            deleteTimespans: deleteTimespans
+         },
          function()
          {
             $("submitButton").enable();

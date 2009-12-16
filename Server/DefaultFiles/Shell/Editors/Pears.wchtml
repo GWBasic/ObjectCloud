@@ -5,7 +5,7 @@
 
 <!-- This code is released under the LGPL, See /Docs/license.wchtml -->
 
-      <? Scripts(/API/Prototype.js, /API/Filehandlers/Name-Value.js, /API/Filehandlers/Directory.js, /API/File.js, <? $_GET["FileName"] ?>?Method=GetJavascriptWrapper&assignToVariable=NVPs) ?>
+      <? Scripts(/API/Prototype.js, /API/Filehandlers/Name-Value.js, /API/Filehandlers/Directory.js, /API/File.js, <? $_GET["FileName"] ?>?Method=GetJSW&assignToVariable=NVPs) ?>
       <link href="/Pages/objectcloud.css" type="text/css" rel="stylesheet" />
       <link href="/API/proto.menu.css" type="text/css" rel="stylesheet" />
 
@@ -54,16 +54,16 @@
 
                var dirAndFile = File.SplitFullPath(filename);
 
-               File.Open(
+               File.GetWrapper(
                   dirAndFile.Directory,
-                  {},
                   function(dirWrapper)
                   {
                      dirWrapper.CreateFile(
-                        dirAndFile.Filename,
-                        "name-value",
-                        false,
-                        {},
+                        {
+                           FileName: dirAndFile.Filename,
+                           FileType: "name-value",
+                           ErrorIfExists: false
+                        },
                         function(nvpWrapper) 
                         {
                            // Saving is finished through recursion
@@ -117,11 +117,11 @@
 
                NVPs.SetAllJson(
                   pairs,
-                  function(transport)
+                  function(responseText)
                   {
                      unsaved = false;
                      updateTitle();
-                     alert(transport.responseText);
+                     alert(responseText);
                   });
             }
          }

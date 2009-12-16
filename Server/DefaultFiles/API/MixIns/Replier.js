@@ -2,8 +2,7 @@ Replier_AddReply.webCallable = "POST_application_x_www_form_urlencoded";
 Replier_AddReply.minimumWebPermission = "Write";
 Replier_AddReply.namedPermissions = "reply";
 Replier_AddReply.webReturnConvention = "Status";
-Replier_AddReply.parser_options = "JSON";
-function Replier_AddReply(replyText, options)
+function Replier_AddReply(replyText)
 {
    var roots = base.GetRelatedFiles(["root"], null, null, null, 1);
 

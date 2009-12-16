@@ -1,5 +1,5 @@
 <? WebComponent("/Pages/header.webcomponent?Title=Editing: <? WebComponent($_GET["FileName"] . "?Method=getTitle") ?>") ?>
-<? Scripts(/API/Prototype.js, <? $_GET["FileName"] ?>?Method=GetJavascriptWrapper&assignToVariable=VotingBooth, /API/nicEdit.js) ?>
+<? Scripts(/API/Prototype.js, <? $_GET["FileName"] ?>?Method=GetJSW&assignToVariable=VotingBooth, /API/nicEdit.js) ?>
 
 <!-- This code is released under the LGPL, See /Docs/license.wchtml -->
 
@@ -15,11 +15,12 @@
       var question = $("question").innerHTML;
 
       VotingBooth.setOptions(
-         $("canChangeVote").checked,
-         $("canSeeResultsWithoutVoting").checked,
-         question,
-         $("q_title").value,
-         {},
+         {
+            canChangeVote: $("canChangeVote").checked,
+            canSeeResultsWithoutVoting: $("canSeeResultsWithoutVoting").checked,
+            question: question,
+            title: $("q_title").value,
+         },
          function()
          {
             $("OptionsEditor").enable();
@@ -76,9 +77,10 @@
    {
       var text = $("q" + qId).value;
       VotingBooth.updateQuestion(
-         qId,
-         text,
-         {},
+         {
+            qId: qId,
+            text: text
+         },
          function(question)
          {
             $("q" + qId).value = question.text;
@@ -100,8 +102,9 @@
       $("AddQuestionInput").value = "";
 
       VotingBooth.addQuestion(
-         newQuestion,
-         {},
+         {
+            text: newQuestion,
+         },
          displayQuestion);
    }
 

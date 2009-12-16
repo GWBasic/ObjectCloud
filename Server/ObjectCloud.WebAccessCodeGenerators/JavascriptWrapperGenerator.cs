@@ -150,6 +150,7 @@ namespace ObjectCloud.WebAccessCodeGenerators
 {
    var parameters = {};
 ");
+            toReturn.Append(GenerateOnSuccessHandler(webReturnConvention));
             toReturn.Append(FunctionBegin);
 
             // Create a urlEncoded string for all of the parameters
@@ -160,7 +161,7 @@ namespace ObjectCloud.WebAccessCodeGenerators
             toReturn.Append(CreateAJAXRequest);
 
             // Open the AJAX request
-            toReturn.Append("   httpRequest.open('GET', '{0}?' + encodedParameters, true);\n");
+            toReturn.Append("   httpRequest.open('GET', '{0}?' + encodedParameters + urlPostfix, true);\n");
             toReturn.Append("   httpRequest.send(null);\n");
             toReturn.Append('}');
 
@@ -189,6 +190,7 @@ namespace ObjectCloud.WebAccessCodeGenerators
             // Create the funciton declaration
             StringBuilder toReturn = new StringBuilder(string.Format("\"{0}\"", methodName));
             toReturn.Append(FunctionDeclaration);
+            toReturn.Append(GenerateOnSuccessHandler(webReturnConvention));
             toReturn.Append(FunctionBegin);
 
             // Create a urlEncoded string for all of the parameters
@@ -199,7 +201,7 @@ namespace ObjectCloud.WebAccessCodeGenerators
             toReturn.Append(CreateAJAXRequest);
 
             // Open the AJAX request
-            toReturn.Append("   httpRequest.open('GET', '{0}?' + encodedParameters, true);\n");
+            toReturn.Append("   httpRequest.open('GET', '{0}?' + encodedParameters + urlPostfix, true);\n");
             toReturn.Append("   httpRequest.send(null);\n");
             toReturn.Append('}');
 
@@ -228,6 +230,7 @@ namespace ObjectCloud.WebAccessCodeGenerators
             // Create the funciton declaration
             StringBuilder toReturn = new StringBuilder(string.Format("\"{0}\"", methodName));
             toReturn.Append(FunctionDeclaration);
+            toReturn.Append(GenerateOnSuccessHandler(webReturnConvention));
             toReturn.Append(FunctionBegin);
 
             // Create a urlEncoded string for all of the parameters
@@ -237,7 +240,7 @@ namespace ObjectCloud.WebAccessCodeGenerators
             toReturn.Append(CreateAJAXRequest);
 
             // Open the AJAX request
-            toReturn.Append("   httpRequest.open('POST', '{0}?Method=" + methodName + "', true);\n");
+            toReturn.Append("   httpRequest.open('POST', '{0}?Method=" + methodName + "' + urlPostfix, true);\n");
             toReturn.Append("   httpRequest.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');\n");
             toReturn.Append("   httpRequest.send(encodedParameters);\n");
             toReturn.Append('}');
@@ -280,13 +283,14 @@ namespace ObjectCloud.WebAccessCodeGenerators
             // Create the funciton declaration
             StringBuilder toReturn = new StringBuilder(string.Format("\"{0}\"", methodName));
             toReturn.Append(FunctionDeclaration);
+            toReturn.Append(GenerateOnSuccessHandler(webReturnConvention));
             toReturn.Append(FunctionBegin);
 
             // Create the AJAX request
             toReturn.Append(CreateAJAXRequest);
 
             // Open the AJAX request
-            toReturn.Append("   httpRequest.open('POST', '{0}?Method=" + methodName + "', true);\n");
+            toReturn.Append("   httpRequest.open('POST', '{0}?Method=" + methodName + "' + urlPostfix, true);\n");
             toReturn.Append(sendString);
             toReturn.Append('}');
 
@@ -326,21 +330,92 @@ namespace ObjectCloud.WebAccessCodeGenerators
 {
 ";
 
+
+        /// <summary>
+        /// Generates the success handler
+        /// </summary>
+        /// <returns></returns>
+        public static string GenerateOnSuccessHandler(WebReturnConvention? webReturnConvention)
+        {
+            switch (webReturnConvention)
+            {
+                case WebReturnConvention.JSON:
+                    return @"
+   if (onSuccess)
+   {
+      var oldOnSuccess = onSuccess;
+
+      onSuccess = function(responseText, transport)
+      {
+         oldOnSuccess(JSON.parse(responseText), transport);
+      };
+   }
+   else
+      requestParameters.onSuccess = function(responseText, transport) {};
+
+";
+                case WebReturnConvention.Primitive:
+                    return @"
+   if (!onSuccess)
+      onSuccess = function(responseText, transport)
+      {
+         alert(responseText);
+      };
+
+";
+                case WebReturnConvention.JavaScriptObject:
+                    return @"
+   if (onSuccess)
+   {
+      var oldOnSuccess = onSuccess;
+
+      onSuccess = function(responseText, transport)
+      {
+         var js;
+
+         try
+         {
+            js = eval('(' + responseText + ')');
+         }
+         catch (error)
+         {
+            alert('Error evaluating response: ' + error);
+         }
+
+         oldOnSuccess(js, transport);
+      };
+   }
+   else
+      onSuccess = function(responseText, transport)
+      {
+         eval('(' + responseText + ')');
+      };
+
+";
+                default:
+                    return @"
+   if (!onSuccess)
+      requestParameters.onSuccess = function(responseText, transport)
+      {
+         alert(responseText);
+      };
+
+";
+            }
+        }
+
         /// <summary>
         /// The beginning of each function wrapper, declares all of the default arguments and default error handlers
         /// </summary>
         private const string FunctionBegin =
-@"   if (!onSuccess)
-      onSuccess = function(transport)
-      {
-         alert(transport.responseText);
-      };
-
-   if (!onFailure)
+@"   if (!onFailure)
       onFailure = function(transport)
       {
          alert(transport.responseText);
       };
+
+   if (!urlPostfix)
+      urlPostfix = '';
 ";
 
         /// <summary>
@@ -371,7 +446,7 @@ namespace ObjectCloud.WebAccessCodeGenerators
    {
       if (4 == httpRequest.readyState)
          if ((httpRequest.status >= 200) && (httpRequest.status < 300))
-            onSuccess(httpRequest);
+            onSuccess(httpRequest.responseText, httpRequest);
          else
             onFailure(httpRequest);
    }

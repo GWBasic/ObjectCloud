@@ -10,7 +10,7 @@
 	<link rel="shortcut icon" href="paint.ico" />
 	<link rel="stylesheet" type="text/css" href="/Shell/Editors/CanvasPaint.css" />
 	<script type="text/javascript" src="/Shell/Editors/CanvasPaint.js"></script>
-	<? Scripts(<? $_GET["FileName"] ?>?Method=GetJavascriptWrapper&assignToVariable=Image) ?>
+	<? Scripts(<? $_GET["FileName"] ?>?Method=GetJSW&assignToVariable=Image) ?>
 
 </head>
 

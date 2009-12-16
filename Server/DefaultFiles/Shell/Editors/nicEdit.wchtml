@@ -6,7 +6,7 @@
 <!-- This code is released under the LGPL, See /Docs/license.wchtml -->
 
       <meta http-equiv="X-UA-Compatible" content="chrome=1">
-      <? Scripts(/API/nicEdit.js, /API/Prototype.js, /API/File.js, <? $_GET["FileName"] ?>?Method=GetJavascriptWrapper&assignToVariable=TextFile, /API/Url.js, /API/Comet/CometProtocol.js) ?>
+      <? Scripts(/API/nicEdit.js, /API/Prototype.js, /API/File.js, <? $_GET["FileName"] ?>?Method=GetJSW&assignToVariable=TextFile, /API/Url.js, /API/Comet/CometProtocol.js) ?>
       <link href="/Pages/objectcloud.css" type="text/css" rel="stylesheet" />
       <link href="/API/proto.menu.css" type="text/css" rel="stylesheet" />
       <script>
@@ -110,16 +110,16 @@
 
                var dirAndFile = File.SplitFullPath(filename);
 
-               File.Open(
+               File.GetWrapper(
                   dirAndFile.Directory,
-                  {},
                   function(dirWrapper)
                   {
                      dirWrapper.CreateFile(
-                        dirAndFile.Filename,
-                        "text",
-                        false,
-                        {},
+                        {
+                           FileName: dirAndFile.Filename,
+                           FileType: "text",
+                           ErrorIfExists: false
+                        },
                         function(textFileWrapper) 
                         {
                            // Saving is finished through recursion
@@ -138,11 +138,11 @@
                // This file already exists, just update it
                TextFile.WriteAll(
                   textToWrite,
-                  function(transport)
+                  function(responseText)
                   {
                      unsaved = false;
                      updateTitle();
-                     alert(transport.responseText);
+                     alert(responseText);
                   });
             }
          }

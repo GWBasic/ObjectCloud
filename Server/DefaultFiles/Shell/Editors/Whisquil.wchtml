@@ -5,7 +5,7 @@
 
 <!-- This code is released under the LGPL, See /Docs/license.wchtml -->
 
-      <? Scripts(/API/Prototype.js, <? $_GET["FileName"] ?>?Method=GetJavascriptWrapper&assignToVariable=Database) ?>
+      <? Scripts(/API/Prototype.js, <? $_GET["FileName"] ?>?Method=GetJSW&assignToVariable=Database) ?>
       <title>Whisquil: <? $_GET["FileName"] ?></title>
       <link href="/Pages/objectcloud.css" type="text/css" rel="stylesheet" />
    </head>
@@ -15,7 +15,13 @@
       {
          var query = $("query").value;
 
-         Database.PostQuery(query, {}, handleSuccessfulQuery, null, null, null, "&CallingFrom=Local");
+         Database.PostQuery(
+            {
+               query: query,
+            },
+            handleSuccessfulQuery,
+            null,
+            "&CallingFrom=Local");
       }
 
       function handleSuccessfulQuery(result)
@@ -87,8 +93,9 @@
             version = null;
 
          Database.SetVersion(
-            version,
-            {},
+            {
+               version: version
+            },
             function()
             {
                alert("updated");
