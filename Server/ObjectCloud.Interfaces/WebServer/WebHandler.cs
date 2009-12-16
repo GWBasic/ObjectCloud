@@ -160,7 +160,7 @@ namespace ObjectCloud.Interfaces.WebServer
         /// <param name="assignToVariable">The variable to assign the wrapper object to</param>
         /// <returns></returns>
         [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Read)]
-        public IWebResults GetJSW(IWebConnection webConnection, string assignToVariable)
+        public IWebResults GetJSW(IWebConnection webConnection, string assignToVariable, string EncodeFor)
         {
             // Not worth syncronizing, nothing bad will happen if multiple threads enter this block at the same time
             if (null == cachedInBrowserJSWrapper)
@@ -204,9 +204,31 @@ namespace ObjectCloud.Interfaces.WebServer
             if (null != assignToVariable)
                 javascriptToReturn = string.Format("var {0} = {1};", assignToVariable, javascriptToReturn);
 
+            javascriptToReturn = "// Scripts: /API/AJAX.js, /API/json2.js\n" + javascriptToReturn;
+
+            if (EncodeFor == "JavaScript")
+                if (FileHandlerFactoryLocator.WebServer.MinimizeJavascript)
+                {
+                    // The text will be "minimized" javascript to save space
+
+                    JavaScriptMinifier javaScriptMinifier = new JavaScriptMinifier();
+
+                    try
+                    {
+                        javascriptToReturn = javaScriptMinifier.Minify(javascriptToReturn);
+                    }
+                    catch (Exception e)
+                    {
+                        log.Error("Error when minimizing JavaScript", e);
+
+                        return WebResults.FromString(Status._500_Internal_Server_Error, "Error when minimizing JavaScript: " + e.Message);
+                    }
+                }
+
+
             IWebResults toReturn = WebResults.FromString(
                 Status._200_OK,
-                "// Scripts: /API/AJAX.js, /API/json2.js\n" + javascriptToReturn);
+                javascriptToReturn);
 
             toReturn.ContentType = "application/javascript";
             return toReturn;

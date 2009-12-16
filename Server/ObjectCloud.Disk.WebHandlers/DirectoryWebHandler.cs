@@ -56,7 +56,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             IWebResults toReturn;
             if (CallingFrom.Web == webConnection.CallingFrom)
-                toReturn = fileHandler.FileContainer.WebHandler.GetJSW(webConnection, null);
+                toReturn = fileHandler.FileContainer.WebHandler.GetJSW(webConnection, null, null);
             else
                 toReturn = fileHandler.FileContainer.WebHandler.GetServersideJavascriptWrapper(webConnection, null);
 

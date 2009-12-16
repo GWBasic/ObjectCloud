@@ -18,7 +18,7 @@ For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/licen
   <WebServer
     Port="1080"
     RedirectIfRequestedHostIsDifferent="true"
-    MinimizeJavascript="false"
+    MinimizeJavascript="true"
     CachingEnabled="true"
     CheckDeadConnectionsFrequencySeconds="15"
     MaxConnectionIdleSeconds="45"

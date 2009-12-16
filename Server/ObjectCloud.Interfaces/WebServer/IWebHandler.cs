@@ -52,7 +52,7 @@ namespace ObjectCloud.Interfaces.WebServer
         /// </summary>
         /// <param name="webConnection"></param>
         /// <returns></returns>
-        IWebResults GetJSW(IWebConnection webConnection, string assignToVariable);
+        IWebResults GetJSW(IWebConnection webConnection, string assignToVariable, string EncodeFor);
 
         /// <summary>
         /// Returns Javascript for running on the server-side that only exposes access to the WebHandler
