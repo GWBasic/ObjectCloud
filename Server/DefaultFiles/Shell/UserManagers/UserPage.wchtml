@@ -23,7 +23,7 @@
       <link rel="particle.incomingNotificationEvent" href="http://<? $_GET["Host"] ?><? $_GET["Target"] ?>?ChannelEndpoint=IncomingNotificationEvent" />
 
       <title>http://<? $_GET["Host"] ?><? $_GET["Target"] ?></title>
-      <? Scripts(/API/Prototype.js, /API/Filehandlers/User.js) ?>
+      <? Scripts(/API/Prototype.js) ?>
 
    </head>
    <body>

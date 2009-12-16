@@ -135,8 +135,6 @@ var CP_Transport =
             }
 
             transport.open('POST', url, true);
-            //var bodyToSend = Object.toJSON(body);
-            //var bodyToSend = DeepJSON.stringify(body);
             var bodyToSend = JSON.stringify(body);
             transport.send(bodyToSend);
          }
