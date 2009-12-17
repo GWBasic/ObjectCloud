@@ -6,7 +6,7 @@
 <!-- This code is released under the LGPL, See /Docs/license.wchtml -->
 
       <? Scripts(/API/Prototype.js, /API/File.js, /API/Url.js, /API/Comet/CometProtocol.js) ?>
-      <script src="<? WebComponent("/Users/UserDB?Method=GetIdentity") ?>?Method=GetJavascriptWrapper&assignToVariable=NotificationsProxy"></script>
+      <script src="<? WebComponent("/Users/UserDB?Method=GetIdentity") ?>?Method=GetJSW&assignToVariable=NotificationsProxy"></script>
       <link href="/Pages/objectcloud.css" type="text/css" rel="stylesheet" />
       <link href="/API/proto.menu.css" type="text/css" rel="stylesheet" />
       <title><? $_GET["FileName"] ?></title>
@@ -35,14 +35,12 @@
                   }
                });
 
+
             NotificationsProxy.GetNotifications(
-               null,
-               null,
-               null,
-               objectUrl,
-               null,
-               "notificationId,timeStamp,state,sender,objectUrl,title,documentType,messageSummary,changeData,",
-               {},
+               {
+                  objectUrl: objectUrl,
+                  desiredValues: "notificationId,timeStamp,state,sender,objectUrl,title,documentType,messageSummary,changeData,"
+               },
                function(notifications)
                {
                   notifications.each(function(notification)

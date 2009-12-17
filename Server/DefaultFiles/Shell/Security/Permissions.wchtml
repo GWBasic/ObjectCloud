@@ -1,11 +1,10 @@
 <? WebComponent("/Pages/header.webcomponent?Title=Permissions%20For%20" .$_GETENCODE["FileName"]) ?>
-   <? Scripts(/API/Prototype.js) ?>
+   <? Scripts(/API/Prototype.js, <? $_GET["FileName"] ?>?Method=GetJSW&assignToVariable=File) ?>
 
 <!-- This code is released under the LGPL, See /Docs/license.wchtml -->
 
    <script>
       var Permissions = <? WebComponent($_GET["FileName"] . "?Method=GetPermissions") ?>;
-      var File = <? WebComponent($_GET["FileName"] . "?Method=GetJavascriptWrapper") ?>;
 
       function UpdatePermission(userOrGroupId)
       {
@@ -23,12 +22,12 @@
          var sendNotifications = sendNotificationsElement.checked;
 
          File.SetPermission(
-            userOrGroupId,
-            null,
-            permission,
-            inherit,
-            sendNotifications,
-            {},
+            {
+               UserOrGroupId: userOrGroupId,
+               FilePermission: permission,
+               Inherit: inherit,
+               SendNotifications: sendNotifications
+            },
             function(transport)
             {
                permissionForm.enable(permissionForm);
@@ -99,12 +98,12 @@
          addForm.disable();
 
          File.SetPermission(
-            null,
-            userOrGroup,
-            filePermission,
-            inherit,
-            sendNotifications,
-            {},
+            {
+               UserOrGroup: userOrGroup,
+               FilePermission: filePermission,
+               Inherit: inherit,
+               SendNotifications: sendNotifications
+            },
             function(result)
             {
                File.GetPermissions(
@@ -118,11 +117,6 @@
                alert(result);
                $("UserOrGroupInput").value = "";
 
-               addForm.enable();
-            },
-            function(transport)
-            {
-               alert(transport.responseText);
                addForm.enable();
             },
             function(transport)

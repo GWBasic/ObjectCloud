@@ -50,8 +50,7 @@ AddPostWithContent.webCallable = "POST_application_x_www_form_urlencoded";
 AddPostWithContent.minimumWebPermission = "Write";
 AddPostWithContent.namedPermissions = "reply";
 AddPostWithContent.webReturnConvention = "Status";
-AddPostWithContent.parser_options = "JSON";
-function AddPostWithContent(title, replyText, options)
+function AddPostWithContent(title, replyText)
 {
    callAsOwner(function()
    {

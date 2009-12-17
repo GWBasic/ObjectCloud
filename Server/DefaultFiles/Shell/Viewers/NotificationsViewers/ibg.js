@@ -232,29 +232,30 @@
       {
          if ("update" == change.action)
             this.IbgProxy.updateNode(
-               this.getId(change.element),
-               change.element.version,
-               this.getValueFromElement(change.element),
-               change.changetag,
-               {},
+               {
+                  id: this.getId(change.element),
+                  version: change.element.version,
+                  contents: this.getValueFromElement(change.element),
+                  changetag: change.changetag
+               },
                function(updatedNode)
                {
                   change.element.version = updatedNode.v;
                   runNextChange();
                },
-               handleError,
                handleError);
 
          else if ("insert" == change.action)
             this.IbgProxy.insertNode(
-               this.getId(change.priorElement),
-               change.priorElement.version,
-               this.getValueFromElement(change.priorElement),
-               change.changetag,
-               this.getValueFromElement(change.newElement),
-               this.getId(change.newElement),
-               change.changetag,
-               {},
+               {
+                  priorId: this.getId(change.priorElement),
+                  priorNodeVersion: change.priorElement.version,
+                  priorNodeContents: this.getValueFromElement(change.priorElement),
+                  priorChangetag: change.changetag,
+                  newNodeContents: this.getValueFromElement(change.newElement),
+                  newNodeId: this.getId(change.newElement),
+                  newChangetag: change.changetag
+               },
                function(updatedNodes)
                {
                   change.priorElement.version = updatedNodes.priorNode.v;
@@ -266,24 +267,23 @@
 
                   runNextChange();
                },
-               handleError,
                handleError);
 
          else if ("delete" == change.action)
          {
             this.IbgProxy.deleteNode(
-               this.getId(change.priorElement),
-               change.priorElement.version,
-               this.getValueFromElement(change.priorElement),
-               change.deletingElement.version,
-               change.changetag,
-               {},
+               {
+                  priorId: this.getId(change.priorElement),
+                  priorNodeVersion: change.priorElement.version,
+                  priorNodeContents: this.getValueFromElement(change.priorElement),
+                  deletingNodeVersion: change.deletingElement.version,
+                  changetag: change.changetag
+               },
                function(updatedNode)
                {
                   change.priorElement.version = updatedNode.v;
                   runNextChange();
                },
-               handleError,
                handleError);
          }
 

@@ -1,21 +1,23 @@
 <!-- This code is released under the LGPL, See /Docs/license.wchtml -->
 
+   <? Scripts(<? $_GET["FileName"] ?>?Method=GetJSW&assignToVariable=<? $_GET["NamedPermission"] ?>_File) ?>
+
    <script>
       var <? $_GET["NamedPermission"] ?>_Permissions = <? WebComponent($_GET["FileName"] . "?Method=GetNamedPermissions&namedPermission=" . $_GET["NamedPermission"] ) ?>;
-
-      var <? $_GET["NamedPermission"] ?>_File = <? WebComponent($_GET["FileName"] . "?Method=GetJavascriptWrapper") ?>;
 
       function <? $_GET["NamedPermission"] ?>_removePermission(userOrGroup)
       {
          <? $_GET["NamedPermission"] ?>_File.RemoveNamedPermission(
-            userOrGroup,
-            "<? $_GET["NamedPermission"] ?>",
-            {},
+            {
+               usernameOrGroup: userOrGroup,
+               namedPermission: "<? $_GET["NamedPermission"] ?>",
+            },
             function(result)
             {
                <? $_GET["NamedPermission"] ?>_File.GetNamedPermissions(
-                  "<? $_GET["NamedPermission"] ?>",
-                  {},
+                  {
+                     namedPermission: "<? $_GET["NamedPermission"] ?>",
+                  },
                   function(permissions)
                   {
                      <? $_GET["NamedPermission"] ?>_Permissions = permissions;
@@ -50,26 +52,23 @@
          addForm.disable();
 
          <? $_GET["NamedPermission"] ?>_File.SetNamedPermission(
-            userOrGroup,
-            "<? $_GET["NamedPermission"] ?>",
-            true,
-            {},
+            {
+               usernameOrGroup: userOrGroup,
+               namedPermission: "<? $_GET["NamedPermission"] ?>",
+               inherit: true
+            },
             function(result)
             {
                <? $_GET["NamedPermission"] ?>_File.GetNamedPermissions(
-                  "<? $_GET["NamedPermission"] ?>",
-                  {},
+                  {
+                     namedPermission: "<? $_GET["NamedPermission"] ?>",
+                  },
                   function(permissions)
                   {
                      <? $_GET["NamedPermission"] ?>_Permissions = permissions;
                      <? $_GET["NamedPermission"] ?>_DisplayPermissions();
                   });
 
-               addForm.enable();
-            },
-            function(transport)
-            {
-               alert(transport.responseText);
                addForm.enable();
             },
             function(transport)

@@ -5,7 +5,7 @@
 
 <!-- This code is released under the LGPL, See /Docs/license.wchtml -->
 
-      <? Scripts(/API/Prototype.js, /Users/[name].user?Method=GetJavascriptWrapper&assignToVariable=NotificationsProxy, /Users/[name]?Method=GetJavascriptWrapper&assignToVariable=UserFolder, /API/File.js, /API/Url.js, /API/Comet/CometProtocol.js) ?>
+      <? Scripts(/API/Prototype.js, /Users/[name].user?Method=GetJSW&assignToVariable=NotificationsProxy, /Users/[name]?Method=GetJSW&assignToVariable=UserFolder, /API/File.js, /API/Url.js, /API/Comet/CometProtocol.js) ?>
       <link href="/Pages/objectcloud.css" type="text/css" rel="stylesheet" />
       <link href="/API/proto.menu.css" type="text/css" rel="stylesheet" />
       <title><? WebComponent("/Users/UserDB?Method=GetUsername") ?>'s Notifications</title>
@@ -251,13 +251,11 @@
       function loadNotifications()
       {
          NotificationsProxy.GetNotifications(
-            newestNotificationIdToLoad,
-            null,
-            MAX_NOTIFICATIONS,
-            null,
-            null,
-            "notificationId,timeStamp,state,sender,objectUrl,title,documentType,messageSummary,changeData,",
-            {},
+            {
+               newestNotificationId: newestNotificationIdToLoad,
+               maxNotifications: MAX_NOTIFICATIONS,
+               desiredValues: "notificationId,timeStamp,state,sender,objectUrl,title,documentType,messageSummary,changeData,"
+            },
             function(newNotifications)
             {
                // In case the page is refreshed, this will prevent weirdo errors
@@ -276,7 +274,6 @@
                else
                   loadNotifications();
             },
-            handleGetNotificationsError,
             handleGetNotificationsError);
       }
 
@@ -388,16 +385,14 @@
                      currentObjectViewer = viewerLoader.load(subViewerDiv, objectUrl, objectProxy);
                   else
                   {
-                     File.Open(
+                     File.GetWrapper(
                         objectUrl,
-                        {},
                         function(newObjectProxy)
                         {
                            objectProxy = newObjectProxy;
                            currentObjectViewer = viewerLoader.load(subViewerDiv, objectUrl, objectProxy);
                         },
-                        onFailure,
-                        function(error){});
+                        onFailure);
                   }
                },
                onFailure: onFailure
@@ -410,9 +405,10 @@
          var filename = "IBG" + new Date().getTime() + ".ibg";
 
          UserFolder.CopyFile(
-            "/Templates/Particle Template",
-            filename,
-            {},
+            {
+               SourceFilename: "/Templates/Particle Template",
+               DestinationFilename: filename,
+            },
             function(ibgProxy)
             {
                viewObject(UserFolder.Url + "/" + filename, "ibg");

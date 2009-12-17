@@ -2,7 +2,7 @@
 
 <div id="FilesDiv"></div>
 
-<? Scripts(<? $_GET["Directory"] ?>?Method=GetJavascriptWrapper&assignToVariable=Dir, /Shell/Navigation/Directory.js, /API/Comet/CometProtocol.js, /API/Url.js) ?>
+<? Scripts(<? $_GET["Directory"] ?>?Method=GetJSW&assignToVariable=Dir, /Shell/Navigation/Directory.js, /API/Comet/CometProtocol.js, /API/Url.js) ?>
 
 <script>
    var lastUpdated = 0;

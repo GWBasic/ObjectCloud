@@ -1,6 +1,6 @@
 <!-- This code is released under the LGPL, See /Docs/license.wchtml -->
 
-<? Scripts(/API/Prototype.js, <? $_GET["FileName"] ?>?Method=GetJavascriptWrapper&assignToVariable=Blog, /API/nicEdit.js, /API/Comet/CometProtocol.js) ?>
+<? Scripts(/API/Prototype.js, <? $_GET["FileName"] ?>?Method=GetJSW&assignToVariable=Blog, /API/nicEdit.js, /API/Comet/CometProtocol.js) ?>
 
 <script>
 
@@ -42,10 +42,10 @@
       replier.innerHTML = 'Saving...<div class="title">' + title + '</div><div>' + content + '</div>';
 
       Blog.AddPostWithContent(
-         title,
-         content,
-         {},
-         {},
+         {
+            title: title,
+            replyText: content
+         },
          function()
          {
             replier.innerHTML = rpy_oldHTML;

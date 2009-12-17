@@ -1,5 +1,5 @@
 <? WebComponent("/Pages/header.webcomponent?Title=" . $_GETENCODE["FileName"]) ?>
-<? Scripts(/API/Prototype.js, /API/Comet/CometProtocol.js, <? $_GET["FileName"] ?>?Method=GetJavascriptWrapper&assignToVariable=Page) ?>
+<? Scripts(/API/Prototype.js, /API/Comet/CometProtocol.js, <? $_GET["FileName"] ?>?Method=GetJSW&assignToVariable=Page) ?>
 
 <? WebComponent("/Shell/Viewers/EditAdministerDisplay.webcomponent?FileName=" . $_GET["FileName"]) ?>
 

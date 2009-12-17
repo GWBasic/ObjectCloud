@@ -1,5 +1,5 @@
 <? WebComponent("/Pages/header.webcomponent?Title=<? WebComponent($_GET["FileName"] . "?Method=getTitle") ?>") ?>
-<? Scripts(/API/Prototype.js, <? $_GET["FileName"] ?>?Method=GetJavascriptWrapper&assignToVariable=VotingBooth) ?>
+<? Scripts(/API/Prototype.js, <? $_GET["FileName"] ?>?Method=GetJSW&assignToVariable=VotingBooth) ?>
 
 <!-- This code is released under the LGPL, See /Docs/license.wchtml -->
 
@@ -44,8 +44,9 @@
 
       if (null != voteToSubmit)
          VotingBooth.vote(
-            voteToSubmit,
-            {},
+            {
+               qId: voteToSubmit
+            },
             function()
             {
                window.location.reload(true);

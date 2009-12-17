@@ -1,5 +1,5 @@
 <? WebComponent("/Pages/header.webcomponent?Title=" . $_GETENCODE["Directory"]) ?>
-<? Scripts(/API/Url.js, <? $_GET["Directory"] ?>?Method=GetJavascriptWrapper&assignToVariable=Dir) ?>
+<? Scripts(/API/Url.js, <? $_GET["Directory"] ?>?Method=GetJSW&assignToVariable=Dir) ?>
 
 <!-- This code is released under the LGPL, See /Docs/license.wchtml -->
 
@@ -74,9 +74,10 @@
       var destination = $("FileNameInput").value;
 
       Dir.CopyFile(
-         source,
-         destination,
-         {},
+         {
+            SourceFilename: source,
+            DestinationFilename: destination
+         },
          function()
          {
             alert(destination + " created");
@@ -106,9 +107,10 @@
       var destination = $("DestinationFileNameInput").value;
 
       Dir.CopyFile(
-         source,
-         destination,
-         {},
+         {
+            SourceFilename: source,
+            DestinationFilename: destination
+         },
          function()
          {
             alert(source + " copied to " + destination);
@@ -136,8 +138,9 @@ to <input id="DestinationFileNameInput" type="text" name="DestinationFilename" /
       var indexFile = $("IndexFileInput").value;
 
       Dir.SetIndexFile(
-         indexFile,
-         {},
+         {
+            IndexFile: indexFile,
+         },
          function(message)
          {
             alert(message);

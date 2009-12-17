@@ -86,9 +86,10 @@
                   if (null != newFilename)
                   {
                      Dir.RenameFile(
-                        file.Filename,
-                        newFilename,
-                        {},
+                        {
+                           OldFileName: file.Filename,
+                           NewFileName: newFilename
+                        },
                         function() {});
                   }
                }
@@ -137,8 +138,9 @@
                   if (confirm("Delete " + file.Filename))
                   {
                      Dir.DeleteFile(
-                        file.Filename,
-                        {},
+                        {
+                           FileName: file.Filename,
+                        },
                         function() {});
                   }
                }

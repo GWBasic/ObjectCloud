@@ -1,5 +1,5 @@
 <? WebComponent("/Pages/header.webcomponent?Title=Create%20An%20Account") ?>
-<? Scripts(/API/Prototype.js, /Users/UserDB?Method=GetJavascriptWrapper&assignToVariable=UserDB) ?>
+<? Scripts(/API/Prototype.js, /Users/UserDB?Method=GetJSW&assignToVariable=UserDB) ?>
 
 <!-- This code is released under the LGPL, See /Docs/license.wchtml -->
 
@@ -10,9 +10,9 @@
          var password = $("passwordInput").value;
 
          UserDB.CreateUser(
-            username,
-            password,
             {
+               username: username,
+               password: password,
                assignSession: true
             },
             function(result)
