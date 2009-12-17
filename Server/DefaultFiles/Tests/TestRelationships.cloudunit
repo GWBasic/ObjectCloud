@@ -1,4 +1,4 @@
-// Scripts: /API/File.js
+// Scripts: /API/File.js, /API/json2.js
 
 var unitTests =
 {
@@ -8,16 +8,16 @@ var unitTests =
    {
       var me = this;
 
-      File.Open(
+      File.GetWrapper(
          "/Users/[name]",
-         {},
          function(myDirectory)
          {
             myDirectory.CreateFile(
-               "TestRelationships" + Math.floor(Math.random() * 10000),
-               "directory",
-               false,
-               {},
+               {
+                  FileName: "TestRelationships" + Math.floor(Math.random() * 10000),
+                  FileType: "directory",
+                  ErrorIfExists: false
+               },
                function(testDirectoryWrapper) 
                {
                   me.TestDirectory = testDirectoryWrapper;
@@ -31,44 +31,42 @@ var unitTests =
       var me = this;
 
       me.TestDirectory.CreateFile(
-         "parentFile.txt",
-         "text",
-         false,
-         {},
+         {
+            FileName: "parentFile.txt",
+            FileType: "text",
+            ErrorIfExists: false
+         },
          function(parentFile)
          {
             me.TestDirectory.CreateFile(
-               "relatedFile.txt",
-               "text",
-               false,
-               {},
+               {
+                  FileName: "relatedFile.txt",
+                  FileType: "text",
+                  ErrorIfExists: false
+               },
                function(relatedFile)
                {
                   parentFile.AddRelatedFile(
-                     "relatedFile.txt",
-                     "test",
-                     {},
+                     {
+                        filename: "relatedFile.txt",
+                        relationship: "test"
+                     },
                      function()
                      {
                         parentFile.GetRelatedFiles(
-                           null,
-                           null,
-                           null,
-                           null,
-                           null,
                            {},
                            function(relationships)
                            {
                               try
                               {
                                  if (1 == relationships.length)
-                                    if ("relatedFile.txt" == relationships[0].Name)
+                                    if ("relatedFile.txt" == relationships[0].Filename)
                                     {
                                        testToken.Pass();
                                        return;
                                     }
 
-                                 testToken.Fail();
+                                 testToken.Fail(JSON.stringify(relationships));
                               }
                               catch (exception)
                               {

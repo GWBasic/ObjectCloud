@@ -1,4 +1,4 @@
-// Scripts: /Tests/file.testclass?Method=GetJavascriptWrapper&assignToVariable=testObject
+// Scripts: /Tests/file.testclass?Method=GetJSW&assignToVariable=testObject
 
 var unitTests =
 {
@@ -19,14 +19,15 @@ var unitTests =
    testEchoWorld : function(test)
    {
       testObject.EchoWorld(
-         "echoooooo...",
-         {},
+         {
+            toEcho: "echoooooo..."
+         },
          function(result)
          {
             if ("echoooooo..." == result)
                test.Pass();
             else
-               test.Fail();
+               test.Fail(result);
          },
          test.FailAJAX);
    },
@@ -34,14 +35,15 @@ var unitTests =
    testDivide : function(test)
    {
       testObject.Divide(
-         420,
-         {},
+         {
+            toDivide: 420,
+         },
          function(result)
          {
             if (210.5 == result)
                test.Pass();
             else
-               test.Fail();
+               test.Fail(result);
          },
          test.FailAJAX);
    },
@@ -49,8 +51,9 @@ var unitTests =
    testBool_True : function(test)
    {
       testObject.TestBool(
-         true,
-         {},
+         {
+            boolValue: true,
+         },
          function(result)
          {
             if ("Argument was true" == result)
@@ -64,8 +67,9 @@ var unitTests =
    testBool_False : function(test)
    {
       testObject.TestBool(
-         false,
-         {},
+         {
+            boolValue: false
+         },
          function(result)
          {
             if ("Argument was false" == result)
@@ -79,9 +83,10 @@ var unitTests =
    testGenerateWebResults : function(test)
    {
       testObject.GenerateWebResults(
-         404,
-         "It's not found!",
-         {},
+         {
+            status: 404,
+            message: "It's not found!"
+         },
          test.FailAJAX,
          function(transport)
          {
@@ -99,8 +104,9 @@ var unitTests =
    testPostWorld : function(test)
    {
       testObject.PostWorld(
-         "echoooooo...",
-         {},
+         {
+            toEcho: "echoooooo..."
+         },
          function(result)
          {
             if ("echoooooo..." == result)
@@ -134,8 +140,9 @@ var unitTests =
       };
 
       testObject.PostJSON(
-         toPost,
-         {},
+         {
+            jsonObj: toPost
+         },
          function(result)
          {
             if ("aaaaaaaa bbbbbbbb" == result)
@@ -223,7 +230,9 @@ var unitTests =
    testCantCallBase : function(test)
    {
       testObject.WriteAll(
-         "Ooops",
+         {
+            text: "Ooops"
+         },
          test.FailAJAX,
          test.Pass);
    },

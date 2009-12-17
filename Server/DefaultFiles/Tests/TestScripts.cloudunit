@@ -6,16 +6,16 @@ var unitTests =
 
    setUp : function(runTests)
    {
-      File.Open(
+      File.GetWrapper(
          "/Users/[name]",
-         {},
          function(myDirectory)
          {
             myDirectory.CreateFile(
-               "tests",
-               "directory",
-               false,
-               {},
+               {
+                  FileName: "tests",
+                  FileType: "directory",
+                  ErrorIfExists: false,
+               },
                function(testDirectoryWrapper) 
                {
                   TestDirectory = testDirectoryWrapper;
@@ -26,26 +26,46 @@ var unitTests =
 
    testScriptsSanity : function(test)
    {
-      var myDirectory = DirectoryWrapper.Open("/Users/[name]/tests");
+      var myDirectory = File.GetWrapper("/Users/[name]/tests");
 
       var subdir = "testScriptsSanity" + Math.random();
 
-      myDirectory.CreateFile(subdir, "directory", false,
+      myDirectory.CreateFile(
+         {
+            FileName: subdir,
+            FileType: "directory",
+            ErrorIfExists: false
+         },
          function(transport)
          {
-            myDirectory = DirectoryWrapper.Open("/Users/[name]/tests/" + subdir);
-      
-            myDirectory.CreateFile("s1.js", "text", false,
+            myDirectory = DirectoryWrapper.GetWrapper("/Users/[name]/tests/" + subdir);
+
+            myDirectory.CreateFile(
+               {
+                  FileName: "s1.js",
+                  FileType: "text",
+                  ErrorIfExists: false
+               },
                function(transport)
                {
                   test.Trace(transport.responseText + "<br />");
 
-                  myDirectory.CreateFile("s2.js", "text", false,
+                  myDirectory.CreateFile(
+                    {
+                       FileName: "s2.js",
+                       FileType: "text",
+                       ErrorIfExists: false
+                    },
                     function(transport)
                     {
                       test.Trace(transport.responseText + "<br />");
-    
-                      myDirectory.CreateFile("wc.wchtml", "text", false,
+
+                      myDirectory.CreateFile(
+                          {
+                             FileName: "wc.wchtml",
+                             FileType: "text",
+                             ErrorIfExists: false
+                          },
                           function(transport)
                           {
                              test.Trace(transport.responseText + "<br />");
