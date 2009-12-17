@@ -1,4 +1,4 @@
-// Scripts: /API/Prototype.js, /API/Cookies.js, /System/SessionManager?Method=GetJavascriptWrapper&assignToVariable=SessionManager
+// Scripts: /API/Prototype.js, /API/Cookies.js, /System/SessionManager?Method=GetJSW&assignToVariable=SessionManager
 
 // This code is released under the LGPL
 // See /Docs/license.wchtml

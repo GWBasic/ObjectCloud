@@ -1,4 +1,4 @@
-// Scripts: /Tests/file.testliberalclass?Method=GetJavascriptWrapper&assignToVariable=testObject
+// Scripts: /Tests/file.testliberalclass?Method=GetJSW&assignToVariable=testObject
 
 var unitTests =
 {
@@ -19,7 +19,9 @@ var unitTests =
    testCanCallBase : function(test)
    {
       testObject.WriteAll(
-         "Ooops",
+         {
+            text: "Ooops"
+         },
          test.Pass,
          test.FailAJAX);
    },
@@ -27,13 +29,15 @@ var unitTests =
    testCallBase : function(test)
    {
       testObject.SetAnonymousPermission(
-         "Read",
-         {},
+         {
+            permission: "Read"
+         },
          function(result)
          {
             testObject.SetAnonymousPermission(
-               null,
-               {},
+               {
+                  permission: null,
+               },
                function(result)
                {
                   test.Pass();

@@ -1,4 +1,4 @@
-<? Scripts(/API/Prototype.js, /API/Filehandlers/SessionManager.js, /Users/UserDB?Method=GetJavascriptWrapper&assignToVariable=UserDB, /API/Url.js) ?>
+<? Scripts(/API/Prototype.js, /API/Filehandlers/SessionManager.js, /Users/UserDB?Method=GetJSW&assignToVariable=UserDB, /API/Url.js) ?>
 <script>
 
 <!-- This code is released under the LGPL, See /Docs/license.wchtml -->
@@ -7,12 +7,13 @@
 function DoLocalLogin()
 {
    UserDB.Login(
-      $('username').value,
-      $('password').value,
-      {},
-      function(transport)
       {
-         alert(transport.responseText);
+         username: $('username').value,
+         password: $('password').value
+      },
+      function(responseText)
+      {
+         alert(responseText);
          window.location.reload();
       });
 
@@ -25,9 +26,9 @@ function DoLocalLogout()
    {
       UserDB.Logout(
          {},
-         function(transport)
+         function(responseText)
          {
-            alert(transport.responseText);
+            alert(responseText);
             window.location.reload();
          });
    }
@@ -57,16 +58,18 @@ function Login_UpdateKeepAlive()
 function Login_OnKeepAliveChanged()
 {
    SessionManager.SetKeepAlive(
-      $("Login_KeepAlive").checked,
-      {},
+      {
+         KeepAlive: $("Login_KeepAlive").checked
+      },
       Login_UpdateKeepAlive);
 }
 
 function Login_OnMaxAgeChanged()
 {
    SessionManager.SetMaxAge(
-      $("Login_MaxAge").value,
-      {},
+      {
+         MaxAge: $("Login_MaxAge").value,
+      },
       Login_UpdateKeepAlive);
 }
 

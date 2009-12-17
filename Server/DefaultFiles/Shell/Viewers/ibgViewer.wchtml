@@ -74,9 +74,8 @@
                         alert(exception);
                      }
 
-                     File.Open(
+                     File.GetWrapper(
                         filename,
-                        {},
                         function(newObjectProxy)
                         {
                            currentObjectViewer = viewerLoader.load($("thediv"), filename, newObjectProxy);
