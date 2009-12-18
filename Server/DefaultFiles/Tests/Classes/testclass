@@ -125,10 +125,10 @@ function ReadAll()
    return base.ReadAll() + "wrapped";
 }
 
-WriteAll.webCallable = "POST_string";
-function WriteAll(toWrite)
+WriteAll_Wrapped.webCallable = "POST_string";
+function WriteAll_Wrapped(toWrite)
 {
-   return base.WriteAll("wrapped" + toWrite);
+   return base.WriteAll_Wrapped("wrapped" + toWrite);
 }
 
 SetAnonymousPermission.webCallable = "POST_application_x_www_form_urlencoded";

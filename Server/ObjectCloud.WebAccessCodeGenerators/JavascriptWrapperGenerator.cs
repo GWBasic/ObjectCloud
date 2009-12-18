@@ -351,7 +351,7 @@ namespace ObjectCloud.WebAccessCodeGenerators
       };
    }
    else
-      requestParameters.onSuccess = function(responseText, transport) {};
+      onSuccess = function(responseText, transport) {};
 
 ";
                 case WebReturnConvention.Primitive:
@@ -395,7 +395,7 @@ namespace ObjectCloud.WebAccessCodeGenerators
                 default:
                     return @"
    if (!onSuccess)
-      requestParameters.onSuccess = function(responseText, transport)
+      onSuccess = function(responseText, transport)
       {
          alert(responseText);
       };

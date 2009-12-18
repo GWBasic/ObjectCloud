@@ -2,7 +2,7 @@
 "http://www.w3.org/TR/html4/strict.dtd">
 <html>
    <head>
-      <? Scripts(/API/Prototype.js, /API/Url.js, /API/Comet/CometProtocol.js, <? $_GET["Filename"] ?>?Method=GetJavascriptWrapper&assignToVariable=File) ?>
+      <? Scripts(/API/Prototype.js, /API/Url.js, /API/Comet/CometProtocol.js, <? $_GET["Filename"] ?>?Method=GetJSW&assignToVariable=File) ?>
       <title>ObjectCloud Bus tester</title>
       <link href="/Pages/objectcloud.css" type="text/css" rel="stylesheet" />
    </head>
@@ -38,12 +38,18 @@
 
        function sendWrite()
        {
-          File.PostBusAsWrite(Object.toJSON($("textarea").value));
+          File.PostBusAsWrite(
+             {
+                incoming: Object.toJSON($("textarea").value)
+             });
        }
 
        function sendAdminister()
        {
-          File.PostBusAsAdminister(Object.toJSON($("textarea").value));
+          File.PostBusAsAdminister(
+             {
+                incoming: Object.toJSON($("textarea").value)
+             });
        }
 
    </script>
