@@ -24,7 +24,14 @@
 </script>
 </ul>
 
-Calling Conventions: <script> document.write(methodDetails.CallingConvention); </script>
+Calling Conventions:
+<script>
+
+   document.write('<a href="/Docs/API.page#' + methodDetails.CallingConvention + '">');
+   document.write(methodDetails.CallingConvention);
+   document.write('</a>');
+
+</script>
 
 <? WebComponent("/Shell/Communication/Replier.webcomponent?ObjectName=Page&FileName=/Docs/API/MethodDetails.wchtml") ?>
 <? WebComponent("/Pages/footer.webcomponent") ?>

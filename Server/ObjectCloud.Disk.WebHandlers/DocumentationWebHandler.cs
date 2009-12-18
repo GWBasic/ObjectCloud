@@ -258,7 +258,16 @@ namespace ObjectCloud.Disk.WebHandlers
                                                     {
                                                         Dictionary<string, object> param = new Dictionary<string, object>();
                                                         param["Name"] = name;
-                                                        param["Summary"] = xmlReader.ReadElementContentAsString();
+
+                                                        try
+                                                        {
+                                                            param["Summary"] = xmlReader.ReadElementContentAsString();
+                                                        }
+                                                        catch (Exception e)
+                                                        {
+                                                            log.Error("Exception when getting an argument's summary", e);
+                                                            param["Summary"] = "Error getting summary";
+                                                        }
 
                                                         arguments.Add(param);
                                                     }

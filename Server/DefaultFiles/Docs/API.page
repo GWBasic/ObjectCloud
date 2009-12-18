@@ -1,0 +1,52 @@
+<div>ObjectCloud's Javascript AJAX API</div>
+<p>ObjectCloud automatically wraps all of its AJAX calls in Javascript. &nbsp;This is to relieve the developer of AJAX's tedium and allow the developer to concentrate on the task at hand. &nbsp;The generated Javascript tends to use JSON, and places arguments into a single JSON object so that older code isn't broken by adding or moving method arguments.</p><p>Each base object type has differing methods. &nbsp;<a href="/Docs/API/Overview.wchtml" title="" target="">The documentation for each object type is available online.</a> &nbsp;It is automatically generated each time ObjectCloud is compiled, although some details are incomplete.</p><p>Currently, documentation for server-side Javascript APIs isn't generated. &nbsp;It can be inferred by inspecting the source code in <a href="/Classes" title="" target="">/Classes</a>.</p><p>Due to the semantics of the web, a variety of calling conventions are used. &nbsp;The calling conventions are grouped by their base HTTP method.</p><a name="GET" /></a><h1>GET</h1><p>In HTTP, GET calls do not change data on the server. &nbsp;GET methods merely return data and can be called many times without changing or impacting data on the server.</p><h2><span class="Apple-style-span" style="font-weight: normal; font-size: 16px;"></span></h2><h2 style="font-size: 1.25em; font-weight: bold;">GET</h2><p>Javascript AJAX methods that use the GET calling convention typically take no arguments. &nbsp;When calling a GET method from Javascript, arguments are passed in the following order:</p><p></p><ol><li><b>Get Arguments</b>: &nbsp;This is usually an empty object; it's present to allow API changes without breaking old code.</li><li><b>Success Callback</b>: &nbsp;Called if the server returns a status code between 200 and 299</li><li><b>Failure Callback</b>: &nbsp;Called if the server returns any other status code</li><li><b>Url Postfix</b>: &nbsp;This postfix is appended to the AJAX requests URL. &nbsp;It is typically&nbsp;omitted, except in fringe cases where ObjectCloud's default behavior requires tuning.</li></ol>Example:<p></p><blockquote><pre>nameValuePairs.GetAll(
+   {},  // (An empty object is used to allow easy refactoring of the server-side API)
+   function(fromServer) // This is called on success
+   {
+      // do something with fromServer
+   },
+   function(ajaxTransport) // This is called if there is a failure
+   {
+      alert(ajaxTransport.responseText);
+   });  // The URL Postfix is omitted because it's not used</pre><p><b>Note</b>: &nbsp;<i>If the success or failure callbacks are omitted, a default callback will be used. &nbsp;This is a message box. &nbsp;Thus, if the failure callback is omitted and an error occurs, the user will see the server's error message. &nbsp;This message is not internationalized and will be in English for the&nbsp;foreseeable&nbsp;future.</i></p></blockquote><a name="GET_application_x_www_form_urlencoded" /></a><h2>GET_application_x_www_form_urlencoded</h2><p>Javascript AJAX methods that use the GET_application_x_www_form_urlencoded calling convention take arguments as a JSON object. &nbsp;When calling a GET_application_x_www_form_urlencoded method from Javascript, arguments are passed in the following order:</p><p></p><ol><li><b>Get Arguments</b>: &nbsp;A JSON object with each argument as a named value.</li><li><b>Success Callback</b>: &nbsp;Called if the server returns a status code between 200 and 299</li><li><b>Failure Callback</b>: &nbsp;Called if the server returns any other status code</li><li><b>Url Postfix</b>: &nbsp;This postfix is appended to the AJAX requests URL. &nbsp;It is typically&nbsp;omitted, except in fringe cases where ObjectCloud's default behavior requires tuning.</li></ol>Example:<p></p><blockquote><pre>myDirectory.ListNewestFiles(
+   {
+      maxToReturn: 123
+   },
+   function(filesFromServer) // This is called on success
+   {
+      // do something with filesFromServer
+   },
+   function(ajaxTransport) // This is called if there is a failure
+   {
+      alert(ajaxTransport.responseText);
+   });  // The URL Postfix is omitted because it's not used</pre></blockquote><blockquote><p><b>Note</b>: &nbsp;<i>If the success or failure callbacks are omitted, a default callback will be used. &nbsp;This is a message box. &nbsp;Thus, if the failure callback is omitted and an error occurs, the user will see the server's error message. &nbsp;This message is not internationalized and will be in English for the&nbsp;foreseeable&nbsp;future.</i></p></blockquote><h1>POST</h1><p>In HTTP, POST calls can change data on the server. &nbsp;Care must be used when calling an AJAX method that uses the POST HTTP method because it could impact data on the server.</p><a name="POST_application_x_www_form_urlencoded" /></a><h2>POST_application_x_www_form_urlencoded</h2><p></p><p>Javascript AJAX methods that use the&nbsp;Javascript AJAX methods that use the POST_application_x_www_form_urlencoded calling convention take arguments as a JSON object. &nbsp;When calling a POST_application_x_www_form_urlencoded method from Javascript, arguments are passed in the following order:</p><p></p><ol><li><b>Post Arguments</b>: &nbsp;A JSON object with each argument as a named value.</li><li><b>Success Callback</b>: &nbsp;Called if the server returns a status code between 200 and 299</li><li><b>Failure Callback</b>: &nbsp;Called if the server returns any other status code</li><li><b>Url Postfix</b>: &nbsp;This postfix is appended to the AJAX requests URL. &nbsp;It is typically&nbsp;omitted, except in fringe cases where ObjectCloud's default behavior requires tuning.</li></ol>Example:<p></p><blockquote class="webkit-indent-blockquote" style="border: medium none ; margin: 0pt 0pt 0pt 40px; padding: 0px;"><pre>myDirectory.DeleteFile(
+   {
+      FileName: "filetodelete.page"
+   },
+   function(response) // This is called on success
+   {
+      alert(response);
+   },
+   function(ajaxTransport) // This is called if there is a failure
+   {
+      alert(ajaxTransport.responseText);
+   });  // The URL Postfix is omitted because it's not used</pre></blockquote><pre><span class="Apple-style-span" style="font-family: Times; white-space: normal; font-size: 16px;"><b>Note</b>: &nbsp;<i>If the success or failure callbacks are omitted, a default callback will be used. &nbsp;This is a message box. &nbsp;Thus, if the failure callback is omitted and an error occurs, the user will see the server's error message. &nbsp;This message is not internationalized and will be in English for the&nbsp;foreseeable&nbsp;future.</i></span><br></pre><p></p><p></p><a name="POST_string" /></a><h2>POST_string</h2><div><meta charset="utf-8"><p>Javascript AJAX methods that use the&nbsp;Javascript AJAX methods that use the POST_string calling convention take a single string as an argument. &nbsp;This string is the POST payload of the HTTP request. &nbsp;When calling a GET_application_x_www_form_urlencoded method from Javascript, arguments are passed in the following order:</p><p></p><ol><li><b>String</b>: &nbsp;The string that is the HTTP payload.</li><li><b>Success Callback</b>: &nbsp;Called if the server returns a status code between 200 and 299</li><li><b>Failure Callback</b>: &nbsp;Called if the server returns any other status code</li><li><b>Url Postfix</b>: &nbsp;This postfix is appended to the AJAX requests URL. &nbsp;It is typically&nbsp;omitted, except in fringe cases where ObjectCloud's default behavior requires tuning.</li></ol>Example:<p></p><pre style="margin-left: 40px;">binaryFile.WriteAllBase64(
+   imageAsABase64String, // JSON is not used when the entire POST body is a string
+   function(response) // This is called on success
+   {
+      alert(response);
+   },
+   function(ajaxTransport) // This is called if there is a failure
+   {
+      alert(ajaxTransport.responseText);
+   });  // The URL Postfix is omitted because it's not used</pre><div style="margin-left: 40px;"><b>Note</b>: &nbsp;<i>If the success or failure callbacks are omitted, a default callback will be used. &nbsp;This is a message box. &nbsp;Thus, if the failure callback is omitted and an error occurs, the user will see the server's error message. &nbsp;This message is not internationalized and will be in English for the&nbsp;foreseeable&nbsp;future.</i><br></div></div><a name="POST_JSON" /></a><h2>POST_JSON<br></h2><p><meta charset="utf-8"></p><p>Javascript AJAX methods that use the&nbsp;Javascript AJAX methods that use the POST_JSON calling convention take a single object that will be serialized to JSON and be the POSTed data. &nbsp;When calling a POST_JSON method from Javascript, arguments are passed in the following order:</p><p></p><ol><li><b>JSON object</b>: &nbsp;Any valid Javascript value that can be serialized to JSON. &nbsp;This will be the POST body.</li><li><b>Success Callback</b>: &nbsp;Called if the server returns a status code between 200 and 299</li><li><b>Failure Callback</b>: &nbsp;Called if the server returns any other status code</li><li><b>Url Postfix</b>: &nbsp;This postfix is appended to the AJAX requests URL. &nbsp;It is typically&nbsp;omitted, except in fringe cases where ObjectCloud's default behavior requires tuning.</li></ol>Example:<p></p><pre style="margin-left: 40px;">nameValuePairs.SetAllJson(
+   {
+      Name: "joe",<br>      Occupation: "plumber"<br>  &nbsp;},
+   function(response) // This is called on success
+   {
+      alert(response);
+   },
+   function(ajaxTransport) // This is called if there is a failure
+   {
+      alert(ajaxTransport.responseText);
+   });  // The URL Postfix is omitted because it's not used</pre><div style="margin-left: 40px;"><b>Note</b>: &nbsp;<i>If the success or failure callbacks are omitted, a default callback will be used. &nbsp;This is a message box. &nbsp;Thus, if the failure callback is omitted and an error occurs, the user will see the server's error message. &nbsp;This message is not internationalized and will be in English for the&nbsp;foreseeable&nbsp;future.</i><br></div><p><br></p><p><br></p><p><br></p>
