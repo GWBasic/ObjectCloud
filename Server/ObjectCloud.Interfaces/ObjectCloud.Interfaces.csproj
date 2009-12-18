@@ -20,6 +20,8 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DocumentationFile>
+    </DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -117,7 +119,6 @@
     <Compile Include="WebServer\WebCallableAttribute.cs" />
     <Compile Include="WebServer\WebCallingConvention.cs" />
     <Compile Include="WebServer\WebDelegate.cs" />
-    <Compile Include="WebServer\WebHandler.cs" />
     <Compile Include="WebServer\WebMethod.cs" />
     <Compile Include="WebServer\WebResults.cs" />
     <Compile Include="Disk\IDatabaseHandler.cs" />

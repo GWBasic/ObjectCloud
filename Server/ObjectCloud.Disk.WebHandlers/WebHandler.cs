@@ -18,8 +18,9 @@ using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Javascript;
 using ObjectCloud.Interfaces.Security;
+using ObjectCloud.Interfaces.WebServer;
 
-namespace ObjectCloud.Interfaces.WebServer
+namespace ObjectCloud.Disk.WebHandlers
 {
     /// <summary>
     /// Generic web handler.  Other web handlers can inherit from this web handler, or the Non-Generic WebHandler can be used
@@ -158,6 +159,7 @@ namespace ObjectCloud.Interfaces.WebServer
         /// </summary>
         /// <param name="webConnection"></param>
         /// <param name="assignToVariable">The variable to assign the wrapper object to</param>
+        /// <param name="EncodeFor">If set to "JavaScript", the generated JavaScript will be minimized</param>
         /// <returns></returns>
         [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Read)]
         public IWebResults GetJSW(IWebConnection webConnection, string assignToVariable, string EncodeFor)
@@ -565,6 +567,9 @@ namespace ObjectCloud.Interfaces.WebServer
 
         #region Common bus methods
 
+        /// <summary>
+        /// The object's bus.  Messages can be written to the bus without having to open a Comet session; any user with read permission to the object can open a comet session and see all messages on the bus
+        /// </summary>
         [ChannelEndpointMinimumPermission(FilePermissionEnum.Read)]
         public IChannelEventWebAdaptor Bus
         {
@@ -630,7 +635,7 @@ namespace ObjectCloud.Interfaces.WebServer
         /// Posts a message to the bus as coming from someone with read permission
         /// </summary>
         /// <param name="webConnection"></param>
-        /// <param name="message"></param>
+        /// <param name="incoming">The message to post to the bus</param>
         /// <returns></returns>
         [WebCallable(WebCallingConvention.POST_string, WebReturnConvention.Status, FilePermissionEnum.Read)]
         public IWebResults PostBusAsRead(IWebConnection webConnection, string incoming)
@@ -645,7 +650,7 @@ namespace ObjectCloud.Interfaces.WebServer
         /// Posts a message to the bus as coming from someone with write permission
         /// </summary>
         /// <param name="webConnection"></param>
-        /// <param name="message"></param>
+        /// <param name="incoming">The message to post to the bus</param>
         /// <returns></returns>
         [WebCallable(WebCallingConvention.POST_string, WebReturnConvention.Status, FilePermissionEnum.Write)]
         public IWebResults PostBusAsWrite(IWebConnection webConnection, string incoming)
@@ -660,7 +665,7 @@ namespace ObjectCloud.Interfaces.WebServer
         /// Posts a message to the bus as coming from someone with administer permission
         /// </summary>
         /// <param name="webConnection"></param>
-        /// <param name="message"></param>
+        /// <param name="incoming"></param>
         /// <returns></returns>
         [WebCallable(WebCallingConvention.POST_string, WebReturnConvention.Status, FilePermissionEnum.Administer)]
         public IWebResults PostBusAsAdminister(IWebConnection webConnection, string incoming)
@@ -674,9 +679,9 @@ namespace ObjectCloud.Interfaces.WebServer
         /// <summary>
         /// Posts some data to the bus
         /// </summary>
-        /// <param name="webConnection"></param>
         /// <param name="data"></param>
         /// <param name="source"></param>
+        /// <param name="user"></param>
         /// <returns></returns>
         private void PostBus(IUser user, object data, string source)
         {
@@ -901,6 +906,7 @@ namespace ObjectCloud.Interfaces.WebServer
         /// </summary>
         /// <param name="session"></param>
         /// <param name="transportId"></param>
+        /// <param name="getArguments"></param>
         /// <returns></returns>
         public ICometTransport CreateNewCometTransport(ISession session, IDictionary<string, string> getArguments, long transportId)
         {
@@ -956,6 +962,7 @@ namespace ObjectCloud.Interfaces.WebServer
         /// </summary>
         /// <param name="session"></param>
         /// <param name="transportId"></param>
+        /// <param name="getArguments"></param>
         /// <returns></returns>
         public virtual ICometTransport ConstructCometTransport(ISession session, IDictionary<string, string> getArguments, long transportId)
         {
@@ -1148,6 +1155,7 @@ namespace ObjectCloud.Interfaces.WebServer
         /// <param name="relationships">A JSON array of potential relationships, or null to match all relationships</param>
         /// <param name="extensions">A JSON array of potential extentions, or null to match all extensions</param>
         /// <param name="newest"></param>
+        /// <param name="oldest"></param>
         /// <param name="maxToReturn"></param>
         /// <returns></returns>
         [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Read)]
@@ -1329,7 +1337,7 @@ namespace ObjectCloud.Interfaces.WebServer
         /// Helper to update the files on a connection
         /// </summary>
         /// <param name="channel"></param>
-        /// <param name="files"></param>
+        /// <param name="args"></param>
         private void SendRelationship(IQueuingReliableCometTransport channel, RelationshipEventArgs args)
         {
             Dictionary<string, object> toSend = new Dictionary<string, object>();

@@ -34,31 +34,31 @@ namespace ObjectCloud.Disk.Implementation
             IDirectoryHandler usersDirectory = (IDirectoryHandler)rootDirectoryHandler.CreateFile("Users", "directory", null);
 
             IUserManagerHandler userManager = usersDirectory.CreateSystemFile<IUserManagerHandler>("UserDB", "usermanager", null);
-			IUserFactory userFactory = FileHandlerFactoryLocator.UserFactory;
+            IUserFactory userFactory = FileHandlerFactoryLocator.UserFactory;
 
             //IUser anonymousUser = 
-			userManager.CreateUser(
-				"anonymous", 
-			    "",
-			    userFactory.AnonymousUser.Id,
-			    true);
+            userManager.CreateUser(
+                "anonymous",
+                "",
+                userFactory.AnonymousUser.Id,
+                true);
 
             usersDirectory.DeleteFile(null, "anonymous");
-			    
+
             IUser rootUser = userManager.CreateUser(
-            	"root",
-            	DefaultRootPassword,
-            	userFactory.RootUser.Id,
-			    true);
-			
-			// Create groups
-			IGroup everybody = userManager.CreateGroup(userFactory.Everybody.Name, null, userFactory.Everybody.Id, true, true, GroupType.Private);
+                "root",
+                DefaultRootPassword,
+                userFactory.RootUser.Id,
+                true);
+
+            // Create groups
+            IGroup everybody = userManager.CreateGroup(userFactory.Everybody.Name, null, userFactory.Everybody.Id, true, true, GroupType.Private);
             userManager.CreateGroup(userFactory.AuthenticatedUsers.Name, null, userFactory.AuthenticatedUsers.Id, true, true, GroupType.Private);
             userManager.CreateGroup(userFactory.LocalUsers.Name, null, userFactory.LocalUsers.Id, true, true, GroupType.Private);
             IGroup administrators = userManager.CreateGroup(userFactory.Administrators.Name, rootUser.Id, userFactory.Administrators.Id, true, false, GroupType.Private);
-			
-			// Add root user to administrators
-			userManager.AddUserToGroup(rootUser.Id, administrators.Id);
+
+            // Add root user to administrators
+            userManager.AddUserToGroup(rootUser.Id, administrators.Id);
 
             // Allow people who aren't logged in to read the user database
             usersDirectory.SetPermission(
@@ -66,7 +66,7 @@ namespace ObjectCloud.Disk.Implementation
                 "UserDB",
                 everybody.Id,
                 ObjectCloud.Interfaces.Security.FilePermissionEnum.Read,
-				false,
+                false,
                 false);
 
             // Allow administrators to administer the user database
@@ -80,16 +80,16 @@ namespace ObjectCloud.Disk.Implementation
 
             // Create shell directory
             rootDirectoryHandler.RestoreFile(
-                "Shell", 
+                "Shell",
                 "directory",
                 "." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Shell",
                 rootUser.Id);
-			
-			rootDirectoryHandler.SetPermission(
+
+            rootDirectoryHandler.SetPermission(
                 null,
                 "Shell",
-			    everybody.Id,
-			    FilePermissionEnum.Read,
+                everybody.Id,
+                FilePermissionEnum.Read,
                 true,
                 false);
 
@@ -99,12 +99,12 @@ namespace ObjectCloud.Disk.Implementation
                 "directory",
                 "." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "API",
                 rootUser.Id);
-			
-			rootDirectoryHandler.SetPermission(
+
+            rootDirectoryHandler.SetPermission(
                 null,
                 "API",
-			    everybody.Id,
-			    FilePermissionEnum.Read,
+                everybody.Id,
+                FilePermissionEnum.Read,
                 true,
                 false);
 
@@ -114,12 +114,12 @@ namespace ObjectCloud.Disk.Implementation
                 "directory",
                 "." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Templates",
                 rootUser.Id);
-			
-			rootDirectoryHandler.SetPermission(
+
+            rootDirectoryHandler.SetPermission(
                 null,
                 "Templates",
-			    everybody.Id,
-			    FilePermissionEnum.Read,
+                everybody.Id,
+                FilePermissionEnum.Read,
                 true,
                 false);
 
@@ -212,7 +212,7 @@ namespace ObjectCloud.Disk.Implementation
                 FilePermissionEnum.Read,
                 true,
                 false);
-                
+
             rootDirectoryHandler.IndexFile = "index.page";
 
             // "/System/SessionManager"
@@ -248,20 +248,20 @@ namespace ObjectCloud.Disk.Implementation
                 FilePermissionEnum.Read,
                 false,
                 false);
-			
-			// Create the log
-			SystemDirectory.CreateFile(
-				"Log",
-				"log",
-			    rootUser.Id);
-			
-			SystemDirectory.SetPermission(
-				null,
-			    "Log",
-			    FileHandlerFactoryLocator.UserFactory.Administrators.Id,
-			    FilePermissionEnum.Administer,
-			    true,
-			    false);
+
+            // Create the log
+            SystemDirectory.CreateFile(
+                "Log",
+                "log",
+                rootUser.Id);
+
+            SystemDirectory.SetPermission(
+                null,
+                "Log",
+                FileHandlerFactoryLocator.UserFactory.Administrators.Id,
+                FilePermissionEnum.Administer,
+                true,
+                false);
 
             DoUpgrades(rootDirectoryHandler);
         }
@@ -371,7 +371,7 @@ namespace ObjectCloud.Disk.Implementation
                     FilePermissionEnum.Read,
                     true,
                     false);
-				
+
                 cometDirectory.CreateFile(
                     "LoopbackQuality",
                     "cometloopbackqueuingreliable",
@@ -391,16 +391,16 @@ namespace ObjectCloud.Disk.Implementation
             if (!usersDirectory.IsFilePresent(groupFileName))
             {
                 IDatabaseHandler groupDB = usersDirectory.CreateFile(
-                    groupFileName, 
+                    groupFileName,
                     "database",
                     FileHandlerFactoryLocator.UserFactory.RootUser.Id).FileContainer.CastFileHandler<IDatabaseHandler>();
-                
+
                 usersDirectory.SetPermission(
-                    null, 
-                    groupFileName, 
-                    FileHandlerFactoryLocator.UserFactory.Administrators.Id, 
-                    FilePermissionEnum.Read, 
-                    true, 
+                    null,
+                    groupFileName,
+                    FileHandlerFactoryLocator.UserFactory.Administrators.Id,
+                    FilePermissionEnum.Read,
+                    true,
                     true);
 
                 using (DbCommand command = groupDB.Connection.CreateCommand())
@@ -423,6 +423,22 @@ insert into Metadata (Name, Value) values ('GroupId', @groupId);
                     command.ExecuteNonQuery();
                 }
             }
+
+            if (!systemDirectory.IsFilePresent("Documentation"))
+            {
+                systemDirectory.CreateFile(
+                    "Documentation",
+                    "documentation",
+                    FileHandlerFactoryLocator.UserFactory.RootUser.Id);
+
+                systemDirectory.SetPermission(
+                    null,
+                    "Documentation",
+                    FileHandlerFactoryLocator.UserFactory.Everybody.Id,
+                    FilePermissionEnum.Read,
+                    true,
+                    false);
+            }
         }
 
         /// <summary>
@@ -430,12 +446,12 @@ insert into Metadata (Name, Value) values ('GroupId', @groupId);
         /// </summary>
         public string DefaultRootPassword
         {
-            get 
+            get
             {
                 if (null == _DefaultRootPassword)
                     throw new SecurityException("The default root password is unspecified");
 
-                return _DefaultRootPassword; 
+                return _DefaultRootPassword;
             }
             set { _DefaultRootPassword = value; }
         }

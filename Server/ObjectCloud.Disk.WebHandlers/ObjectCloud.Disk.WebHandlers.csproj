@@ -37,6 +37,7 @@
     <Compile Include="Comet\LoopbackQueuingReliableWebHandler.cs" />
     <Compile Include="DatabaseWebHandler.cs" />
     <Compile Include="DirectoryWebHandler.cs" />
+    <Compile Include="DocumentationWebHandler.cs" />
     <Compile Include="HTTPWebProxy.cs" />
     <Compile Include="Comet\MultiplexingCometWebHandler.cs" />
     <Compile Include="NameValuePairsWebHandler.cs" />
@@ -45,6 +46,7 @@
     <Compile Include="UserManagerWebHandler.cs" />
     <Compile Include="UserWebHandler.cs" />
     <Compile Include="LogWebHandler.cs" />
+    <Compile Include="WebHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Data" />
