@@ -61,13 +61,24 @@ contents of a .vote file.&nbsp; To do so, use the following URL syntax:</p>
 <p>Narl, (pronounced "nar-eye",) allows someone to set the valid responses and options for a voting booth.&nbsp; Narl is stored at <a target="_blank" title="" href="../Shell/Editors/Narl.wchtml?Method=ReadAll">/Shell/Editors/Narl.wchtml</a><br>
 </p>
 <p>Narl loads the Javascript object to access the server-side code with the following &lt;? Scripts... tag:</p>
-<pre style="margin-left: 40px;">&lt;? Scripts(/API/Prototype.js, <span style="background-color: rgb(255, 255, 51);">&lt;? $_GET["FileName"] ?&gt;?Method=GetJavascriptWrapper&amp;assignToVariable=VotingBooth,<span style="background-color: rgb(255, 255, 255);"> /API/nicEdit.js) ?&gt;</span></span><br></pre>
+<pre style="margin-left: 40px;">&lt;? Scripts(/API/Prototype.js, <span style="background-color: rgb(255, 255, 51);">&lt;? $_GET["FileName"] ?&gt;?Method=GetJSW&amp;assignToVariable=VotingBooth,<span style="background-color: rgb(255, 255, 255);"> /API/nicEdit.js) ?&gt;</span></span><br></pre>
 <p>The options and questions are pre-loaded using WebComponents:</p>
 <pre style="margin-left: 40px;">var pollInfo = <span style="background-color: rgb(255, 255, 51);">&lt;? WebComponent($_GET["FileName"] . "?Method=getQuestionsAndOptions") ?&gt;;</span><br>var options = pollInfo.options;<br>var questions = pollInfo.questions;<br></pre>
 <p>Options are written back to the server using the VotingBooth object
 that wraps all AJAX.&nbsp; (Note:&nbsp; Prototype.js gives the $("...") syntax)<br>
 </p>
-<pre style="margin-left: 40px;">function updateOptions()<br>{<br>   $("OptionsEditor").disable();<br><br>   var question = $("question").innerHTML;<br><br>   VotingBooth.setOptions(<br>      $("canChangeVote").checked,<br>      $("canSeeResultsWithoutVoting").checked,<br>      question,<br>      $("q_title").value,<br>      {},<br>      function()<br>      {<br>         $("OptionsEditor").enable();<br>         options.question = question;<br>      });<br>}<br></pre>
+<pre style="margin-left: 40px;">function updateOptions()<br>{<br>   $("OptionsEditor").disable();<br><br>   var question = $("question").innerHTML;<br><br>   VotingBooth.setOptions(<br>   {
+      canChangeVote: $("canChangeVote").checked,
+      canSeeResultsWithoutVoting: $("canSeeResultsWithoutVoting").checked,
+      question: question,
+      title: $("q_title").value,
+   },
+   function()
+   {
+      $("OptionsEditor").enable();
+      options.question = question;
+   });
+}<br></pre>
 <p>A question is added and updated using the VotingBooth object as well:</p>
 <pre style="margin-left: 40px;">function addQuestion()<br>{<br>   var newQuestion = $("AddQuestionInput").value;<br>   $("AddQuestionInput").value = "";<br><br>   VotingBooth.addQuestion(<br>      newQuestion,<br>      {},<br>      displayQuestion);<br>}<br><br>function updateQuestion(qId)<br>{<br>   var text = $("q" + qId).value;<br>   VotingBooth.updateQuestion(<br>      qId,<br>      text,<br>      {},<br>      function(question)<br>      {<br>         $("q" + qId).value = question.text;<br>      });<br>}<br></pre>
 <h1>Goreal, the voting booth Program<br>

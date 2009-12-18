@@ -45,10 +45,6 @@
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 	<File
-		Name="jsio"
-		TypeId="directory"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
-	<File
 		Name="json_parse.js"
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
