@@ -1,12 +1,20 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-"http://www.w3.org/TR/html4/strict.dtd">
-<html>
-   <head>
-      <? Scripts(/API/Prototype.js) ?>
-      <title></title>
-      <link href="/Pages/objectcloud.css" type="text/css" rel="stylesheet" />
-      <link href="/API/proto.menu.css" type="text/css" rel="stylesheet" />
-   </head>
-   <body>
-   </body>
-</html>
+<? WebComponent("/Pages/header.webcomponent?Title=ObjectCloud%20File%20Type%20Overview") ?>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+<ul>
+<script>
+
+   var fileTypes = <? WebComponent("/System/Documentation?Method=GetObjectTypes") ?>;
+
+   for (var i = 0; i < fileTypes.length; i++)
+   {
+      var fileType = fileTypes[i];
+      document.write('<li><em><a href="MethodList.wchtml?objectType=' + fileType.ObjectType + '">' + fileType.ObjectType + '</a></em>: ' + fileType.Summary + '</li>');
+   }
+
+</script>
+</ul>
+
+<? WebComponent("/Shell/Communication/Replier.webcomponent?ObjectName=Page&FileName=/Docs/API/Overview.wchtml") ?>
+<? WebComponent("/Pages/footer.webcomponent") ?>

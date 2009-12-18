@@ -10,6 +10,8 @@ using System.Reflection;
 using System.Text;
 using System.Xml;
 
+using Common.Logging;
+
 using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
@@ -22,6 +24,8 @@ namespace ObjectCloud.Disk.WebHandlers
     /// </summary>
     public class DocumentationWebHandler : WebHandler<IFileHandler>
     {
+        private static ILog log = LogManager.GetLogger<DocumentationWebHandler>();
+
         /// <summary>
         /// Returns all of the object types that the server supports
         /// </summary>
@@ -100,9 +104,13 @@ namespace ObjectCloud.Disk.WebHandlers
             if (!FileHandlerFactoryLocator.WebHandlerClasses.TryGetValue(objectType, out cSharpType))
                 throw new WebResultsOverrideException(WebResults.FromString(Status._404_Not_Found, objectType + " isn't a known object type"));
 
-            List<object> toReturn = new List<object>();
+            List<object> methodsForJSON = new List<object>();
 
-            GetMethodsForObjectTypeHelper(cSharpType, toReturn);
+            string summary = GetMethodsForObjectTypeHelper(cSharpType, methodsForJSON);
+
+            Dictionary<string, object> toReturn = new Dictionary<string, object>();
+            toReturn["Methods"] = methodsForJSON;
+            toReturn["Summary"] = summary;
 
             return WebResults.ToJson(toReturn);
         }
@@ -111,10 +119,12 @@ namespace ObjectCloud.Disk.WebHandlers
         /// Recursively generates documentation for the web-accessible methods on the given type
         /// </summary>
         /// <param name="cSharpType"></param>
-        /// <param name="toReturn"></param>
-        private void GetMethodsForObjectTypeHelper(Type cSharpType, List<object> toReturn)
+        /// <param name="methodsForJSON"></param>
+        private string GetMethodsForObjectTypeHelper(Type cSharpType, List<object> methodsForJSON)
         {
             string methodNamePrefix = "M:" + cSharpType.Namespace + "." + cSharpType.Name;
+            string classNameInXml = "T:" + cSharpType.Namespace + "." + cSharpType.Name;
+            string toReturn = null;
 
             string documentationFileName = cSharpType.Assembly.ManifestModule.ScopeName;
             documentationFileName = documentationFileName.Substring(0, documentationFileName.IndexOf(".dll")) + ".xml";
@@ -159,16 +169,110 @@ namespace ObjectCloud.Disk.WebHandlers
 
                                                     } while (xmlReader.Depth > currentLevel);
 
-                                                    toReturn.Add(toAdd);
+                                                    methodsForJSON.Add(toAdd);
                                                 }
                                         }
+                                    }
+                                    else if (nameAttribute == classNameInXml)
+                                    {
+                                        int currentLevel = xmlReader.Depth;
+
+                                        do
+                                        {
+                                            xmlReader.Read();
+
+                                            if ("summary" == xmlReader.Name)
+                                                toReturn = xmlReader.ReadElementContentAsString();
+
+                                        } while (xmlReader.Depth > currentLevel);
                                     }
                             }
                     }
 
             // recurse for base types
             if (typeof(object) != cSharpType.BaseType)
-                GetMethodsForObjectTypeHelper(cSharpType.BaseType, toReturn);
+                GetMethodsForObjectTypeHelper(cSharpType.BaseType, methodsForJSON);
+
+            return toReturn;
+        }
+
+        /// <summary>
+        /// Returns information about the specified method
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="objectType"></param>
+        /// <param name="methodName"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JSON, FilePermissionEnum.Read)]
+        public IWebResults GetMethodDetails(IWebConnection webConnection, string objectType, string methodName)
+        {
+            Type cSharpType = default(Type);
+            if (!FileHandlerFactoryLocator.WebHandlerClasses.TryGetValue(objectType, out cSharpType))
+                throw new WebResultsOverrideException(WebResults.FromString(Status._404_Not_Found, objectType + " isn't a known object type"));
+
+            Dictionary<string, object> toReturn = new Dictionary<string, object>();
+            List<object> arguments = new List<object>();
+            toReturn["Arguments"] = arguments;
+
+            try
+            {
+                MethodInfo methodInfo = cSharpType.GetMethod(methodName);
+                WebCallableAttribute wca = (WebCallableAttribute)methodInfo.GetCustomAttributes(typeof(WebCallableAttribute), true)[0];
+                toReturn["CallingConvention"] = wca.WebCallingConvention.ToString();
+            }
+            catch (Exception e)
+            {
+                log.Error("Error getting calling convention", e);
+                throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, "Error getting calling conventions"));
+            }
+
+            do
+            {
+                using (XmlReader xmlReader = GetXmlReaderForType(cSharpType))
+                    if (null != xmlReader)
+                    {
+                        string methodNameForXML = "M:" + cSharpType.Namespace + "." + cSharpType.Name + "." + methodName + "(";
+
+                        while (xmlReader.Read())
+                            if (xmlReader.Name == "member")
+                            {
+                                string nameAttribute = xmlReader.GetAttribute("name");
+
+                                if (null != nameAttribute)
+                                    if (nameAttribute.StartsWith(methodNameForXML))
+                                    {
+                                        int currentLevel = xmlReader.Depth;
+
+                                        do
+                                        {
+                                            xmlReader.Read();
+
+                                            if ("summary" == xmlReader.Name)
+                                                toReturn["Summary"] = xmlReader.ReadElementContentAsString();
+                                            else if ("param" == xmlReader.Name)
+                                            {
+                                                string name = xmlReader.GetAttribute("name");
+
+                                                if ("webConnection" != name)
+                                                    if (null != name)
+                                                    {
+                                                        Dictionary<string, object> param = new Dictionary<string, object>();
+                                                        param["Name"] = name;
+                                                        param["Summary"] = xmlReader.ReadElementContentAsString();
+
+                                                        arguments.Add(param);
+                                                    }
+                                            }
+
+                                        } while (xmlReader.Depth > currentLevel);
+                                    }
+                            }
+                    }
+
+                cSharpType = cSharpType.BaseType;
+            } while (typeof(object) != cSharpType);
+
+            return WebResults.ToJson(toReturn);
         }
     }
 }

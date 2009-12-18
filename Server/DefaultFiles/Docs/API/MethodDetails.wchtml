@@ -1,0 +1,30 @@
+<? WebComponent("/Pages/header.webcomponent?Title=Details%20For%20" . $_GETENCODE["objectType"] . "%20" . $_GETENCODE["methodName"]) ?>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+<script>
+
+   var methodDetails = <? WebComponent("/System/Documentation?Method=GetMethodDetails&objectType=" . $_GET["objectType"] . "&methodName=". $_GET["methodName"]) ?>;
+
+   document.write('<p>' + methodDetails.Summary + '</p>');
+
+</script>
+
+<h1>Arguments</h1>
+
+<ul>
+<script>
+
+   for (var i = 0; i < methodDetails.Arguments.length; i++)
+   {
+      var argument = methodDetails.Arguments[i];
+      document.write('<li><em>' + argument.Name + '</em>: ' + argument.Summary + '</li>');
+   }
+
+</script>
+</ul>
+
+Calling Conventions: <script> document.write(methodDetails.CallingConvention); </script>
+
+<? WebComponent("/Shell/Communication/Replier.webcomponent?ObjectName=Page&FileName=/Docs/API/MethodDetails.wchtml") ?>
+<? WebComponent("/Pages/footer.webcomponent") ?>

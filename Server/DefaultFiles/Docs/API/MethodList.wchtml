@@ -1,12 +1,26 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-"http://www.w3.org/TR/html4/strict.dtd">
-<html>
-   <head>
-      <? Scripts(/API/Prototype.js) ?>
-      <title></title>
-      <link href="/Pages/objectcloud.css" type="text/css" rel="stylesheet" />
-      <link href="/API/proto.menu.css" type="text/css" rel="stylesheet" />
-   </head>
-   <body>
-   </body>
-</html>
+<? WebComponent("/Pages/header.webcomponent?Title=Methods%20For%20" . $_GETENCODE["objectType"]) ?>
+
+<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+
+<script>
+
+   var methodInformation = <? WebComponent("/System/Documentation?Method=GetMethodsForObjectType&objectType=" . $_GET["objectType"]) ?>;
+
+   document.write('<p>' + methodInformation.Summary + '</p>');
+
+</script>
+
+<ul>
+<script>
+
+   for (var i = 0; i < methodInformation.Methods.length; i++)
+   {
+      var method = methodInformation.Methods[i];
+      document.write('<li><em><a href="MethodDetails.wchtml?objectType=<? $_GET["objectType"] ?>&methodName=' + method.Method + '">' + method.Method + '</a></em>: ' + method.Summary + '</li>');
+   }
+
+</script>
+</ul>
+
+<? WebComponent("/Shell/Communication/Replier.webcomponent?ObjectName=Page&FileName=/Docs/API/MethodList.wchtml") ?>
+<? WebComponent("/Pages/footer.webcomponent") ?>
