@@ -38,7 +38,7 @@ namespace ObjectCloud.Disk.WebHandlers
             if (null != ErrorIfExists)
                 if (ErrorIfExists.ToLowerInvariant().Equals("false"))
                     if (FileHandler.IsFilePresent(FileName))
-                        return FileHandler.OpenFile(FileName).WebHandler.GetJavascriptWrapper(webConnection, null);
+                        return FileHandler.OpenFile(FileName).WebHandler.GetJSW(webConnection, null, null);
 
             IFileHandler fileHandler;
             try
@@ -117,7 +117,7 @@ namespace ObjectCloud.Disk.WebHandlers
 			
 			if (null != permission)
 			{
-		        IWebResults webResults = fileContainer.WebHandler.GetJavascriptWrapper(webConnection, null);
+		        IWebResults webResults = fileContainer.WebHandler.GetJSW(webConnection, null, null);
 		
 		        string minified = JavaScriptMinifier.Instance.Minify(webResults.ResultsAsString);
 

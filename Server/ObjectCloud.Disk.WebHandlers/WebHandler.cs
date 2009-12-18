@@ -132,30 +132,12 @@ namespace ObjectCloud.Disk.WebHandlers
         Dictionary<WrapperCallsThrough, string> JavascriptWrappers = new Dictionary<WrapperCallsThrough, string>();
 
         /// <summary>
-        /// This should return a Javascript object that can perform all calls to all methods marked as WebCallable through AJAX.  This convention is depricated
-        /// </summary>
-        /// <param name="webConnection"></param>
-        /// <param name="assignToVariable">The variable to assign the wrapper object to</param>
-        /// <returns></returns>
-        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Read)]
-        public IWebResults GetJavascriptWrapper(IWebConnection webConnection, string assignToVariable)
-        {
-            string javascriptToReturn = GetJavascriptWrapper(webConnection, assignToVariable, WrapperCallsThrough.AJAX);
-
-            javascriptToReturn = "// Scripts: /API/Prototype.js\n" + javascriptToReturn;
-
-            IWebResults toReturn = WebResults.FromString(Status._200_OK, javascriptToReturn);
-            toReturn.ContentType = "application/javascript";
-            return toReturn;
-        }
-
-        /// <summary>
         /// The cached in-browser JavaScript wrapper
         /// </summary>
         private string cachedInBrowserJSWrapper = null;
 
         /// <summary>
-        /// This should return a Javascript object that can perform all calls to all methods marked as WebCallable through AJAX.
+        /// Returns a Javascript object that can perform all calls to all methods marked as WebCallable through AJAX.
         /// </summary>
         /// <param name="webConnection"></param>
         /// <param name="assignToVariable">The variable to assign the wrapper object to</param>
