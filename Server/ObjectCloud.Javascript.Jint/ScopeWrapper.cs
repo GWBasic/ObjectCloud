@@ -8,7 +8,10 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 
+using Common.Logging;
+
 using Jint;
+using Jint.Expressions;
 using Jint.Native;
 using JsonFx.Json;
 
@@ -24,6 +27,8 @@ namespace ObjectCloud.Javascript.Jint
     /// </summary>
     public class ScopeWrapper
     {
+        private static ILog log = LogManager.GetLogger<ScopeWrapper>();
+
         public ScopeWrapper(FileHandlerFactoryLocator fileHandlerFactoryLocator, IWebConnection webConnection, string javascript, IFileContainer theObject)
         {
             _FileHandlerFactoryLocator = fileHandlerFactoryLocator;
@@ -36,8 +41,7 @@ namespace ObjectCloud.Javascript.Jint
                 IEnumerable<Delegate> delegates = (IEnumerable<Delegate>)DelegatesProperty.GetValue(null, null);
 
                 foreach (Delegate del in delegates)
-                    JintEngine.SetFunction(
-                        del.Method.Name, del);
+                    GlobalScope[del.Method.Name] = ExecutionVisitor.Global.FunctionClass.New(del);
             }
 
             StringBuilder scopeBuilder = new StringBuilder();
@@ -64,7 +68,7 @@ var JSON =
             }
 
             IEnumerable<ScriptAndMD5> dependantScriptsAndMD5s = webConnection.WebServer.WebComponentResolver.DetermineDependantScripts(
-                requestedScripts, webConnection, new List<string>());
+                requestedScripts, webConnection);
 
             // TODO:  Need a Jint equivilent of a class shutter
             //context.setClassShutter(RestriciveClassShutter.Instance);
@@ -72,7 +76,7 @@ var JSON =
             // Load all dependant scripts
             foreach (ScriptAndMD5 dependantScript in dependantScriptsAndMD5s)
             {
-                string resolvedScript = Encoding.UTF8.GetString(webConnection.ShellTo(dependantScript.ScriptName).Body);
+                string resolvedScript = webConnection.ShellTo(dependantScript.ScriptName).ResultsAsString;
                 //JintEngine.Run(resolvedScript);
 
                 scopeBuilder.Append(resolvedScript);
@@ -91,7 +95,7 @@ var JSON =
             //object globalScope = null;
             FunctionCaller.UseTemporaryCaller(this, theObject, webConnection, delegate()
             {
-                JintEngine.Run(scopeBuilder.ToString());
+                Run(scopeBuilder.ToString());
             });
 
             // Initialize each function caller
@@ -121,23 +125,86 @@ var JSON =
                     }
                 }
             }
+
+            // Load additional runtime options
+            if (GlobalScope.HasProperty("options"))
+                GetOptions();
         }
 
         /// <summary>
-        /// The javascript execution engine
+        /// Runs a set of JavaScript statements and optionally returns a value if return is called  (NOTE: This function was pulled out of Jint's source code)
         /// </summary>
-        public JintEngine JintEngine
+        /// <param name="program">The expression tree to execute</param>
+        /// <param name="unwrap">Whether to unwrap the returned value to a CLR instance. <value>True</value> by default.</param>
+        /// <returns>Optionaly, returns a value from the scripts</returns>
+        /// <exception cref="System.ArgumentException" />
+        /// <exception cref="System.Security.SecurityException" />
+        /// <exception cref="Jint.JintException" />
+        public void Run(string script)
         {
-            get { return _JintEngine; }
+            Program program = JintEngine.Compile(script, false);
+
+            if (program == null)
+                throw new
+                    ArgumentException("Script can't be null", "script");
+
+            ExecutionVisitor.DebugMode = false;
+            ExecutionVisitor.PermissionSet = new System.Security.PermissionSet(System.Security.Permissions.PermissionState.None);
+
+            try
+            {
+                ExecutionVisitor.Visit(program);
+            }
+            catch (SecurityException)
+            {
+                throw;
+            }
+            catch (JsException e)
+            {
+                string message = e.Message;
+                if (e.Value.Class == JsError.TYPEOF)
+                    message = ((JsError)e.Value).Value.ToString();
+                StringBuilder stackTrace = new StringBuilder();
+                string source = String.Empty;
+
+                if (ExecutionVisitor.CurrentStatement.Source != null)
+                {
+                    source = Environment.NewLine + ExecutionVisitor.CurrentStatement.Source.ToString()
+                            + Environment.NewLine + ExecutionVisitor.CurrentStatement.Source.Code;
+                }
+
+                throw new JintException(message + source + stackTrace, e);
+            }
+            catch (Exception e)
+            {
+                StringBuilder stackTrace = new StringBuilder();
+                string source = String.Empty;
+
+                if (ExecutionVisitor.CurrentStatement.Source != null)
+                {
+                    source = Environment.NewLine + ExecutionVisitor.CurrentStatement.Source.ToString()
+                            + Environment.NewLine + ExecutionVisitor.CurrentStatement.Source.Code;
+                }
+
+                throw new JintException(e.Message + source + stackTrace, e.InnerException);
+            }
         }
-        private JintEngine _JintEngine = new JintEngine();
+
+        /// <summary>
+        /// The execution visitor
+        /// </summary>
+        public ExecutionVisitor ExecutionVisitor
+        {
+            get { return _ExecutionVisitor; }
+        }
+        private readonly ExecutionVisitor _ExecutionVisitor = new ExecutionVisitor();
 
         /// <summary>
         /// The global scope
         /// </summary>
         public JsDictionaryObject GlobalScope
         {
-            get { return _JintEngine.Visitor.GlobalScope; }
+            get { return _ExecutionVisitor.GlobalScope; }
         }
 
         /// <summary>
@@ -281,10 +348,20 @@ var JSON =
         /// Generates a Javscript wrapper for the browser that calls functions in this javascript.  Assumes that the prototype AJAX library is present
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<string> GenerateJavascriptWrapper(WrapperCallsThrough wrapperCallsThrough)
+        public IEnumerable<string> GenerateLegacyJavascriptWrapper(WrapperCallsThrough wrapperCallsThrough)
         {
             foreach (string method in FunctionCallers.Keys)
-                yield return FunctionCallers[method].GenerateWrapper(wrapperCallsThrough);
+                yield return FunctionCallers[method].GenerateLegacyWrapper(wrapperCallsThrough);
+        }
+
+        /// <summary>
+        /// Generates a Javscript wrapper for the browser that calls functions in this javascript
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<string> GenerateJavascriptWrapper()
+        {
+            foreach (string method in FunctionCallers.Keys)
+                yield return FunctionCallers[method].GenerateWrapper();
         }
 
         /// <summary>
@@ -330,5 +407,31 @@ var JSON =
 
             scopeBuilder.AppendFormat("{0} = {1};", name, serialized);
         }
+
+        /// <summary>
+        /// Loads options from the javascript
+        /// </summary>
+        private void GetOptions()
+        {
+            JsDictionaryObject optionsObj = (JsDictionaryObject)GlobalScope["options"];
+            if (optionsObj.HasProperty("BlockWebMethods"))
+                try
+                {
+                    _BlockWebMethods = optionsObj["BlockWebMethods"].ToBoolean();
+                }
+                catch (Exception e)
+                {
+                    log.Error("Error when parsing options.BlockWebMethods", e);
+                }
+        }
+
+        /// <summary>
+        /// Returns true if underlying web methods are blocked, false otherwise
+        /// </summary>
+        public bool BlockWebMethods
+        {
+            get { return _BlockWebMethods; }
+        }
+        private bool _BlockWebMethods = true;
     }
 }

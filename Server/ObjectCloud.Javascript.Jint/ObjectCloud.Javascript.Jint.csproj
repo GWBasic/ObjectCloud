@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
+    <ProductVersion>8.0.50727</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{8AD6ECCF-3021-4F5E-BFD1-EF25AD09AFCC}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -45,6 +45,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Dependancies\Common.Logging.dll</HintPath>
     </Reference>
+    <Reference Include="Jint, Version=0.8.7.0, Culture=neutral, PublicKeyToken=973cde3f1cafed03, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependancies\Jint.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -62,10 +66,6 @@
     <Compile Include="JavascriptDatabaseFunctions.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Jint\Jint.csproj">
-      <Project>{DBF3AEF6-9D13-4E03-899B-561BCFDD9920}</Project>
-      <Name>Jint</Name>
-    </ProjectReference>
     <ProjectReference Include="..\JsonFx.Json\JsonFx.Json.csproj">
       <Project>{ABA23F14-7E47-43FE-A3E7-1FF97840C3FB}</Project>
       <Name>JsonFx.Json</Name>

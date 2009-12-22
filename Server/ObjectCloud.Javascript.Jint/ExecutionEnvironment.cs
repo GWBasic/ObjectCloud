@@ -302,7 +302,7 @@ namespace ObjectCloud.Javascript.Jint
         /// <returns></returns>
         public IEnumerable<string> GenerateLegacyJavascriptWrapper(IWebConnection webConnection, WrapperCallsThrough wrapperCallsThrough)
         {
-            return GetOrCreateScope(webConnection).GenerateJavascriptWrapper(wrapperCallsThrough);
+            return GetOrCreateScope(webConnection).GenerateLegacyJavascriptWrapper(wrapperCallsThrough);
         }
 
         /// <summary>
@@ -313,5 +313,24 @@ namespace ObjectCloud.Javascript.Jint
             get { return _ExecutionEnvironmentErrors; }
         }
         private string _ExecutionEnvironmentErrors = null;
+
+        /// <summary>
+        /// Generates a Javscript wrapper for the browser that calls functions in this javascript
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<string> GenerateJavascriptWrapper(IWebConnection webConnection)
+        {
+            return GetOrCreateScope(webConnection).GenerateJavascriptWrapper();
+        }
+
+        public bool IsBlockWebMethodsEnabled(IWebConnection webConnection)
+        {
+            ScopeWrapper scopeWrapper = GetOrCreateScope(webConnection);
+
+            if (null != scopeWrapper)
+                return scopeWrapper.BlockWebMethods;
+            else
+                return false;
+        }
     }
 }

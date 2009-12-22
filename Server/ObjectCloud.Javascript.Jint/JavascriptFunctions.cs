@@ -45,7 +45,7 @@ namespace ObjectCloud.Javascript.Jint
                 yield return new Func<JsObject, string>(stringify);
                 yield return new Func<string, JsInstance>(parse);
                 yield return new Func<JsInstance>(getParentDirectoryWrapper);
-                yield return new Func<JsInstance>(getDefaultRelatedObjectDirectoryWrapper);
+                yield return new Func<object>(getDefaultRelatedObjectDirectoryWrapper);
             }
         }
 
@@ -101,7 +101,7 @@ namespace ObjectCloud.Javascript.Jint
 
             JsObject toReturn = new JsObject();
             toReturn["Status"] = new JsNumber((int)webResults.Status);
-            toReturn["Content"] = new JsString(Encoding.UTF8.GetString(webResults.Body));
+            toReturn["Content"] = new JsString(webResults.ResultsAsString);
             toReturn["Headers"] = DictionaryCreator.ToObject<string, string>(webResults.Headers);
 
             return toReturn;
@@ -273,8 +273,12 @@ namespace ObjectCloud.Javascript.Jint
 
             try
             {
-                function.Execute(functionCallContext.ScopeWrapper.JintEngine.Visitor, new JsInstance[0]);
-                return functionCallContext.ScopeWrapper.JintEngine.Visitor.Result;
+                function.Execute(
+                    functionCallContext.ScopeWrapper.ExecutionVisitor,
+                    functionCallContext.ScopeWrapper.ExecutionVisitor.CurrentScope,
+                    new JsInstance[0]);
+
+                return functionCallContext.ScopeWrapper.ExecutionVisitor.Result;
             }
             finally
             {
@@ -293,8 +297,8 @@ namespace ObjectCloud.Javascript.Jint
 
             using (TimedLock.Lock(functionCallContext.ScopeWrapper.TheObject.FileHandler))
             {
-                function.Execute(functionCallContext.ScopeWrapper.JintEngine.Visitor, functionCallContext.ScopeWrapper.GlobalScope, new JsInstance[0]);
-                return functionCallContext.ScopeWrapper.JintEngine.Visitor.Result;
+                function.Execute(functionCallContext.ScopeWrapper.ExecutionVisitor, functionCallContext.ScopeWrapper.GlobalScope, new JsInstance[0]);
+                return functionCallContext.ScopeWrapper.ExecutionVisitor.Result;
 
             }
         }
@@ -322,10 +326,10 @@ namespace ObjectCloud.Javascript.Jint
             {
                 functionCallContext.WebConnection.TemporaryChangeSession(tempSession, delegate()
                 {
-                    function.Execute(functionCallContext.ScopeWrapper.JintEngine.Visitor, functionCallContext.ScopeWrapper.GlobalScope, new JsInstance[0]);
+                    function.Execute(functionCallContext.ScopeWrapper.ExecutionVisitor, functionCallContext.ScopeWrapper.GlobalScope, new JsInstance[0]);
                 });
 
-                return functionCallContext.ScopeWrapper.JintEngine.Visitor.Result;
+                return functionCallContext.ScopeWrapper.ExecutionVisitor.Result;
 
             }
             finally
@@ -411,7 +415,7 @@ namespace ObjectCloud.Javascript.Jint
                 throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, "The root directory has no parent directory"));
 
             IWebResults webResults = parentDirectoryHandler.FileContainer.WebHandler.GetServersideJavascriptWrapper(functionCallContext.WebConnection, null);
-            string webResultsAsString = Encoding.UTF8.GetString(webResults.Body);
+            string webResultsAsString = webResults.ResultsAsString;
 
             /*object toReturn = functionCallContext.Context.evaluateString(
                 functionCallContext.Scope,
@@ -431,7 +435,7 @@ namespace ObjectCloud.Javascript.Jint
         /// to go!
         /// </summary>
         /// <returns></returns>
-        public virtual static object getDefaultRelatedObjectDirectoryWrapper()
+        public static object getDefaultRelatedObjectDirectoryWrapper()
         {
             return getParentDirectoryWrapper();
         }
