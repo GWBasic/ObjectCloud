@@ -458,6 +458,9 @@ namespace ObjectCloud.Common
                 {
                     processMemorySize = GC.GetTotalMemory(true);
 
+                    log.WarnFormat("Dumping Cache:\tProcess Memory: {0}\n\tMax Memory: {1}\n\tMax Working Set: {2}",
+                        processMemorySize, maxMemory, MyProcess.MaxWorkingSet);
+
                     if (processMemorySize >= maxMemory)
                     {
                         while (CachedReferences.Count > MaxCacheReferences)

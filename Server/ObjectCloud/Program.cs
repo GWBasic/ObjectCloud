@@ -39,13 +39,18 @@ namespace ObjectCloud
                 if (null == fileHandlerFactoryLocator.Hostname)
                 {
                     string hostname = Dns.GetHostName();
-                    Console.WriteLine(hostname);
                     IPHostEntry IPHost = Dns.GetHostEntry(hostname);
 
                     // When the hostname isn't specified, the current IP is defaulted to
                     // This is because the OpenID functionality needs stable hostnames in order to work.
                     // The hostname isn't used because they don't work from Windows to *nix
-                    fileHandlerFactoryLocator.Hostname = IPHost.AddressList[0].ToString();
+                    foreach (IPAddress address in IPHost.AddressList)
+                        // For now, just grab the 1st IPv4 address...  I don't know how to handle IPv6
+                        if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                        {
+                            fileHandlerFactoryLocator.Hostname = address.ToString();
+                            break;
+                        }
                 }
 
                 if (0 == args.Length)

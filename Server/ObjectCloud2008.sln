@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual Studio 2005
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C# Express 2008
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectCloud.ORM.DataAccess.DomainModel", "ObjectCloud.ORM.DataAccess.DomainModel\ObjectCloud.ORM.DataAccess.DomainModel.csproj", "{6303CA5E-0510-4BF8-94A3-74E30F8B8025}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectCloud.ORM.DataAccess.Generator", "ObjectCloud.ORM.DataAccess.Generator\ObjectCloud.ORM.DataAccess.Generator.csproj", "{1C756C82-AEFD-432B-BB1A-07C128B60108}"

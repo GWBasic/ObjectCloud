@@ -167,7 +167,8 @@ namespace ObjectCloud.Disk.FileHandlers
                 using (TimedLock.Lock(ConnectionAccessLock))
                     if (null != _DatabaseConnection)
                     {
-                        _DatabaseConnection.DbConnection.Close();
+                        //_DatabaseConnection.DbConnection.Close();
+                        _DatabaseConnection.Dispose();
                         _DatabaseConnection = default(TDatabaseConnection);
                     }
 
