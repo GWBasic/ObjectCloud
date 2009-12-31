@@ -1,0 +1,6 @@
+// Scripts: /API/MixIns/Replier.js
+
+var options =
+{
+   BlockWebMethods: false
+};
