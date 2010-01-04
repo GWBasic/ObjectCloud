@@ -1,5 +1,8 @@
 // based on code from http://www.w3schools.com/Ajax/ajax_browsers.asp
 
+// This code is released under the LGPL
+// See /Docs/license.wchtml
+
 if (typeof CreateHttpRequest != 'function')
    CreateHttpRequest = function()
    {

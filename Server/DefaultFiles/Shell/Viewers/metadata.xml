@@ -60,8 +60,4 @@
 		Name="RollsDownStairs.wchtml"
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
-	<File
-		Name="TextViewer.wchtml"
-		TypeId="text"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 </Directory>

@@ -1,4 +1,4 @@
-// Scripts: /System/Proxy?Method=GetServersideJavascriptWrapper&assignToVariable=Proxy
+// Scripts: /System/Proxy?Method=GetJSW&assignToVariable=Proxy
 
 HelloWorld.webCallable = "GET";
 function HelloWorld()
@@ -154,7 +154,22 @@ function TestElevateProxyGet()
 {
    return elevate(function()
    {
-      return Proxy.GET("http://slashdot.org", {}).Content;
+      var toReturn;
+
+      Proxy.GET(
+         {
+            targetUrl: "http://slashdot.org"
+         },
+         function(result)
+         {
+            toReturn = result.Content;
+         },
+         function()
+         {
+            throwWebResultOverrideException(400, "Could not get results");
+         });
+
+      return toReturn;
    });
 }
 
@@ -163,8 +178,22 @@ function TestElevateProxyPost()
 {
    return elevate(function()
    {
-      return Proxy.POST_urlencoded(
-         "http://" + hostMetadata.host + "/Tests/file.testclass?Method=ShellPost_TARGET",
-         {theArg: "frompost"}).Content;
+      var toReturn;
+
+      Proxy.POST_urlencoded(
+         {
+            targetUrl: "http://" + hostMetadata.host + "/Tests/file.testclass?Method=ShellPost_TARGET",
+            theArg: "frompost"
+         },
+         function(result)
+         {
+            toReturn = result.Content;
+         },
+         function()
+         {
+            throwWebResultOverrideException(400, "Could not get results");
+         });
+
+      return toReturn;
    });
 }
