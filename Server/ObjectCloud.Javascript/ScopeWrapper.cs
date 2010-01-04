@@ -33,7 +33,7 @@ namespace ObjectCloud.Javascript
             _FileHandlerFactoryLocator = fileHandlerFactoryLocator;
             _User = webConnection.Session.User;
 
-            List<string> requestedScripts = new List<string>(new string[] { "/API/json2.js" });
+            List<string> requestedScripts = new List<string>(new string[] { "/API/AJAX_serverside.js", "/API/json2.js" });
 
             // Find dependant scripts
             if (javascript.StartsWith("// Scripts:"))

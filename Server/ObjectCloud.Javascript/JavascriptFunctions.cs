@@ -98,6 +98,75 @@ namespace ObjectCloud.Javascript
         }
 
         /// <summary>
+        /// Assists in letting server-side javascript call into the server
+        /// </summary>
+        /// <param name="webMethodString"></param>
+        /// <param name="url"></param>
+        /// <param name="contentType"></param>
+        /// <param name="postArguments"></param>
+        /// <param name="bypassJavascript"></param>
+        /// <returns></returns>
+        public static object Shell(
+            string webMethodString,
+            string url,
+            string contentType,
+            object postArguments,
+            java.lang.Boolean bypassJavascript)
+        {
+            FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
+            bool bypassJavascriptB = bypassJavascript != null ? bypassJavascript.booleanValue() : false;
+
+            WebMethod webMethod = Enum<WebMethod>.Parse(webMethodString);
+
+            byte[] content;
+
+            if (null != postArguments)
+            {
+                if (postArguments is Scriptable)
+                {
+                    RequestParameters requestParameters = new RequestParameters();
+
+                    Scriptable postArgumentsS = (Scriptable)postArguments;
+
+                    foreach (object id in postArgumentsS.getIds())
+                    {
+                        object val;
+
+                        if (id is int)
+                            val = postArgumentsS.get((int)id, functionCallContext.Scope);
+                        else
+                            val = postArgumentsS.get(id.ToString(), functionCallContext.Scope);
+
+                        if (null != val)
+                        {
+                            string vasAsString = functionCallContext.ScopeWrapper.ConvertObjectFromJavascriptToString(val);
+
+                            if (null != vasAsString)
+                                requestParameters[id.ToString()] = vasAsString;
+                        }
+                    }
+
+                    content = requestParameters.ToBytes();
+                }
+                else
+                    content = Encoding.UTF8.GetBytes(postArguments.ToString());
+            }
+            else
+                content = new byte[0];
+
+            IWebResults shellResult = functionCallContext.WebConnection.ShellTo(
+                webMethod,
+                url,
+                content,
+                contentType,
+                functionCallContext.CallingFrom,
+                bypassJavascriptB);
+
+            Scriptable toReturn = ConvertWebResultToJavascript(functionCallContext, shellResult);
+            return toReturn;
+        }
+
+        /// <summary>
         /// Sends a GET request to the specified object with the given arguments
         /// </summary>
         /// <param name="file"></param>
