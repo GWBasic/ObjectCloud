@@ -30,15 +30,10 @@ function updateNode(id, version, contents, changetag)
    var nodeAsString;
    elevate(function()
    {
-      base.Get(
+      nodeAsString = base.Get_Sync(
       {
          Name: id
-      },
-      function(result)
-      {
-         nodeAsString = result;
-      },
-      function(error){throw error;});
+      });
    });
    
    var node = eval('(' + nodeAsString + ')');
@@ -57,12 +52,11 @@ function updateNode(id, version, contents, changetag)
       nodeAsString = JSON.stringify(node);
       elevate(function()
       {
-         base.Set(
+         base.Set_Sync(
          {
             Name: id,
             Value: nodeAsString
-         },
-         function(){}, function(error){throw error;});
+         });
       });
    }
 
@@ -108,14 +102,10 @@ function insertNode(priorId, priorNodeVersion, priorNodeContents, priorChangetag
    var priorNodeAsString;
    elevate(function()
    {
-      base.Get(
+      priorNodeAsString = base.Get_Sync(
       {
          Name: priorId
-      },
-      function(result)
-      {
-         priorNodeAsString = result;
-      },function(error){throw error;});
+      });
    });
    var priorNode = eval('(' + priorNodeAsString + ')');
 
@@ -127,15 +117,13 @@ function insertNode(priorId, priorNodeVersion, priorNodeContents, priorChangetag
    // Verify the newNodeId if specified, or create it if unspecified
    elevate(function()
    {
-      base.Contains(
+      var containsNewNode = base.Contains_Sync(
       {
          Name: newNodeId
-      },
-      function(result)
-      {
-         if (result)
-            throwWebResultOverrideException(400, "newNodeId is already in use.  Use a sufficiently random id that starts with \"id\".");
-      },function(error){throw error;});
+      });
+
+      if (containsNewNode)
+         throwWebResultOverrideException(400, "newNodeId is already in use.  Use a sufficiently random id that starts with \"id\".");
    });
 
    var newNode =
@@ -154,18 +142,18 @@ function insertNode(priorId, priorNodeVersion, priorNodeContents, priorChangetag
    elevate(function()
    {
       priorNodeAsString = JSON.stringify(priorNode);
-      base.Set(
+      base.Set_Sync(
       {
          Name: priorId,
          Value: priorNodeAsString
-      }, function(){}, function(error){throw error;});
+      });
 
       var newNodeAsString = JSON.stringify(newNode);
-      base.Set(
+      base.Set_Sync(
       {
          Name: newNodeId,
          Value: newNodeAsString
-      }, function(){}, function(error){throw error;});
+      });
    });
 
    var toReturn =
@@ -188,14 +176,10 @@ function deleteNode(priorId, priorNodeVersion, priorNodeContents, deletingNodeVe
    var priorNodeAsString;
    elevate(function()
    {
-      base.Get(
+      priorNodeAsString = base.Get_Sync(
       {
          Name: priorId
-      },
-      function(result)
-      {
-         priorNodeAsString = result;
-      },function(error){throw error;});
+      });
    });
    var priorNode = eval('(' + priorNodeAsString + ')');
 
@@ -207,14 +191,10 @@ function deleteNode(priorId, priorNodeVersion, priorNodeContents, deletingNodeVe
    var deletingNodeAsString;
    elevate(function()
    {
-      base.Get(
+      deletingNodeAsString = base.Get_Sync(
       {
          Name: priorNode.n
-      },
-      function(result)
-      {
-         deletingNodeAsString = result;
-      },function(error){throw error;});
+      });
    });
 
    var deletingNode = eval('(' + deletingNodeAsString + ')');
@@ -231,16 +211,16 @@ function deleteNode(priorId, priorNodeVersion, priorNodeContents, deletingNodeVe
    priorNodeAsString = JSON.stringify(priorNode);
    elevate(function()
    {
-      base.Set(
+      base.Set_Sync(
       {
          Name: priorId,
          Value: priorNodeAsString
-      }, function(){}, function(error){throw error;});
+      });
 
-      base.Delete(
+      base.Delete_Sync(
       {
          Name: deletingNodeId
-      }, function(){}, function(error){throw error;});
+      });
    });
 
    return priorNode;
@@ -256,12 +236,7 @@ function GetAll()
    var toReturn;
    elevate(function()
    {
-      base.GetAll(
-      {},
-      function(result)
-      {
-         toReturn = result;
-      }, function(error){throw error;});
+      toReturn = base.GetAll_Sync({});
    });
 
    for (var id in toReturn)

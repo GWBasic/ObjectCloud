@@ -12,14 +12,53 @@ base.PostQuery() must be called as the .vote file's owner, and must be
 called in an elevated security context.&nbsp; Once the schema is created,
 the version is assigned to 0.<br>
 </p>
-<pre style="margin-left: 40px;">elevate(function()<br>{<br>   var version = <span style="background-color: rgb(255, 255, 51);">base.GetVersion()</span>;<br><br>   // Constructor<br>   if (null == version)<br>      <span style="background-color: rgb(255, 255, 51);">lockMe(function()</span><br style="background-color: rgb(255, 255, 51);"><span style="background-color: rgb(255, 255, 51);">      {</span><br style="background-color: rgb(255, 255, 51);"><span style="background-color: rgb(255, 255, 51);">         callAsOwner(function()</span><br>         {<br>            // Need to double-check in case someone else built the DB...<br>            version = base.GetVersion();<br>            if (null == version)<br>            {<br>               <span style="background-color: rgb(255, 255, 51);">base.PostQuery("create table Question (qId integer not null primary key AUTOINCREMENT, text not null)");</span><br>               base.PostQuery("create table AuthenticatedVotes (qId not null, voterId not null, timestamp not null)");<br>               base.PostQuery("create table AnonymousVotes (qId not null, timestamp not null)");<br>               base.PostQuery("create table Options (theOptions not null)");<br><br>               var defaultOptions =<br>               {<br>                  canChangeVote: false,<br>                  canSeeResultsWithoutVoting: false,<br>                  title: "",<br>                  question: ""<br>               };<br><br>               base.PostQuery("insert into Options (theOptions) values (@theOptions)", {"@theOptions": JSON.stringify(defaultOptions)});<br><br>               <span style="background-color: rgb(255, 255, 51);">base.SetVersion(0);</span><br style="background-color: rgb(255, 255, 51);"><span style="background-color: rgb(255, 255, 51);">               version = 0;</span><br>            }<br>         });<br>      });<br>});<br></pre>
+<pre style="margin-left: 40px;"><span class="Apple-style-span" style="white-space: pre-wrap; font-size: medium; ">elevate(function()</span><br></pre><pre style="margin-left: 40px;"><span class="Apple-style-span" style="font-family: Times; white-space: normal; font-size: medium; "><pre style="word-wrap: break-word; white-space: pre-wrap; ">{
+   var version = <span class="Apple-style-span" style="background-color: rgb(255, 255, 0);">base.GetVersion_Sync({});</span>
+
+   // Constructor
+   if (null == version)
+      <span class="Apple-style-span" style="background-color: rgb(255, 255, 0);">lockMe(function()
+      {
+         callAsOwner(function()</span>
+         {
+            // Need to double-check in case someone else built the DB...
+            var version = base.GetVersion_Sync({});
+
+            if (null == version)
+            {
+               <span class="Apple-style-span" style="background-color: rgb(255, 255, 0);">base.PostQuery_Sync({query:"create table Question (qId integer not null primary key AUTOINCREMENT, text not null)"});</span>
+               base.PostQuery_Sync({query:"create table AuthenticatedVotes (qId not null, voterId not null, timestamp integer not null)"});
+               base.PostQuery_Sync({query:"create table AnonymousVotes (qId not null, timestamp integer not null)"});
+               base.PostQuery_Sync({query:"create table Options (theOptions not null)"});
+
+               var defaultOptions =
+               {
+                  canChangeVote: false,
+                  canSeeResultsWithoutVoting: false,
+                  title: "",
+                  question: ""
+               };
+
+               base.PostQuery_Sync({query:"insert into Options (theOptions) values (@theOptions)", "@theOptions": JSON.stringify(defaultOptions)});
+
+               <span class="Apple-style-span" style="background-color: rgb(255, 255, 0);">base.SetVersion_Sync({version:0});
+               version = 0;</span>
+            }
+         });
+      });
+});</pre></span></pre>
 <p>When constructing the schema, the entire object is locked.&nbsp; The
 version is checked inside and outside of the lock in case multiple
 requests attempt to create the schema.<br>
 </p>
 <h2>Getting Poll Results</h2>
 <p>SQL is used to count the results.&nbsp; In this case, when getting the results, we use a compound query that has 3 sub-queries:</p><p>From the getVotes() function:<br></p>
-<pre style="margin-left: 40px;">elevate(function()<br>{<br>   resultsFromDB = base.PostQuery(<br>      "select qId from Question group by qId;" +<br>      "select distinct qId, count(qId) as numVotes from AuthenticatedVotes group by qId;" +<br>      "select distinct qId, count(qId) as numVotes from AnonymousVotes group by qId;");<br>});<br><br>var resultsToReturn =<br>{<br>   authenticated: aggregate(resultsFromDB<span style="background-color: rgb(255, 255, 51);">[0]</span>, resultsFromDB<span style="background-color: rgb(255, 255, 51);">[1]</span>),<br>   anonymous: aggregate(resultsFromDB<span style="background-color: rgb(255, 255, 51);">[0]</span>, resultsFromDB<span style="background-color: rgb(255, 255, 51);">[2]</span>)<br>};<br></pre>
+<pre style="margin-left: 40px;">elevate(function()<br>{<br>   <span class="Apple-style-span" style="white-space: pre-wrap; font-size: medium;">resultsFromDB = base.PostQuery_Sync(
+        {
+            query: "select qId from Question group by qId;" +
+               "select distinct qId, count(qId) as numVotes from AuthenticatedVotes group by qId;" +
+               "select distinct qId, count(qId) as numVotes from AnonymousVotes group by qId;"
+        });</span></pre><pre style="margin-left: 40px;"><span class="Apple-style-span" style="white-space: pre-wrap; font-size: medium;"></span>});<br><br>var resultsToReturn =<br>{<br>   authenticated: aggregate(resultsFromDB<span style="background-color: rgb(255, 255, 51);">[0]</span>, resultsFromDB<span style="background-color: rgb(255, 255, 51);">[1]</span>),<br>   anonymous: aggregate(resultsFromDB<span style="background-color: rgb(255, 255, 51);">[0]</span>, resultsFromDB<span style="background-color: rgb(255, 255, 51);">[2]</span>)<br>};<br></pre>
 <p>The contents of aggregate are shown for your convenience:</p>
 <pre style="margin-left: 40px;">function aggregate(validQIds, results)<br>{<br>   var toReturn = {};<br><br>   for (var ctr = 0; ctr &lt; <span style="background-color: rgb(255, 255, 51);">validQIds.length</span>; ctr++)<br>      toReturn[validQIds[ctr].qId] = 0;<br><br>   for (var ctr = 0; ctr &lt; <span style="background-color: rgb(255, 255, 51);">results.length</span>; ctr++)<br>      if (null != toReturn[results[ctr].qId])<br>         <span style="background-color: rgb(255, 255, 51);">toReturn[results[ctr].qId] = results[ctr].numVotes</span>;<br><br>   return toReturn;<br>}<br></pre>
 <p>base.PostQuery() always returns a compound array.&nbsp; For compound
@@ -30,7 +69,11 @@ When a query returns a scalar, the scalar is used instead of the inner
 array.</p>
 <h2>Getting the Current User's Vote</h2>
 <p>A simpler query is to get the current user's vote:</p>
-<pre style="margin-left: 40px;">getVote.webCallable = "GET";<br>getVote.minimumWebPermission = "Read";  // In case someone's permission changed!  What if someone closed voting by revoking Write?<br>getVote.webReturnConvention = "JavaScriptObject";<br>function getVote()<br>{<br>   var qId = null;<br><br>   if (userMetadata.name != "anonymous")<br>      elevate(function()<br>      {<br>         var votes = <span style="background-color: rgb(255, 255, 51);">base.PostQuery("select qId from AuthenticatedVotes where voterId = @voterId", {"@voterId": userMetadata.id})</span><span style="background-color: rgb(0, 255, 51);">[0]</span>;<br><br>         if (votes.length &gt; 0)<br>            <span style="background-color: rgb(255, 255, 51);">qId = votes[0].qId</span>;<br>      });<br><br>   return qId;<br>}<br></pre>
+<pre style="margin-left: 40px;">getVote.webCallable = "GET";<br>getVote.minimumWebPermission = "Read";  // In case someone's permission changed!  What if someone closed voting by revoking Write?<br>getVote.webReturnConvention = "JavaScriptObject";<br>function getVote()<br>{<br>   var qId = null;<br><br>   if (userMetadata.name != "anonymous")<br>      elevate(function()<br>      {<br>         var votes = <span style="background-color: rgb(255, 255, 51);">base.PostQuery_Sync(
+         {
+            query: "select qId from AuthenticatedVotes where voterId = @voterId",
+            "@voterId": userMetadata.id
+         })</span><span style="background-color: rgb(0, 255, 51);">[0]</span>;<br><br>         if (votes.length &gt; 0)<br>            <span style="background-color: rgb(255, 255, 51);">qId = votes[0].qId</span>;<br>      });<br><br>   return qId;<br>}<br></pre>
 <p>The above query still returns an outer array, thus votes is assigned
 to the 0th element of base.PostQuery's results.&nbsp; Another interesting
 difference is that this query uses symbolic arguments.&nbsp; SQlite replaces
@@ -40,8 +83,15 @@ technique avoids <a target="_blank" title="" href="http://en.wikipedia.org/wiki/
 <p>The voting booth's options are stored as a serialized JSON object in
 a table with one row.&nbsp; This keeps the schema simple, and allows for
 simple addition of options without needing to update the schema.</p>
-<pre style="margin-left: 40px;">setOptions.webCallable = "POST_application_x_www_form_urlencoded";<br>setOptions.minimumWebPermission = "Administer";<br>setOptions.parser_canChangeVote = "bool";<br>setOptions.parser_canSeeResultsWithoutVoting = "bool";<br>function setOptions(canChangeVote, canSeeResultsWithoutVoting, question, title)<br>{<br>   var options = getOptions();<br><br>   if (null != canChangeVote)<br>      options.canChangeVote = canChangeVote;<br><br>   if (null != canSeeResultsWithoutVoting)<br>      options.canSeeResultsWithoutVoting = canSeeResultsWithoutVoting;<br><br>   if (null != question)<br>      options.question = question;<br><br>   if (null != title)<br>      options.title = title;<br><br>   elevate(function()<br>   {<br>      base.PostQuery("update Options set theOptions=@theOptions", {"@theOptions": JSON.stringify(options)});<br>   });<br>}<br><br></pre>
-<pre style="margin-left: 40px;">function getOptions()<br>{<br>   var options;<br>   elevate(function()<br>   {<br>      callAsOwner(function()<br>      {<br>         options = base.PostQuery("select theOptions from Options")<span style="background-color: rgb(255, 255, 51);">[0][0]</span>.theOptions;<br>         options = eval('(' + options + ')');<br>      });<br>   });<br><br>   return options;<br>}<br></pre>
+<pre style="margin-left: 40px;">setOptions.webCallable = "POST_application_x_www_form_urlencoded";<br>setOptions.minimumWebPermission = "Administer";<br>setOptions.parser_canChangeVote = "bool";<br>setOptions.parser_canSeeResultsWithoutVoting = "bool";<br>function setOptions(canChangeVote, canSeeResultsWithoutVoting, question, title)<br>{<br>   var options = getOptions();<br><br>   if (null != canChangeVote)<br>      options.canChangeVote = canChangeVote;<br><br>   if (null != canSeeResultsWithoutVoting)<br>      options.canSeeResultsWithoutVoting = canSeeResultsWithoutVoting;<br><br>   if (null != question)<br>      options.question = question;<br><br>   if (null != title)<br>      options.title = title;<br><br>   elevate(function()<br>   {<br>      base.PostQuery_Sync(
+      {
+         query: "update Options set theOptions=@theOptions",
+         "@theOptions": JSON.stringify(options)
+      });<br>   });<br>}<br><br></pre>
+<pre style="margin-left: 40px;">function getOptions()<br>{<br>   var options;<br>   elevate(function()<br>   {<br>      callAsOwner(function()<br>      {<br>         options = base.PostQuery_Sync(
+         {
+            query: "select theOptions from Options"
+         })<span class="Apple-style-span" style="background-color: rgb(255, 255, 0);">[0][0]</span>;<br>         options = eval('(' + options + ')');<br>      });<br>   });<br><br>   return options;<br>}<br></pre>
 <p>Because PostQuery always returns a compound array, the single row
 from the Options table is element [0][0].&nbsp; theOptions, a serialized
 JSON string, is eval()ed to parse.&nbsp; Because the string comes from
