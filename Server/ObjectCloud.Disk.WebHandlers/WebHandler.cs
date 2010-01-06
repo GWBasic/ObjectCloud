@@ -127,11 +127,6 @@ namespace ObjectCloud.Disk.WebHandlers
         }
 
         /// <summary>
-        /// The Javascript wrappers for this object.  Set by GetJavascriptWrapper.  This can accumulate in memory because the WebHandlers are cached and collected as they fall out of use
-        /// </summary>
-        Dictionary<WrapperCallsThrough, string> JavascriptWrappers = new Dictionary<WrapperCallsThrough, string>();
-
-        /// <summary>
         /// The cached in-browser JavaScript wrapper
         /// </summary>
         private string cachedInBrowserJSWrapper = null;

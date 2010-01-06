@@ -759,11 +759,6 @@ namespace ObjectCloud.Javascript
         /// </summary>
         private IEnumerable<string> WrapperCache = null;
 
-        /// <summary>
-        /// Cache of pre-generated wrappers
-        /// </summary>
-        private Dictionary<WrapperCallsThrough, string> LegacyWrapperCache = new Dictionary<WrapperCallsThrough, string>();
-
          /// <summary>
         /// Note:  The scope must be within a context!
         /// </summary>
