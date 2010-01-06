@@ -16,7 +16,6 @@ namespace ObjectCloud.WebAccessCodeGenerators
     {
         static JavascriptWrapperGenerator()
         {
-            LegacyWrappersCache = new Cache<LegacyTypeAndWrapperCallsThrough, IEnumerable<string>>(GenerateWrapperForLegacyCache);
             WrappersCache = new Cache<Type, IEnumerable<string>>(GenerateWrapperForCache);
         }
 

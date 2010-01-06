@@ -312,16 +312,6 @@ namespace ObjectCloud.Javascript
         }
 
         /// <summary>
-        /// Generates a Javscript wrapper for the browser that calls functions in this javascript.  Assumes that the prototype AJAX library is present
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerable<string> GenerateLegacyJavascriptWrapper(WrapperCallsThrough wrapperCallsThrough)
-        {
-            foreach (string method in FunctionCallers.Keys)
-                yield return FunctionCallers[method].GenerateLegacyWrapper(wrapperCallsThrough);
-        }
-
-        /// <summary>
         /// Converts an object from Javascript to a string.  Doubles, bools, and strings are returned via ToString, everything else is JSON-stringified
         /// </summary>
         /// <param name="fromJavascript"></param>

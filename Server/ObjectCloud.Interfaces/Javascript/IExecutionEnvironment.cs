@@ -19,12 +19,6 @@ namespace ObjectCloud.Interfaces.Javascript
         System.Collections.Generic.IEnumerable<string> GenerateJavascriptWrapper(IWebConnection webConnection);
 
         /// <summary>
-        /// Generates a Javscript wrapper for the browser that calls functions in this javascript.  Assumes that the prototype AJAX library is present
-        /// </summary>
-        /// <returns></returns>
-        System.Collections.Generic.IEnumerable<string> GenerateLegacyJavascriptWrapper(IWebConnection webConnection, ObjectCloud.Interfaces.WebServer.WrapperCallsThrough wrapperCallsThrough);
-
-        /// <summary>
         /// Returns a delegate to handle the incoming request
         /// </summary>
         /// <param name="webConnection"></param>

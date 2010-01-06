@@ -246,59 +246,6 @@ namespace ObjectCloud.Disk.WebHandlers
         }
 
         /// <summary>
-        /// This should return a Javascript object that can perform all calls to all methods marked as WebCallable through.
-        /// </summary>
-        /// <param name="webConnection"></param>
-        /// <param name="assignToVariable">The variable to assign the wrapper object to</param>
-        /// <param name="wrapperCallsThrough">Indicates either to generate server-side Javascript or AJAX calls</param>
-        /// <returns></returns>
-        private string GetJavascriptWrapper(IWebConnection webConnection, string assignToVariable, WrapperCallsThrough wrapperCallsThrough)
-        {
-            if (!JavascriptWrappers.ContainsKey(wrapperCallsThrough))
-            {
-                string javascriptWrapper = StringGenerator.GenerateSeperatedList(
-                    FileHandlerFactoryLocator.WebServer.JavascriptWebAccessCodeGenerator.GenerateLegacyWrapper(GetType(), wrapperCallsThrough), ",\n");
-
-                // Replace some key constants
-                javascriptWrapper = javascriptWrapper.Replace("{0}", FileContainer.FullPath);
-                javascriptWrapper = javascriptWrapper.Replace("{1}", FileContainer.Filename);
-                JavascriptWrappers[wrapperCallsThrough] = javascriptWrapper.Replace("{2}", "http://" + FileHandlerFactoryLocator.HostnameAndPort + FileContainer.FullPath);
-            }
-
-            string javascriptToReturn = JavascriptWrappers[wrapperCallsThrough];
-
-            // Insert the user's permission to the file
-            javascriptToReturn = javascriptToReturn.Replace("{3}", FileContainer.LoadPermission(webConnection.Session.User.Id).ToString());
-
-            if ((WrapperCallsThrough.BypassServerSideJavascript & wrapperCallsThrough) == 0)
-                try
-                {
-                    IExecutionEnvironment executionEnvironment = GetOrCreateExecutionEnvironment();
-                    if (null != executionEnvironment)
-                    {
-                        string serversideJavscriptWrapper = StringGenerator.GenerateCommaSeperatedList(
-                            executionEnvironment.GenerateLegacyJavascriptWrapper(webConnection, wrapperCallsThrough));
-
-                        serversideJavscriptWrapper = serversideJavscriptWrapper.Replace("{0}", FileContainer.FullPath);
-
-                        javascriptToReturn = javascriptToReturn + ",\n" + serversideJavscriptWrapper;
-                    }
-                }
-                catch (Exception e)
-                {
-                    log.ErrorFormat("Exception occured when trying to generate a Javascript wrapper for server-side Javascript", e);
-                }
-
-            // Enclose the functions with { .... }
-            javascriptToReturn = "{\n" + javascriptToReturn + "\n}";
-
-            if (null != assignToVariable)
-                javascriptToReturn = string.Format("var {0} = {1};", assignToVariable, javascriptToReturn);
-
-            return javascriptToReturn;
-        }
-
-        /// <summary>
         /// Returns any syntax errors that occur as a result of trying to load server-side javascript
         /// </summary>
         /// <param name="webConnection"></param>

@@ -328,15 +328,6 @@ namespace ObjectCloud.Javascript
         }
 
         /// <summary>
-        /// Generates a Javscript wrapper for the browser that calls functions in this javascript.  Assumes that the prototype AJAX library is present
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerable<string> GenerateLegacyJavascriptWrapper(IWebConnection webConnection, WrapperCallsThrough wrapperCallsThrough)
-        {
-            return GetOrCreateScope(webConnection).GenerateLegacyJavascriptWrapper(wrapperCallsThrough);
-        }
-
-        /// <summary>
         /// Any syntax errors in the javascript execution environment
         /// </summary>
         public string ExecutionEnvironmentErrors
