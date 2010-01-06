@@ -334,7 +334,7 @@ namespace ObjectCloud.Disk.WebHandlers
         }
 
         /// <summary>
-        /// Adds the user to the group.  Either groupname or groupid must be specified, OR, username or userid must be specified
+        /// Adds the user to the group.  Either groupname or groupid must be specified, AND, username or userid must be specified
         /// </summary>
         /// <param name="webConnection"></param>
         /// <param name="groupname"></param>

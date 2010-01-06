@@ -1,4 +1,4 @@
-// Scripts: /Users/UserDB?Method=GetServersideJavascriptWrapper&assignToVariable=UserDB
+// Scripts: /Users/UserDB?Method=GetJSW&assignToVariable=UserDB
 
 getMembers.webCallable = "GET";
 getMembers.minimumWebPermission = "Read";
@@ -8,8 +8,15 @@ function getMembers()
 
    callAsOwner(function()
    {
-      var groupId = base.PostQuery("select Value from metadata where Name='GroupId'")[0][0].Value;
-      toReturn = UserDB.GetUsersInGroup(null, groupId);
+      var groupId = base.PostQuery_Sync(
+         {
+            query: "select Value from metadata where Name='GroupId'"
+         })[0][0].Value;
+
+      toReturn = UserDB.GetUsersInGroup_Sync(
+         {
+            groupid: groupId
+         });
    });
 
    return toReturn;
@@ -23,10 +30,16 @@ function getGroup()
 
    callAsOwner(function()
    {
-      groupId = base.PostQuery("select Value from metadata where Name='GroupId'")[0][0].Value;
+      groupId = base.PostQuery_Sync(
+         {
+            query: "select Value from metadata where Name='GroupId'"
+         })[0][0].Value;
    });
 
-   return UserDB.GetGroupAndAlias(groupId);
+   return UserDB.GetGroupAndAlias_Sync(
+      {
+         groupid: groupId
+      });
 }
 
 joinGroup.webCallable = "POST_application_x_www_form_urlencoded";
@@ -39,11 +52,18 @@ function joinGroup()
    if (group.Type != "Public")
       throwWebResultOverrideException(403, "This group is not public.  Contact the owner to join.");
 
+   if ("anonymous" == userMetadata.name)
+      throwWebResultOverrideException(403, "You must be logged in to join a group");
+
    var toReturn;
 
    callAsOwner(function()
    {
-      toReturn = UserDB.AddUserToGroup(null, group.Id, null, userMetadata.id);
+      toReturn = UserDB.AddUserToGroup_Sync(
+         {
+            groupid: group.Id,
+            userid: userMetadata.id
+         });
    });
 
    return toReturn;
@@ -62,7 +82,11 @@ function leaveGroup()
 
    callAsOwner(function()
    {
-      toReturn = UserDB.RemoveUserFromGroup(null, group.Id, null, userMetadata.id);
+      toReturn = UserDB.RemoveUserFromGroup_Sync(
+         {
+            groupid: group.Id,
+            userid: userMetadata.id
+         });
    });
 
    return toReturn;

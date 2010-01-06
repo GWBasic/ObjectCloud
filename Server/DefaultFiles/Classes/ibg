@@ -30,7 +30,15 @@ function updateNode(id, version, contents, changetag)
    var nodeAsString;
    elevate(function()
    {
-      nodeAsString = base.Get(id);
+      base.Get(
+      {
+         Name: id
+      },
+      function(result)
+      {
+         nodeAsString = result;
+      },
+      function(error){throw error;});
    });
    
    var node = eval('(' + nodeAsString + ')');
@@ -49,7 +57,12 @@ function updateNode(id, version, contents, changetag)
       nodeAsString = JSON.stringify(node);
       elevate(function()
       {
-         base.Set(id, nodeAsString);
+         base.Set(
+         {
+            Name: id,
+            Value: nodeAsString
+         },
+         function(){}, function(error){throw error;});
       });
    }
 
@@ -95,7 +108,14 @@ function insertNode(priorId, priorNodeVersion, priorNodeContents, priorChangetag
    var priorNodeAsString;
    elevate(function()
    {
-      priorNodeAsString = base.Get(priorId);
+      base.Get(
+      {
+         Name: priorId
+      },
+      function(result)
+      {
+         priorNodeAsString = result;
+      },function(error){throw error;});
    });
    var priorNode = eval('(' + priorNodeAsString + ')');
 
@@ -107,8 +127,15 @@ function insertNode(priorId, priorNodeVersion, priorNodeContents, priorChangetag
    // Verify the newNodeId if specified, or create it if unspecified
    elevate(function()
    {
-      if (true == base.Contains(newNodeId))
-         throwWebResultOverrideException(400, "newNodeId is already in use.  Use a sufficiently random id that starts with \"id\".");
+      base.Contains(
+      {
+         Name: newNodeId
+      },
+      function(result)
+      {
+         if (result)
+            throwWebResultOverrideException(400, "newNodeId is already in use.  Use a sufficiently random id that starts with \"id\".");
+      },function(error){throw error;});
    });
 
    var newNode =
@@ -127,10 +154,18 @@ function insertNode(priorId, priorNodeVersion, priorNodeContents, priorChangetag
    elevate(function()
    {
       priorNodeAsString = JSON.stringify(priorNode);
-      base.Set(priorId, priorNodeAsString);
+      base.Set(
+      {
+         Name: priorId,
+         Value: priorNodeAsString
+      }, function(){}, function(error){throw error;});
 
       var newNodeAsString = JSON.stringify(newNode);
-      base.Set(newNodeId, newNodeAsString);
+      base.Set(
+      {
+         Name: newNodeId,
+         Value: newNodeAsString
+      }, function(){}, function(error){throw error;});
    });
 
    var toReturn =
@@ -153,7 +188,14 @@ function deleteNode(priorId, priorNodeVersion, priorNodeContents, deletingNodeVe
    var priorNodeAsString;
    elevate(function()
    {
-      priorNodeAsString = base.Get(priorId);
+      base.Get(
+      {
+         Name: priorId
+      },
+      function(result)
+      {
+         priorNodeAsString = result;
+      },function(error){throw error;});
    });
    var priorNode = eval('(' + priorNodeAsString + ')');
 
@@ -162,7 +204,19 @@ function deleteNode(priorId, priorNodeVersion, priorNodeContents, deletingNodeVe
    if (priorNode.v != priorNodeVersion)
       throwWebResultOverrideException(400, "Wrong version for prior node");
 
-   var deletingNodeAsString = base.Get(priorNode.n);
+   var deletingNodeAsString;
+   elevate(function()
+   {
+      base.Get(
+      {
+         Name: priorNode.n
+      },
+      function(result)
+      {
+         deletingNodeAsString = result;
+      },function(error){throw error;});
+   });
+
    var deletingNode = eval('(' + deletingNodeAsString + ')');
 
    if (deletingNode.v != deletingNodeVersion)
@@ -177,8 +231,16 @@ function deleteNode(priorId, priorNodeVersion, priorNodeContents, deletingNodeVe
    priorNodeAsString = JSON.stringify(priorNode);
    elevate(function()
    {
-      base.Set(priorId, priorNodeAsString);
-      base.Delete(deletingNodeId);
+      base.Set(
+      {
+         Name: priorId,
+         Value: priorNodeAsString
+      }, function(){}, function(error){throw error;});
+
+      base.Delete(
+      {
+         Name: deletingNodeId
+      }, function(){}, function(error){throw error;});
    });
 
    return priorNode;
@@ -194,7 +256,12 @@ function GetAll()
    var toReturn;
    elevate(function()
    {
-      toReturn = base.GetAll();
+      base.GetAll(
+      {},
+      function(result)
+      {
+         toReturn = result;
+      }, function(error){throw error;});
    });
 
    for (var id in toReturn)

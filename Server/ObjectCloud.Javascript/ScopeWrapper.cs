@@ -307,7 +307,8 @@ namespace ObjectCloud.Javascript
         public IEnumerable<string> GenerateJavascriptWrapper()
         {
             foreach (string method in FunctionCallers.Keys)
-                yield return FunctionCallers[method].GenerateWrapper();
+                foreach (string wrapperMethod in FunctionCallers[method].GenerateWrapper())
+                    yield return wrapperMethod;
         }
 
         /// <summary>

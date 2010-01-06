@@ -40,30 +40,37 @@ namespace ObjectCloud.WebAccessCodeGenerators
                 {
                     case WebCallingConvention.GET:
                         javascriptMethods.Add(GenerateGET(methodAndWCA));
+                        javascriptMethods.Add(GenerateGET_Sync(methodAndWCA));
                         break;
 
                     case WebCallingConvention.GET_application_x_www_form_urlencoded:
                         javascriptMethods.Add(GenerateGET_urlencoded(methodAndWCA));
+                        javascriptMethods.Add(GenerateGET_urlencoded_Sync(methodAndWCA));
                         break;
 
                     case WebCallingConvention.POST_application_x_www_form_urlencoded:
                         javascriptMethods.Add(GeneratePOST_urlencoded(methodAndWCA));
+                        javascriptMethods.Add(GeneratePOST_urlencoded_Sync(methodAndWCA));
                         break;
 
                     case WebCallingConvention.POST_JSON:
                         javascriptMethods.Add(GeneratePOST_JSON(methodAndWCA));
+                        javascriptMethods.Add(GeneratePOST_JSON_Sync(methodAndWCA));
                         break;
 
                     case WebCallingConvention.POST_string:
                         javascriptMethods.Add(GeneratePOST(methodAndWCA));
+                        javascriptMethods.Add(GeneratePOST_Sync(methodAndWCA));
                         break;
 
                     case WebCallingConvention.POST_bytes:
                         javascriptMethods.Add(GeneratePOST(methodAndWCA));
+                        javascriptMethods.Add(GeneratePOST_Sync(methodAndWCA));
                         break;
 
                     case WebCallingConvention.POST_stream:
                         javascriptMethods.Add(GeneratePOST(methodAndWCA));
+                        javascriptMethods.Add(GeneratePOST_Sync(methodAndWCA));
                         break;
 
                     // For now everything else is unsupported
@@ -162,7 +169,46 @@ namespace ObjectCloud.WebAccessCodeGenerators
 
             // Open the AJAX request
             toReturn.Append("   httpRequest.open('GET', '{0}?' + encodedParameters + urlPostfix, true);\n");
-            toReturn.Append("   httpRequest.send(null);\n");
+            toReturn.Append(GenerateSend("   httpRequest.send(null);\n"));
+            toReturn.Append('}');
+
+            return toReturn.ToString();
+        }
+
+        /// <summary>
+        /// Generates a POST wrapper for non-urlencoded queries
+        /// </summary>
+        /// <param name="methodAndWCA"></param>
+        /// <returns></returns>
+        private static string GenerateGET_Sync(MethodAndWebCallableAttribute methodAndWCA)
+        {
+            return GenerateGET_Sync(
+                methodAndWCA.MethodInfo.Name,
+                methodAndWCA.WebCallableAttribute.WebReturnConvention);
+        }
+
+        /// <summary>
+        /// Generates a POST wrapper for urlencoded queries
+        /// </summary>
+        /// <param name="methodAndWCA"></param>
+        /// <returns></returns>
+        public static string GenerateGET_Sync(string methodName, WebReturnConvention webReturnConvention)
+        {
+            // Create the funciton declaration
+            StringBuilder toReturn = new StringBuilder(string.Format("\"{0}_Sync\"", methodName));
+            toReturn.Append(SyncronousFunctionDeclaration);
+
+            // Create a urlEncoded string for all of the parameters
+            toReturn.AppendFormat("   parameters.Method='{0}';\n", methodName);
+            toReturn.Append(CreateEncodedParameters);
+
+            // Create the AJAX request
+            toReturn.Append(CreateSyncronousAJAXRequest);
+
+            // Open the AJAX request
+            toReturn.Append("   httpRequest.open('GET', '{0}?' + encodedParameters + urlPostfix, false);\n");
+            toReturn.Append(GenerateSend("   httpRequest.send(null);\n"));
+            toReturn.Append(GenerateSyncronousReturnHandler(webReturnConvention));
             toReturn.Append('}');
 
             return toReturn.ToString();
@@ -202,7 +248,46 @@ namespace ObjectCloud.WebAccessCodeGenerators
 
             // Open the AJAX request
             toReturn.Append("   httpRequest.open('GET', '{0}?' + encodedParameters + urlPostfix, true);\n");
-            toReturn.Append("   httpRequest.send(null);\n");
+            toReturn.Append(GenerateSend("   httpRequest.send(null);\n"));
+            toReturn.Append('}');
+
+            return toReturn.ToString();
+        }
+
+        /// <summary>
+        /// Generates a POST wrapper for non-urlencoded queries
+        /// </summary>
+        /// <param name="methodAndWCA"></param>
+        /// <returns></returns>
+        private static string GenerateGET_urlencoded_Sync(MethodAndWebCallableAttribute methodAndWCA)
+        {
+            return GenerateGET_urlencoded_Sync(
+                methodAndWCA.MethodInfo.Name,
+                methodAndWCA.WebCallableAttribute.WebReturnConvention);
+        }
+
+        /// <summary>
+        /// Generates a POST wrapper for urlencoded queries
+        /// </summary>
+        /// <param name="methodAndWCA"></param>
+        /// <returns></returns>
+        public static string GenerateGET_urlencoded_Sync(string methodName, WebReturnConvention webReturnConvention)
+        {
+            // Create the funciton declaration
+            StringBuilder toReturn = new StringBuilder(string.Format("\"{0}_Sync\"", methodName));
+            toReturn.Append(SyncronousFunctionDeclaration);
+
+            // Create a urlEncoded string for all of the parameters
+            toReturn.AppendFormat("   parameters.Method='{0}';\n", methodName);
+            toReturn.Append(CreateEncodedParameters);
+
+            // Create the AJAX request
+            toReturn.Append(CreateSyncronousAJAXRequest);
+
+            // Open the AJAX request
+            toReturn.Append("   httpRequest.open('GET', '{0}?' + encodedParameters + urlPostfix, false);\n");
+            toReturn.Append(GenerateSend("   httpRequest.send(null);\n"));
+            toReturn.Append(GenerateSyncronousReturnHandler(webReturnConvention));
             toReturn.Append('}');
 
             return toReturn.ToString();
@@ -242,7 +327,46 @@ namespace ObjectCloud.WebAccessCodeGenerators
             // Open the AJAX request
             toReturn.Append("   httpRequest.open('POST', '{0}?Method=" + methodName + "' + urlPostfix, true);\n");
             toReturn.Append("   httpRequest.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');\n");
-            toReturn.Append("   httpRequest.send(encodedParameters);\n");
+            toReturn.Append(GenerateSend("   httpRequest.send(encodedParameters);\n"));
+            toReturn.Append('}');
+
+            return toReturn.ToString();
+        }
+
+        /// <summary>
+        /// Generates a POST wrapper for non-urlencoded queries
+        /// </summary>
+        /// <param name="methodAndWCA"></param>
+        /// <returns></returns>
+        private static string GeneratePOST_urlencoded_Sync(MethodAndWebCallableAttribute methodAndWCA)
+        {
+            return GeneratePOST_urlencoded_Sync(
+                methodAndWCA.MethodInfo.Name,
+                methodAndWCA.WebCallableAttribute.WebReturnConvention);
+        }
+
+        /// <summary>
+        /// Generates a POST wrapper for urlencoded queries
+        /// </summary>
+        /// <param name="methodAndWCA"></param>
+        /// <returns></returns>
+        public static string GeneratePOST_urlencoded_Sync(string methodName, WebReturnConvention webReturnConvention)
+        {
+            // Create the funciton declaration
+            StringBuilder toReturn = new StringBuilder(string.Format("\"{0}_Sync\"", methodName));
+            toReturn.Append(SyncronousFunctionDeclaration);
+
+            // Create a urlEncoded string for all of the parameters
+            toReturn.Append(CreateEncodedParameters);
+
+            // Create the AJAX request
+            toReturn.Append(CreateSyncronousAJAXRequest);
+
+            // Open the AJAX request
+            toReturn.Append("   httpRequest.open('POST', '{0}?Method=" + methodName + "' + urlPostfix, false);\n");
+            toReturn.Append("   httpRequest.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');\n");
+            toReturn.Append(GenerateSend("   httpRequest.send(encodedParameters);\n"));
+            toReturn.Append(GenerateSyncronousReturnHandler(webReturnConvention));
             toReturn.Append('}');
 
             return toReturn.ToString();
@@ -270,9 +394,9 @@ namespace ObjectCloud.WebAccessCodeGenerators
             return GeneratePOST(
                 methodName,
                 webReturnConvention,
-			    "   httpRequest.send(parameters);\n");
-		}
-		
+                "   httpRequest.send(parameters);\n");
+        }
+
         /// <summary>
         /// Generates a POST wrapper for urlencoded queries
         /// </summary>
@@ -291,7 +415,55 @@ namespace ObjectCloud.WebAccessCodeGenerators
 
             // Open the AJAX request
             toReturn.Append("   httpRequest.open('POST', '{0}?Method=" + methodName + "' + urlPostfix, true);\n");
-            toReturn.Append(sendString);
+            toReturn.Append(GenerateSend(sendString));
+            toReturn.Append('}');
+
+            return toReturn.ToString();
+        }
+
+        /// <summary>
+        /// Generates a POST wrapper for non-urlencoded queries
+        /// </summary>
+        /// <param name="methodAndWCA"></param>
+        /// <returns></returns>
+        private static string GeneratePOST_Sync(MethodAndWebCallableAttribute methodAndWCA)
+        {
+            return GeneratePOST_Sync(
+                methodAndWCA.MethodInfo.Name,
+                methodAndWCA.WebCallableAttribute.WebReturnConvention);
+        }
+
+        /// <summary>
+        /// Generates a POST wrapper for urlencoded queries
+        /// </summary>
+        /// <param name="methodAndWCA"></param>
+        /// <returns></returns>
+        public static string GeneratePOST_Sync(string methodName, WebReturnConvention webReturnConvention)
+        {
+            return GeneratePOST_Sync(
+                methodName,
+                webReturnConvention,
+                "   httpRequest.send(parameters);\n");
+        }
+
+        /// <summary>
+        /// Generates a POST wrapper for urlencoded queries
+        /// </summary>
+        /// <param name="methodAndWCA"></param>
+        /// <returns></returns>
+        public static string GeneratePOST_Sync(string methodName, WebReturnConvention webReturnConvention, string sendString)
+        {
+            // Create the funciton declaration
+            StringBuilder toReturn = new StringBuilder(string.Format("\"{0}_Sync\"", methodName));
+            toReturn.Append(SyncronousFunctionDeclaration);
+
+            // Create the AJAX request
+            toReturn.Append(CreateSyncronousAJAXRequest);
+
+            // Open the AJAX request
+            toReturn.Append("   httpRequest.open('POST', '{0}?Method=" + methodName + "' + urlPostfix, false);\n");
+            toReturn.Append(GenerateSend(sendString));
+            toReturn.Append(GenerateSyncronousReturnHandler(webReturnConvention));
             toReturn.Append('}');
 
             return toReturn.ToString();
@@ -315,12 +487,37 @@ namespace ObjectCloud.WebAccessCodeGenerators
         /// <param name="methodAndWCA"></param>
         /// <returns></returns>
         public static string GeneratePOST_JSON(string methodName, WebReturnConvention webReturnConvention)
-		{
-			return GeneratePOST(
-				methodName,
-			    webReturnConvention,
-			    "   httpRequest.send(JSON.stringify(parameters));\n");
-		}
+        {
+            return GeneratePOST(
+                methodName,
+                webReturnConvention,
+                "   httpRequest.send(JSON.stringify(parameters));\n");
+        }
+
+        /// <summary>
+        /// Generates a POST wrapper for non-urlencoded queries
+        /// </summary>
+        /// <param name="methodAndWCA"></param>
+        /// <returns></returns>
+        private static string GeneratePOST_JSON_Sync(MethodAndWebCallableAttribute methodAndWCA)
+        {
+            return GeneratePOST_JSON_Sync(
+                methodAndWCA.MethodInfo.Name,
+                methodAndWCA.WebCallableAttribute.WebReturnConvention);
+        }
+
+        /// <summary>
+        /// Generates a POST wrapper for urlencoded queries
+        /// </summary>
+        /// <param name="methodAndWCA"></param>
+        /// <returns></returns>
+        public static string GeneratePOST_JSON_Sync(string methodName, WebReturnConvention webReturnConvention)
+        {
+            return GeneratePOST_Sync(
+                methodName,
+                webReturnConvention,
+                "   httpRequest.send(JSON.stringify(parameters));\n");
+        }
 
         /// <summary>
         /// The beginning of each function wrapper, declares all of the default arguments and default error handlers
@@ -328,6 +525,17 @@ namespace ObjectCloud.WebAccessCodeGenerators
         private const string FunctionDeclaration =
 @" : function(parameters, onSuccess, onFailure, urlPostfix)
 {
+";
+
+        /// <summary>
+        /// The beginning of each syncronous function wrapper, declares all of the default arguments and default error handlers
+        /// </summary>
+        private const string SyncronousFunctionDeclaration =
+@" : function(parameters, urlPostfix)
+{
+
+   if (urlPostfix == undefined)
+      urlPostfix = '';
 ";
 
 
@@ -405,6 +613,39 @@ namespace ObjectCloud.WebAccessCodeGenerators
         }
 
         /// <summary>
+        /// Generates the success handler
+        /// </summary>
+        /// <returns></returns>
+        public static string GenerateSyncronousReturnHandler(WebReturnConvention? webReturnConvention)
+        {
+            switch (webReturnConvention)
+            {
+                case WebReturnConvention.JSON:
+                    return @"
+   if ((httpRequest.status >= 200) && (httpRequest.status < 300))
+      return JSON.parse(httpRequest.responseText);
+   else
+      throw httpRequest;
+";
+                case WebReturnConvention.JavaScriptObject:
+                    return @"
+   if ((httpRequest.status >= 200) && (httpRequest.status < 300))
+      return eval('(' + httpRequest.responseText + ')');
+   else
+      throw httpRequest;
+";
+                default:
+                    return @"
+   if ((httpRequest.status >= 200) && (httpRequest.status < 300))
+      return httpRequest.responseText;
+   else
+      throw httpRequest;
+";
+
+            }
+        }
+
+        /// <summary>
         /// The beginning of each function wrapper, declares all of the default arguments and default error handlers
         /// </summary>
         private const string FunctionBegin =
@@ -451,5 +692,42 @@ namespace ObjectCloud.WebAccessCodeGenerators
             onFailure(httpRequest);
    }
 ";
+
+        /// <summary>
+        /// Snippit of code to create an AJAX request and callback handler
+        /// </summary>
+        private const string CreateSyncronousAJAXRequest =
+@"   var httpRequest = CreateHttpRequest();
+";
+
+        /// <summary>
+        /// Generates the send expression
+        /// </summary>
+        /// <param name="sendExpression"></param>
+        /// <returns></returns>
+        private static string GenerateSend(string sendExpression)
+        {
+            StringBuilder toReturn = new StringBuilder();
+            toReturn.Append(
+@"
+   if ({4})
+      bypassJavascript(function()
+      {");
+
+            toReturn.Append(sendExpression);
+
+            toReturn.Append(
+@"      });
+   else
+   {");
+
+            toReturn.Append(sendExpression);
+
+            toReturn.Append(
+@"   }
+");
+
+            return toReturn.ToString();
+        }
     }
 }

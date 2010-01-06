@@ -110,11 +110,9 @@ namespace ObjectCloud.Javascript
             string webMethodString,
             string url,
             string contentType,
-            object postArguments,
-            java.lang.Boolean bypassJavascript)
+            object postArguments)
         {
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
-            bool bypassJavascriptB = bypassJavascript != null ? bypassJavascript.booleanValue() : false;
 
             WebMethod webMethod = Enum<WebMethod>.Parse(webMethodString);
 
@@ -160,7 +158,7 @@ namespace ObjectCloud.Javascript
                 content,
                 contentType,
                 functionCallContext.CallingFrom,
-                bypassJavascriptB);
+                functionCallContext.WebConnection.BypassJavascript);
 
             Scriptable toReturn = ConvertWebResultToJavascript(functionCallContext, shellResult);
             return toReturn;
@@ -346,12 +344,36 @@ namespace ObjectCloud.Javascript
 
             try
             {
-                object toReturn =  function.call(functionCallContext.Context, functionCallContext.Scope, functionCallContext.Scope, new object[0]);
+                object toReturn = function.call(functionCallContext.Context, functionCallContext.Scope, functionCallContext.Scope, new object[0]);
                 return toReturn;
             }
             finally
             {
                 FunctionCaller.CallingFrom = priorCallingFrom;
+            }
+        }
+
+        /// <summary>
+        /// Disables server-side JavaScript while calling the passed-in function
+        /// </summary>
+        /// <param name="function"></param>
+        /// <param name="callingFrom"></param>
+        /// <returns></returns>
+        public static object bypassJavascript(Function function)
+        {
+            FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
+
+            bool oldBypassJavascript = functionCallContext.WebConnection.BypassJavascript;
+            functionCallContext.WebConnection.BypassJavascript = true;
+
+            try
+            {
+                object toReturn = function.call(functionCallContext.Context, functionCallContext.Scope, functionCallContext.Scope, new object[0]);
+                return toReturn;
+            }
+            finally
+            {
+                functionCallContext.WebConnection.BypassJavascript = oldBypassJavascript;
             }
         }
 
@@ -430,7 +452,7 @@ namespace ObjectCloud.Javascript
             if (null == parentDirectoryHandler)
                 throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, "The root directory has no parent directory"));
 
-            IWebResults webResults = parentDirectoryHandler.FileContainer.WebHandler.GetServersideJavascriptWrapper(functionCallContext.WebConnection, null);
+            IWebResults webResults = parentDirectoryHandler.FileContainer.WebHandler.GetJSW(functionCallContext.WebConnection, null, null, false);
             string webResultsAsString = webResults.ResultsAsString;
 
             object toReturn = functionCallContext.Context.evaluateString(

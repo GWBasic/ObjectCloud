@@ -12,5 +12,21 @@ function HelloWorld()
 SetAnonymousPermission.webCallable = "POST_application_x_www_form_urlencoded";
 function SetAnonymousPermission(permission)
 {
-   return base.SetPermission(null, "anonymous", permission);
+   var toReturn;
+
+   base.SetPermission(
+      {
+         UserOrGroup: "anonymous",
+         FilePermission: permission
+      },
+      function(result)
+      {
+         toReturn = result;
+      },
+      function(error)
+      {
+         throw error;
+      });
+
+   return toReturn;
 }

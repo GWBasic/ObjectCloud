@@ -1,6 +1,6 @@
 elevate(function()
 {
-   var version = base.GetVersion();
+   var version = base.GetVersion_Sync({});
 
    // Constructor
    if (null == version)
@@ -9,13 +9,14 @@ elevate(function()
          callAsOwner(function()
          {
             // Need to double-check in case someone else built the DB...
-            version = base.GetVersion();
+            var version = base.GetVersion_Sync({});
+
             if (null == version)
             {
-               base.PostQuery("create table Question (qId integer not null primary key AUTOINCREMENT, text not null)");
-               base.PostQuery("create table AuthenticatedVotes (qId not null, voterId not null, timestamp integer not null)");
-               base.PostQuery("create table AnonymousVotes (qId not null, timestamp integer not null)");
-               base.PostQuery("create table Options (theOptions not null)");
+               base.PostQuery_Sync({query:"create table Question (qId integer not null primary key AUTOINCREMENT, text not null)"});
+               base.PostQuery_Sync({query:"create table AuthenticatedVotes (qId not null, voterId not null, timestamp integer not null)"});
+               base.PostQuery_Sync({query:"create table AnonymousVotes (qId not null, timestamp integer not null)"});
+               base.PostQuery_Sync({query:"create table Options (theOptions not null)"});
 
                var defaultOptions =
                {
@@ -25,9 +26,9 @@ elevate(function()
                   question: ""
                };
 
-               base.PostQuery("insert into Options (theOptions) values (@theOptions)", {"@theOptions": JSON.stringify(defaultOptions)});
+               base.PostQuery_Sync({query:"insert into Options (theOptions) values (@theOptions)", "@theOptions": JSON.stringify(defaultOptions)});
 
-               base.SetVersion(0);
+               base.SetVersion_Sync({version:0});
                version = 0;
             }
          });
@@ -42,8 +43,11 @@ function getOptions()
    {
       callAsOwner(function()
       {
-         options = base.PostQuery("select theOptions from Options")[0][0].theOptions;
-         options = eval('(' + options + ')');
+         options = base.PostQuery_Sync(
+         {
+            query: "select theOptions from Options"
+         })[0][0];
+         options = eval('(' + options.theOptions + ')');
       });
    });
 
@@ -66,7 +70,10 @@ function getQuestionsAndOptions()
    {
       callAsOwner(function()
       {
-         questions = base.PostQuery("select qId, text from question")[0];
+         questions = base.PostQuery_Sync(
+         {
+            query: "select qId, text from question"
+         })[0];
       });
    });
 
@@ -101,7 +108,11 @@ function setOptions(canChangeVote, canSeeResultsWithoutVoting, question, title)
 
    elevate(function()
    {
-      base.PostQuery("update Options set theOptions=@theOptions", {"@theOptions": JSON.stringify(options)});
+      base.PostQuery_Sync(
+      {
+         query: "update Options set theOptions=@theOptions",
+         "@theOptions": JSON.stringify(options)
+      });
    });
 }
 
@@ -116,8 +127,11 @@ function addQuestion(text)
 
    elevate(function()
    {
-      qId = base.PostQuery(
-         "insert into Question (text) values (@text);select last_insert_rowid() AS RecordID;", {"@text": text})[0][0].RecordID;
+      qId = base.PostQuery_Sync(
+      {
+         query: "insert into Question (text) values (@text);select last_insert_rowid() AS RecordID;",
+         "@text": text
+      })[0][0].RecordID;
    });
 
    var toReturn =
@@ -139,9 +153,9 @@ function updateQuestion(qId, text)
 
    elevate(function()
    {
-      base.PostQuery(
-         "update Question set text = @text where qId = @qId",
+      base.PostQuery_Sync(
          {
+            query: "update Question set text = @text where qId = @qId",
             "@qId": qId,
             "@text": text
          });
@@ -165,21 +179,27 @@ function vote(qId)
       elevate(function()
       {
          var voted = true;
-         if (0 == base.PostQuery("select qId from AuthenticatedVotes where voterId = @voterId", {"@voterId": userMetadata.id})[0].length)
+         if (0 == base.PostQuery_Sync(
+            {
+               query: "select qId from AuthenticatedVotes where voterId = @voterId",
+               "@voterId": userMetadata.id
+            })[0].length)
+         {
             voted = false;
+         }
 
          if (!voted)
-            base.PostQuery(
-               "insert into AuthenticatedVotes (qId, voterId, timestamp) values (@qId, @voterId, @timestamp)",
+            base.PostQuery_Sync(
                {
+                  query: "insert into AuthenticatedVotes (qId, voterId, timestamp) values (@qId, @voterId, @timestamp)",
                   "@qId": qId,
                   "@voterId": userMetadata.id,
                   "@timestamp": new Date().getTime()
                });
          else if (getOptions().canChangeVote)
-            base.PostQuery(
-               "update AuthenticatedVotes set qId = @qId, timestamp = @timestamp where voterId = @voterId",
+            base.PostQuery_Sync(
                {
+                  query: "update AuthenticatedVotes set qId = @qId, timestamp = @timestamp where voterId = @voterId",
                   "@qId": qId,
                   "@voterId": userMetadata.id,
                   "@timestamp": new Date().getTime()
@@ -191,9 +211,9 @@ function vote(qId)
    else
       elevate(function()
       {
-         base.PostQuery(
-            "insert into AnonymousVotes (qId, timestamp) values (@qId, @timestamp)",
+         base.PostQuery_Sync(
             {
+               query: "insert into AnonymousVotes (qId, timestamp) values (@qId, @timestamp)",
                "@qId": qId,
                "@timestamp": new Date().getTime()
             });
@@ -210,7 +230,11 @@ function getVote()
    if (userMetadata.name != "anonymous")
       elevate(function()
       {
-         var votes = base.PostQuery("select qId from AuthenticatedVotes where voterId = @voterId", {"@voterId": userMetadata.id})[0];
+         var votes = base.PostQuery_Sync(
+         {
+            query: "select qId from AuthenticatedVotes where voterId = @voterId",
+            "@voterId": userMetadata.id
+         })[0];
 
          if (votes.length > 0)
             qId = votes[0].qId;
@@ -254,10 +278,12 @@ function getVotes()
 
    elevate(function()
    {
-      resultsFromDB = base.PostQuery(
-         "select qId from Question group by qId;" +
-         "select distinct qId, count(qId) as numVotes from AuthenticatedVotes group by qId;" +
-         "select distinct qId, count(qId) as numVotes from AnonymousVotes group by qId;");
+      resultsFromDB = base.PostQuery_Sync(
+         {
+            query: "select qId from Question group by qId;" +
+               "select distinct qId, count(qId) as numVotes from AuthenticatedVotes group by qId;" +
+               "select distinct qId, count(qId) as numVotes from AnonymousVotes group by qId;"
+        });
    });
 
    var resultsToReturn =

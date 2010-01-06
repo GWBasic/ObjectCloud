@@ -10,10 +10,11 @@ if (typeof CreateHttpRequest != 'function')
       {
          headers: {},
 
-         open: function(webMethod, url, ignore)
+         open: function(webMethod, url, asyncronous)
          {
             this.webMethod = webMethod;
             this.url = url;
+            this.asyncronous = asyncronous;
          },
 
          setRequestHeader: function(name, value)
@@ -28,13 +29,14 @@ if (typeof CreateHttpRequest != 'function')
                this.webMethod,
                this.url,
                this.headers['Content-type'],
-               payload,
-               false);
+               payload);
 
             this.readyState = 4;
             this.status = results.Status;
             this.responseText = results.Content;
-            this.onreadystatechange();
+
+            if (this.asyncronous)
+               this.onreadystatechange();
          }
       };
 

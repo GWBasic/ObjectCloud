@@ -4,7 +4,11 @@ Replier_AddReply.namedPermissions = "reply";
 Replier_AddReply.webReturnConvention = "Status";
 function Replier_AddReply(replyText)
 {
-   var roots = base.GetRelatedFiles(["root"], null, null, null, 1);
+   var roots = base.GetRelatedFiles_Sync(
+      {
+         relationships: ["root"],
+         maxToReturn: 1
+      });
 
    callAsOwner(function()
    {
@@ -15,21 +19,38 @@ function Replier_AddReply(replyText)
          var now = new Date();
          var replyFilename = fileMetadata.filename + "_reply" + now.getTime() + ".reply";
 
-         var replyFile = parentDirectoryWrapper.CreateFile(
-            replyFilename,
-            "text",
-            true);
+         var replyFile = parentDirectoryWrapper.CreateFile_Sync(
+            {
+               FileName: replyFilename,
+               FileType: "text",
+               ErrorIfExists: true
+           });
 
-         replyFile.WriteAll(sanitize(replyText));
+         replyFile.WriteAll_Sync(sanitize(replyText));
 
          if (0 == roots.length)
-            replyFile.AddRelatedFile(fileMetadata.filename, "root");
+            replyFile.AddRelatedFile_Sync(
+               {
+                  filename: fileMetadata.filename,
+                  relationship: "root"
+               });
          else
-            replyFile.AddRelatedFile(roots[0].FullPath, "root");
+            replyFile.AddRelatedFile_Sync(
+               {
+                  filename: roots[0].FullPath,
+                  relationship: "root"
+               });
 
-         replyFile.Chown(userMetadata.id);
+         replyFile.Chown_Sync(
+            {
+               newOwnerId: userMetadata.id
+            });
 
-         base.AddRelatedFile(replyFilename, "reply");
+         base.AddRelatedFile_Sync(
+               {
+                  filename: replyFilename,
+                  relationship: "reply"
+               });
       });
    });
 }
@@ -39,7 +60,11 @@ Replier_GetRepliesForDisplay.minimumWebPermission = "Read";
 Replier_GetRepliesForDisplay.webReturnConvention = "JSON";
 function Replier_GetRepliesForDisplay()
 {
-   var replies = base.GetRelatedFiles(["reply"], null, null, null, 200);
+   var replies = base.GetRelatedFiles_Sync(
+      {
+         relationships: ["reply"],
+         maxToReturn: 200
+      });
 
    var toReturn = [];
 

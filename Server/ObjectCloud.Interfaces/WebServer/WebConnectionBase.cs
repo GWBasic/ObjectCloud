@@ -484,13 +484,6 @@ namespace ObjectCloud.Interfaces.WebServer
 
                 WebDelegate webDelegate = webHandler.GetMethod(this);
 
-                /*if (null == webDelegate)
-                {
-                    string methodName = GetParameters["Method"];
-
-                    webDelegate = WebServer.WebMethodCache[MethodNameAndFileContainer.New(methodName, fileContainer)];
-                }*/
-
                 return webDelegate(this, CallingFrom);
             }
 
@@ -779,6 +772,7 @@ namespace ObjectCloud.Interfaces.WebServer
         public bool BypassJavascript
         {
             get { return _BypassJavascript; }
+            set { _BypassJavascript = value; }
         }
         protected bool _BypassJavascript = false;
 

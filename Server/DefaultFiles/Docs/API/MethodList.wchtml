@@ -6,6 +6,19 @@
 
    var methodInformation = <? WebComponent("/System/Documentation?Method=GetMethodsForObjectType&objectType=" . $_GET["objectType"]) ?>;
 
+   methodInformation.Methods.sort(function(a,b)
+   {
+      var aS = a.Method.toLowerCase();
+      var bS = b.Method.toLowerCase();
+
+      if (aS < bS)
+         return -1;
+      if (aS > bS)
+         return 1;
+
+      return 0;
+   });
+
    document.write('<p>' + methodInformation.Summary + '</p>');
 
 </script>

@@ -142,9 +142,10 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="webConnection"></param>
         /// <param name="assignToVariable">The variable to assign the wrapper object to</param>
         /// <param name="EncodeFor">If set to "JavaScript", the generated JavaScript will be minimized</param>
+        /// <param name="bypassJavascript">true to bypass server-side Javascript</param>
         /// <returns></returns>
         [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Read)]
-        public IWebResults GetJSW(IWebConnection webConnection, string assignToVariable, string EncodeFor)
+        public IWebResults GetJSW(IWebConnection webConnection, string assignToVariable, string EncodeFor, bool bypassJavascript)
         {
             // Not worth syncronizing, nothing bad will happen if multiple threads enter this block at the same time
             if (null == cachedInBrowserJSWrapper)
@@ -164,23 +165,26 @@ namespace ObjectCloud.Disk.WebHandlers
             javascriptToReturn = javascriptToReturn.Replace("{3}", FileContainer.LoadPermission(webConnection.Session.User.Id).ToString());
 
             // Insert the server-side Javascript wrappers
-            try
-            {
-                IExecutionEnvironment executionEnvironment = GetOrCreateExecutionEnvironment();
-                if (null != executionEnvironment)
+            if (!bypassJavascript)
+                try
                 {
-                    string serversideJavscriptWrapper = StringGenerator.GenerateCommaSeperatedList(
-                        executionEnvironment.GenerateJavascriptWrapper(webConnection));
+                    IExecutionEnvironment executionEnvironment = GetOrCreateExecutionEnvironment();
+                    if (null != executionEnvironment)
+                    {
+                        string serversideJavscriptWrapper = StringGenerator.GenerateCommaSeperatedList(
+                            executionEnvironment.GenerateJavascriptWrapper(webConnection));
 
-                    serversideJavscriptWrapper = serversideJavscriptWrapper.Replace("{0}", FileContainer.FullPath);
+                        serversideJavscriptWrapper = serversideJavscriptWrapper.Replace("{0}", FileContainer.FullPath);
 
-                    javascriptToReturn = javascriptToReturn + ",\n" + serversideJavscriptWrapper;
+                        javascriptToReturn = javascriptToReturn + ",\n" + serversideJavscriptWrapper;
+                    }
                 }
-            }
-            catch (Exception e)
-            {
-                log.ErrorFormat("Exception occured when trying to generate a Javascript wrapper for server-side Javascript", e);
-            }
+                catch (Exception e)
+                {
+                    log.ErrorFormat("Exception occured when trying to generate a Javascript wrapper for server-side Javascript", e);
+                }
+
+            javascriptToReturn = javascriptToReturn.Replace("{4}", bypassJavascript.ToString().ToLower());
 
             // Enclose the functions with { .... }
             javascriptToReturn = "{\n" + javascriptToReturn + "\n}";
@@ -227,11 +231,7 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Read)]
         public IWebResults GetServersideJavascriptWrapper(IWebConnection webConnection, string assignToVariable)
         {
-            string javascriptToReturn = GetJavascriptWrapper(webConnection, assignToVariable, WrapperCallsThrough.ServerSideShells);
-
-            IWebResults toReturn = WebResults.FromString(Status._200_OK, javascriptToReturn);
-            toReturn.ContentType = "application/javascript";
-            return toReturn;
+            return GetJSW(webConnection, assignToVariable, null, true);
         }
 
         /// <summary>
@@ -242,7 +242,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <returns></returns>
         public string GetJavascriptWrapperForBase(IWebConnection webConnection, string assignToVariable)
         {
-            return GetJavascriptWrapper(webConnection, assignToVariable, WrapperCallsThrough.ServerSideShells | WrapperCallsThrough.BypassServerSideJavascript);
+            return GetJSW(webConnection, assignToVariable, null, true).ResultsAsString;
         }
 
         /// <summary>

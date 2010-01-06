@@ -122,7 +122,20 @@ function ShellPost_TARGET(theArg)
 ReadAll.webCallable = "GET";
 function ReadAll()
 {
-   return base.ReadAll() + "wrapped";
+   var toReturn;
+
+   base.ReadAll(
+      {},
+      function(result)
+      {
+         toReturn = result + "wrapped";
+      },
+      function(error)
+      {
+         throw error;
+      });
+
+   return toReturn;
 }
 
 WriteAll_Wrapped.webCallable = "POST_string";

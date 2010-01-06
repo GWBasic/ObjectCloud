@@ -690,33 +690,61 @@ namespace ObjectCloud.Javascript
         /// </summary>
         /// <param name="wrapperCallsThrough"></param>
         /// <returns></returns>
-        public string GenerateWrapper()
+        public IEnumerable<string> GenerateWrapper()
         {
             if (null == WrapperCache)
                 switch (WebCallingConvention.Value)
                 {
                     case ObjectCloud.Interfaces.WebServer.WebCallingConvention.GET:
-                        WrapperCache = JavascriptWrapperGenerator.GenerateGET(
-			                Method,
-			                WebReturnConvention);
+                        WrapperCache = new string[]
+                        {
+                            JavascriptWrapperGenerator.GenerateGET(
+    			                Method,
+	    		                WebReturnConvention),
+
+                            JavascriptWrapperGenerator.GenerateGET_Sync(
+    			                Method,
+	    		                WebReturnConvention),
+                        };
                         break;
 
                     case ObjectCloud.Interfaces.WebServer.WebCallingConvention.GET_application_x_www_form_urlencoded:
-                        WrapperCache = JavascriptWrapperGenerator.GenerateGET_urlencoded(
-			                Method,
-			                WebReturnConvention);
+                        WrapperCache = new string[]
+                        {
+                            JavascriptWrapperGenerator.GenerateGET_urlencoded(
+			                    Method,
+			                    WebReturnConvention),
+
+                            JavascriptWrapperGenerator.GenerateGET_urlencoded_Sync(
+			                    Method,
+			                    WebReturnConvention)
+                        };
                         break;
 
                     case ObjectCloud.Interfaces.WebServer.WebCallingConvention.POST_application_x_www_form_urlencoded:
-                        WrapperCache = JavascriptWrapperGenerator.GeneratePOST_urlencoded(
-			                Method,
-			                WebReturnConvention);
+                        WrapperCache = new string[]
+                        {
+                            JavascriptWrapperGenerator.GeneratePOST_urlencoded(
+			                    Method,
+			                    WebReturnConvention),
+
+                            JavascriptWrapperGenerator.GeneratePOST_urlencoded_Sync(
+			                    Method,
+			                    WebReturnConvention)
+                        };
                         break;
 
                     case ObjectCloud.Interfaces.WebServer.WebCallingConvention.POST_string:
-                        WrapperCache = JavascriptWrapperGenerator.GeneratePOST(
-			                Method,
-			                WebReturnConvention);
+                        WrapperCache = new string[]
+                        {
+                            JavascriptWrapperGenerator.GeneratePOST(
+			                    Method,
+			                    WebReturnConvention),
+
+                            JavascriptWrapperGenerator.GeneratePOST_Sync(
+			                    Method,
+			                    WebReturnConvention)
+                        };
                         break;
 
                     default:
@@ -729,7 +757,7 @@ namespace ObjectCloud.Javascript
         /// <summary>
         /// The generated wrapper for the function
         /// </summary>
-        private string WrapperCache = null;
+        private IEnumerable<string> WrapperCache = null;
 
         /// <summary>
         /// Generates the wrapper for the given calling source

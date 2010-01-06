@@ -174,6 +174,12 @@ namespace ObjectCloud.Javascript
                 _ExecutionEnvironmentErrors = ee.getErrorMessage() + "\n" + ee.getMessage();
                 return null;
             }
+            catch (EvaluatorException evaluatorException)
+            {
+                _ExecutionEnvironmentErrors =
+                    evaluatorException.Message + "\n at line " + evaluatorException.lineNumber().ToString() + ", " + evaluatorException.columnNumber().ToString();
+                return null;
+            }
             catch (Exception e)
             {
                 _ExecutionEnvironmentErrors = e.Message;

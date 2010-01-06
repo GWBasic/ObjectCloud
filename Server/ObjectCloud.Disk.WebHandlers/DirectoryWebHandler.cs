@@ -38,7 +38,10 @@ namespace ObjectCloud.Disk.WebHandlers
             if (null != ErrorIfExists)
                 if (ErrorIfExists.ToLowerInvariant().Equals("false"))
                     if (FileHandler.IsFilePresent(FileName))
-                        return FileHandler.OpenFile(FileName).WebHandler.GetJSW(webConnection, null, null);
+                        return FileHandler.OpenFile(FileName).WebHandler.GetJSW(webConnection, null, null, false);
+
+            if (null == FileType)
+                throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, "FileType can not be null"));
 
             IFileHandler fileHandler;
             try
@@ -54,14 +57,8 @@ namespace ObjectCloud.Disk.WebHandlers
                 return WebResults.FromString(Status._409_Conflict, FileName + " is an invalid file name");
             }
 
-            IWebResults toReturn;
-            if (CallingFrom.Web == webConnection.CallingFrom)
-                toReturn = fileHandler.FileContainer.WebHandler.GetJSW(webConnection, null, null);
-            else
-                toReturn = fileHandler.FileContainer.WebHandler.GetServersideJavascriptWrapper(webConnection, null);
-
+            IWebResults toReturn = fileHandler.FileContainer.WebHandler.GetJSW(webConnection, null, null, false);
             toReturn.Status = Status._201_Created;
-
             return toReturn;
         }
 
@@ -117,7 +114,7 @@ namespace ObjectCloud.Disk.WebHandlers
 			
 			if (null != permission)
 			{
-		        IWebResults webResults = fileContainer.WebHandler.GetJSW(webConnection, null, null);
+		        IWebResults webResults = fileContainer.WebHandler.GetJSW(webConnection, null, null, false);
 		
 		        string minified = JavaScriptMinifier.Instance.Minify(webResults.ResultsAsString);
 

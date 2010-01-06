@@ -6,7 +6,13 @@ GetPostsForDisplay.parser_oldest = "number";
 GetPostsForDisplay.parser_max = "number";
 function GetPostsForDisplay(newest, oldest, max)
 {
-   var replies = base.GetRelatedFiles(["post"], null, newest, oldest, max);
+   var replies = base.GetRelatedFiles_Sync(
+      {
+         relationships: ["post"],
+         newest: newest,
+         oldest: oldest,
+         maxToReturn: max
+      });
 
    var toReturn = [];
 
@@ -26,12 +32,29 @@ function AddPost(filename)
 {
    elevate(function()
    {
-      base.AddRelatedFile(filename, "post");
-      base.AddRelatedFile(filename, "reply");
+      base.AddRelatedFile_Sync(
+         {
+            filename: filename,
+            relationship: "post"
+         });
+      base.AddRelatedFile_Sync(
+         {
+            filename: filename,
+            relationship: "reply"
+         });
 
       var parentDirectoryWrapper = getDefaultRelatedObjectDirectoryWrapper();
-      var replyFile = parentDirectoryWrapper(filename);
-      replyFile.AddRelatedFile(fileMetadata.filename, "root");
+
+      var replyFile = parentDirectoryWrapper.Open_Sync(
+         {
+            FileName: filename
+         });
+
+      replyFile.AddRelatedFile_Sync(
+         {
+            filename: fileMetadata.filename,
+            relationship: "root"
+         });
    });
 }
 
@@ -40,10 +63,17 @@ CanPost.minimumWebPermission = "Read";
 CanPost.webReturnConvention = "JavaScriptObject";
 function CanPost()
 {
-   if (base.GetPermissionAsJSON().CanWrite)
+   var permissionAsJSON = base.GetPermissionAsJSON_Sync({});
+
+   if (permissionAsJSON.CanWrite)
       return true;
 
-   return base.HasNamedPermission("post");
+   var canPost;
+
+   return base.HasNamedPermission_Sync(
+      {
+         namedPermission: "post"
+      });
 }
 
 AddPostWithContent.webCallable = "POST_application_x_www_form_urlencoded";
@@ -61,19 +91,37 @@ function AddPostWithContent(title, replyText)
          var now = new Date();
          var replyFilename = fileMetadata.filename + "_post" + now.getTime() + ".page";
 
-         var replyFile = parentDirectoryWrapper.CreateFile(
-            replyFilename,
-            "text",
-            true);
+         var replyFile = parentDirectoryWrapper.CreateFile_Sync(
+            {
+               FileName: replyFilename,
+               FileType: "text",
+               ErrorIfExists: true
+            });
 
-         replyFile.WriteAll('<div>' + sanitize(title) + '</div>' + sanitize(replyText));
+         replyFile.WriteAll_Sync('<div>' + sanitize(title) + '</div>' + sanitize(replyText));
 
-         replyFile.AddRelatedFile(fileMetadata.filename, "root");
+         replyFile.AddRelatedFile_Sync(
+            {
+               filename: fileMetadata.filename,
+               relationship: "root"
+            });
 
-         replyFile.Chown(userMetadata.id);
+         replyFile.Chown_Sync(
+            {
+               newOwnerId: userMetadata.id
+            });
 
-         base.AddRelatedFile(replyFilename, "post");
-         base.AddRelatedFile(replyFilename, "reply");
+         base.AddRelatedFile_Sync(
+            {
+               filename: replyFilename,
+               relationship: "post"
+            });
+
+         base.AddRelatedFile_Sync(
+            {
+               filename: replyFilename,
+               relationship: "reply"
+            });
       });
    });
 }
