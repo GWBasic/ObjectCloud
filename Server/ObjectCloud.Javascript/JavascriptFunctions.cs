@@ -98,6 +98,119 @@ namespace ObjectCloud.Javascript
         }
 
         /// <summary>
+        /// Returns all of the GET parameters
+        /// </summary>
+        /// <returns></returns>
+        public static object getGet()
+        {
+            FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
+            string parametersAsJSON = JsonWriter.Serialize(new Dictionary<string, string>(functionCallContext.WebConnection.GetParameters));
+
+            // eval() is used because it's safe and faster
+            object toReturn = functionCallContext.Context.evaluateString(
+                functionCallContext.Scope,
+                "(" + parametersAsJSON + ")",
+                "<cmd>",
+                1,
+                null);
+
+            return (Scriptable)toReturn;
+        }
+
+        /// <summary>
+        /// Returns all of the POST parameters
+        /// </summary>
+        /// <returns></returns>
+        public static object getPost()
+        {
+            FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
+
+            try
+            {
+                string parametersAsJSON = JsonWriter.Serialize(new Dictionary<string, string>(functionCallContext.WebConnection.PostParameters));
+
+                // eval() is used because it's safe and faster
+                object toReturn = functionCallContext.Context.evaluateString(
+                    functionCallContext.Scope,
+                    "(" + parametersAsJSON + ")",
+                    "<cmd>",
+                    1,
+                    null);
+
+                return (Scriptable)toReturn;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Returns all of the Cookies
+        /// </summary>
+        /// <returns></returns>
+        public static object getCookies()
+        {
+            FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
+            string parametersAsJSON = JsonWriter.Serialize(new Dictionary<string, string>(functionCallContext.WebConnection.CookiesFromBrowser));
+
+            // eval() is used because it's safe and faster
+            object toReturn = functionCallContext.Context.evaluateString(
+                functionCallContext.Scope,
+                "(" + parametersAsJSON + ")",
+                "<cmd>",
+                1,
+                null);
+
+            return (Scriptable)toReturn;
+        }
+
+        public static object setCookie(string name, string value)
+        {
+            FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
+            functionCallContext.WebConnection.CookiesToSet.Add(new CookieToSet(name, value));
+            return null;
+        }
+
+        /// <summary>
+        /// Returns all of the Headers
+        /// </summary>
+        /// <returns></returns>
+        public static object getHeaders()
+        {
+            FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
+            string parametersAsJSON = JsonWriter.Serialize(new Dictionary<string, string>(functionCallContext.WebConnection.Headers));
+
+            // eval() is used because it's safe and faster
+            object toReturn = functionCallContext.Context.evaluateString(
+                functionCallContext.Scope,
+                "(" + parametersAsJSON + ")",
+                "<cmd>",
+                1,
+                null);
+
+            return (Scriptable)toReturn;
+        }
+
+        /// <summary>
+        /// Returns the POST contents, unparsed
+        /// </summary>
+        /// <returns></returns>
+        public static object getPostContents()
+        {
+            FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
+
+            try
+            {
+                return functionCallContext.WebConnection.Content.AsString();
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Assists in letting server-side javascript call into the server
         /// </summary>
         /// <param name="webMethodString"></param>

@@ -4,6 +4,7 @@
    {"Template":"/Templates/Directory Template","Extension":"","Display":"Directory"},
    {"Template":"/Templates/WcHtml Template.wchtml","Extension":".wchtml","Display":"Web Component HTML"},
    {"Template":"/Templates/WebComponent Template.webcomponent","Extension":".webcomponent","Display":"Web Component"},
+   {"Template":"/Templates/ServerSide Javascript Template.ssjs","Extension":".ssjs","Display":"Server-Side Javascript"},
    {"Template":"/Templates/Pairs Template","Extension":"","Display":"Name-Value pairs"},
    {"Template":"/Templates/Database Template","Extension":"","Display":"Database"},
    {"Template":"/Templates/Particle Template","Extension":".ibg","Display":"Particle Discussion (Experimental)"},

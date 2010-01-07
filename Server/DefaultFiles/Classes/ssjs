@@ -1,0 +1,100 @@
+
+var options =
+{
+   BlockWebMethods: false
+};
+
+Run.webCallable = "GET_application_x_www_form_urlencoded";
+Run.minimumWebPermission = "Read";
+function Run()
+{
+   var script = base.ResolveComponentsGET_Sync(getGet());
+
+   var brokenAtTags = script.split('<?')
+
+   var ctr;
+   var toReturn;
+   if (0 == script.indexOf('<?'))
+   {
+      ctr = 0;
+      toReturn = '';
+   }
+   else
+   {
+      ctr = 1;
+      toReturn = brokenAtTags[0];
+   }
+
+   for (; ctr < brokenAtTags.length; ctr++)
+      toReturn += runBlock(brokenAtTags[ctr]);
+
+   return toReturn;
+}
+
+function runBlock(toRun)
+{
+   var scriptAndPostString = toRun.split('?>');
+
+   // If there isn't a single matching close tag, return as-is
+   if (2 != scriptAndPostString.length)
+      return toRun;
+
+   var endString = scriptAndPostString[1];
+
+   var results;
+   try
+   {
+      results = eval('function (){' + scriptAndPostString[0] + '};')();
+   }
+   catch (exception)
+   {
+      return exception + ' ' + endString;
+   }
+
+   // If the result isn't an array, make it an array.  All elements in the array will be iterated over
+
+   var isArray = false;
+   if (typeof results === 'object')
+      if (results)
+         if (typeof results.splice === 'function')
+            isArray = true;
+
+   if (!isArray)
+      results = [results];
+
+   var toReturn = '';
+
+   // for each result returned, use it to dictate how the trailing string is rendered
+   for (ctr = 0; ctr < results.length; ctr++)
+   {
+      var res = results[ctr];
+
+      // strings, numbers, and functions are returned as-is, and no manipulations are performed to the trailing string
+      if ((typeof res === 'string') || (typeof res === 'number') || (typeof res === 'function'))
+         toReturn += res + endString;
+
+      // undefined and null results are ignored, and the trailing string returned without any manipulation
+      else if ((typeof res === 'undefined') || (null == res))
+         toReturn += endString;
+
+      // boolean results conditionally display the trailing string
+      else if (typeof res === 'boolean')
+      {
+         if (res)
+            toReturn += endString;
+      }
+
+      // else result is 'object'
+      else
+      {
+         var toParse = endString;
+
+         for (prop in res)
+            toParse = toParse.replace('%' + prop + '%', res[prop]);
+
+         toReturn += toParse;
+      }
+   }
+
+   return toReturn;
+}

@@ -93,6 +93,21 @@ namespace ObjectCloud.Disk.WebHandlers
         }
 
         /// <summary>
+        /// A Javascript-acceddible way to resolves all of the WebComponents in the file
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.Primitive, FilePermissionEnum.Read)]
+        public IWebResults ResolveComponentsGET(IWebConnection webConnection)
+        {
+            string contents = FileHandler.ReadAll();
+
+            contents = webConnection.ResolveWebComponents(contents);
+
+            return WebResults.FromString(Status._200_OK, contents);
+        }
+
+        /// <summary>
         /// Writes all of the text
         /// </summary>
         /// <param name="webConnection"></param>

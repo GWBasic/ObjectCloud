@@ -41,6 +41,10 @@
 		TypeId="name-value"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 	<File
+		Name="ServerSide Javascript Template.ssjs"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
 		Name="Small Image Template.png"
 		TypeId="binary"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
