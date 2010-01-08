@@ -16,6 +16,9 @@ namespace ObjectCloud.ORM.DataAccess.DomainModel
         {
         }
 
+        public Index(params Column[] columns)
+            : this(columns as IEnumerable<Column>) { }
+
         public Index(IEnumerable<Column> columns, bool unique)
         {
             _Columns = columns;

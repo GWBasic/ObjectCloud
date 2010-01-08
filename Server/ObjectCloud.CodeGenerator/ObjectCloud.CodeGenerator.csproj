@@ -58,6 +58,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DirectorySchemaCreator.cs" />
+    <Compile Include="EventSchemaCreator.cs" />
     <Compile Include="NameValuePairsSchemaCreator.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
