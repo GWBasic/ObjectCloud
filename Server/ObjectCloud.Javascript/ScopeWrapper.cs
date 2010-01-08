@@ -389,5 +389,55 @@ namespace ObjectCloud.Javascript
             get { return _BlockWebMethods; }
         }
         private bool _BlockWebMethods = true;
+
+        /// <summary>
+        /// All of the loaded libraries
+        /// </summary>
+        Dictionary<string, object> LoadedLibraries = new Dictionary<string, object>();
+
+        /// <summary>
+        /// Loads the given Javascript library into the scope, if it is not yet loaded
+        /// </summary>
+        /// <param name="toLoad"></param>
+        public object Use(FunctionCallContext functionCallContext, string toLoad)
+        {
+            // This could cause problems with ssjs
+            /*if (functionCallContext.Scope != Scope)
+                throw new JavascriptException("Can not add javascript to a scope when it isn't the active scope");*/
+
+            // If the library is already loaded, then the return value is cached.
+            // If the library isn't loaded, then the script needs to be loaded and executed
+            object toReturn;
+            if (!LoadedLibraries.TryGetValue(toLoad, out toReturn))
+            {
+                IFileContainer fileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(toLoad);
+
+                // Just return if the user doesn't have permission to the file
+                if (null == fileContainer.LoadPermission(functionCallContext.WebConnection.Session.User.Id))
+                    return false;
+
+                ITextHandler textHandler;
+                try
+                {
+                    textHandler = fileContainer.CastFileHandler<ITextHandler>();
+                }
+                catch (Exception e)
+                {
+                    log.Warn("An attempt was made to load a Javascript library that is not a text file.", e);
+                    return false;
+                }
+
+                toReturn = functionCallContext.Context.evaluateString(
+                    Scope,
+                    textHandler.ReadAll(),
+                    "<cmd>",
+                    1,
+                    null);
+
+                LoadedLibraries[toLoad] = toReturn;
+            }
+
+            return toReturn;
+        }
     }
 }

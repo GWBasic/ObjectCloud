@@ -85,7 +85,7 @@ var JSON =
             AddMetadata(webConnection, scopeBuilder);
 
             // Construct Javascript to shell to the "base" webHandler
-            string baseWrapper = theObject.WebHandler.GetJavascriptWrapperForBase(webConnection, "base");
+            string baseWrapper = theObject.WebHandler.zGetJavascriptWrapperForBase(webConnection, "base");
             scopeBuilder.Append(baseWrapper);
 
             // Load the actual script

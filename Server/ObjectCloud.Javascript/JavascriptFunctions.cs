@@ -588,5 +588,35 @@ namespace ObjectCloud.Javascript
         {
             return getParentDirectoryWrapper();
         }
+
+        /// <summary>
+        /// Loads the given Javascript library into the scope, if it is not yet loaded
+        /// </summary>
+        /// <param name="toLoad"></param>
+        public static object use(string toLoad)
+        {
+            FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
+            return FunctionCallContext.GetCurrentContext().ScopeWrapper.Use(functionCallContext, toLoad);
+        }
+
+        /// <summary>
+        /// Returns a wrapper to use the specified object
+        /// </summary>
+        /// <param name="toOpen"></param>
+        /// <returns></returns>
+        public static object open(string toOpen)
+        {
+            FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
+            IFileContainer fileContainer = functionCallContext.ScopeWrapper.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(toOpen);
+
+            string wrapper = fileContainer.WebHandler.GetServersideJavascriptWrapper(functionCallContext.WebConnection, null).ResultsAsString;
+
+            return functionCallContext.Context.evaluateString(
+                functionCallContext.Scope,
+                "(" + wrapper + ")",
+                "<cmd>",
+                1,
+                null);
+        }
     }
 }

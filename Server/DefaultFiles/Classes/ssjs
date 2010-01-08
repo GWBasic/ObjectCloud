@@ -1,4 +1,3 @@
-
 var options =
 {
    BlockWebMethods: false
@@ -44,7 +43,8 @@ function runBlock(toRun)
    var results;
    try
    {
-      results = eval('function (){' + scriptAndPostString[0] + '};')();
+      //results = eval('function (){' + scriptAndPostString[0] + '};')();
+      results = eval(scriptAndPostString[0]);
    }
    catch (exception)
    {
