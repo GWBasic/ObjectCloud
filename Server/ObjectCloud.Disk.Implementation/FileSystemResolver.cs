@@ -283,6 +283,17 @@ namespace ObjectCloud.Disk.Implementation
             get { return _IsStarted; }
         }
         volatile private bool _IsStarted = false;
+		
+		/// <summary>
+		/// When set to false, ObjectCloud will not syncronize to external files when starting up.  This will make startups faster,
+		/// but could result in outdated files in the file system 
+		/// </summary>
+        public bool SyncronizeToDefaultFiles
+		{
+    			get { return _SyncronizeToDefaultFiles; }
+    			set { _SyncronizeToDefaultFiles = value; }
+    		}
+		private bool _SyncronizeToDefaultFiles = true;
 
         /// <summary>
         /// All of the service threads
