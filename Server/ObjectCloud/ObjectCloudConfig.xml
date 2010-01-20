@@ -6,7 +6,7 @@ This code is released under the LGPL license
 For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
 -->
 
-	<FileSystem ConnectionString="./FileSystem" SyncronizeToDefaultFiles="false" />
+	<FileSystem ConnectionString="./FileSystem" SyncronizeToDefaultFiles="true" />
 
   <!-- WARNING!!!  You REALLY need a working domain if you're using ANY OpenID-related functionality on the public internet!!!
   If you do not have a domain on the public internet, but would like to experiment, you can get a free domain at dyndns.org -->
