@@ -61,6 +61,7 @@
     <Compile Include="Disk\FileHandler.cs" />
     <Compile Include="Disk\FileHandlerFactoryLocator.cs" />
     <Compile Include="Disk\FileIsNotADirectory.cs" />
+    <Compile Include="Disk\FileTypePlugin.cs" />
     <Compile Include="Disk\IBinaryHandler.cs" />
     <Compile Include="Disk\IDirectoryHandler.cs" />
     <Compile Include="Disk\IFileContainer.cs" />
@@ -78,6 +79,7 @@
     <Compile Include="Disk\NotificationColumn.cs" />
     <Compile Include="Disk\NotificationState.cs" />
     <Compile Include="Disk\ParticleException.cs" />
+    <Compile Include="Disk\Plugin.cs" />
     <Compile Include="Disk\TooManyCometSessions.cs" />
     <Compile Include="Javascript\IExecutionEnvironment.cs" />
     <Compile Include="Javascript\IExecutionEnvironmentFactory.cs" />

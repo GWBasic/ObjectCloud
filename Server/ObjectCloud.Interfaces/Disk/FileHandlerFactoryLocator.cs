@@ -213,5 +213,15 @@ namespace ObjectCloud.Interfaces.Disk
             set { _WebMethodCache = value; }
         }
         private IWebMethodCache _WebMethodCache;
+
+        /// <summary>
+        /// The plugins; ObjectCloud initializes these prior to starting the file system
+        /// </summary>
+        public List<Plugin> Plugins
+        {
+            get { return _Plugins; }
+            set { _Plugins = value; }
+        }
+        private List<Plugin> _Plugins = new List<Plugin>();
     }
 }

@@ -302,6 +302,10 @@ namespace ObjectCloud.Disk.Implementation
 
         public void Start()
         {
+            log.Info("Initializing plugins...");
+            foreach (Plugin plugin in FileHandlerFactoryLocator.Plugins)
+                plugin.Initialize();
+
             log.Info("Starting ObjectCloud's File System...");
             ID<IFileContainer,long> rootDirectoryId = new ID<IFileContainer,long>(RootDirectoryId);
 
