@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<objects xmlns="http://www.springframework.net" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://www.springframework.net, http://www.springframework.net/xsd/spring-objects-1.1.xsd">
+
+  <object id="SamplePlugin" type="ObjectCloud.Interfaces.Disk.FileTypePlugin, ObjectCloud.Interfaces">
+    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+    <property name="FileHandlerFactory">
+      <object id="SecondDirectoryHandlerFactory" type="ObjectCloud.Disk.Factories.DirectoryHandlerFactory, ObjectCloud.Disk.Factories">
+        <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+        <property name="DataAccessLocator" ref="DirectoryDataAccessLocator" />
+      </object>
+    </property>
+    <property name="WebHandlerType">
+      <object type="System.Type" factory-method="GetType" id="secondD.directoryWebHandlerType">
+        <constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.DirectoryWebHandler, ObjectCloud.Disk.WebHandlers" />
+      </object>
+    </property>
+    <property name="FileType" value="SecondDirectory" />
+  </object>
+  
+</objects>

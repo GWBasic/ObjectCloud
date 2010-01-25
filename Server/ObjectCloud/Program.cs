@@ -31,7 +31,8 @@ namespace ObjectCloud
                     new string[] { "file://Database.xml", "file://Disk.xml", "file://WebServer.xml" });
 
                 // Get all of the plugins
-                springFilesToLoad.AddRange(Directory.GetFiles(".", "Plugin.*.xml"));
+                foreach (string pluginFilename in Directory.GetFiles(".", "Plugin.*.xml"))
+                    springFilesToLoad.Add("file://" + pluginFilename);
 
                 // Load objects declared in Spring
                 IApplicationContext context = new XmlApplicationContext(springFilesToLoad.ToArray());
