@@ -66,7 +66,8 @@ namespace ObjectCloud.Interfaces.Disk
         /// Syncronizes this file from an authoritative version on the local disk if it's newer
         /// </summary>
         /// <param name="localDiskPath"></param>
-        void SyncFromLocalDisk(string localDiskPath);
+        /// <param name="force">Set to true to force syncing</param>
+        void SyncFromLocalDisk(string localDiskPath, bool force);
 		
 		/// <summary>
 		/// Performs any needed maintanence operations, such as a SQLite vacuum

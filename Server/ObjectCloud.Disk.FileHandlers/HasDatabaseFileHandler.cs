@@ -187,14 +187,14 @@ namespace ObjectCloud.Disk.FileHandlers
             base.OnDelete(changer);
         }
 
-        public override void SyncFromLocalDisk(string localDiskPath)
+        public override void SyncFromLocalDisk(string localDiskPath, bool force)
         {
             using (TimedLock.Lock(this))
             {
                 DateTime authoritativeCreated = File.GetLastWriteTimeUtc(localDiskPath);
                 DateTime thisCreated = DatabaseConnector.LastModified;
 
-                if (authoritativeCreated > thisCreated)
+                if (authoritativeCreated > thisCreated  || force)
                     DatabaseConnector.Restore(localDiskPath);
             }
         }

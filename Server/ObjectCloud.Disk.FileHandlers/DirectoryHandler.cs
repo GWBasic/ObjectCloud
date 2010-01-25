@@ -924,7 +924,7 @@ namespace ObjectCloud.Disk.FileHandlers
             }
         }
 
-        public override void SyncFromLocalDisk(string localDiskPath)
+        public override void SyncFromLocalDisk(string localDiskPath, bool force)
         {
 			log.Trace("Syncing " + FileContainer.FullPath);
 			
@@ -969,7 +969,7 @@ namespace ObjectCloud.Disk.FileHandlers
 							
 									log.Trace("Jumping into " + toSync.FullPath);
 							
-                                    toSync.FileHandler.SyncFromLocalDisk(fileToSync);
+                                    toSync.FileHandler.SyncFromLocalDisk(fileToSync, force);
 
                                     DatabaseConnection.File.Update((File_Table.Name == filename) & (File_Table.OwnerId != ownerId),
                                         delegate(IFile_Writable file)

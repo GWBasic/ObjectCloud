@@ -96,7 +96,7 @@ namespace ObjectCloud.Disk.FileHandlers
             }
         }
 
-        public override void SyncFromLocalDisk(string localDiskPath)
+        public override void SyncFromLocalDisk(string localDiskPath, bool force)
         {
             using (TimedLock.Lock(this))
             {
@@ -106,13 +106,14 @@ namespace ObjectCloud.Disk.FileHandlers
                 DateTime authoritativeCreated = File.GetLastWriteTimeUtc(localDiskPath);
                 DateTime thisCreated = File.GetLastWriteTimeUtc(Path);
 
-                if (authoritativeCreated > thisCreated)
+                if (authoritativeCreated > thisCreated || force)
                 {
                     File.Delete(Path);
                     File.Copy(localDiskPath, Path);
-                    CachedEnumerable = null;
-                    Cached = null;
                 }
+
+                CachedEnumerable = null;
+                Cached = null;
             }
         }
 

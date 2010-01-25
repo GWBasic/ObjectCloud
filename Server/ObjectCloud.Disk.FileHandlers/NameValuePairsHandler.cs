@@ -175,12 +175,12 @@ namespace ObjectCloud.Disk.FileHandlers
             }
         }
 
-        public override void SyncFromLocalDisk(string localDiskPath)
+        public override void SyncFromLocalDisk(string localDiskPath, bool force)
         {
             DateTime authoritativeCreated = File.GetLastWriteTimeUtc(localDiskPath);
             DateTime thisCreated = DatabaseConnector.LastModified;
 
-            if (authoritativeCreated > thisCreated)
+            if (authoritativeCreated > thisCreated || force)
                 using (TextReader tr = File.OpenText(localDiskPath))
                 using (XmlReader xmlReader = XmlReader.Create(tr))
                 {

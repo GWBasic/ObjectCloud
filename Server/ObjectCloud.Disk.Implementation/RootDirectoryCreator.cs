@@ -271,25 +271,25 @@ namespace ObjectCloud.Disk.Implementation
             IFileHandler dir;
 
             dir = rootDirectoryHandler.OpenFile("Shell").FileHandler;
-            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Shell");
+            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Shell", false);
 
             dir = rootDirectoryHandler.OpenFile("API").FileHandler;
-            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "API");
+            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "API", false);
 
             dir = rootDirectoryHandler.OpenFile("Templates").FileHandler;
-            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Templates");
+            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Templates", false);
 
             dir = rootDirectoryHandler.OpenFile("Tests").FileHandler;
-            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Tests");
+            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Tests", false);
 
             dir = rootDirectoryHandler.OpenFile("Pages").FileHandler;
-            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Pages");
+            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Pages", false);
 
             dir = rootDirectoryHandler.OpenFile("Docs").FileHandler;
-            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Docs");
+            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Docs", false);
 
             dir = rootDirectoryHandler.OpenFile("Classes").FileHandler;
-            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Classes");
+            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Classes", false);
 
             // Do not syncronize the index file; this is for the user to update.  It's just a web component anyway
             //IFileHandler indexFile = rootDirectoryHandler.OpenFile("index.page").FileHandler;

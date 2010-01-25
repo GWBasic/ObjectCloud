@@ -129,7 +129,30 @@ namespace ObjectCloud
 
                                 break;
                             }
-					
+
+                        case ("restore"):
+                            {
+                                string objectCloudfileToRestore = args[1];
+                                string fileSystemSource = args[2];
+
+                                string fileType = "directory";
+                                if (args.Length > 3)
+                                    fileType = args[3];
+
+                                fileHandlerFactoryLocator.FileSystemResolver.Start();
+
+                                if (!fileHandlerFactoryLocator.FileSystemResolver.IsFilePresent(objectCloudfileToRestore))
+                                    fileHandlerFactoryLocator.FileSystemResolver.RootDirectoryHandler.CreateFile(
+                                        objectCloudfileToRestore,
+                                        fileType,
+                                        fileHandlerFactoryLocator.UserFactory.RootUser.Id);
+
+                                fileHandlerFactoryLocator.FileSystemResolver.ResolveFile(
+                                    objectCloudfileToRestore).FileHandler.SyncFromLocalDisk(fileSystemSource, true);
+
+                                break;
+                            }
+
 						case ("restoresystem"):
 							{
 						        // Delete the contents of every system directory so that it's completely resored the next time ObjectCloud is loaded
