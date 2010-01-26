@@ -53,11 +53,6 @@ namespace ObjectCloud.Disk.FileHandlers
         /// </summary>
         private Cache<string, IFileContainer> FileHandlerCache;
 
-        /// <summary>
-        /// All of the characters that can not be in a filename
-        /// </summary>
-        private IEnumerable<string> ForbiddenChars = new string[] { "[", "]", "/" };
-
         public IFileHandler CreateFile(string filename, string fileType, ID<IUserOrGroup, Guid>? ownerID)
         {
             IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
@@ -111,8 +106,8 @@ namespace ObjectCloud.Disk.FileHandlers
             if (0 == filename.Length)
                 throw new BadFileName("0-length file names are not allowed");
 
-            foreach (string forbiddenChar in ForbiddenChars)
-                if (filename.Contains(forbiddenChar))
+            foreach (char forbiddenChar in FileHandlerFactoryLocator.FileSystemResolver.FilenameForbiddenCharacters)
+                if (filename.Contains(new string(new char[] { forbiddenChar })))
                     throw new BadFileName("filenames can not contain a " + forbiddenChar);
 		}
 		

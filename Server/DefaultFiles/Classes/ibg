@@ -1,3 +1,5 @@
+// FileType: name-value
+
 // Manipulations:
 
 function createVersionNumber()

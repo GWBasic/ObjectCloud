@@ -1312,16 +1312,53 @@ namespace ObjectCloud.Disk.WebHandlers
                 return null;
 
             // Try to find the javascript file
+            IFileContainer javascriptContainer = FindJavascriptContainer(extension, FileContainer.ParentDirectoryHandler);
 
-            IDirectoryHandler parentDirectoryHandler = FileContainer.ParentDirectoryHandler;
+            // If a javascript container was found, make sure there's an up-to-date ExecutionEnvironment
+            if (null != javascriptContainer)
+            {
+                using (TimedLock.Lock(ExecutionEnvironmentLock))
+                {
+                    IExecutionEnvironmentFactory factory = FileHandlerFactoryLocator.ExecutionEnvironmentFactory;
+
+                    if (null == _ExecutionEnvironment)
+                        _ExecutionEnvironment = factory.Create(FileHandlerFactoryLocator, FileContainer, javascriptContainer);
+                    else if (_ExecutionEnvironment.JavascriptContainer != javascriptContainer)
+                        _ExecutionEnvironment = factory.Create(FileHandlerFactoryLocator, FileContainer, javascriptContainer);
+                    else if (javascriptContainer.FileHandler.LastModified > _ExecutionEnvironment.JavascriptLastModified)
+                        _ExecutionEnvironment = factory.Create(FileHandlerFactoryLocator, FileContainer, javascriptContainer);
+
+                    // using a local version of the object outside of the lock avoids a potential null reference issue if the file is deleted while its javascript is run
+                    return _ExecutionEnvironment;
+                }
+            }
+            else
+            {
+                // If there is no javascript container, make sure that the execution environment is explicitly disabled!
+                using (TimedLock.Lock(ExecutionEnvironmentLock))
+                    _ExecutionEnvironment = null;
+
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Finds the Javascript containing file for the given extension and its parent directory handler
+        /// </summary>
+        /// <param name="extension"></param>
+        /// <param name="parentDirectoryHandler"></param>
+        /// <returns></returns>
+        protected IFileContainer FindJavascriptContainer(string extension, IDirectoryHandler parentDirectoryHandler)
+        {
+            IDirectoryHandler directoryHandler = parentDirectoryHandler;
             IFileContainer javascriptContainer = null;
 
             // Keep looking up the directory tree for a Classes folder...
-            while (null != parentDirectoryHandler && null == javascriptContainer)
+            while (null != directoryHandler && null == javascriptContainer)
             {
-                if (parentDirectoryHandler.IsFilePresent("Classes"))
+                if (directoryHandler.IsFilePresent("Classes"))
                 {
-                    IFileContainer classesDirectoryContainer = parentDirectoryHandler.OpenFile("Classes");
+                    IFileContainer classesDirectoryContainer = directoryHandler.OpenFile("Classes");
 
                     // ...if a parent folder has a directory named Classes
                     if (classesDirectoryContainer.FileHandler is IDirectoryHandler)
@@ -1350,38 +1387,12 @@ namespace ObjectCloud.Disk.WebHandlers
                 }
 
                 // move to the parent directory
-                if (null != parentDirectoryHandler.FileContainer)
-                    parentDirectoryHandler = parentDirectoryHandler.FileContainer.ParentDirectoryHandler;
+                if (null != directoryHandler.FileContainer)
+                    directoryHandler = directoryHandler.FileContainer.ParentDirectoryHandler;
                 else
-                    parentDirectoryHandler = null;
+                    directoryHandler = null;
             }
-
-            // If a javascript container was found, make sure there's an up-to-date ExecutionEnvironment
-            if (null != javascriptContainer)
-            {
-                using (TimedLock.Lock(ExecutionEnvironmentLock))
-                {
-                    IExecutionEnvironmentFactory factory = FileHandlerFactoryLocator.ExecutionEnvironmentFactory;
-
-                    if (null == _ExecutionEnvironment)
-                        _ExecutionEnvironment = factory.Create(FileHandlerFactoryLocator, FileContainer, javascriptContainer);
-                    else if (_ExecutionEnvironment.JavascriptContainer != javascriptContainer)
-                        _ExecutionEnvironment = factory.Create(FileHandlerFactoryLocator, FileContainer, javascriptContainer);
-                    else if (javascriptContainer.FileHandler.LastModified > _ExecutionEnvironment.JavascriptLastModified)
-                        _ExecutionEnvironment = factory.Create(FileHandlerFactoryLocator, FileContainer, javascriptContainer);
-
-                    // using a local version of the object outside of the lock avoids a potential null reference issue if the file is deleted while its javascript is run
-                    return _ExecutionEnvironment;
-                }
-            }
-            else
-            {
-                // If there is no javascript container, make sure that the execution environment is explicitly disabled!
-                using (TimedLock.Lock(ExecutionEnvironmentLock))
-                    _ExecutionEnvironment = null;
-
-                return null;
-            }
+            return javascriptContainer;
         }
 
         /// <summary>

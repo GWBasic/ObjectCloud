@@ -24,42 +24,137 @@ namespace ObjectCloud.Disk.WebHandlers
     public class DirectoryWebHandler : DatabaseWebHandler<IDirectoryHandler, DirectoryWebHandler>
     {
         /// <summary>
+        /// Synchronizes creating a file
+        /// </summary>
+        private object CreateFileLock = new object();
+
+        /// <summary>
         /// Creates a file
         /// </summary>
         /// <param name="webConnection"></param>
         /// <returns></returns>
-        /// <param name="FileName">The file name</param>
+        /// <param name="FileName">The file name.  Either the file name or extension need to be specified</param>
+        /// <param name="extension">The file extension.  Either the extension or file name need to be specified</param>
         /// <param name="FileType">The file type</param>
         /// <param name="ErrorIfExists">True to return an error if the file already exists</param>
+        /// <param name="fileNameSuggestion">A suggestion for creating a file name.  ObjectCloud will attempt to generate a real file name from this suggestion</param>
         [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.JavaScriptObject)]
-        public IWebResults CreateFile(IWebConnection webConnection, string FileName, string FileType, string ErrorIfExists)
+        public IWebResults CreateFile(IWebConnection webConnection, string FileName, string extension, string fileNameSuggestion, string FileType, bool? ErrorIfExists)
         {
-            // This is a performance optimization when a file needs to be created if it doesn't exist
-            if (null != ErrorIfExists)
-                if (ErrorIfExists.ToLowerInvariant().Equals("false"))
-                    if (FileHandler.IsFilePresent(FileName))
-                        return FileHandler.OpenFile(FileName).WebHandler.GetJSW(webConnection, null, null, false);
-
-            if (null == FileType)
-                throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, "FileType can not be null"));
-
-            IFileHandler fileHandler;
-            try
+            using (TimedLock.Lock(CreateFileLock))
             {
-                fileHandler = FileHandler.CreateFile(FileName, FileType, webConnection.Session.User.Id);
-            }
-            catch (DuplicateFile)
-            {
-                return WebResults.FromString(Status._409_Conflict, FileName + " already exists");
-            }
-            catch (BadFileName)
-            {
-                return WebResults.FromString(Status._409_Conflict, FileName + " is an invalid file name");
-            }
+                // It's an error if both FileName and extension are null, or if both are set
+                if (((null == FileName) && (null == extension)) || ((null != FileName) && (null != extension)))
+                    throw new WebResultsOverrideException(
+                        WebResults.FromString(Status._400_Bad_Request, "Either FileName or Extension must be specified"));
 
-            IWebResults toReturn = fileHandler.FileContainer.WebHandler.GetJSW(webConnection, null, null, false);
-            toReturn.Status = Status._201_Created;
-            return toReturn;
+                else if (null == FileName)
+                {
+                    if (extension.Length < 1)
+                        throw new WebResultsOverrideException(
+                        WebResults.FromString(Status._400_Bad_Request, "The extension must be at least one character long"));
+
+                    DateTime timestamp = DateTime.UtcNow;
+
+                    // If there's a suggestion, then follow it
+                    if (null != fileNameSuggestion)
+                    {
+                        // Limit potential filenames to a reasonable length
+                        if (fileNameSuggestion.Length > 25)
+                            fileNameSuggestion = fileNameSuggestion.Substring(0, 25);
+
+                        // Get rid of forbidden characters
+                        foreach (char forbiddenChar in FileHandlerFactoryLocator.FileSystemResolver.FilenameForbiddenCharacters)
+                            fileNameSuggestion = fileNameSuggestion.Replace(forbiddenChar, '_');
+
+                        // Try the suggestion plus an extension
+                        FileName = string.Format(
+                            "{0}.{1}",
+                            fileNameSuggestion,
+                            extension);
+
+                        // If that doesn't work, then just keep using the time to find something unique
+                        if (FileHandler.IsFilePresent(FileName))
+                        {
+                            long ticks = timestamp.Ticks;
+
+                            do
+                            {
+                                FileName = string.Format(
+                                    "{0}_{1}.{2}",
+                                    fileNameSuggestion,
+                                    ticks,
+                                    extension);
+
+                                ticks++;
+                            }
+                            while (FileHandler.IsFilePresent(FileName));
+                        }
+                    }
+                    else
+                        FileName = string.Format(
+                            "{0}x{1}-{2}-{3}___{4}-{5}-{6}_{7}.{8}",
+                            SRandom.Next<byte>(),
+                            timestamp.Year,
+                            timestamp.Month,
+                            timestamp.Day,
+                            timestamp.Hour,
+                            timestamp.Minute,
+                            timestamp.Second,
+                            timestamp.Millisecond,
+                            extension);
+                }
+                else
+                {
+                    int lastDot = FileName.LastIndexOf('.');
+                    if (-1 != lastDot)
+                        extension = FileName.Substring(lastDot + 1);
+                }
+
+                // This is a performance optimization when a file needs to be created if it doesn't exist
+                if (null != ErrorIfExists)
+                    if (!ErrorIfExists.Value)  //  ErrorIfExists.ToLowerInvariant().Equals("false"))
+                        if (FileHandler.IsFilePresent(FileName))
+                            return FileHandler.OpenFile(FileName).WebHandler.GetJSW(webConnection, null, null, false);
+
+                // If the file type is not specified, try to load it from a server-side class
+                if (null == FileType)
+                {
+                    IFileContainer javascriptClass = FindJavascriptContainer(extension, FileHandler);
+
+                    // If there is server-side Javascript, try to infer the file type
+                    if (null != javascriptClass)
+                        if (javascriptClass.FileHandler is ITextHandler)
+                            foreach (string line in javascriptClass.CastFileHandler<ITextHandler>().ReadLines())
+                                if (line.Trim().StartsWith("// FileType:"))
+                                {
+                                    FileType = line.Substring(12).Trim();
+                                    goto FileTypeFound; // It's valid to use a goto to break a loop
+                                }
+
+                FileTypeFound:
+                    if (null == FileType)
+                        throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, "FileType must be specified for files with extension ." + extension));
+                }
+
+                IFileHandler fileHandler;
+                try
+                {
+                    fileHandler = FileHandler.CreateFile(FileName, FileType, webConnection.Session.User.Id);
+                }
+                catch (DuplicateFile)
+                {
+                    return WebResults.FromString(Status._409_Conflict, FileName + " already exists");
+                }
+                catch (BadFileName)
+                {
+                    return WebResults.FromString(Status._409_Conflict, FileName + " is an invalid file name");
+                }
+
+                IWebResults toReturn = fileHandler.FileContainer.WebHandler.GetJSW(webConnection, null, null, false);
+                toReturn.Status = Status._201_Created;
+                return toReturn;
+            }
         }
 
         /// <summary>

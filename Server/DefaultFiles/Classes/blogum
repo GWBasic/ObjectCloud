@@ -1,3 +1,5 @@
+// FileType: text
+
 GetPostsForDisplay.webCallable = "GET_application_x_www_form_urlencoded";
 GetPostsForDisplay.minimumWebPermission = "Read";
 GetPostsForDisplay.webReturnConvention = "JSON";

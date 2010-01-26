@@ -111,5 +111,10 @@ namespace ObjectCloud.Interfaces.Disk
         /// The ID of the root object
         /// </summary>
         long RootDirectoryId { get; set; }
+
+        /// <summary>
+        /// The characters that are forbidden in filenames
+        /// </summary>
+        string FilenameForbiddenCharacters { get; set; }
     }
 }

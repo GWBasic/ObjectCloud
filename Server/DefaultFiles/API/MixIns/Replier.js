@@ -16,14 +16,10 @@ function Replier_AddReply(replyText)
       {
          var parentDirectoryWrapper = getDefaultRelatedObjectDirectoryWrapper();
 
-         var now = new Date();
-         var replyFilename = fileMetadata.filename + "_reply" + now.getTime() + ".reply";
-
          var replyFile = parentDirectoryWrapper.CreateFile_Sync(
             {
-               FileName: replyFilename,
-               FileType: "text",
-               ErrorIfExists: true
+               extension: 'reply',
+               fileNameSuggestion: fileMetadata.filename
            });
 
          replyFile.WriteAll_Sync(sanitize(replyText));
@@ -48,7 +44,7 @@ function Replier_AddReply(replyText)
 
          base.AddRelatedFile_Sync(
                {
-                  filename: replyFilename,
+                  filename: replyFile.Filename,
                   relationship: "reply"
                });
       });

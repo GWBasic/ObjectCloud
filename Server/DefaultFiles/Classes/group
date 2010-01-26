@@ -1,4 +1,5 @@
 // Scripts: /Users/UserDB?Method=GetJSW&assignToVariable=UserDB
+// FileType: database
 
 getMembers.webCallable = "GET";
 getMembers.minimumWebPermission = "Read";

@@ -55,6 +55,13 @@ namespace ObjectCloud.Disk.Implementation
             get { return RootDirectoryContainer.CastFileHandler<IDirectoryHandler>(); }
         }
 
+        public string FilenameForbiddenCharacters
+        {
+            get { return _FilenameForbiddenCharacters; }
+            set { _FilenameForbiddenCharacters = value; }
+        }
+        private string _FilenameForbiddenCharacters;
+
         /// <summary>
         /// The root directory file
         /// </summary>

@@ -1,3 +1,5 @@
+// FileType: database
+
 elevate(function()
 {
    var version = base.GetVersion_Sync({});
