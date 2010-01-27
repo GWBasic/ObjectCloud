@@ -31,5 +31,24 @@ namespace ObjectCloud.Common
 			
 			return toReturn;
 		}
+
+        /// <summary>
+        /// Returns a dictionary object created from an enumeration of key-value pairs
+        /// </summary>
+        /// <typeparam name="TDictionary"></typeparam>
+        /// <typeparam name="TKey"></typeparam>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        public static TDictionary Create<TDictionary, TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> values)
+            where TDictionary : IDictionary<TKey, TValue>, new()
+        {
+            TDictionary toReturn = new TDictionary();
+
+            foreach (KeyValuePair<TKey, TValue> value in values)
+                toReturn[value.Key] = value.Value;
+
+            return toReturn;
+        }
 	}
 }
