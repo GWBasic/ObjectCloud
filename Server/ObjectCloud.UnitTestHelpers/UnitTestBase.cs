@@ -5,6 +5,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 using Spring.Context;
@@ -20,6 +21,10 @@ namespace ObjectCloud.UnitTestHelpers
         public UnitTestBase(params string[] springConfigFiles)
         {
             SpringConfigFiles = new List<string>(springConfigFiles);
+
+            // Get all of the plugins
+            foreach (string pluginFilename in Directory.GetFiles(".", "Plugin.*.xml"))
+                SpringConfigFiles.Add("file://" + pluginFilename);
 
             try
             {
