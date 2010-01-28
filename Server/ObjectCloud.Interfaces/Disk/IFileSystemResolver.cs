@@ -116,5 +116,14 @@ namespace ObjectCloud.Interfaces.Disk
         /// The characters that are forbidden in filenames
         /// </summary>
         string FilenameForbiddenCharacters { get; set; }
+		
+		/// <summary>
+		/// Throws an exception if the filename is invalid
+		/// </summary>
+		/// <param name="filename">
+		/// A <see cref="System.String"/>
+		/// </param>
+		/// <exception cref="BadFileName">Thrown if the filename contains invalid characters</exception>
+		void VerifyNoForbiddenChars(string filename);
     }
 }

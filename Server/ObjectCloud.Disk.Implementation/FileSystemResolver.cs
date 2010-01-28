@@ -55,6 +55,16 @@ namespace ObjectCloud.Disk.Implementation
             get { return RootDirectoryContainer.CastFileHandler<IDirectoryHandler>(); }
         }
 
+		public void VerifyNoForbiddenChars(string filename)
+		{
+            if (0 == filename.Length)
+                throw new BadFileName("0-length file names are not allowed");
+
+            foreach (char forbiddenChar in FilenameForbiddenCharacters)
+                if (filename.Contains(new string(new char[] { forbiddenChar })))
+                    throw new BadFileName("filenames can not contain a " + forbiddenChar);
+		}
+		
         public string FilenameForbiddenCharacters
         {
             get { return _FilenameForbiddenCharacters; }

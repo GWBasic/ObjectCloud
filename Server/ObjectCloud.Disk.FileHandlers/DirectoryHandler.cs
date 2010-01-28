@@ -64,7 +64,7 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public IFileHandler RestoreFile(string filename, string fileType, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
         {
-            VerifyNoForbiddenChars(filename);
+            FileHandlerFactoryLocator.FileSystemResolver.VerifyNoForbiddenChars(filename);
 
             IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
             IFileHandlerFactory fileHandlerFactory = fileSystemResolver.GetFactoryForFileType(fileType);
@@ -101,20 +101,10 @@ namespace ObjectCloud.Disk.FileHandlers
             // TODO:  Delete file
         }
 
-		private void VerifyNoForbiddenChars(string filename)
-		{
-            if (0 == filename.Length)
-                throw new BadFileName("0-length file names are not allowed");
-
-            foreach (char forbiddenChar in FileHandlerFactoryLocator.FileSystemResolver.FilenameForbiddenCharacters)
-                if (filename.Contains(new string(new char[] { forbiddenChar })))
-                    throw new BadFileName("filenames can not contain a " + forbiddenChar);
-		}
-		
         private IFileHandler CreateFileHelper(
             string filename, string fileType, ID<IUserOrGroup, Guid>? ownerId, CreateFileDelegate createFileDelegate)
         {
-			VerifyNoForbiddenChars(filename);
+			FileHandlerFactoryLocator.FileSystemResolver.VerifyNoForbiddenChars(filename);
 
             IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
 
@@ -858,7 +848,7 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public void CopyFile(IUser changer, IFileContainer toCopy, string newFileName, ID<IUserOrGroup, Guid>? ownerID)
         {
-			VerifyNoForbiddenChars(newFileName);
+			FileHandlerFactoryLocator.FileSystemResolver.VerifyNoForbiddenChars(newFileName);
 
 			FilePermissionEnum? permission;
 
