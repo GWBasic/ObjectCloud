@@ -56,7 +56,10 @@ namespace ObjectCloud.Disk.Test
             }
             finally
             {
-                Directory.Delete(dumpDestination, true);
+				try
+				{
+                		Directory.Delete(dumpDestination, true);
+				} catch {}
             }
         }
 
@@ -205,7 +208,10 @@ namespace ObjectCloud.Disk.Test
             }
             finally
             {
-                Directory.Delete(dumpDestination, true);
+				try
+				{
+                		Directory.Delete(dumpDestination, true);
+				} catch {}
             }
 
             Dictionary<string, IFileContainer> restoredFiles = new Dictionary<string, IFileContainer>();
@@ -270,7 +276,10 @@ namespace ObjectCloud.Disk.Test
             }
             finally
             {
-                Directory.Delete(dumpDestination, true);
+				try
+				{
+                		Directory.Delete(dumpDestination, true);
+				} catch {}
             }
 
             Dictionary<string, IFileContainer> restoredFiles = new Dictionary<string, IFileContainer>();

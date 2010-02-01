@@ -274,9 +274,6 @@ namespace ObjectCloud.Disk.Test
             user = fileSystemResolver.ResolveFile("Users/anonymous.user").CastFileHandler<IUserHandler>();
             Assert.IsNotNull(user, "anonymous user does not exist");
 
-            userDir = fileSystemResolver.ResolveFile("Users/anonymous").CastFileHandler<IDirectoryHandler>();
-            Assert.IsNotNull(userDir, "anonymous directory not created");
-
             Assert.AreEqual("anonymous", user.Name, "Username for anonymous isn't anonymous");
         }
 
