@@ -41,8 +41,11 @@ namespace ObjectCloud.Interfaces.Disk
 
         public override void Initialize()
         {
-            FileHandlerFactoryLocator.FileHandlerFactories[this.FileType] = FileHandlerFactory;
-            FileHandlerFactoryLocator.WebHandlerClasses[this.FileType] = WebHandlerType;
+            if (null != FileHandlerFactory)
+                FileHandlerFactoryLocator.FileHandlerFactories[this.FileType] = FileHandlerFactory;
+
+            if (null != WebHandlerType)
+                FileHandlerFactoryLocator.WebHandlerClasses[this.FileType] = WebHandlerType;
         }
     }
 }
