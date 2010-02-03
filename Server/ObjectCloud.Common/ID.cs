@@ -98,5 +98,21 @@ namespace ObjectCloud.Common
 		{
 			return !(r == l);
 		}
+
+        public static IEnumerable<TID> ToValues(IEnumerable<ID<T, TID>> ids)
+        {
+            foreach (ID<T, TID> id in ids)
+                yield return id.Value;
+        }
+
+        public static Set<TID> ToSet(IEnumerable<ID<T, TID>> ids)
+        {
+            Set<TID> toReturn = new Set<TID>();
+
+            foreach (ID<T, TID> id in ids)
+                toReturn.Add(id.Value);
+
+            return toReturn;
+        }
     }
 }

@@ -27,11 +27,11 @@ namespace ObjectCloud.Disk.Test
             IFileContainer userDBFile = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("/Users/UserDB");
             IUserManagerHandler userManagerHandler = userDBFile.CastFileHandler<IUserManagerHandler>();
 
-            TestUser_1 = userManagerHandler.CreateUser("user1", "user1");
-            TestUser_2 = userManagerHandler.CreateUser("user2", "user2");
+            TestUser_1 = userManagerHandler.CreateUser("user1" + SRandom.Next<ulong>().ToString(), "user1");
+            TestUser_2 = userManagerHandler.CreateUser("user2" + SRandom.Next<ulong>().ToString(), "user2");
 
-            TestGroup_1 = userManagerHandler.CreateGroup("group1", TestUser_1.Id, GroupType.Private);
-            TestGroup_2 = userManagerHandler.CreateGroup("group2", TestUser_2.Id, GroupType.Private);
+            TestGroup_1 = userManagerHandler.CreateGroup("group1" + SRandom.Next<ulong>().ToString(), TestUser_1.Id, GroupType.Private);
+            TestGroup_2 = userManagerHandler.CreateGroup("group2" + SRandom.Next<ulong>().ToString(), TestUser_2.Id, GroupType.Private);
         }
 
         protected override void DoAdditionalTearDown()
@@ -39,11 +39,11 @@ namespace ObjectCloud.Disk.Test
             IFileContainer userDBFile = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("/Users/UserDB");
             IUserManagerHandler userManagerHandler = userDBFile.CastFileHandler<IUserManagerHandler>();
 
-            userManagerHandler.DeleteUser("user1");
-            userManagerHandler.DeleteUser("user2");
-			
-			userManagerHandler.DeleteGroup("group1");
-			userManagerHandler.DeleteGroup("group2");
+            userManagerHandler.DeleteUser(TestUser_1.Name);
+            userManagerHandler.DeleteUser(TestUser_2.Name);
+
+            userManagerHandler.DeleteGroup(TestGroup_1.Name);
+            userManagerHandler.DeleteGroup(TestGroup_2.Name);
         }
 
         IUser TestUser_1;
