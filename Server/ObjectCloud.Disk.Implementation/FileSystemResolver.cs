@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading;
 
@@ -24,13 +25,13 @@ namespace ObjectCloud.Disk.Implementation
         private static ILog log = LogManager.GetLogger<FileSystemResolver>();
 
         Cache<ID<IFileContainer, long>, IFileHandler, string> FileHandlers;
-        Cache<ID<IFileContainer, long>, IWebHandler, string> WebHandlers;
+        Cache<ID<IFileContainer, long>, WebHandlers, IFileContainer> WebHandlers;
 
         public FileSystemResolver()
             : base()
         {
             FileHandlers = new Cache<ID<IFileContainer, long>, IFileHandler, string>(CreateFileHandlerForCache);
-            WebHandlers = new Cache<ID<IFileContainer, long>, IWebHandler, string>(CreateWebHandlerForCache);
+            WebHandlers = new Cache<ID<IFileContainer, long>, WebHandlers, IFileContainer>(CreateWebHandlersForCache);
         }
 
         public FileHandlerFactoryLocator FileHandlerFactoryLocator
@@ -207,9 +208,9 @@ namespace ObjectCloud.Disk.Implementation
             return FileHandlers.Get(id, fileType);
         }
 
-        public IWebHandler LoadWebHandler(ID<IFileContainer, long> id, string fileType)
+        public WebHandlers LoadWebHandlers(IFileContainer fileContainer)
         {
-            return WebHandlers.Get(id, fileType);
+            return WebHandlers.Get(fileContainer.FileId, fileContainer);
         }
 
         /// <summary>
@@ -236,15 +237,46 @@ namespace ObjectCloud.Disk.Implementation
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        private IWebHandler CreateWebHandlerForCache(ID<IFileContainer, long> id, string filetype)
+        private WebHandlers CreateWebHandlersForCache(ID<IFileContainer, long> id, IFileContainer fileContainer)
         {
-            Type webHandlerType = FileHandlerFactoryLocator.WebHandlerClasses[filetype];
+            Type webHandlerType = FileHandlerFactoryLocator.WebHandlerClasses[fileContainer.TypeId];
             object webHandlerObj = Activator.CreateInstance(webHandlerType);
 
             if (!(webHandlerObj is IWebHandler))
                 throw new InvalidCastException("WebHandler classes must implement IWebHandler; " + webHandlerType.FullName + " is not an IWebHandler");
 
-            return webHandlerObj as IWebHandler;
+            IWebHandler webHandler = (IWebHandler)webHandlerObj;
+            webHandler.FileContainer = fileContainer;
+            webHandler.FileHandlerFactoryLocator = FileHandlerFactoryLocator;
+
+            return new WebHandlers(
+                webHandler,
+                new ReadOnlyCollection<IWebHandlerPlugin>(ConstructWebHandlerPlugins(fileContainer)));
+        }
+
+        /// <summary>
+        /// Constructs WebHandlerPlugins
+        /// </summary>
+        /// <returns></returns>
+        private IList<IWebHandlerPlugin> ConstructWebHandlerPlugins(IFileContainer fileContainer)
+        {
+            List<IWebHandlerPlugin> toReturn = new List<IWebHandlerPlugin>();
+
+            foreach (Type webHandlerType in FileHandlerFactoryLocator.WebHandlerPlugins)
+            {
+                object webHandlerObj = Activator.CreateInstance(webHandlerType);
+
+                if (!(webHandlerObj is IWebHandlerPlugin))
+                    throw new InvalidCastException("WebHandler classes must implement IWebHandler; " + webHandlerType.FullName + " is not an IWebHandler");
+
+                IWebHandlerPlugin webHandler = (IWebHandlerPlugin)webHandlerObj;
+                webHandler.FileContainer = fileContainer;
+                webHandler.FileHandlerFactoryLocator = FileHandlerFactoryLocator;
+
+                toReturn.Add(webHandler);
+            }
+
+            return toReturn;
         }
 
         public void DeleteFile(ID<IFileContainer, long> id)

@@ -47,6 +47,16 @@ namespace ObjectCloud.Interfaces.Disk
         private Dictionary<string, Type> _WebHandlerClasses;
 
         /// <summary>
+        /// Plugins for "WebHandlers" that are tacked on to all objects to add global behaviors to all objects
+        /// </summary>
+        public List<Type> WebHandlerPlugins
+        {
+            get { return _WebHandlerPlugins; }
+            set { _WebHandlerPlugins = value; }
+        }
+        private List<Type> _WebHandlerPlugins = new List<Type>();
+
+        /// <summary>
         /// Returns the name of the file handler factory
         /// </summary>
         /// <param name="fileHandlerFactory"></param>

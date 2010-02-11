@@ -210,17 +210,33 @@ namespace ObjectCloud.Interfaces.Disk
         	get
 			{
 				if (null == _WebHandler)
-				{
-                    _WebHandler = FileHandlerFactoryLocator.FileSystemResolver.LoadWebHandler(FileId, TypeId);
-					_WebHandler.FileContainer = this;
-                    _WebHandler.FileHandlerFactoryLocator = FileHandlerFactory.FileHandlerFactoryLocator;
-                }
+                    LoadWebHandlers();
 				
         		return _WebHandler;
         	}
         }
 		private IWebHandler _WebHandler;
 
+        public IEnumerable<IWebHandlerPlugin> WebHandlerPlugins
+        {
+            get
+            {
+                if (null == _WebHandlerPlugins)
+                    LoadWebHandlers();
+
+                return _WebHandlerPlugins;
+            }
+        }
+        private IEnumerable<IWebHandlerPlugin> _WebHandlerPlugins;
+
+        private void LoadWebHandlers()
+        {
+            WebHandlers webHandlers = FileHandlerFactoryLocator.FileSystemResolver.LoadWebHandlers(this);
+
+            _WebHandler = webHandlers.WebHandler;
+            _WebHandlerPlugins = webHandlers.WebHandlersFromPlugins;
+        }
+ 
 		public IFileHandlerFactory FileHandlerFactory
 		{
 			get

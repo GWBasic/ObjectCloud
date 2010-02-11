@@ -18,9 +18,9 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
             public POST_UrlEncoded(MethodInfo methodInfo, WebCallableAttribute webCallableAttribute)
                 : base(methodInfo, webCallableAttribute, ObjectCloud.Interfaces.WebServer.WebMethod.POST) { }
 
-            public override IWebResults CallMethod(IWebConnection webConnection, IWebHandler webHandler)
+            public override IWebResults CallMethod(IWebConnection webConnection, IWebHandlerPlugin webHandlerPlugin)
             {
-                return base.CallMethod(webConnection, webHandler, webConnection.PostParameters);
+                return base.CallMethod(webConnection, webHandlerPlugin, webConnection.PostParameters);
             }
         }
     }

@@ -65,7 +65,7 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
         /// <param name="webConnection"></param>
         /// <param name="webHandler"></param>
         /// <returns></returns>
-        public abstract IWebResults CallMethod(IWebConnection webConnection, IWebHandler webHandler);
+        public abstract IWebResults CallMethod(IWebConnection webConnection, IWebHandlerPlugin webHandlerPlugin);
 
         /// <summary>
         /// Each named parameter, and the numerical location in its call

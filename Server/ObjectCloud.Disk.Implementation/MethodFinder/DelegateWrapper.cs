@@ -20,14 +20,16 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
     /// </summary>
     public class DelegateWrapper
     {
-        public DelegateWrapper(WebCallableMethod webCallableMethod, IFileContainer fileContainer)
+        public DelegateWrapper(WebCallableMethod webCallableMethod, IWebHandlerPlugin webHandlerPlugin)
         {
             WebCallableMethod = webCallableMethod;
-            FileContainer = fileContainer;
+            FileContainer = webHandlerPlugin.FileContainer;
+            WebHandlerPlugin = webHandlerPlugin;
         }
 
         private readonly WebCallableMethod WebCallableMethod;
         private IFileContainer FileContainer;
+        private readonly IWebHandlerPlugin WebHandlerPlugin;
 
         public IWebResults CallMethod(IWebConnection webConnection, CallingFrom callingFrom)
         {
@@ -79,7 +81,7 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
                     if (WebCallableMethod.WebMethod.Value != webConnection.Method)
                         return WebResults.FromString(Status._405_Method_Not_Allowed, "Allowed method: " + WebCallableMethod.WebMethod.Value.ToString());
 
-                toReturn = WebCallableMethod.CallMethod(webConnection, FileContainer.WebHandler);
+                toReturn = WebCallableMethod.CallMethod(webConnection, WebHandlerPlugin);
             }
             catch (Exception e)
             {

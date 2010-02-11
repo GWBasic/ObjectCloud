@@ -18,14 +18,14 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
             public Naked(MethodInfo methodInfo, WebCallableAttribute webCallableAttribute)
                 : base(methodInfo, webCallableAttribute, null) { }
 
-            public override IWebResults CallMethod(IWebConnection webConnection, IWebHandler webHandler)
+            public override IWebResults CallMethod(IWebConnection webConnection, IWebHandlerPlugin webHandlerPlugin)
             {
                 object[] arguments = new object[]
                 {
                     webConnection,
                 };
 
-                object toReturn = MethodInfo.Invoke(webHandler, arguments);
+                object toReturn = MethodInfo.Invoke(webHandlerPlugin, arguments);
                 return (IWebResults)toReturn;
             }
         }

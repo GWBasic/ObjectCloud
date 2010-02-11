@@ -478,13 +478,23 @@ namespace ObjectCloud.Interfaces.WebServer
 
             if (GetParameters.ContainsKey("Method"))
             {
-                // The request is handled by directly polling the object / target
+                // First, see if any of the plugins will intercept the call
+                foreach (IWebHandlerPlugin webHandlerPlugin in fileContainer.WebHandlerPlugins)
+                {
+                    WebDelegate pluginWebDelegate = webHandlerPlugin.GetMethod(this);
+
+                    if (null != pluginWebDelegate)
+                        return pluginWebDelegate(this, CallingFrom);
+                }
+
+                // Next, directly poll the object / target
 
                 IWebHandler webHandler = fileContainer.WebHandler;
 
                 WebDelegate webDelegate = webHandler.GetMethod(this);
 
-                return webDelegate(this, CallingFrom);
+                if (null != webDelegate)
+                    return webDelegate(this, CallingFrom);
             }
 
             string action;

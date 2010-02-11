@@ -19,7 +19,7 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
             public POST_Multipart(MethodInfo methodInfo, WebCallableAttribute webCallableAttribute)
                 : base(methodInfo, webCallableAttribute, ObjectCloud.Interfaces.WebServer.WebMethod.POST) { }
 
-            public override IWebResults CallMethod(IWebConnection webConnection, IWebHandler webHandler)
+            public override IWebResults CallMethod(IWebConnection webConnection, IWebHandlerPlugin webHandlerPlugin)
             {
                 object[] arguments = new object[NumParameters];
 
@@ -34,7 +34,7 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
                 // The first argument is always the web connection
                 arguments[0] = webConnection;
 
-                object toReturn = MethodInfo.Invoke(webHandler, arguments);
+                object toReturn = MethodInfo.Invoke(webHandlerPlugin, arguments);
                 return (IWebResults)toReturn;
             }
         }

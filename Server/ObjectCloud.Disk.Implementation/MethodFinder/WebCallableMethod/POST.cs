@@ -25,7 +25,7 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
             /// <returns></returns>
             protected abstract object GetSecondArgument(IWebConnectionContent webConnectionContent);
 
-            public override IWebResults CallMethod(IWebConnection webConnection, IWebHandler webHandler)
+            public override IWebResults CallMethod(IWebConnection webConnection, IWebHandlerPlugin webHandlerPlugin)
             {
                 if (null == webConnection.Content)
                     return WebResults.FromString(Status._400_Bad_Request, "No data sent");
@@ -36,7 +36,7 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
                     GetSecondArgument(webConnection.Content)
                 };
 
-                object toReturn = MethodInfo.Invoke(webHandler, arguments);
+                object toReturn = MethodInfo.Invoke(webHandlerPlugin, arguments);
                 return (IWebResults)toReturn;
             }
         }

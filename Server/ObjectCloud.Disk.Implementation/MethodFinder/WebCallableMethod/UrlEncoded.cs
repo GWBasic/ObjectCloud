@@ -19,7 +19,7 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
         public UrlEncoded(MethodInfo methodInfo, WebCallableAttribute webCallableAttribute, WebMethod? webMethod)
             : base(methodInfo, webCallableAttribute, webMethod) { }
 
-        protected IWebResults CallMethod(IWebConnection webConnection, IWebHandler webHandler, IDictionary<string, string> parameters)
+        protected IWebResults CallMethod(IWebConnection webConnection, IWebHandlerPlugin webHandlerPlugin, IDictionary<string, string> parameters)
         {
             object[] arguments = new object[NumParameters];
 
@@ -90,7 +90,7 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
             // The first argument is always the web connection
             arguments[0] = webConnection;
 
-            object toReturn = MethodInfo.Invoke(webHandler, arguments);
+            object toReturn = MethodInfo.Invoke(webHandlerPlugin, arguments);
             return (IWebResults)toReturn;
         }
     }

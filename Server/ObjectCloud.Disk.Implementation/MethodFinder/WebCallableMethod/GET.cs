@@ -18,9 +18,9 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
             public GET(MethodInfo methodInfo, WebCallableAttribute webCallableAttribute)
                 : base(methodInfo, webCallableAttribute, ObjectCloud.Interfaces.WebServer.WebMethod.GET) { }
 
-            public override IWebResults CallMethod(IWebConnection webConnection, IWebHandler webHandler)
+            public override IWebResults CallMethod(IWebConnection webConnection, IWebHandlerPlugin webHandlerPlugin)
             {
-                object toReturn = MethodInfo.Invoke(webHandler, new object[] { webConnection });
+                object toReturn = MethodInfo.Invoke(webHandlerPlugin, new object[] { webConnection });
                 return (IWebResults)toReturn;
             }
         }

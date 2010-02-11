@@ -31,14 +31,14 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
             string methodName = key.MethodName;
             IFileContainer fileContainer = key.FileContainer;
 
-            IDictionary<string, WebCallableMethod> methods = WebMethodCache.MethodInfoCache[fileContainer.WebHandler.GetType()];
+            IDictionary<string, WebCallableMethod> methods = WebMethodCache.MethodInfoCache[key.WebHandlerPlugin.GetType()];
 
             if (!methods.ContainsKey(methodName))
-                throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, "method does not exist"), "method does not exist");
+                return null;
 
             WebCallableMethod methodInfo = methods[methodName];
 
-            return new DelegateWrapper(methodInfo, fileContainer);
+            return new DelegateWrapper(methodInfo, key.WebHandlerPlugin);
         }
 
         WebDelegate IWebMethodCache.this[MethodNameAndFileContainer methodNameAndFileContainer]
@@ -46,6 +46,10 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
             get 
             {
                 DelegateWrapper wrapper = this[methodNameAndFileContainer];
+
+                if (null == wrapper)
+                    return null;
+
                 return wrapper.CallMethod;
             }
         }

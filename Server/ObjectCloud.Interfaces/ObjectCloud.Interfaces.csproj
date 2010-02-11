@@ -62,6 +62,7 @@
     <Compile Include="Disk\FileHandlerFactoryLocator.cs" />
     <Compile Include="Disk\FileIsNotADirectory.cs" />
     <Compile Include="Disk\FileTypePlugin.cs" />
+    <Compile Include="Disk\GlobalWebHandlerPlugin.cs" />
     <Compile Include="Disk\IBinaryHandler.cs" />
     <Compile Include="Disk\IDirectoryHandler.cs" />
     <Compile Include="Disk\IFileContainer.cs" />
@@ -113,6 +114,7 @@
     <Compile Include="WebServer\IWebComponentResolver.cs" />
     <Compile Include="WebServer\IWebConnection.cs" />
     <Compile Include="WebServer\IWebHandler.cs" />
+    <Compile Include="WebServer\IWebHandlerPlugin.cs" />
     <Compile Include="WebServer\IWebMethodCache.cs" />
     <Compile Include="WebServer\IWebResults.cs" />
     <Compile Include="WebServer\IWebServer.cs" />
@@ -127,6 +129,7 @@
     <Compile Include="WebServer\WebCallableAttribute.cs" />
     <Compile Include="WebServer\WebCallingConvention.cs" />
     <Compile Include="WebServer\WebDelegate.cs" />
+    <Compile Include="WebServer\WebHandlerPlugin.cs" />
     <Compile Include="WebServer\WebMethod.cs" />
     <Compile Include="WebServer\WebResults.cs" />
     <Compile Include="Disk\IDatabaseHandler.cs" />

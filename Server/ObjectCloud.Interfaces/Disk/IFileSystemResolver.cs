@@ -71,7 +71,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="fileType">The file's type</param>
         /// <returns></returns>
         /// <exception cref="InvalidFileId">Bad file ID</exception>
-        IWebHandler LoadWebHandler(ID<IFileContainer, long> id, string fileType);
+        WebHandlers LoadWebHandlers(IFileContainer fileContainer);
 
         /// <summary>
         /// Deletes the file with the given FileID
@@ -125,5 +125,37 @@ namespace ObjectCloud.Interfaces.Disk
 		/// </param>
 		/// <exception cref="BadFileName">Thrown if the filename contains invalid characters</exception>
 		void VerifyNoForbiddenChars(string filename);
+    }
+
+    /// <summary>
+    /// Container for a file's webhandlers
+    /// </summary>
+    public class WebHandlers
+    {
+        public WebHandlers(
+            IWebHandler webHandler,
+            IEnumerable<IWebHandlerPlugin> webHandlersFromPlugins)
+        {
+            _WebHandler = webHandler;
+            _WebHandlersFromPlugins = webHandlersFromPlugins;
+        }
+
+        /// <summary>
+        /// The type-specific web handler
+        /// </summary>
+        public IWebHandler WebHandler
+        {
+            get { return _WebHandler; }
+        }
+        private readonly IWebHandler _WebHandler;
+
+        /// <summary>
+        /// The web handlers created from plugins
+        /// </summary>
+        public IEnumerable<IWebHandlerPlugin> WebHandlersFromPlugins
+        {
+            get { return _WebHandlersFromPlugins; }
+        }
+        private readonly IEnumerable<IWebHandlerPlugin> _WebHandlersFromPlugins;
     }
 }

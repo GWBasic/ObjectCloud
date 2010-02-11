@@ -58,7 +58,11 @@ namespace ObjectCloud.Disk.WebHandlers
 
             // When the call is local or there is no execution environment, then look for the base web method
             if (webConnection.CallingFrom == CallingFrom.Local || allowLocalMethods || AllowedBaseMethods.Contains(method))
-                return FileHandlerFactoryLocator.WebMethodCache[MethodNameAndFileContainer.New(method, FileContainer)];
+            {
+                WebDelegate toReturn = FileHandlerFactoryLocator.WebMethodCache[MethodNameAndFileContainer.New(method, FileContainer)];
+                if (null != toReturn)
+                    return toReturn;
+            }
 
             // Throw an exception if no method is found
             throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, "method \"" + method + "\" does not exist"));

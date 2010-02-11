@@ -30,11 +30,39 @@ namespace ObjectCloud.Interfaces.WebServer
         }
         private IFileContainer _FileContainer;
 
+        /// <summary>
+        /// The WebHandler that this applies to
+        /// </summary>
+        public IWebHandlerPlugin WebHandlerPlugin
+        {
+            get { return _WebHandlerPlugin; }
+        }
+        private IWebHandlerPlugin _WebHandlerPlugin;
+
+        /// <summary>
+        /// Creates a new MethodNameAndContainer for the default web handler
+        /// </summary>
+        /// <param name="methodName"></param>
+        /// <param name="fileContainer"></param>
+        /// <returns></returns>
         public static MethodNameAndFileContainer New(string methodName, IFileContainer fileContainer)
+        {
+            return New(methodName, fileContainer, fileContainer.WebHandler);
+        }
+
+        /// <summary>
+        /// Creates a new MethodNameAndContainer for a specfic plugin
+        /// </summary>
+        /// <param name="methodName"></param>
+        /// <param name="fileContainer"></param>
+        /// <param name="webHandler"></param>
+        /// <returns></returns>
+        public static MethodNameAndFileContainer New(string methodName, IFileContainer fileContainer, IWebHandlerPlugin webHandlerPlugin)
         {
             MethodNameAndFileContainer me = new MethodNameAndFileContainer();
             me._MethodName = methodName;
             me._FileContainer = fileContainer;
+            me._WebHandlerPlugin = webHandlerPlugin;
 
             return me;
         }
@@ -42,7 +70,8 @@ namespace ObjectCloud.Interfaces.WebServer
         public static bool operator ==(MethodNameAndFileContainer a, MethodNameAndFileContainer b)
         {
             return a._FileContainer == b._FileContainer
-                && a._MethodName == b._MethodName;
+                && a._MethodName == b._MethodName
+                && a.WebHandlerPlugin == b.WebHandlerPlugin;
         }
 
         public static bool operator !=(MethodNameAndFileContainer a, MethodNameAndFileContainer b)
@@ -56,7 +85,7 @@ namespace ObjectCloud.Interfaces.WebServer
             {
                 MethodNameAndFileContainer mnah = (MethodNameAndFileContainer)obj;
 
-                return _MethodName.Equals(mnah._MethodName) && _FileContainer.Equals(mnah._FileContainer);
+                return _MethodName.Equals(mnah._MethodName) && _FileContainer.Equals(mnah._FileContainer) && _WebHandlerPlugin.Equals(mnah._WebHandlerPlugin);
             }
 
             return false;
@@ -64,11 +93,13 @@ namespace ObjectCloud.Interfaces.WebServer
 
         public override int GetHashCode()
         {
-            int methodNameMask = ~0xff;
-            int webHandlerMask = 0xff;
+            int methodNameMask = 0xff;
+            int fileContainerMask = 0xff00;
+            int webHandlerMask = 0xff0000;
 
             return (methodNameMask & _MethodName.GetHashCode())
-                | (webHandlerMask & _FileContainer.GetHashCode());
+                | (fileContainerMask & _FileContainer.GetHashCode())
+                | (webHandlerMask & _WebHandlerPlugin.GetHashCode());
         }
     }
 }

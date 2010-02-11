@@ -31,6 +31,11 @@ namespace ObjectCloud.Interfaces.Disk
         /// The object that handles web requests
         /// </summary>
         IWebHandler WebHandler { get; }
+
+        /// <summary>
+        /// All of the WebHandlerPlugins
+        /// </summary>
+        IEnumerable<IWebHandlerPlugin> WebHandlerPlugins { get; }
 		
 		/// <value>
 		/// The factory used to construct the file 

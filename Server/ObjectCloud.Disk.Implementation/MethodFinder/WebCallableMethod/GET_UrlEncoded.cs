@@ -18,9 +18,9 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
             public GET_UrlEncoded(MethodInfo methodInfo, WebCallableAttribute webCallableAttribute)
                 : base(methodInfo, webCallableAttribute, ObjectCloud.Interfaces.WebServer.WebMethod.GET) { }
 
-            public override IWebResults CallMethod(IWebConnection webConnection, IWebHandler webHandler)
+            public override IWebResults CallMethod(IWebConnection webConnection, IWebHandlerPlugin webHandlerPlugin)
             {
-                return base.CallMethod(webConnection, webHandler, webConnection.GetParameters);
+                return base.CallMethod(webConnection, webHandlerPlugin, webConnection.GetParameters);
             }
         }
     }

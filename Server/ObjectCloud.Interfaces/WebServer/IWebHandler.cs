@@ -1,4 +1,4 @@
-// Copyright 2009 Andrew Rondeau
+// Copyright 2009, 2010 Andrew Rondeau
 // This code is released under the LGPL license
 // For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
 
@@ -16,25 +16,8 @@ namespace ObjectCloud.Interfaces.WebServer
     /// <summary>
     /// All methods in this object are exposed to the web
     /// </summary>
-    public interface IWebHandler
+    public interface IWebHandler : IWebHandlerPlugin
     {
-        /// <summary>
-        /// Returns a delegate for handling the request, or throws a WebResultsOverride exception if the method can not be handled
-        /// </summary>
-        /// <exception cref="WebResultsOverrideException">Thrown if no method can be found</exception>
-        /// <returns></returns>
-        WebDelegate GetMethod(IWebConnection webConnection);
-		
-		/// <value>
-		/// The FileContainer.  This is always set directly after construction. 
-		/// </value>
-		IFileContainer FileContainer { get; set; }
-
-        /// <summary>
-        /// The service locator
-        /// </summary>
-        FileHandlerFactoryLocator FileHandlerFactoryLocator { get; set; }
-
         /// <summary>
         /// The implicit action to use if no action or method is specified.  This is usually View, but could be something else
         /// </summary>
