@@ -29,7 +29,6 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
         private static DelegateWrapper CreateForCache(MethodNameAndFileContainer key)
         {
             string methodName = key.MethodName;
-            IFileContainer fileContainer = key.FileContainer;
 
             IDictionary<string, WebCallableMethod> methods = WebMethodCache.MethodInfoCache[key.WebHandlerPlugin.GetType()];
 
