@@ -1,4 +1,4 @@
-// Copyright 2009 Andrew Rondeau
+// Copyright 2009, 2010 Andrew Rondeau
 // This code is released under the LGPL license
 // For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
 
@@ -129,7 +129,8 @@ namespace ObjectCloud.ORM.DataAccess.WhereConditionals
                 else
                     yield return _Rhs;
             }
-        }
+        }
+
 
         public static ComparisonCondition operator &(ComparisonCondition lhs, ComparisonCondition rhs)
         {

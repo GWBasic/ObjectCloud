@@ -1,4 +1,4 @@
-// Copyright 2009 Andrew Rondeau
+// Copyright 2009, 2010 Andrew Rondeau
 // This code is released under the LGPL license
 // For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
 
@@ -52,7 +52,8 @@ namespace ObjectCloud.Disk.Implementation
         public IUser AnonymousUser
         {
             get { return _AnonymousUser; }
-        }        
+        }
+        
         private static IUser _AnonymousUser = null;
 				
         public IGroup Everybody
@@ -76,7 +77,8 @@ namespace ObjectCloud.Disk.Implementation
         public IGroup Administrators
 		{
         	get { return _Administrators; }
-		}		private IGroup _Administrators = null;
+		}
+		private IGroup _Administrators = null;
 		
 		private IList<ID<IUserOrGroup, Guid>> SystemUserOrGroupIds
 		{
