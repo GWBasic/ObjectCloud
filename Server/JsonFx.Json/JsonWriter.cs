@@ -530,7 +530,7 @@ namespace JsonFx.Json
         /// <summary>
         /// Javascript's epoc
         /// </summary>
-        public static readonly DateTime JavascriptEpoc = new DateTime(1970, 1, 1);
+        public static readonly DateTime JavascriptEpoc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
 		public virtual void Write(DateTime value)
 		{
