@@ -50,5 +50,37 @@ namespace ObjectCloud.Common
 
             return toReturn;
         }
+
+        /// <summary>
+        /// Returns true if the dictionaries are functionally equivilent.  (Both have the same keys and values)
+        /// </summary>
+        /// <typeparam name="TKey"></typeparam>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="right"></param>
+        /// <param name="left"></param>
+        /// <returns></returns>
+        public static bool Equals<TKey, TValue>(IDictionary<TKey, TValue> right, IDictionary<TKey, TValue> left)
+            where TValue : class
+        {
+            Set<TKey> rightKeys = new Set<TKey>(right.Keys);
+            Set<TKey> leftKeys = new Set<TKey>(left.Keys);
+
+            if (!rightKeys.Equals(leftKeys))
+                return false;
+
+            foreach (KeyValuePair<TKey, TValue> rightKvp in right)
+            {
+                TValue rightValue = rightKvp.Value;
+                TValue leftValue = left[rightKvp.Key];
+
+                if ((leftValue == default(TValue)) && (rightValue != default(TValue)))
+                    return false;
+
+                if (!leftValue.Equals(rightValue))
+                    return false;
+            }
+
+            return true;
+        }
 	}
 }

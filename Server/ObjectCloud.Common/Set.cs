@@ -106,6 +106,36 @@ namespace ObjectCloud.Common
         {
             return InnerDictionary.Keys.GetEnumerator();
         }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is IEnumerable<T>)
+            {
+                int ctr = 0;
+
+                foreach (T val in (IEnumerable<T>)obj)
+                {
+                    if (!Contains(val))
+                        return false;
+
+                    ctr++;
+                }
+
+                return ctr == Count;
+            }
+
+            return base.Equals(obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return InnerDictionary.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return InnerDictionary.ToString();
+        }
     }
 
     /// <summary>

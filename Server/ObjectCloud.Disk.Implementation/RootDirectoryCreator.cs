@@ -17,7 +17,7 @@ namespace ObjectCloud.Disk.Implementation
 {
     public class RootDirectoryCreator : IRootDirectoryCreator
     {
-        public void CreateRootDirectoryHandler(IFileContainer rootDirectoryContainer)
+        public virtual void CreateRootDirectoryHandler(IFileContainer rootDirectoryContainer)
         {
             // Construct the root directory on disk
             IDirectoryHandler rootDirectoryHandler = FileHandlerFactoryLocator.DirectoryFactory.CreateFile(
@@ -266,7 +266,7 @@ namespace ObjectCloud.Disk.Implementation
             DoUpgrades(rootDirectoryHandler);
         }
 
-        public void Syncronize(IDirectoryHandler rootDirectoryHandler)
+        public virtual void Syncronize(IDirectoryHandler rootDirectoryHandler)
         {
             IFileHandler dir;
 

@@ -134,7 +134,9 @@ namespace ObjectCloud.WebServer.Test
             Assert.AreEqual(HttpStatusCode.OK, webResponse.StatusCode, "Bad status code");
             IDictionary<string, string> nameValuePairsFromServer = webResponse.AsJsonReader().Deserialize<Dictionary<string, string>>();
 
-            Assert.AreEqual(nameValuePairs, nameValuePairsFromServer, "Server did not respond with the correct name value pairs");
+            Assert.IsTrue(
+                DictionaryFunctions.Equals<string, string>(nameValuePairs, nameValuePairsFromServer),
+                "Server did not respond with the correct name value pairs");
         }
         
         [Test]
