@@ -52,42 +52,34 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
                     break;
             }
 
-            try
-            {
-                ID<IUserOrGroup, Guid> userId = webConnection.Session.User.Id;
+            ID<IUserOrGroup, Guid> userId = webConnection.Session.User.Id;
 
-                // If this user isn't the owner, then verify that the user has the appropriate permission
-                if (null != minimumPermission)
-                    if (FileContainer.OwnerId != userId)
-                    {
-                        bool hasPermission = false;
+            // If this user isn't the owner, then verify that the user has the appropriate permission
+            if (null != minimumPermission)
+                if (FileContainer.OwnerId != userId)
+                {
+                    bool hasPermission = false;
 
-                        // Get appropriate permission
-                        FilePermissionEnum? userPermission = FileContainer.LoadPermission(userId);
+                    // Get appropriate permission
+                    FilePermissionEnum? userPermission = FileContainer.LoadPermission(userId);
 
-                        if (null != userPermission)
-                            if (userPermission.Value >= minimumPermission.Value)
-                                hasPermission = true;
+                    if (null != userPermission)
+                        if (userPermission.Value >= minimumPermission.Value)
+                            hasPermission = true;
 
-                        // If the user doesn't explicitly have the needed permission, try loading any potentially-needed declaritive permissions
-                        if (!hasPermission)
-                            hasPermission = FileContainer.HasNamedPermissions(userId, WebCallableMethod.NamedPermissions);
+                    // If the user doesn't explicitly have the needed permission, try loading any potentially-needed declaritive permissions
+                    if (!hasPermission)
+                        hasPermission = FileContainer.HasNamedPermissions(userId, WebCallableMethod.NamedPermissions);
 
-                        if (!hasPermission)
-                            return WebResults.FromString(Status._401_Unauthorized, "Permission Denied");
-                    }
+                    if (!hasPermission)
+                        return WebResults.FromString(Status._401_Unauthorized, "Permission Denied");
+                }
 
-                if (null != WebCallableMethod.WebMethod)
-                    if (WebCallableMethod.WebMethod.Value != webConnection.Method)
-                        return WebResults.FromString(Status._405_Method_Not_Allowed, "Allowed method: " + WebCallableMethod.WebMethod.Value.ToString());
+            if (null != WebCallableMethod.WebMethod)
+                if (WebCallableMethod.WebMethod.Value != webConnection.Method)
+                    return WebResults.FromString(Status._405_Method_Not_Allowed, "Allowed method: " + WebCallableMethod.WebMethod.Value.ToString());
 
-                toReturn = WebCallableMethod.CallMethod(webConnection, WebHandlerPlugin);
-            }
-            catch (Exception e)
-            {
-                // Invoke wraps exceptions
-                throw e.InnerException;
-            }
+            toReturn = WebCallableMethod.CallMethod(webConnection, WebHandlerPlugin);
 
             return (IWebResults)toReturn;
         }

@@ -20,11 +20,11 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.GET, WebReturnConvention.Primitive, ObjectCloud.Interfaces.Security.FilePermissionEnum.Read)]
         public IWebResults IsLegacyWithoutChromePlug(IWebConnection webConnection)
         {
-            string userAgent = webConnection.Headers["USER-AGENT"];
-
-            if (userAgent.Contains("MSIE"))
-                if (!userAgent.Contains("chromeframe"))
-                    return WebResults.FromString(Status._200_OK, "true");
+            string userAgent;
+            if (webConnection.Headers.TryGetValue("USER-AGENT", out userAgent))
+                if (userAgent.Contains("MSIE"))
+                    if (!userAgent.Contains("chromeframe"))
+                        return WebResults.FromString(Status._200_OK, "true");
 
             return WebResults.FromString(Status._200_OK, "false");
         }

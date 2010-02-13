@@ -30,13 +30,18 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
                 if (null == webConnection.Content)
                     return WebResults.FromString(Status._400_Bad_Request, "No data sent");
 
-                object[] arguments = new object[]
-                {
-                    webConnection,
-                    GetSecondArgument(webConnection.Content)
-                };
+                object toReturn;
 
-                object toReturn = MethodInfo.Invoke(webHandlerPlugin, arguments);
+                try
+                {
+                    toReturn = MethodInfo.Invoke(webHandlerPlugin, new object[] { webConnection, GetSecondArgument(webConnection.Content) });
+                }
+                catch (TargetInvocationException e)
+                {
+                    // Invoke wraps exceptions
+                    throw e.InnerException;
+                }
+
                 return (IWebResults)toReturn;
             }
         }

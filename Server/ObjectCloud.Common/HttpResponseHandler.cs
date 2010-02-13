@@ -58,11 +58,26 @@ namespace ObjectCloud.Common
         }
 
         /// <summary>
+        /// Flag to prevent double-reading the stream
+        /// </summary>
+        bool returned = false;
+
+        private void PreventDoubleRead()
+        {
+            if (returned)
+                throw new InvalidOperationException("Can not read from the stream twice!");
+
+            returned = true;
+        }
+
+        /// <summary>
         /// Parses the result as a string
         /// </summary>
         /// <returns></returns>
         public string AsString()
         {
+            PreventDoubleRead();
+
             StreamReader reader = new StreamReader(HttpWebResponse.GetResponseStream());
             string response = reader.ReadToEnd().Trim();
 
@@ -75,6 +90,8 @@ namespace ObjectCloud.Common
         /// <returns></returns>
         public byte[] AsBytes()
         {
+            PreventDoubleRead();
+
             return StreamFunctions.ReadAllBytes(HttpWebResponse.GetResponseStream());
         }
 
@@ -84,6 +101,8 @@ namespace ObjectCloud.Common
         /// <returns></returns>
         public JsonReader AsJsonReader()
         {
+            PreventDoubleRead();
+
             return new JsonReader(HttpWebResponse.GetResponseStream());
         }
     }

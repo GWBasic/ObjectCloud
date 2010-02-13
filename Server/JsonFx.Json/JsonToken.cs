@@ -52,6 +52,7 @@ namespace JsonFx.Json
 		ObjectStart,
 		ObjectEnd,
 		NameDelim,
-		ValueDelim
+		ValueDelim,
+        DateTime
 	}
 }

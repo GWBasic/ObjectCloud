@@ -20,12 +20,18 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
 
             public override IWebResults CallMethod(IWebConnection webConnection, IWebHandlerPlugin webHandlerPlugin)
             {
-                object[] arguments = new object[]
-                {
-                    webConnection,
-                };
+                object toReturn;
 
-                object toReturn = MethodInfo.Invoke(webHandlerPlugin, arguments);
+                try
+                {
+                    toReturn = MethodInfo.Invoke(webHandlerPlugin, new object[] { webConnection });
+                }
+                catch (TargetInvocationException e)
+                {
+                    // Invoke wraps exceptions
+                    throw e.InnerException;
+                }
+
                 return (IWebResults)toReturn;
             }
         }

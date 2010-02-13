@@ -270,11 +270,15 @@ namespace JsonFx.Json
 				{
 					return this.ReadString(typeIsHint ? null : expectedType);
 				}
-				case JsonToken.Number:
-				{
-					return this.ReadNumber(typeIsHint ? null : expectedType);
-				}
-				case JsonToken.False:
+                case JsonToken.Number:
+                {
+                    return this.ReadNumber(typeIsHint ? null : expectedType);
+                }
+                case JsonToken.DateTime:
+                {
+                    return this.ReadDateTime(typeIsHint ? null : expectedType);
+                }
+                case JsonToken.False:
 				{
 					this.index += JsonReader.LiteralFalse.Length;
 					return false;
@@ -564,149 +568,179 @@ namespace JsonFx.Json
 			return jsArray.ToArray();
 		}
 
-		/// <summary>
-		/// Reads a JSON string
-		/// </summary>
-		/// <param name="expectedType"></param>
-		/// <returns>string or value which is represented as a string in JSON</returns>
-		private object ReadString(Type expectedType)
-		{
-			if (this.Source[this.index] != JsonReader.OperatorStringDelim &&
-				this.Source[this.index] != JsonReader.OperatorStringDelimAlt)
-			{
-				throw new JsonDeserializationException(JsonReader.ErrorExpectedString, this.index);
-			}
+        /// <summary>
+        /// Reads a JSON string
+        /// </summary>
+        /// <param name="expectedType"></param>
+        /// <returns>string or value which is represented as a string in JSON</returns>
+        private object ReadString(Type expectedType)
+        {
+            if (this.Source[this.index] != JsonReader.OperatorStringDelim &&
+                this.Source[this.index] != JsonReader.OperatorStringDelimAlt)
+            {
+                throw new JsonDeserializationException(JsonReader.ErrorExpectedString, this.index);
+            }
 
-			char startStringDelim = this.Source[this.index];
+            char startStringDelim = this.Source[this.index];
 
-			// consume opening quote
-			this.index++;
-			if (this.index >= this.SourceLength)
-			{
-				throw new JsonDeserializationException(JsonReader.ErrorUnterminatedString, this.index);
-			}
+            // consume opening quote
+            this.index++;
+            if (this.index >= this.SourceLength)
+            {
+                throw new JsonDeserializationException(JsonReader.ErrorUnterminatedString, this.index);
+            }
 
-			int start = this.index;
-			StringBuilder builder = new StringBuilder();
+            int start = this.index;
+            StringBuilder builder = new StringBuilder();
 
-			while (this.Source[this.index] != startStringDelim)
-			{
-				if (this.Source[this.index] == JsonReader.OperatorCharEscape)
-				{
-					// copy chunk before decoding
-					builder.Append(this.Source, start, this.index - start);
+            while (this.Source[this.index] != startStringDelim)
+            {
+                if (this.Source[this.index] == JsonReader.OperatorCharEscape)
+                {
+                    // copy chunk before decoding
+                    builder.Append(this.Source, start, this.index - start);
 
-					// consume escape char
-					this.index++;
-					if (this.index >= this.SourceLength)
-					{
-						throw new JsonDeserializationException(JsonReader.ErrorUnterminatedString, this.index);
-					}
+                    // consume escape char
+                    this.index++;
+                    if (this.index >= this.SourceLength)
+                    {
+                        throw new JsonDeserializationException(JsonReader.ErrorUnterminatedString, this.index);
+                    }
 
-					// decode
-					switch (this.Source[this.index])
-					{
-						case '0':
-						{
-							// don't allow NULL char '\0'
-							// causes CStrings to terminate
-							break;
-						}
-						case 'b':
-						{
-							// backspace
-							builder.Append('\b');
-							break;
-						}
-						case 'f':
-						{
-							// formfeed
-							builder.Append('\f');
-							break;
-						}
-						case 'n':
-						{
-							// newline
-							builder.Append('\n');
-							break;
-						}
-						case 'r':
-						{
-							// carriage return
-							builder.Append('\r');
-							break;
-						}
-						case 't':
-						{
-							// tab
-							builder.Append('\t');
-							break;
-						}
-						case 'u':
-						{
-							// Unicode escape sequence
-							// e.g. Copyright: "\u00A9"
+                    // decode
+                    switch (this.Source[this.index])
+                    {
+                        case '0':
+                            {
+                                // don't allow NULL char '\0'
+                                // causes CStrings to terminate
+                                break;
+                            }
+                        case 'b':
+                            {
+                                // backspace
+                                builder.Append('\b');
+                                break;
+                            }
+                        case 'f':
+                            {
+                                // formfeed
+                                builder.Append('\f');
+                                break;
+                            }
+                        case 'n':
+                            {
+                                // newline
+                                builder.Append('\n');
+                                break;
+                            }
+                        case 'r':
+                            {
+                                // carriage return
+                                builder.Append('\r');
+                                break;
+                            }
+                        case 't':
+                            {
+                                // tab
+                                builder.Append('\t');
+                                break;
+                            }
+                        case 'u':
+                            {
+                                // Unicode escape sequence
+                                // e.g. Copyright: "\u00A9"
 
-							// unicode ordinal
-							int utf16;
-							if (this.index+4 < this.SourceLength &&
-								Int32.TryParse(
-									this.Source.Substring(this.index+1, 4),
-									NumberStyles.AllowHexSpecifier,
-									NumberFormatInfo.InvariantInfo,
-									out utf16))
-							{
-								builder.Append(Char.ConvertFromUtf32(utf16));
-								this.index += 4;
-							}
-							else
-							{
-								// using FireFox style recovery, if not a valid hex
-								// escape sequence then treat as single escaped 'u'
-								// followed by rest of string
-								builder.Append(this.Source[this.index]);
-							}
-							break;
-						}
-						default:
-						{
-							builder.Append(this.Source[this.index]);
-							break;
-						}
-					}
+                                // unicode ordinal
+                                int utf16;
+                                if (this.index + 4 < this.SourceLength &&
+                                    Int32.TryParse(
+                                        this.Source.Substring(this.index + 1, 4),
+                                        NumberStyles.AllowHexSpecifier,
+                                        NumberFormatInfo.InvariantInfo,
+                                        out utf16))
+                                {
+                                    builder.Append(Char.ConvertFromUtf32(utf16));
+                                    this.index += 4;
+                                }
+                                else
+                                {
+                                    // using FireFox style recovery, if not a valid hex
+                                    // escape sequence then treat as single escaped 'u'
+                                    // followed by rest of string
+                                    builder.Append(this.Source[this.index]);
+                                }
+                                break;
+                            }
+                        default:
+                            {
+                                builder.Append(this.Source[this.index]);
+                                break;
+                            }
+                    }
 
-					this.index++;
-					if (this.index >= this.SourceLength)
-					{
-						throw new JsonDeserializationException(JsonReader.ErrorUnterminatedString, this.index);
-					}
+                    this.index++;
+                    if (this.index >= this.SourceLength)
+                    {
+                        throw new JsonDeserializationException(JsonReader.ErrorUnterminatedString, this.index);
+                    }
 
-					start = this.index;
-				}
-				else
-				{
-					// next char
-					this.index++;
-					if (this.index >= this.SourceLength)
-					{
-						throw new JsonDeserializationException(JsonReader.ErrorUnterminatedString, this.index);
-					}
-				}
-			}
+                    start = this.index;
+                }
+                else
+                {
+                    // next char
+                    this.index++;
+                    if (this.index >= this.SourceLength)
+                    {
+                        throw new JsonDeserializationException(JsonReader.ErrorUnterminatedString, this.index);
+                    }
+                }
+            }
 
-			// copy rest of string
-			builder.Append(this.Source, start, this.index-start);
+            // copy rest of string
+            builder.Append(this.Source, start, this.index - start);
 
-			// consume closing quote
-			this.index++;
+            // consume closing quote
+            this.index++;
 
-			if (expectedType != null && expectedType != typeof(String))
-			{
-				return JsonReader.CoerceType(expectedType, builder.ToString(), this.index, this.AllowNullValueTypes);
-			}
+            if (expectedType != null && expectedType != typeof(String))
+            {
+                return JsonReader.CoerceType(expectedType, builder.ToString(), this.index, this.AllowNullValueTypes);
+            }
 
-			return builder.ToString();
-		}
+            return builder.ToString();
+        }
+
+        /// <summary>
+        /// Reads a DateTime in the "new Date(12345...)" format
+        /// </summary>
+        /// <param name="expectedType"></param>
+        /// <returns>DateTime in the UTC timezone</returns>
+        private object ReadDateTime(Type expectedType)
+        {
+            do
+                this.index++;
+            while (this.Source[this.index] != '(');
+
+            int milisecondsStringStart = this.index + 1;
+
+            do
+                this.index++;
+            while (this.Source[this.index] != ')');
+
+            int milisecondsStringEnd = this.index;
+            index++;
+
+            string milisecondsString = this.Source.Substring(milisecondsStringStart, milisecondsStringEnd - milisecondsStringStart).Trim();
+
+            double totalMiliseconds;
+            if (!double.TryParse(milisecondsString, out totalMiliseconds))
+                throw new JsonDeserializationException(milisecondsString + " is not a valid number of miliseconds since the Javascript epoc", this.index);
+
+            TimeSpan timeSpanSinceEpoc = TimeSpan.FromMilliseconds(totalMiliseconds);
+            return JsonWriter.JavascriptEpoc + timeSpanSinceEpoc;
+        }
 
 		private object ReadNumber(Type expectedType)
 		{
@@ -1552,6 +1586,11 @@ namespace JsonFx.Json
 			{
 				return JsonToken.Number;
 			}
+
+            if (this.MatchLiteral("new Date("))
+            {
+                return JsonToken.DateTime;
+            }
 
 			// "false" literal
 			if (this.MatchLiteral(JsonReader.LiteralFalse))

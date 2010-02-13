@@ -34,7 +34,18 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
                 // The first argument is always the web connection
                 arguments[0] = webConnection;
 
-                object toReturn = MethodInfo.Invoke(webHandlerPlugin, arguments);
+                object toReturn;
+
+                try
+                {
+                    toReturn = MethodInfo.Invoke(webHandlerPlugin, new object[] { arguments });
+                }
+                catch (TargetInvocationException e)
+                {
+                    // Invoke wraps exceptions
+                    throw e.InnerException;
+                }
+
                 return (IWebResults)toReturn;
             }
         }

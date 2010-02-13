@@ -9,6 +9,7 @@ using System.Net;
 using System.Text;
 
 using Common.Logging;
+using JsonFx.Json;
 
 using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Disk;
@@ -353,6 +354,12 @@ namespace ObjectCloud.Interfaces.WebServer
                 }
 
                 return webResults;
+            }
+            catch (JsonDeserializationException e)
+            {
+                log.Error(e);
+
+                return WebResults.FromString(Status._400_Bad_Request, e.Message);
             }
             catch (NotImplementedException e)
             {

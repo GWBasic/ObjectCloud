@@ -26,71 +26,96 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
             // Decode the arguments
             foreach (KeyValuePair<string, string> parameter in parameters)
                 if (ParameterIndexes.ContainsKey(parameter.Key))
-                {
-                    string value = parameter.Value;
-                    uint parameterIndex = ParameterIndexes[parameter.Key];
-
-                    if (null != value)
+                    try
                     {
-                        ParameterInfo parameterInfo = Parameters[parameterIndex];
-                        Type parameterType = parameterInfo.ParameterType;
+                        string value = parameter.Value;
+                        uint parameterIndex = ParameterIndexes[parameter.Key];
 
-                        // Attempt to convert the value to the requested parameter type
-
-                        // JSON types
-                        if ((typeof(Dictionary<string, string>) == parameterType)
-                            || (typeof(Dictionary<string, object>) == parameterType)
-                            || (parameterType.IsGenericType && typeof(Dictionary<,>) == parameterType.GetGenericTypeDefinition()))
+                        if (null != value)
                         {
-                            JsonReader jsonReader = new JsonReader(value);
-                            arguments[parameterIndex] = jsonReader.Deserialize(parameterType);
-                        }
-                        else if (typeof(JsonReader) == parameterType)
-                            arguments[parameterIndex] = new JsonReader(value);
+                            ParameterInfo parameterInfo = Parameters[parameterIndex];
+                            Type parameterType = parameterInfo.ParameterType;
 
-                        else if (typeof(bool) == parameterType || typeof(bool?) == parameterType)
-                        {
-                            if ("on".Equals(value.ToLower()))
-                                arguments[parameterIndex] = true;
-                            else
-                                arguments[parameterIndex] = Convert.ToBoolean(value);
-                        }
+                            // Attempt to convert the value to the requested parameter type
 
-                        else if ((typeof(DateTime) == parameterType) || (typeof(DateTime?) == parameterType))
-                        {
-                            if (null != value)
+                            // JSON types
+                            if ((typeof(Dictionary<string, string>) == parameterType)
+                                || (typeof(Dictionary<string, object>) == parameterType)
+                                || (parameterType.IsGenericType && typeof(Dictionary<,>) == parameterType.GetGenericTypeDefinition()))
                             {
                                 JsonReader jsonReader = new JsonReader(value);
-                                arguments[parameterIndex] = jsonReader.Deserialize<DateTime>();
+                                arguments[parameterIndex] = jsonReader.Deserialize(parameterType);
                             }
+                            else if (typeof(JsonReader) == parameterType)
+                                arguments[parameterIndex] = new JsonReader(value);
+
+                            else if (typeof(bool) == parameterType || typeof(bool?) == parameterType)
+                            {
+                                if ("on".Equals(value.ToLower()))
+                                    arguments[parameterIndex] = true;
+                                else
+                                    arguments[parameterIndex] = Convert.ToBoolean(value);
+                            }
+
+                            else if ((typeof(DateTime) == parameterType) || (typeof(DateTime?) == parameterType))
+                            {
+                                if (null != value)
+                                {
+                                    JsonReader jsonReader = new JsonReader(value);
+                                    arguments[parameterIndex] = jsonReader.Deserialize<DateTime>();
+                                }
+                            }
+
+                            else if (typeof(Guid) == parameterType || typeof(Guid?) == parameterType)
+                                arguments[parameterIndex] = new Guid(value.ToString());
+
+                            // Nullable
+                            else if (parameterType.IsGenericType && typeof(Nullable<>) == parameterType.GetGenericTypeDefinition())
+                                arguments[parameterIndex] = Convert.ChangeType(value, parameterType.GetGenericArguments()[0]);
+
+                            // Arrays
+                            else if (parameterType.IsArray)
+                            {
+                                JsonReader jsonReader = new JsonReader(value);
+                                arguments[parameterIndex] = jsonReader.Deserialize(parameterType);
+                            }
+
+                            // Everything else
+                            else
+                                arguments[parameterIndex] = Convert.ChangeType(value, parameterType);
                         }
-
-                        else if (typeof(Guid) == parameterType || typeof(Guid?) == parameterType)
-                            arguments[parameterIndex] = new Guid(value.ToString());
-
-                        // Nullable
-                        else if (parameterType.IsGenericType && typeof(Nullable<>) == parameterType.GetGenericTypeDefinition())
-                            arguments[parameterIndex] = Convert.ChangeType(value, parameterType.GetGenericArguments()[0]);
-
-                        // Arrays
-                        else if (parameterType.IsArray)
-                        {
-                            JsonReader jsonReader = new JsonReader(value);
-                            arguments[parameterIndex] = jsonReader.Deserialize(parameterType);
-                        }
-
-                        // Everything else
                         else
-                            arguments[parameterIndex] = Convert.ChangeType(value, parameterType);
+                            arguments[parameterIndex] = null;
                     }
-                    else
-                        arguments[parameterIndex] = null;
-                }
+                    catch (JsonDeserializationException jde)
+                    {
+                        throw new WebResultsOverrideException(WebResults.FromString(
+                            Status._400_Bad_Request,
+                            "Error parsing " + parameter.Key + ", Bad JSON: " + jde.Message));
+                    }
+                    catch
+                    {
+                        throw new WebResultsOverrideException(WebResults.FromString(
+                            Status._400_Bad_Request,
+                            "Error parsing " + parameter.Key));
+                    }
+
 
             // The first argument is always the web connection
             arguments[0] = webConnection;
 
-            object toReturn = MethodInfo.Invoke(webHandlerPlugin, arguments);
+            object toReturn;
+
+            try
+            {
+                toReturn = MethodInfo.Invoke(webHandlerPlugin, arguments);
+            }
+            catch (TargetInvocationException e)
+            {
+                // Invoke wraps exceptions
+                throw e.InnerException;
+            }
+
             return (IWebResults)toReturn;
         }
     }
