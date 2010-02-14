@@ -1,6 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <NameValuePairs>
-	<NameValuePair Name="Edit" Value="Write" />
 	<NameValuePair Name="View" Value="Read" />
-	<NameValuePair Name="Preview" Value="Read" />
+	<NameValuePair Name="Edit" Value="Write" />
 </NameValuePairs>

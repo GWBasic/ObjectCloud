@@ -3,45 +3,166 @@
 	<File
 		Name="Actions"
 		TypeId="directory"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
 	<File
 		Name="Communication"
 		TypeId="directory"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
 	<File
 		Name="Editors"
 		TypeId="directory"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
 	<File
 		Name="Legacy"
 		TypeId="directory"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
 	<File
 		Name="Navigation"
 		TypeId="directory"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
 	<File
 		Name="OpenID"
 		TypeId="directory"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
 	<File
 		Name="Security"
 		TypeId="directory"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
 	<File
 		Name="Upload"
 		TypeId="directory"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
 	<File
 		Name="UserManagers"
 		TypeId="directory"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
 	<File
 		Name="version.json"
 		TypeId="text"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
 	<File
 		Name="Viewers"
 		TypeId="directory"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
 </Directory>

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <NameValuePairs>
-	<NameValuePair Name="Edit" Value="/Shell/Navigation/Directory.wchtml?Directory=[Target]/, text/html" />
 	<NameValuePair Name="View" Value="/Shell/Viewers/BlogPostViewer.wchtml?FileName=[Target]/" />
+	<NameValuePair Name="Edit" Value="/Shell/Navigation/Directory.wchtml?Directory=[Target]/, text/html" />
 </NameValuePairs>

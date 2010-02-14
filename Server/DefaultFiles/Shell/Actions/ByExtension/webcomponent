@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <NameValuePairs>
-	<NameValuePair Name="Edit" Value="/Shell/Editors/Weco.wchtml?FileName=[Target]" />
 	<NameValuePair Name="View" Value="[Target]?Method=ResolveComponents&amp;[Arguments]" />
+	<NameValuePair Name="Edit" Value="/Shell/Editors/Weco.wchtml?FileName=[Target]" />
 </NameValuePairs>

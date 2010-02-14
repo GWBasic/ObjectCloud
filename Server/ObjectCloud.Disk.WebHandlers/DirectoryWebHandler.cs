@@ -560,10 +560,13 @@ namespace ObjectCloud.Disk.WebHandlers
             string fullPathToIndexFile;
 
             if (null != FileHandler.IndexFile)
-                fullPathToIndexFile = string.Format(
-                    "{0}/{1}",
-                    FileContainer.FullPath,
-                    FileHandler.IndexFile);
+                if (FileHandler.IndexFile.StartsWith("/"))
+                    fullPathToIndexFile = FileHandler.IndexFile;
+                else
+                    fullPathToIndexFile = string.Format(
+                        "{0}/{1}",
+                        FileContainer.FullPath,
+                        FileHandler.IndexFile);
             else
                 fullPathToIndexFile = FileContainer.FullPath;
 
