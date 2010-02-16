@@ -396,6 +396,11 @@ namespace ObjectCloud.Javascript
         Dictionary<string, object> LoadedLibraries = new Dictionary<string, object>();
 
         /// <summary>
+        /// When the loaded libraries were last modified
+        /// </summary>
+        Dictionary<string, DateTime> LoadedLibrariesLastModified = new Dictionary<string, DateTime>();
+
+        /// <summary>
         /// Loads the given Javascript library into the scope, if it is not yet loaded
         /// </summary>
         /// <param name="toLoad"></param>
@@ -420,6 +425,7 @@ namespace ObjectCloud.Javascript
                 try
                 {
                     textHandler = fileContainer.CastFileHandler<ITextHandler>();
+                    LoadedLibrariesLastModified[toLoad] = fileContainer.FileHandler.LastModified;
                 }
                 catch (Exception e)
                 {
@@ -435,6 +441,13 @@ namespace ObjectCloud.Javascript
                     null);
 
                 LoadedLibraries[toLoad] = toReturn;
+            }
+
+            // If the dependant library has been modified, reload it
+            if (LoadedLibrariesLastModified[toLoad] != FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(toLoad).FileHandler.LastModified)
+            {
+                LoadedLibraries.Remove(toLoad);
+                return Use(functionCallContext, toLoad);
             }
 
             return toReturn;

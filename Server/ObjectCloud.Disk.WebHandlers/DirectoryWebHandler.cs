@@ -570,7 +570,17 @@ namespace ObjectCloud.Disk.WebHandlers
             else
                 fullPathToIndexFile = FileContainer.FullPath;
 
-            return webConnection.ShellTo(fullPathToIndexFile);
+            if (0 == webConnection.GetParameters.Count)
+                return webConnection.ShellTo(fullPathToIndexFile);
+            else
+            {
+                RequestParameters newGetParameters = new RequestParameters();
+                foreach (KeyValuePair<string, string> getParameter in webConnection.GetParameters)
+                    if (getParameter.Key != "Method")
+                        newGetParameters.Add(getParameter);
+
+                return webConnection.ShellTo(fullPathToIndexFile + "?" + newGetParameters);
+            }
         }
 
         /// <summary>

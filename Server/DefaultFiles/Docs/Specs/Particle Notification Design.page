@@ -286,7 +286,7 @@ for the arguments, no use copying)</p>
 <ol><li><p style="font-weight: normal;">The Sender table is queried to
 	find the OpenID from the senderToken.  If no matching senderToken is
 	found, then an HTTP status 424 (failed dependancy.) and the text
-	“senderToken�������� are returned.</p>
+	“senderToken������������ are returned.</p>
 	</li><li><p style="font-weight: normal;">The Blocked table is queried for
 	the OpenID.  If it is found, then a 202 is returned and the
 	notification discarded.</p>
@@ -406,7 +406,7 @@ are unblocked.</p>
 <p style="font-weight: normal;">(See the spec's section for this
 endpoint to see the arguments.)</p>
 <p style="font-weight: normal;">Server-side javascript function named
-“UpdateObjectState”.  A session must be established where the
+“UpdateObjectState���.  A session must be established where the
 user has ADMINISTER access.  An entry in the ObjectState table is
 either created or updated based on the passed-in state.</p>
 <p style="font-weight: normal;">If “delete” or “silentDelete”
