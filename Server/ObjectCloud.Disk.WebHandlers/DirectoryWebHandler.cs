@@ -393,7 +393,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <returns></returns>
         /// <param name="DestinationFilename">The destination file</param>
         /// <param name="SourceFilename">The source file</param>
-        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Administer)]
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Administer)]
         public IWebResults CopyFile(IWebConnection webConnection, string SourceFilename, string DestinationFilename)
         {
             IFileContainer toCopy;
