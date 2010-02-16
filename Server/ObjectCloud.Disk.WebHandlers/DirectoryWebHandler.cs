@@ -54,55 +54,7 @@ namespace ObjectCloud.Disk.WebHandlers
                         throw new WebResultsOverrideException(
                         WebResults.FromString(Status._400_Bad_Request, "The extension must be at least one character long"));
 
-                    DateTime timestamp = DateTime.UtcNow;
-
-                    // If there's a suggestion, then follow it
-                    if (null != fileNameSuggestion)
-                    {
-                        // Limit potential filenames to a reasonable length
-                        if (fileNameSuggestion.Length > 25)
-                            fileNameSuggestion = fileNameSuggestion.Substring(0, 25);
-
-                        // Get rid of forbidden characters
-                        foreach (char forbiddenChar in FileHandlerFactoryLocator.FileSystemResolver.FilenameForbiddenCharacters)
-                            fileNameSuggestion = fileNameSuggestion.Replace(forbiddenChar, '_');
-
-                        // Try the suggestion plus an extension
-                        FileName = string.Format(
-                            "{0}.{1}",
-                            fileNameSuggestion,
-                            extension);
-
-                        // If that doesn't work, then just keep using the time to find something unique
-                        if (FileHandler.IsFilePresent(FileName))
-                        {
-                            long ticks = timestamp.Ticks;
-
-                            do
-                            {
-                                FileName = string.Format(
-                                    "{0}_{1}.{2}",
-                                    fileNameSuggestion,
-                                    ticks,
-                                    extension);
-
-                                ticks++;
-                            }
-                            while (FileHandler.IsFilePresent(FileName));
-                        }
-                    }
-                    else
-                        FileName = string.Format(
-                            "{0}x{1}-{2}-{3}___{4}-{5}-{6}_{7}.{8}",
-                            SRandom.Next<byte>(),
-                            timestamp.Year,
-                            timestamp.Month,
-                            timestamp.Day,
-                            timestamp.Hour,
-                            timestamp.Minute,
-                            timestamp.Second,
-                            timestamp.Millisecond,
-                            extension);
+                    FileName = GenerateFilename(extension, fileNameSuggestion);
                 }
                 else
                 {
@@ -155,6 +107,67 @@ namespace ObjectCloud.Disk.WebHandlers
                 toReturn.Status = Status._201_Created;
                 return toReturn;
             }
+        }
+
+        /// <summary>
+        /// Assists in generating a filename
+        /// </summary>
+        /// <param name="extension"></param>
+        /// <param name="fileNameSuggestion"></param>
+        /// <returns></returns>
+        private string GenerateFilename(string extension, string fileNameSuggestion)
+        {
+            DateTime timestamp = DateTime.UtcNow;
+
+            // If there's a suggestion, then follow it
+            if (null != fileNameSuggestion)
+            {
+                // Limit potential filenames to a reasonable length
+                if (fileNameSuggestion.Length > 25)
+                    fileNameSuggestion = fileNameSuggestion.Substring(0, 25);
+
+                // Get rid of forbidden characters
+                foreach (char forbiddenChar in FileHandlerFactoryLocator.FileSystemResolver.FilenameForbiddenCharacters)
+                    fileNameSuggestion = fileNameSuggestion.Replace(forbiddenChar, '_');
+
+                // Try the suggestion plus an extension
+                string fileName = string.Format(
+                    "{0}.{1}",
+                    fileNameSuggestion,
+                    extension);
+
+                // If that doesn't work, then just keep using the time to find something unique
+                if (FileHandler.IsFilePresent(fileName))
+                {
+                    long ticks = timestamp.Ticks;
+
+                    do
+                    {
+                        fileName = string.Format(
+                            "{0}_{1}.{2}",
+                            fileNameSuggestion,
+                            ticks,
+                            extension);
+
+                        ticks++;
+                    }
+                    while (FileHandler.IsFilePresent(fileName));
+                }
+
+                return fileName;
+            }
+            else
+                return string.Format(
+                    "{0}x{1}-{2}-{3}___{4}-{5}-{6}_{7}.{8}",
+                    SRandom.Next<byte>(),
+                    timestamp.Year,
+                    timestamp.Month,
+                    timestamp.Day,
+                    timestamp.Hour,
+                    timestamp.Minute,
+                    timestamp.Second,
+                    timestamp.Millisecond,
+                    extension);
         }
 
         /// <summary>
@@ -398,11 +411,16 @@ namespace ObjectCloud.Disk.WebHandlers
                     Status._404_Not_Found, SourceFilename + " not found"));
             }
 
-            if (null == DestinationFilename)
-                DestinationFilename = toCopy.Filename;
+            // Generate a filename, if needed
+            bool generateFilename = false;
 
-            if (DestinationFilename.Length == 0)
-                DestinationFilename = toCopy.Filename;
+            if (null == DestinationFilename)
+                generateFilename = true;
+            else if (DestinationFilename.Length == 0)
+                generateFilename = true;
+
+            if (generateFilename)
+                DestinationFilename = GenerateFilename(toCopy.Extension, toCopy.Filename);
 
             FilePermissionEnum? permissionToSource = toCopy.LoadPermission(webConnection.Session.User.Id);
 
@@ -423,7 +441,10 @@ namespace ObjectCloud.Disk.WebHandlers
 		                return WebResults.FromString(Status._409_Conflict, DestinationFilename + " is an invalid file name");
 					}
 
-                    return WebResults.FromString(Status._201_Created, "Copied");
+                    // Return a Javascript wrapper to assist in the caller knowing more about the created file
+                    IFileContainer newFile = FileHandler.OpenFile(DestinationFilename);
+                    IWebResults wrapperResults = newFile.WebHandler.GetJSW(webConnection, null, null, false);
+                    return WebResults.FromStream(Status._201_Created, wrapperResults.ResultsAsStream);
                 }
 
             return WebResults.FromString(Status._401_Unauthorized, "Permission deined");

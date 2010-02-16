@@ -175,7 +175,9 @@ namespace ObjectCloud.WebServer.Test
                 new KeyValuePair<string, string>("DestinationFilename", destinationFilename));
 
             Assert.AreEqual(HttpStatusCode.Created, webResponse.StatusCode, "Wrong status code");
-            Assert.AreEqual("Copied", webResponse.AsString(), "Unexpected response");
+
+            // Now the Javascript wrapper is returned so that the caller can immediately get information about the created file
+            //Assert.AreEqual("Copied", webResponse.AsString(), "Unexpected response");
 
             webResponse = httpWebClient.Get(
                 "http://localhost:" + WebServer.Port + "/" + destinationFilename,

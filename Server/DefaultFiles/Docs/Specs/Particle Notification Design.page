@@ -286,7 +286,7 @@ for the arguments, no use copying)</p>
 <ol><li><p style="font-weight: normal;">The Sender table is queried to
 	find the OpenID from the senderToken.  If no matching senderToken is
 	found, then an HTTP status 424 (failed dependancy.) and the text
-	“senderToken������������ are returned.</p>
+	“senderToken�������������� are returned.</p>
 	</li><li><p style="font-weight: normal;">The Blocked table is queried for
 	the OpenID.  If it is found, then a 202 is returned and the
 	notification discarded.</p>
@@ -347,7 +347,7 @@ be authenticated and that the client's user has Write access to this
 object.  Typically, this will be the owner, although the owner can
 allow other people to pretend to be him / her by granting Write
 access to this object.  This is implemented as the server-side
-“SendNotification��� method.</p>
+��SendNotification��� method.</p>
 <p style="font-weight: normal;">(See the spec's section for this
 endpoint to see the arguments.)</p>
 <p style="font-weight: normal;">The additional optional arguments are
@@ -384,7 +384,7 @@ supported:</p>
 	transportErrorDelay and then recurses with forceRefreshEndpoints set
 	to true.  When recursing, maxRetries is decremented.</p>
 	</li><li><p style="font-weight: normal;">If receiveNotification returns a
-	412 and the text “SenderToken”, then the function recurses with
+	412 and the text ���SenderToken”, then the function recurses with
 	forceRefreshSenderToken set to true and maxRetries decremented.</p>
 	</li><li><p style="font-weight: normal;">If receiveNotification returns a
 	450 (Blocked), then an entry is made in the Deleted table.  The
