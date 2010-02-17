@@ -198,6 +198,8 @@ namespace ObjectCloud.WebAccessCodeGenerators
             toReturn.Append(SyncronousFunctionDeclaration);
 
             // Create a urlEncoded string for all of the parameters
+            toReturn.AppendFormat("   if (parameters == undefined)\n");
+            toReturn.Append("      parameters = {};\n");
             toReturn.AppendFormat("   parameters.Method='{0}';\n", methodName);
             toReturn.Append(CreateEncodedParameters);
 
@@ -277,6 +279,8 @@ namespace ObjectCloud.WebAccessCodeGenerators
             toReturn.Append(SyncronousFunctionDeclaration);
 
             // Create a urlEncoded string for all of the parameters
+            toReturn.AppendFormat("   if (parameters == undefined)\n");
+            toReturn.Append("      parameters = {};\n");
             toReturn.AppendFormat("   parameters.Method='{0}';\n", methodName);
             toReturn.Append(CreateEncodedParameters);
 
