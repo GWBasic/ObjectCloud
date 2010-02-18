@@ -136,6 +136,29 @@ namespace ObjectCloud.Disk.WebHandlers
         private string cachedInBrowserJSWrapper = null;
 
         /// <summary>
+        /// The web handler types
+        /// </summary>
+        public Set<Type> WebHandlerTypes
+        {
+            get 
+            {
+                if (null == _WebHandlerTypes)
+                {
+                    Set<Type> webHandlerTypes = new Set<Type>();
+                    webHandlerTypes.Add(GetType());
+
+                    foreach (IWebHandlerPlugin webHandlerPlugin in FileContainer.WebHandlerPlugins)
+                        webHandlerTypes.Add(webHandlerPlugin.GetType());
+
+                    _WebHandlerTypes = webHandlerTypes;
+                }
+
+                return _WebHandlerTypes; 
+            }
+        }
+        private Set<Type> _WebHandlerTypes = null;
+
+        /// <summary>
         /// Returns a Javascript object that can perform all calls to all methods marked as WebCallable through AJAX.
         /// </summary>
         /// <param name="webConnection"></param>
@@ -150,7 +173,7 @@ namespace ObjectCloud.Disk.WebHandlers
             if (null == cachedInBrowserJSWrapper)
             {
                 string javascriptWrapper = StringGenerator.GenerateSeperatedList(
-                    FileHandlerFactoryLocator.WebServer.JavascriptWebAccessCodeGenerator.GenerateWrapper(GetType()), ",\n");
+                    FileHandlerFactoryLocator.WebServer.JavascriptWebAccessCodeGenerator.GenerateWrapper(WebHandlerTypes), ",\n");
 
                 // Replace some key constants
                 javascriptWrapper = javascriptWrapper.Replace("{0}", FileContainer.FullPath);

@@ -16,65 +16,66 @@ namespace ObjectCloud.WebAccessCodeGenerators
     {
         static JavascriptWrapperGenerator()
         {
-            WrappersCache = new Cache<Type, IEnumerable<string>>(GenerateWrapperForCache);
+            WrappersCache = new Cache<Set<Type>, IEnumerable<string>>(GenerateWrapperForCache);
         }
 
         /// <summary>
         /// Cache of generated JavaScript wrappers
         /// </summary>
-        private static Cache<Type, IEnumerable<string>> WrappersCache;
+        private static Cache<Set<Type>, IEnumerable<string>> WrappersCache;
 
-        public IEnumerable<string> GenerateWrapper(Type webHandlerType)
+        public IEnumerable<string> GenerateWrapper(Set<Type> webHandlerTypes)
         {
-            return WrappersCache[webHandlerType];
+            return WrappersCache[webHandlerTypes];
         }
 
-        private static IEnumerable<string> GenerateWrapperForCache(Type type)
+        private static IEnumerable<string> GenerateWrapperForCache(Set<Type> types)
         {
             List<string> javascriptMethods = new List<string>();
 
-            foreach (MethodAndWebCallableAttribute methodAndWCA in GetWebCallableMethods(type))
-            {
-                switch (methodAndWCA.WebCallableAttribute.WebCallingConvention)
+            foreach (Type type in types)
+                foreach (MethodAndWebCallableAttribute methodAndWCA in GetWebCallableMethods(type))
                 {
-                    case WebCallingConvention.GET:
-                        javascriptMethods.Add(GenerateGET(methodAndWCA));
-                        javascriptMethods.Add(GenerateGET_Sync(methodAndWCA));
-                        break;
+                    switch (methodAndWCA.WebCallableAttribute.WebCallingConvention)
+                    {
+                        case WebCallingConvention.GET:
+                            javascriptMethods.Add(GenerateGET(methodAndWCA));
+                            javascriptMethods.Add(GenerateGET_Sync(methodAndWCA));
+                            break;
 
-                    case WebCallingConvention.GET_application_x_www_form_urlencoded:
-                        javascriptMethods.Add(GenerateGET_urlencoded(methodAndWCA));
-                        javascriptMethods.Add(GenerateGET_urlencoded_Sync(methodAndWCA));
-                        break;
+                        case WebCallingConvention.GET_application_x_www_form_urlencoded:
+                            javascriptMethods.Add(GenerateGET_urlencoded(methodAndWCA));
+                            javascriptMethods.Add(GenerateGET_urlencoded_Sync(methodAndWCA));
+                            break;
 
-                    case WebCallingConvention.POST_application_x_www_form_urlencoded:
-                        javascriptMethods.Add(GeneratePOST_urlencoded(methodAndWCA));
-                        javascriptMethods.Add(GeneratePOST_urlencoded_Sync(methodAndWCA));
-                        break;
+                        case WebCallingConvention.POST_application_x_www_form_urlencoded:
+                            javascriptMethods.Add(GeneratePOST_urlencoded(methodAndWCA));
+                            javascriptMethods.Add(GeneratePOST_urlencoded_Sync(methodAndWCA));
+                            break;
 
-                    case WebCallingConvention.POST_JSON:
-                        javascriptMethods.Add(GeneratePOST_JSON(methodAndWCA));
-                        javascriptMethods.Add(GeneratePOST_JSON_Sync(methodAndWCA));
-                        break;
+                        case WebCallingConvention.POST_JSON:
+                            javascriptMethods.Add(GeneratePOST_JSON(methodAndWCA));
+                            javascriptMethods.Add(GeneratePOST_JSON_Sync(methodAndWCA));
+                            break;
 
-                    case WebCallingConvention.POST_string:
-                        javascriptMethods.Add(GeneratePOST(methodAndWCA));
-                        javascriptMethods.Add(GeneratePOST_Sync(methodAndWCA));
-                        break;
+                        case WebCallingConvention.POST_string:
+                            javascriptMethods.Add(GeneratePOST(methodAndWCA));
+                            javascriptMethods.Add(GeneratePOST_Sync(methodAndWCA));
+                            break;
 
-                    case WebCallingConvention.POST_bytes:
-                        javascriptMethods.Add(GeneratePOST(methodAndWCA));
-                        javascriptMethods.Add(GeneratePOST_Sync(methodAndWCA));
-                        break;
+                        case WebCallingConvention.POST_bytes:
+                            javascriptMethods.Add(GeneratePOST(methodAndWCA));
+                            javascriptMethods.Add(GeneratePOST_Sync(methodAndWCA));
+                            break;
 
-                    case WebCallingConvention.POST_stream:
-                        javascriptMethods.Add(GeneratePOST(methodAndWCA));
-                        javascriptMethods.Add(GeneratePOST_Sync(methodAndWCA));
-                        break;
+                        case WebCallingConvention.POST_stream:
+                            javascriptMethods.Add(GeneratePOST(methodAndWCA));
+                            javascriptMethods.Add(GeneratePOST_Sync(methodAndWCA));
+                            break;
 
-                    // For now everything else is unsupported
+                        // For now everything else is unsupported
+                    }
                 }
-            }
 
             javascriptMethods.Add("\"FullPath\": \"{0}\"");
             javascriptMethods.Add("\"Filename\": \"{1}\"");
