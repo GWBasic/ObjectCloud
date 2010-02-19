@@ -405,6 +405,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 permission["Id"] = userOrGroup.Id.Value;
                 permission["Permission"] = filePermission.FilePermissionEnum;
                 permission["Name"] = userOrGroup.Name;
+                permission["Identity"] = userOrGroup.Identity;
                 permission["Inherit"] = filePermission.Inherit;
                 permission["SendNotifications"] = filePermission.SendNotifications;
 

@@ -43,7 +43,7 @@ namespace ObjectCloud.Disk.Implementation
 			return new User(new ID<IUserOrGroup, Guid>(new Guid(id)), name, true, true, fileHandlerFactoryLocator);
 		}
 
-        public string Identity
+        public override string Identity
         {
             get
             {

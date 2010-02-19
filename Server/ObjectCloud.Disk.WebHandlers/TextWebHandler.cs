@@ -82,7 +82,8 @@ namespace ObjectCloud.Disk.WebHandlers
         /// </summary>
         /// <param name="webConnection"></param>
         /// <returns></returns>
-        [WebCallable(WebCallingConvention.Naked, WebReturnConvention.Naked, FilePermissionEnum.Read)]
+        //[WebCallable(WebCallingConvention.Naked, WebReturnConvention.Naked, FilePermissionEnum.Read)]
+        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.Primitive, FilePermissionEnum.Read)]
         public IWebResults ResolveComponents(IWebConnection webConnection)
         {
             string contents = FileHandler.ReadAll();

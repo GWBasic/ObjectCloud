@@ -15,6 +15,11 @@ namespace ObjectCloud.Interfaces.Security
     /// </summary>
     public interface IUserOrGroup
     {
+        /// <value>
+        /// Returns the OpenID Identity if this is a user, or the group's URL if this is a group
+        /// </value>
+        string Identity { get; }
+
         /// <summary>
         /// The user's ID
         /// </summary>

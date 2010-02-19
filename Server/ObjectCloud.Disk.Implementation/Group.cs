@@ -80,6 +80,17 @@ namespace ObjectCloud.Disk.Implementation
             get { return _Type; }
         }
         private readonly GroupType _Type;
+
+        public override string Identity
+        {
+            get
+            {
+                return string.Format(
+                    "http://{0}/Users/{1}.group",
+                    FileHandlerFactoryLocator.HostnameAndPort,
+                    Name);
+            }
+        }
     }
 
     /// <summary>

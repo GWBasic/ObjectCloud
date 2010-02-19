@@ -48,5 +48,7 @@ namespace ObjectCloud.Disk.Implementation
         	get { return _BuiltIn; }
         }
         protected bool _BuiltIn;
+
+        public abstract string Identity { get; }
 	}
 }
