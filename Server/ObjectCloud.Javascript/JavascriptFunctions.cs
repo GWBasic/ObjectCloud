@@ -609,7 +609,7 @@ namespace ObjectCloud.Javascript
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
             IFileContainer fileContainer = functionCallContext.ScopeWrapper.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(toOpen);
 
-            string wrapper = fileContainer.WebHandler.GetServersideJavascriptWrapper(functionCallContext.WebConnection, null).ResultsAsString;
+            string wrapper = fileContainer.WebHandler.GetJSW(functionCallContext.WebConnection, null, null, false).ResultsAsString;
 
             return functionCallContext.Context.evaluateString(
                 functionCallContext.Scope,
