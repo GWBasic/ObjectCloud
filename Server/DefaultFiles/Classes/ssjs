@@ -26,13 +26,15 @@ function Run()
       toReturn = brokenAtTags[0];
    }
 
+   var scope = {};
+
    for (; ctr < brokenAtTags.length; ctr++)
-      toReturn += runBlock(brokenAtTags[ctr]);
+      toReturn += runBlock(brokenAtTags[ctr], scope);
 
    return toReturn;
 }
 
-function runBlock(toRun)
+function runBlock(toRun, scope)
 {
    var scriptAndPostString = toRun.split('?>');
 

@@ -1,4 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <NameValuePairs>
+	<NameValuePair Name="Edit" Value="/Shell/Editors/CanvasPaint.wchtml?FileName=[Target]&amp;Format=image/gif" />
 	<NameValuePair Name="View" Value="[Target]?Method=ReadAll&amp;[Arguments], image/gif" />
 </NameValuePairs>

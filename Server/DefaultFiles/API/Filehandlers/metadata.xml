@@ -15,4 +15,8 @@
 			Inherit="False"
 			SendNotifications="False" />
 	</File>
+	<File
+		Name="User.js"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 </Directory>
