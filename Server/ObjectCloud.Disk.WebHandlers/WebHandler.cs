@@ -472,7 +472,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 FileContainer.FileId, namedPermission))
             {
                 Dictionary<string, object> toJSON = new Dictionary<string, object>();
-                toJSON["UserOrGroupId"] = np.UserOrGroupId;
+                toJSON["UserOrGroupId"] = np.UserOrGroupId.Value.ToString();
                 toJSON["UserOrGroup"] = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroup(np.UserOrGroupId).Name;
                 toJSON["Inherit"] = np.Inherit;
 
