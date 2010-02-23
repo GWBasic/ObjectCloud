@@ -152,7 +152,7 @@ namespace ObjectCloud.Disk.Test
 			
 			IUserOrGroup groupObj = userManagerHandler.GetUserOrGroupOrOpenId(name);
 			
-			Assert.IsInstanceOfType(typeof(IGroup), groupObj, "Wrong type returned for a group");
+			Assert.IsInstanceOf<IGroup>(groupObj, "Wrong type returned for a group");
 			
 			IGroup group = (IGroup)groupObj;
 			
@@ -174,7 +174,7 @@ namespace ObjectCloud.Disk.Test
 			
 			IUserOrGroup groupObj = userManagerHandler.GetUserOrGroupOrOpenId(name);
 			
-			Assert.IsInstanceOfType(typeof(IGroup), groupObj, "Wrong type returned for a group");
+			Assert.IsInstanceOf<IGroup>(groupObj, "Wrong type returned for a group");
 			
 			userManagerHandler.DeleteGroup(name);
 			
