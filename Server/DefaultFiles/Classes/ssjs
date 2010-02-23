@@ -11,7 +11,7 @@ function Run()
 {
    var script = base.ResolveComponentsGET_Sync(getGet());
 
-   var brokenAtTags = script.split('<?')
+   var brokenAtTags = script.split('<?');
 
    var ctr;
    var toReturn;
@@ -36,6 +36,9 @@ function Run()
 
 function runBlock(toRun, scope)
 {
+   if (0 == toRun.indexOf(' Scripts('))
+      return '<' + '? ' + toRun;
+
    var scriptAndPostString = toRun.split('?>');
 
    // If there isn't a single matching close tag, return as-is
