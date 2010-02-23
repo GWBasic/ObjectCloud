@@ -198,6 +198,7 @@ namespace ObjectCloud.Javascript
             userMetadata["id"] = user.Id.Value;
             userMetadata["name"] = user.Name;
             userMetadata["identity"] = user.Identity;
+			userMetadata["isLocal"] = user.Local;
 
             AddObject(context, "userMetadata", userMetadata);
 
