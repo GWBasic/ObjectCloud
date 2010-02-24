@@ -315,7 +315,7 @@ namespace ObjectCloud.Disk.FileHandlers
 				comparisonConditions.Add(Log_Table.ExceptionClassId.In(GetClassNameIds(exceptionClassnames)));
 
             if (null != exceptionMessageLike)
-                comparisonConditions.Add(Log_Table.Message.Like(exceptionMessageLike));
+                comparisonConditions.Add(Log_Table.ExceptionMessage.Like(exceptionMessageLike));
 
             foreach (ILog_Readable logReadable in DatabaseConnection.Log.Select(
                 ComparisonCondition.Condense(comparisonConditions), null, ObjectCloud.ORM.DataAccess.OrderBy.Desc, Log_Table.TimeStamp))
