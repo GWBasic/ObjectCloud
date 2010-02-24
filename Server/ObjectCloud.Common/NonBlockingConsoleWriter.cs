@@ -16,11 +16,12 @@ namespace ObjectCloud.Common
         static Queue<string> QueuedStrings = new Queue<string>();
 
         /// <summary>
-        /// Prints the text to the console.  Does not block.  All text is queued up to be printed
+        /// Prints the text to the console.  Does not block in release builds.  All text is queued up to be printed
         /// </summary>
         /// <param name="task"></param>
         static public void Print(string task)
         {
+#if RELEASE
             using (TimedLock.Lock(Key))
             {
                 QueuedStrings.Enqueue(task);
@@ -32,6 +33,10 @@ namespace ObjectCloud.Common
                     ThreadPool.QueueUserWorkItem(Work);
                 }
             }
+#else
+            if (Running || (!Running))
+                Console.Write(task);
+#endif
         }
 
         /// <summary>
