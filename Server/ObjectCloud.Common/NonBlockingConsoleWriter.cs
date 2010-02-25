@@ -21,7 +21,10 @@ namespace ObjectCloud.Common
         /// <param name="task"></param>
         static public void Print(string task)
         {
-#if RELEASE
+#if DEBUG
+            if (Running || (!Running))
+                Console.Write(task);
+#else
             using (TimedLock.Lock(Key))
             {
                 QueuedStrings.Enqueue(task);
@@ -33,9 +36,6 @@ namespace ObjectCloud.Common
                     ThreadPool.QueueUserWorkItem(Work);
                 }
             }
-#else
-            if (Running || (!Running))
-                Console.Write(task);
 #endif
         }
 
