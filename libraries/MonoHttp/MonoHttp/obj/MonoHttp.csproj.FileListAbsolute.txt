@@ -1,1 +1,0 @@
-Z:\andrewrondeau On My Mac\Perforce\ObjectCloud\Source Code\Trunk\libraries\MonoHttp\MonoHttp\obj\Debug\ResolveAssemblyReference.cache
