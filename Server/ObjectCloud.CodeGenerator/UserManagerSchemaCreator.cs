@@ -64,7 +64,7 @@ namespace ObjectCloud.CodeGenerator
                     "AssociationHandles",
                     new Column[]
                     {
-                        new Column("UserID", IDColumn<IUser, Guid>.NotNullColumnType, ColumnOption.Indexed),
+                        new Column("UserID", IDColumn<IUserOrGroup, Guid>.NotNullColumnType, ColumnOption.Indexed),
 					    new Column("AssociationHandle", NotNull.String),
 						new Column("Timestamp", NotNull.TimeStamp)
                     }));

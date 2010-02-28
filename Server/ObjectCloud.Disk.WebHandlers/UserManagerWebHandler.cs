@@ -783,7 +783,7 @@ namespace ObjectCloud.Disk.WebHandlers
 			{
 				case("checkid_setup"):
 				{
-					return CheckID_Setup(webConnection, new ID<IUser, Guid>(user.Id.Value), userHandler, getParametersToPass);
+					return CheckID_Setup(webConnection, user.Id, userHandler, getParametersToPass);
 				}
 				default:
 				{
@@ -792,7 +792,7 @@ namespace ObjectCloud.Disk.WebHandlers
 			}
 		}
 		
-		private IWebResults CheckID_Setup(IWebConnection webConnection, ID<IUser, Guid> userId, IUserHandler userHandler, IDictionary<string, string> getParametersToPass)
+		private IWebResults CheckID_Setup(IWebConnection webConnection, ID<IUserOrGroup, Guid> userId, IUserHandler userHandler, IDictionary<string, string> getParametersToPass)
 		{
 			StringBuilder additionalGetParameters = new StringBuilder();
 			foreach (KeyValuePair<string, string> getParameter in getParametersToPass)

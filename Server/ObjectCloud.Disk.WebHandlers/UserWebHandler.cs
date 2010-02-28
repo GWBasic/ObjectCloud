@@ -64,7 +64,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
                             IUser user = FileHandlerFactoryLocator.UserManagerHandler.GetUser(FileHandler.Name);
                             bool associationHandleValid = FileHandlerFactoryLocator.UserManagerHandler.VerifyAssociationHandle(
-                                new ID<IUser, Guid>(user.Id.Value), associationHandle);
+                                user.Id, associationHandle);
 
                             if (log.IsInfoEnabled)
                                 log.InfoFormat("OpenID validation for {0}: {1}", FileHandler.Name, associationHandleValid);

@@ -19,12 +19,29 @@ namespace ObjectCloud.Disk.Test
     [TestFixture]
     public class TestShell : TestBase
 	{
+        protected override void  DoAdditionalSetup()
+        {
+         	 base.DoAdditionalSetup();
+
+             TestUser = FileHandlerFactoryLocator.UserManagerHandler.CreateUser(
+                "testUser" + SRandom.Next<ulong>().ToString(),
+                "gerwfaewfaew");
+        }
+
+        protected override void DoAdditionalTearDown()
+        {
+            base.DoAdditionalTearDown();
+
+            FileHandlerFactoryLocator.UserManagerHandler.DeleteUser(TestUser.Name);
+        }
+
+        IUser TestUser;
+
 		[Test]
 		public void TestAssociationHandleTrue()
 		{
-			ID<IUser, Guid> userId = new ID<IUser, Guid>(Guid.NewGuid());
-			string associationHandle = FileHandlerFactoryLocator.UserManagerHandler.CreateAssociationHandle(userId);
-			bool isHandleValid = FileHandlerFactoryLocator.UserManagerHandler.VerifyAssociationHandle(userId, associationHandle);
+			string associationHandle = FileHandlerFactoryLocator.UserManagerHandler.CreateAssociationHandle(TestUser.Id);
+            bool isHandleValid = FileHandlerFactoryLocator.UserManagerHandler.VerifyAssociationHandle(TestUser.Id, associationHandle);
 			
 			Assert.IsTrue(isHandleValid, "Handle not valid");
 		}
@@ -32,12 +49,11 @@ namespace ObjectCloud.Disk.Test
 		[Test]
 		public void TestAssociationHandleFalse()
 		{
-			ID<IUser, Guid> userId = new ID<IUser, Guid>(Guid.NewGuid());
-			string associationHandle = FileHandlerFactoryLocator.UserManagerHandler.CreateAssociationHandle(userId);
+            string associationHandle = FileHandlerFactoryLocator.UserManagerHandler.CreateAssociationHandle(TestUser.Id);
 			
 			associationHandle = associationHandle + "dne";
-			
-			bool isHandleValid = FileHandlerFactoryLocator.UserManagerHandler.VerifyAssociationHandle(userId, associationHandle);
+
+            bool isHandleValid = FileHandlerFactoryLocator.UserManagerHandler.VerifyAssociationHandle(TestUser.Id, associationHandle);
 			
 			Assert.IsFalse(isHandleValid, "Handle not rejected");
 		}

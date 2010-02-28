@@ -678,7 +678,7 @@ insert into Metadata (Name, Value) values ('GroupId', @groupId);
             });
         }
 
-        public string CreateAssociationHandle(ID<IUser, Guid> userId)
+        public string CreateAssociationHandle(ID<IUserOrGroup, Guid> userId)
         {
             byte[] associationHandleBytes = new byte[64];
             SRandom.NextBytes(associationHandleBytes);
@@ -695,7 +695,7 @@ insert into Metadata (Name, Value) values ('GroupId', @groupId);
             return associationHandle;
         }
 
-        public bool VerifyAssociationHandle(ID<IUser, Guid> userId, string associationHandle)
+        public bool VerifyAssociationHandle(ID<IUserOrGroup, Guid> userId, string associationHandle)
         {
             // First, delete all old associations
 

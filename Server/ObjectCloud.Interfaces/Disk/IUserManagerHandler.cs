@@ -195,7 +195,7 @@ namespace ObjectCloud.Interfaces.Disk
 		/// <returns>
 		/// A <see cref="System.String"/>
 		/// </returns>
-		string CreateAssociationHandle(ID<IUser, Guid> userId);
+		string CreateAssociationHandle(ID<IUserOrGroup, Guid> userId);
 		
 		/// <summary>
 		/// Verifies that the passed in association handle is valid
@@ -206,7 +206,7 @@ namespace ObjectCloud.Interfaces.Disk
 		/// <returns>
 		/// A <see cref="System.Boolean"/>
 		/// </returns>
-		bool VerifyAssociationHandle(ID<IUser, Guid> userId, string associationHandle);
+        bool VerifyAssociationHandle(ID<IUserOrGroup, Guid> userId, string associationHandle);
 		
 		/// <summary>
 		/// Adds a user to a group.  If the user is already in the group, no action will occur
