@@ -36,6 +36,21 @@ namespace ObjectCloud.Disk.FileHandlers
             FileIDCacheByName = new Cache<string, Wrapped<ID<IFileContainer, long>>>(GetFileIdForCache);
             PermissionsCacheWithInherit = new Cache<string, Wrapped<FilePermissionEnum?>, LoadPermissionArgs>(LoadPermissionForCache);
             PermissionsCacheWithoutInherit = new Cache<string, Wrapped<FilePermissionEnum?>, LoadPermissionArgs>(LoadPermissionForCache);
+
+            // TODO:  This can eventually go away, it's just to support old schemas
+            foreach (IFile_Readable groupFile in new List<IFile_Readable>(
+                DatabaseConnection.File.Select(File_Table.Extension == "group" & File_Table.TypeId == "database")))
+            {
+                DeleteFile(null, groupFile.Name);
+
+                string groupName = groupFile.Name.Substring(0, groupFile.Name.Length - 6);
+
+                IGroup group = FileHandlerFactoryLocator.UserManagerHandler.GetGroup(groupName);
+
+                INameValuePairsHandler groupHandler = (INameValuePairsHandler)CreateFile(groupFile.Name, "group", groupFile.OwnerId);
+
+                groupHandler.Set(null, "GroupId", group.Id.Value.ToString());
+            }
         }
 
         /// <summary>

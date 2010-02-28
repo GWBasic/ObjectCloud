@@ -157,6 +157,9 @@
         <entry key="user">
           <ref object="UserHandlerFactory" />
         </entry>
+        <entry key="group">
+          <ref object="NameValuePairsHandlerFactory" />
+        </entry>
         <entry key="usermanager">
           <ref object="UserManagerHandlerFactory" />
         </entry>
@@ -220,6 +223,11 @@
         <entry key="user">
           <object type="System.Type" factory-method="GetType" id="userWebHandlerType">
             <constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.UserWebHandler, ObjectCloud.Disk.WebHandlers" />
+          </object>
+        </entry>
+        <entry key="group">
+          <object type="System.Type" factory-method="GetType" id="groupWebHandlerType">
+            <constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.GroupWebHandler, ObjectCloud.Disk.WebHandlers" />
           </object>
         </entry>
         <entry key="usermanager">

@@ -180,44 +180,27 @@ namespace ObjectCloud.Disk.FileHandlers
             IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
             string groupFileName = name + ".group";
 
+            IUser owner = null;
+            if (null != ownerId)
+                owner = GetUser(ownerId.Value);
+
             if (!automatic)
             {
                 // Decide where the object goes, for personal groups in the user's directory, for system groups in the users directory
                 IDirectoryHandler groupObjectDestinationDirectory;
                 if (groupType == GroupType.Personal)
-                {
-                    IUser owner = FileHandlerFactoryLocator.UserManagerHandler.GetUser(ownerId.Value);
                     groupObjectDestinationDirectory = usersDirectory.OpenFile(owner.Name).CastFileHandler<IDirectoryHandler>();
-                }
                 else
                     groupObjectDestinationDirectory = usersDirectory;
 
-                IDatabaseHandler groupDB = groupObjectDestinationDirectory.CreateFile(groupFileName, "database", ownerId).FileContainer.CastFileHandler<IDatabaseHandler>(); ;
+                INameValuePairsHandler groupDB = groupObjectDestinationDirectory.CreateFile(groupFileName, "group", ownerId).FileContainer.CastFileHandler<INameValuePairsHandler>(); ;
                 groupObjectDestinationDirectory.SetPermission(ownerId, groupFileName, groupId, FilePermissionEnum.Read, true, true);
 
                 // Everyone can read a public group
                 if (GroupType.Public == groupType)
                     usersDirectory.SetPermission(ownerId, groupFileName, FileHandlerFactoryLocator.UserFactory.Everybody.Id, FilePermissionEnum.Read, true, false);
 
-                using (DbCommand command = groupDB.Connection.CreateCommand())
-                {
-                    command.CommandText =
-@"create table Metadata 
-(
-	Value			string not null,
-	Name			string not null	primary key
-);
-Create index Metadata_Name on Metadata (Name);
-insert into Metadata (Name, Value) values ('GroupId', @groupId);
-";
-
-                    DbParameter parameter = command.CreateParameter();
-                    parameter.ParameterName = "@groupId";
-                    parameter.Value = groupId;
-                    command.Parameters.Add(parameter);
-
-                    command.ExecuteNonQuery();
-                }
+                groupDB.Set(owner, "GroupId", groupId.Value.ToString());
             }
 
             return groupObj;

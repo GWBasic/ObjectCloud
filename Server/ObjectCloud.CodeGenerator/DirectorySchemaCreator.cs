@@ -111,7 +111,7 @@ namespace ObjectCloud.CodeGenerator
 
             database.Tables.Add(namedPermissionTable);
 
-            database.Version = 5;
+            database.Version = 5; // 6;
 
             return database;
         }

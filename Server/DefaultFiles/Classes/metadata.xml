@@ -51,6 +51,10 @@
 			SendNotifications="False" />
 	</File>
 	<File
+		Name="icle"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
 		Name="page"
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
@@ -65,6 +69,10 @@
 			Inherit="False"
 			SendNotifications="False" />
 	</File>
+	<File
+		Name="posts"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 	<File
 		Name="reply"
 		TypeId="text"
@@ -110,4 +118,8 @@
 			Inherit="False"
 			SendNotifications="False" />
 	</File>
+	<File
+		Name="wchtml"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 </Directory>

@@ -45,6 +45,7 @@
     <Compile Include="DatabaseWebHandler.cs" />
     <Compile Include="DirectoryWebHandler.cs" />
     <Compile Include="DocumentationWebHandler.cs" />
+    <Compile Include="GroupWebHandler.cs" />
     <Compile Include="HTTPWebProxy.cs" />
     <Compile Include="Comet\MultiplexingCometWebHandler.cs" />
     <Compile Include="NameValuePairsWebHandler.cs" />
