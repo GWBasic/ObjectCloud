@@ -190,16 +190,11 @@ namespace ObjectCloud.Disk.Implementation
         /// <returns></returns>
         private IFileHandler CreateFileHandlerForCache(IFileId id, string filetype)
         {
-            if (FileHandlerFactoryLocator.FileSystem.IsFilePresent(id))
-            {
-                IFileHandlerFactory fileHandlerFactory = this.GetFactoryForFileType(filetype);
+            IFileHandlerFactory fileHandlerFactory = this.GetFactoryForFileType(filetype);
 
-                IFileHandler toReturn = fileHandlerFactory.OpenFile(id);
+            IFileHandler toReturn = fileHandlerFactory.OpenFile(id);
 
-                return toReturn;
-            }
-            else
-                throw new InvalidFileId(id);
+            return toReturn;
         }
 
         /// <summary>
