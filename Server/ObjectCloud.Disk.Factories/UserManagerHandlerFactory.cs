@@ -29,11 +29,6 @@ namespace ObjectCloud.Disk.Factories
         }
         private DataAccessLocator _DataAccessLocator;
 
-        public override void CreateFile(string path, FileId fileId)
-        {
-            throw new SecurityException("UserManagerHandlers can not be created");
-        }
-
         public override void CreateSystemFile(string path, FileId fileId)
         {
             Directory.CreateDirectory(path);

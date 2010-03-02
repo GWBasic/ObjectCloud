@@ -16,11 +16,6 @@ namespace ObjectCloud.Disk.Factories
 {
     public class UserHandlerFactory : SystemFileHandlerFactory<UserHandler>
     {
-        public override void CreateFile(string path, FileId fileId)
-        {
-            throw new SecurityException("Users can not be created");
-        }
-
         public override void CreateSystemFile(string path, FileId fileId)
         {
             Directory.CreateDirectory(path);
