@@ -53,13 +53,6 @@ namespace ObjectCloud.Interfaces.Disk
         where TFileHandler : IFileHandler
     {
         /// <summary>
-        /// Creates a file at the given path 
-        /// </summary>
-        /// <param name="fileId">The file's unique ID</param>
-        /// <returns>An IFileHandler object that handles the file.  This must be closed</returns>
-        new void CreateFile(IFileId fileId);
-
-        /// <summary>
         /// Opens a file at the given path
         /// </summary>
         /// <param name="fileId">The file's unique ID</param>

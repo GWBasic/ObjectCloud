@@ -27,11 +27,6 @@ namespace ObjectCloud.Disk.Factories
             log = LogManager.GetLogger(GetType());
         }
 
-        void IFileHandlerFactory.CreateFile(IFileId fileId)
-		{
-			CreateFile(fileId);
-        }
-
         IFileHandler IFileHandlerFactory.OpenFile(IFileId fileId)
 		{
             return OpenFile(fileId);
