@@ -29,23 +29,21 @@ namespace ObjectCloud.Disk.Factories
         }
         private DataAccessLocator _DataAccessLocator;
 
-        public override UserManagerHandler CreateFile(string path)
+        public override void CreateFile(string path, FileId fileId)
         {
             throw new SecurityException("UserManagerHandlers can not be created");
         }
 
-        public override IFileHandler CreateSystemFile(string path)
+        public override void CreateSystemFile(string path, FileId fileId)
         {
             Directory.CreateDirectory(path);
 
             string databaseFilename = CreateDatabaseFilename(path);
 
             DataAccessLocator.DatabaseCreator.Create(databaseFilename);
-
-            return new UserManagerHandler(CreateDatabaseConnector(databaseFilename), FileHandlerFactoryLocator);
         }
 
-        public override UserManagerHandler OpenFile(string path)
+        public override UserManagerHandler OpenFile(string path, FileId fileId)
         {
             string databaseFilename = CreateDatabaseFilename(path);
 
@@ -72,14 +70,15 @@ namespace ObjectCloud.Disk.Factories
             return DataAccessLocator.DatabaseConnectorFactory.CreateConnectorForEmbedded(path);
         }
 
-        public override IFileHandler CopyFile(IFileHandler sourceFileHandler, ID<IFileContainer, long> fileId, ID<IUserOrGroup, Guid>? ownerID)
+        public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID)
         {
             throw new NotImplementedException("A UserManager can not be copied");
         }
 
-        public override IFileHandler RestoreFile(ID<IFileContainer, long> fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
+        public override void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
         {
-            IUserManagerHandler toReturn = CreateFile(fileId);
+            throw new NotImplementedException();
+            /*IUserManagerHandler toReturn = CreateFile(fileId);
 
             using (XmlReader xmlReader = XmlReader.Create(pathToRestoreFrom))
             {
@@ -88,7 +87,7 @@ namespace ObjectCloud.Disk.Factories
                 toReturn.Restore(xmlReader, userId);
             }
 
-            return toReturn;
+            return toReturn;*/
         }
     }
 }

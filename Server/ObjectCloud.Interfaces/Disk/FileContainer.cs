@@ -17,7 +17,7 @@ namespace ObjectCloud.Interfaces.Disk
     {
         public FileContainer(
             IFileHandler fileHandler,
-            ID<IFileContainer, long> fileId,
+            IFileId fileId,
             string typeId,
             string filename,
             IDirectoryHandler parentDirectoryHandler,
@@ -29,7 +29,7 @@ namespace ObjectCloud.Interfaces.Disk
         }
 
         public FileContainer(
-            ID<IFileContainer, long> fileId, 
+            IFileId fileId, 
             string typeId, 
             string filename, 
             IDirectoryHandler parentDirectoryHandler,
@@ -72,11 +72,14 @@ namespace ObjectCloud.Interfaces.Disk
         }
         private FileHandlerFactoryLocator _FileHandlerFactoryLocator;
 
-        public ID<IFileContainer, long> FileId
+        /// <summary>
+        /// The FileId.  Use FileHandlerFactoryLocator.ParseId to parse an ID from a string.
+        /// </summary>
+        public IFileId FileId
         {
             get { return _FileId; }
         }
-        private readonly ID<IFileContainer, long> _FileId;
+        private readonly IFileId _FileId;
 
         public string TypeId
         {

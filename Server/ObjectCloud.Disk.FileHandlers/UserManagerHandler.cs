@@ -604,7 +604,9 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public void Restore(XmlReader xmlReader, ID<IUserOrGroup, Guid> userId)
         {
-            int depth = xmlReader.Depth;
+            throw new NotImplementedException();
+
+            /*int depth = xmlReader.Depth;
 
             do
             {
@@ -626,7 +628,7 @@ namespace ObjectCloud.Disk.FileHandlers
                     });
                 }
 
-            } while (xmlReader.Depth >= depth);
+            } while (xmlReader.Depth >= depth);*/
         }
 
         public IUser GetOpenIdUser(string openIdIdentity)

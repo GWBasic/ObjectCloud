@@ -1199,7 +1199,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             toReturn["Filename"] = file.Filename;
             toReturn["FullPath"] = file.FullPath;
-            toReturn["FileId"] = file.FileId.Value.ToString(CultureInfo.InvariantCulture);
+            toReturn["FileId"] = file.FileId.ToString();
             toReturn["TypeId"] = file.TypeId;
             toReturn["LastModified"] = file.FileHandler.LastModified;
             toReturn["Created"] = file.Created;

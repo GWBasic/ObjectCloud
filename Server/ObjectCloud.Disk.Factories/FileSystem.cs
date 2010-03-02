@@ -21,7 +21,7 @@ namespace ObjectCloud.Disk.Factories
     {
 		private static ILog log = LogManager.GetLogger<FileSystem>();
 		
-        public bool IsFilePresent(ID<IFileContainer, long> fileId)
+        public bool IsFilePresent(IFileId fileId)
         {
             string pathToCheck = GetFullPath(fileId);
 
@@ -53,12 +53,12 @@ namespace ObjectCloud.Disk.Factories
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public string GetFullPath(ID<IFileContainer, long> id)
+        public string GetFullPath(IFileId id)
         {
             return ConnectionString + Path.DirectorySeparatorChar + id.ToString();
         }
 
-        public void DeleteFile(ID<IFileContainer, long> fileId)
+        public void DeleteFile(IFileId fileId)
         {
             string pathToDelete = GetFullPath(fileId);
             RecursiveDelete(pathToDelete);

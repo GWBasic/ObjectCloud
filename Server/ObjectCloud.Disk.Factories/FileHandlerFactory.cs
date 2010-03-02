@@ -27,21 +27,21 @@ namespace ObjectCloud.Disk.Factories
             log = LogManager.GetLogger(GetType());
         }
 
-        IFileHandler IFileHandlerFactory.CreateFile(ID<IFileContainer, long> fileId)
+        void IFileHandlerFactory.CreateFile(IFileId fileId)
 		{
-			return CreateFile(fileId);
+			CreateFile(fileId);
         }
 
-        IFileHandler IFileHandlerFactory.OpenFile(ID<IFileContainer, long> fileId)
+        IFileHandler IFileHandlerFactory.OpenFile(IFileId fileId)
 		{
             return OpenFile(fileId);
 		}
 
-        public abstract IFileHandler CopyFile(IFileHandler sourceFileHandler, ID<IFileContainer, long> fileId, ID<IUserOrGroup, Guid>? ownerID);
+        public abstract void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID);
 
-        public abstract IFileHandler RestoreFile(ID<IFileContainer, long> fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId);
+        public abstract void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId);
 
-        public TFileHandler CreateFile(ID<IFileContainer, long> fileId)
+        public void CreateFile(IFileId fileId)
         {
             string path = FileSystem.GetFullPath(fileId);
 
@@ -52,7 +52,7 @@ namespace ObjectCloud.Disk.Factories
 
             try
             {
-                return CreateFile(path);
+                CreateFile(path, (FileId)fileId);
             }
             catch (DiskException de)
             {
@@ -63,14 +63,14 @@ namespace ObjectCloud.Disk.Factories
             }
         }
 
-        public TFileHandler OpenFile(ID<IFileContainer, long> fileId)
+        public TFileHandler OpenFile(IFileId fileId)
         {
-            return OpenFile(FileSystem.GetFullPath(fileId));
+            return OpenFile(FileSystem.GetFullPath(fileId), (FileId)fileId);
         }
 
-        public abstract TFileHandler CreateFile(string path);
+        public abstract void CreateFile(string path, FileId fileId);
 
-        public abstract TFileHandler OpenFile(string path);
+        public abstract TFileHandler OpenFile(string path, FileId fileId);
 
         /// <summary>
         /// The service locator.  This should be set in Spring so that these assemblies aren't dependant on Spring
@@ -93,7 +93,7 @@ namespace ObjectCloud.Disk.Factories
             get { return (FileSystem)FileHandlerFactoryLocator.FileSystem; }
         }
 
-        public DateTime EstimateCreationTime(ID<IFileContainer, long> fileId)
+        public DateTime EstimateCreationTime(IFileId fileId)
         {
             return Directory.GetCreationTime(FileSystem.GetFullPath(fileId));
         }
@@ -104,22 +104,19 @@ namespace ObjectCloud.Disk.Factories
     /// </summary>
     public class FileHandlerFactory : FileHandlerFactory<FileHandlerFactory.DoNothingFileHandler>
     {
-        public override IFileHandler CopyFile(IFileHandler sourceFileHandler, ID<IFileContainer, long> fileId, ID<IUserOrGroup, Guid>? ownerID)
+        public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID)
         {
             throw new NotImplementedException("The method or operation is not implemented.");
         }
 
-        public override FileHandlerFactory.DoNothingFileHandler CreateFile(string path)
+        public override void CreateFile(string path, FileId fileId) {}
+
+        public override FileHandlerFactory.DoNothingFileHandler OpenFile(string path, FileId fileId)
         {
             return new DoNothingFileHandler();
         }
 
-        public override FileHandlerFactory.DoNothingFileHandler OpenFile(string path)
-        {
-            return new DoNothingFileHandler();
-        }
-
-        public override IFileHandler RestoreFile(ID<IFileContainer, long> fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
+        public override void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
         {
             throw new NotImplementedException("The method or operation is not implemented.");
         }

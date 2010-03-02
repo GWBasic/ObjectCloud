@@ -66,9 +66,9 @@ namespace ObjectCloud.Interfaces.Disk
         bool HasNamedPermissions(ID<IUserOrGroup, Guid> userId, IEnumerable<string> namedPermissions);
 
         /// <summary>
-        /// The file ID
+        /// The FileId.  Use FileHandlerFactoryLocator.ParseId to parse an ID from a string.
         /// </summary>
-        ID<IFileContainer, long> FileId {get;}
+        IFileId FileId { get; }
 
         /// <summary>
         /// The filename

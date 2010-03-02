@@ -32,8 +32,8 @@ namespace ObjectCloud.Disk.FileHandlers
             DatabaseConnector.DatabaseWritten += new EventHandler<IDatabaseConnector, EventArgs>(DatabaseConnector_TransactionCommitted);
 
             FileHandlerCache = new Cache<string, IFileContainer>(CreateForCache);
-            OwnerIdCache = new Cache<ID<IFileContainer, long>, Wrapped<ID<IUserOrGroup, Guid>?>>(LoadOwnerIdForCache);
-            FileIDCacheByName = new Cache<string, Wrapped<ID<IFileContainer, long>>>(GetFileIdForCache);
+            OwnerIdCache = new Cache<IFileId, Wrapped<ID<IUserOrGroup, Guid>?>>(LoadOwnerIdForCache);
+            FileIDCacheByName = new Cache<string, Wrapped<FileId>>(GetFileIdForCache);
             PermissionsCacheWithInherit = new Cache<string, Wrapped<FilePermissionEnum?>, LoadPermissionArgs>(LoadPermissionForCache);
             PermissionsCacheWithoutInherit = new Cache<string, Wrapped<FilePermissionEnum?>, LoadPermissionArgs>(LoadPermissionForCache);
 
@@ -85,9 +85,9 @@ namespace ObjectCloud.Disk.FileHandlers
             IFileHandlerFactory fileHandlerFactory = fileSystemResolver.GetFactoryForFileType(fileType);
 
             return CreateFileHelper(
-                filename, fileType, userId, delegate(ID<IFileContainer, long> fileId)
+                filename, fileType, userId, delegate(IFileId fileId)
                 {
-                    return fileHandlerFactory.RestoreFile(fileId, pathToRestoreFrom, userId);
+                    fileHandlerFactory.RestoreFile(fileId, pathToRestoreFrom, userId);
                 });
         }
 
@@ -116,64 +116,74 @@ namespace ObjectCloud.Disk.FileHandlers
             // TODO:  Delete file
         }
 
+        // Ensures that only one file can be created at a time, thus preventing an unlikely collision of file IDs
+        private static object CreateFileKey = new object();
+
         private IFileHandler CreateFileHelper(
             string filename, string fileType, ID<IUserOrGroup, Guid>? ownerId, CreateFileDelegate createFileDelegate)
         {
 			FileHandlerFactoryLocator.FileSystemResolver.VerifyNoForbiddenChars(filename);
 
-            IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
-
             DateTime created = DateTime.UtcNow;
 
-            ID<IFileContainer, long> fileId = default(ID<IFileContainer, long>);
-            FileCreatorDelegate fileCreator = delegate(ID<IFileContainer, long> id)
+            FileId fileId = default(FileId);
+
+            int ctr = 0;
+
+            using (TimedLock.Lock(CreateFileKey))
+            {
+                do
                 {
-                    IFileHandler toReturn;
+                    fileId = new FileId(SRandom.Next<long>());
 
-                    fileId = id;
+                    ctr++;
 
-                    try
+                    if (ctr > 500)
+                        throw new CanNotCreateFile("Tried too many times to create a file");
+
+                } while (FileHandlerFactoryLocator.FileSystem.IsFilePresent(fileId));
+
+            }
+
+            try
+            {
+                DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
+                {
+                    IFile_Readable existingFile = DatabaseConnection.File.SelectSingle(File_Table.Name == filename);
+
+                    if (null != existingFile)
+                        throw new DuplicateFile(filename);
+
+                    // Insert database record for file
+                    DatabaseConnection.File.Insert(delegate(IFile_Writable file)
                     {
-                        return DatabaseConnection.CallOnTransaction<IFileHandler>(delegate(IDatabaseTransaction transaction)
-                        {
-                            IFile_Readable existingFile = DatabaseConnection.File.SelectSingle(File_Table.Name == filename);
+                        file.Name = filename;
+                        file.FileId = fileId;
+                        file.TypeId = fileType;
+                        file.OwnerId = ownerId;
+                        file.Created = created;
+                    });
 
-                            if (null != existingFile)
-                                throw new DuplicateFile(filename);
+                    // Create the file within the transaction.  This way, if there's an exception, the transaction
+                    // is rolled back
+                    createFileDelegate(fileId);
 
-                            // Insert database record for file
-                            DatabaseConnection.File.Insert(delegate(IFile_Writable file)
-                            {
-                                file.Name = filename;
-                                file.FileId = id;
-                                file.TypeId = fileType;
-                                file.OwnerId = ownerId;
-                                file.Created = created;
-                            });
+                    transaction.Commit();
 
-                            // Create the file within the transaction.  This way, if there's an exception, the transaction
-                            // is rolled back
-                            toReturn = createFileDelegate(id);
+                    OwnerIdCache[fileId] = ownerId;
+                });
+            }
+            catch (DiskException)
+            {
+                throw;
+            }
+            catch (Exception e)
+            {
+                throw new CanNotCreateFile("Database exception when creating " + filename, e);
+            }
 
-                            transaction.Commit();
-
-                            OwnerIdCache[id] = ownerId;
-
-                            return toReturn;
-                        });
-                    }
-                    catch (DiskException)
-                    {
-                        throw;
-                    }
-                    catch (Exception e)
-                    {
-                        throw new CanNotCreateFile("Database exception when creating " + filename, e);
-                    }
-                };
-
-            IFileHandler toReturnFH = fileSystemResolver.CreateFile(fileCreator, fileType);
-            toReturnFH.FileContainer = new FileContainer(fileId, fileType, filename, this, FileHandlerFactoryLocator, created);
+            IFileHandler toReturn = FileHandlerFactoryLocator.FileSystemResolver.LoadFile(fileId, fileType);
+            toReturn.FileContainer = new FileContainer(fileId, fileType, filename, this, FileHandlerFactoryLocator, created);
 
             IUser changer = null;
             if (null != ownerId)
@@ -188,12 +198,12 @@ namespace ObjectCloud.Disk.FileHandlers
                 Dictionary<string, object> changeData = new Dictionary<string, object>();
                 changeData["action"] = "created";
                 string actionData = JsonFx.Json.JsonWriter.Serialize(changeData);
-                toReturnFH.SendNotification(changer, actionData, null);
+                toReturn.SendNotification(changer, actionData, null);
             }
 
             OnDirectoryChanged();
 
-            return toReturnFH;
+            return toReturn;
         }
 
         /// <summary>
@@ -208,8 +218,8 @@ namespace ObjectCloud.Disk.FileHandlers
             if (null == file)
                 throw new FileDoesNotExist(FileContainer.FullPath + "/" + key);
 
-            IFileContainer toReturn = new FileContainer(file.FileId, file.TypeId, key, this, FileHandlerFactoryLocator, file.Created);
-            OwnerIdCache[file.FileId] = file.OwnerId;
+            IFileContainer toReturn = new FileContainer(new FileId(file.FileId.Value), file.TypeId, key, this, FileHandlerFactoryLocator, file.Created);
+            OwnerIdCache[toReturn.FileId] = file.OwnerId;
 
             return toReturn;
         }
@@ -235,8 +245,8 @@ namespace ObjectCloud.Disk.FileHandlers
             {
                 foreach (IFile_Readable file in DatabaseConnection.File.Select())
                 {
-                    IFileContainer toYield = new FileContainer(file.FileId, file.TypeId, file.Name, this, FileHandlerFactoryLocator, file.Created);
-                    OwnerIdCache[file.FileId] = file.OwnerId;
+                    IFileContainer toYield = new FileContainer(new FileId(file.FileId.Value), file.TypeId, file.Name, this, FileHandlerFactoryLocator, file.Created);
+                    OwnerIdCache[toYield.FileId] = file.OwnerId;
                     yield return toYield;
                 }
             }
@@ -266,8 +276,8 @@ namespace ObjectCloud.Disk.FileHandlers
                 ids,
                 maxToReturn))
             {
-                IFileContainer toYield = new FileContainer(file.FileId, file.TypeId, file.Name, this, FileHandlerFactoryLocator, file.Created);
-                OwnerIdCache[file.FileId] = file.OwnerId;
+                IFileContainer toYield = new FileContainer(new FileId(file.FileId.Value), file.TypeId, file.Name, this, FileHandlerFactoryLocator, file.Created);
+                OwnerIdCache[toYield.FileId] = file.OwnerId;
                 yield return toYield;
             }
         }
@@ -275,23 +285,25 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <summary>
         /// Cache of file IDs by their name
         /// </summary>
-        private Cache<string, Wrapped<ID<IFileContainer, long>>> FileIDCacheByName;
+        private Cache<string, Wrapped<FileId>> FileIDCacheByName;
 
         /// <summary>
         /// Returns the file ID for the given file
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
-        private Wrapped<ID<IFileContainer, long>> GetFileIdForCache(string filename)
+        private Wrapped<FileId> GetFileIdForCache(string filename)
         {
             IFile_Readable file = DatabaseConnection.File.SelectSingle(File_Table.Name == filename);
 
             if (null == file)
                 throw new FileDoesNotExist(FileContainer.FullPath + "/" + filename);
 
-            OwnerIdCache[file.FileId] = file.OwnerId;
+            FileId fileId = new FileId(file.FileId.Value);
 
-            return new Wrapped<ID<IFileContainer,long>>(file.FileId);
+            OwnerIdCache[fileId] = file.OwnerId;
+
+            return new Wrapped<FileId>(fileId);
         }
 
         public void SetPermission(ID<IUserOrGroup, Guid>? assigningPermission, string filename, ID<IUserOrGroup, Guid> userOrGroupId, FilePermissionEnum level, bool inherit, bool sendNotifications)
@@ -345,7 +357,7 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             bool updated = false;
 
-            ID<IFileContainer, long> fileId = FileIDCacheByName[filename].Value;
+            FileId fileId = FileIDCacheByName[filename].Value;
 
             // If there is already a permission in the DB, update it, else, create a new entry
 
@@ -387,7 +399,7 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
             {
-                ID<IFileContainer, long> fileId = FileIDCacheByName[filename].Value;
+                IFileId fileId = FileIDCacheByName[filename].Value;
 
                 DatabaseConnection.Permission.Delete(Permission_Table.FileId == fileId & Permission_Table.UserOrGroupId == userId);
 
@@ -402,7 +414,7 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public IEnumerable<FilePermission> GetPermissions(string filename)
         {
-            ID<IFileContainer, long> fileId = FileIDCacheByName[filename].Value;
+            IFileId fileId = FileIDCacheByName[filename].Value;
 
             foreach (IPermission_Readable permission in
                 DatabaseConnection.Permission.Select(Permission_Table.FileId == fileId))
@@ -420,10 +432,8 @@ namespace ObjectCloud.Disk.FileHandlers
         public void DeleteFile(IUser changer, string filename)
         {
             IFileContainer fileContainer = this.OpenFile(filename);
-            fileContainer.FileHandler.OnDelete(changer);
-
-            if (fileContainer.FileHandler is IDisposable)
-                ((IDisposable)fileContainer.FileHandler).Dispose();
+            using (IFileHandler fileHandler = fileContainer.FileHandler)
+                fileHandler.OnDelete(changer);
 
             DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
             {
@@ -438,9 +448,11 @@ namespace ObjectCloud.Disk.FileHandlers
                 DatabaseConnection.Permission.Delete(Permission_Table.FileId == toDelete.FileId);
                 DatabaseConnection.File.Delete(File_Table.FileId == toDelete.FileId);
 
-                FileHandlerFactoryLocator.FileSystemResolver.DeleteFile(toDelete.FileId);
+                FileId fileId = toDelete.FileId;
 
-                OwnerIdCache.Remove(toDelete.FileId);
+                FileHandlerFactoryLocator.FileSystemResolver.DeleteFile(fileId);
+
+                OwnerIdCache.Remove(fileId);
 
                 transaction.Commit();
             });
@@ -533,7 +545,7 @@ namespace ObjectCloud.Disk.FileHandlers
         /// </summary>
         private struct LoadPermissionArgs
         {
-            internal ID<IFileContainer, long> FileId;
+            internal IFileId FileId;
             internal IEnumerable<ID<IUserOrGroup, Guid>> UserAndGroupIds;
             internal bool OnlyReturnInheritedPermissions;
         }
@@ -566,7 +578,7 @@ namespace ObjectCloud.Disk.FileHandlers
                 return new Wrapped<FilePermissionEnum?>(null);
             else
                 return new Wrapped<FilePermissionEnum?>(
-                    LoadPermissionFromRelated(new ID<IFileContainer, long>[] { args.FileId }, args.UserAndGroupIds, new Set<ID<IFileContainer, long>>(), 0));
+                    LoadPermissionFromRelated(new IFileId[] { args.FileId }, args.UserAndGroupIds, new Set<IFileId>(), 0));
         }
 
         /// <summary>
@@ -574,7 +586,7 @@ namespace ObjectCloud.Disk.FileHandlers
         /// </summary>
         /// <param name="userAndGroupIds"></param>
         /// <returns></returns>
-        private string ConvertUserOrGroupIdsToString(ID<IFileContainer, long> fileId, IEnumerable<ID<IUserOrGroup, Guid>> userAndGroupIds)
+        private string ConvertUserOrGroupIdsToString(IFileId fileId, IEnumerable<ID<IUserOrGroup, Guid>> userAndGroupIds)
         {
             List<string> idsAsString = new List<string>();
 
@@ -593,7 +605,7 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public FilePermissionEnum? LoadPermission(string filename, IEnumerable<ID<IUserOrGroup, Guid>> userAndGroupIds, bool onlyReturnInheritedPermissions)
         {
-            ID<IFileContainer, long> fileId = FileIDCacheByName[filename].Value;
+            IFileId fileId = FileIDCacheByName[filename].Value;
             string cacheKey = ConvertUserOrGroupIdsToString(fileId, userAndGroupIds);
 
             LoadPermissionArgs args = new LoadPermissionArgs();
@@ -623,21 +635,25 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <param name="userAndGroupIds"></param>
         /// <returns></returns>
         private FilePermissionEnum? LoadPermissionFromRelated(
-            IEnumerable<ID<IFileContainer, long>> fileIds,
+            IEnumerable<IFileId> fileIds,
             IEnumerable<ID<IUserOrGroup, Guid>> userAndGroupIds,
-            Set<ID<IFileContainer, long>> alreadyChecked,
+            Set<IFileId> alreadyChecked,
             uint recurse)
         {
             FilePermissionEnum? highestPermission = null;
-            List<ID<IFileContainer, long>> parentIds = new List<ID<IFileContainer, long>>();
+            List<IFileId> parentIds = new List<IFileId>();
 
             // Load all of the parent related files
             foreach (IRelationships_Readable relationship in DatabaseConnection.Relationships.Select(Relationships_Table.ReferencedFileId.In(fileIds)))
-                if (!alreadyChecked.Contains(relationship.FileId))
+            {
+                FileId fileId = relationship.FileId;
+
+                if (!alreadyChecked.Contains(fileId))
                 {
-                    parentIds.Add(relationship.FileId);
-                    alreadyChecked.Add(relationship.FileId);
+                    parentIds.Add(fileId);
+                    alreadyChecked.Add(fileId);
                 }
+            }
 
             // If there are no parent relationships, just return null
             if (0 == parentIds.Count)
@@ -686,10 +702,10 @@ namespace ObjectCloud.Disk.FileHandlers
 
             List<IFile_Readable> files;
 
-            Dictionary<ID<IFileContainer, long>, List<IPermission_Readable>> permissionsByFileId =
-                new Dictionary<ID<IFileContainer, long>, List<IPermission_Readable>>();
+            Dictionary<FileId, List<IPermission_Readable>> permissionsByFileId =
+                new Dictionary<FileId, List<IPermission_Readable>>();
 
-            Dictionary<ID<IFileContainer, long>, IFileContainer> fileContainersById = new Dictionary<ID<IFileContainer, long>, IFileContainer>();
+            Dictionary<FileId, IFileContainer> fileContainersById = new Dictionary<FileId, IFileContainer>();
 
             // Load all of the files into memory.  This is because as the files are iterated, additional queries will run
             files = new List<IFile_Readable>(DatabaseConnection.File.Select());
@@ -877,9 +893,9 @@ namespace ObjectCloud.Disk.FileHandlers
                 {
                     IFileHandlerFactory fileHandlerFactory = FileHandlerFactoryLocator.FileSystemResolver.GetFactoryForFileType(toCopy.TypeId);
 
-                    this.CreateFileHelper(newFileName, toCopy.TypeId, ownerID, delegate(ID<IFileContainer, long> fileId)
+                    this.CreateFileHelper(newFileName, toCopy.TypeId, ownerID, delegate(IFileId fileId)
                     {
-                        return fileHandlerFactory.CopyFile(toCopy.FileHandler, fileId, ownerID);
+                        fileHandlerFactory.CopyFile(toCopy.FileHandler, fileId, ownerID);
                     });
 
                     // TODO:  changeData would be cool
@@ -1037,14 +1053,14 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public virtual IEnumerable<IFileContainer> GetRelatedFiles(
             ID<IUserOrGroup, Guid> userId,
-            ID<IFileContainer, long> parentFileId,
+            IFileId parentFileId,
             IEnumerable<string> relationships,
             IEnumerable<string> extensions,
             DateTime? newest,
             DateTime? oldest,
             uint? maxToReturn)
         {
-            Set<ID<IFileContainer, long>> filesToInspect = new Set<ID<IFileContainer, long>>();
+            Set<FileId> filesToInspect = new Set<FileId>();
 
             // First get the related files
 
@@ -1079,7 +1095,7 @@ namespace ObjectCloud.Disk.FileHandlers
             {
                 userOrGroupIds = GetAllUserAndGroupIdsThatApplyToUser(userId);
 
-                if (null != LoadPermissionFromRelated(new ID<IFileContainer, long>[] { parentFileId }, userOrGroupIds, new Set<ID<IFileContainer,long>>(), 0))
+                if (null != LoadPermissionFromRelated(new IFileId[] { parentFileId }, userOrGroupIds, new Set<IFileId>(), 0))
                     inspectPermissions = false;
             }
 
@@ -1088,7 +1104,7 @@ namespace ObjectCloud.Disk.FileHandlers
                 IEnumerable<IPermission_Readable> permissions = DatabaseConnection.Permission.Select(
                     Permission_Table.FileId.In(filesToInspect) & Permission_Table.UserOrGroupId.In(userOrGroupIds));
 
-                filesToInspect = new Set<ID<IFileContainer, long>>();
+                filesToInspect = new Set<FileId>();
 
                 foreach (IPermission_Readable permission in permissions)
                     filesToInspect.Add(permission.FileId);
@@ -1112,7 +1128,7 @@ namespace ObjectCloud.Disk.FileHandlers
                 ObjectCloud.ORM.DataAccess.OrderBy.Desc,
                 File_Table.Created))
             {
-                IFileContainer toYield = new FileContainer(file.FileId, file.TypeId, file.Name, this, FileHandlerFactoryLocator, file.Created);
+                IFileContainer toYield = new FileContainer(new FileId(file.FileId.Value), file.TypeId, file.Name, this, FileHandlerFactoryLocator, file.Created);
                 OwnerIdCache[toYield.FileId] = toYield.OwnerId;
                 yield return toYield;
             }
@@ -1132,8 +1148,8 @@ namespace ObjectCloud.Disk.FileHandlers
                 {
                     DatabaseConnection.Relationships.Insert(delegate(IRelationships_Writable relationshipInDb)
                     {
-                        relationshipInDb.FileId = parentFile.FileId;
-                        relationshipInDb.ReferencedFileId = relatedFile.FileId;
+                        relationshipInDb.FileId = (FileId)(parentFile.FileId);
+                        relationshipInDb.ReferencedFileId = (FileId)relatedFile.FileId;
                         relationshipInDb.Relationship = relationship;
                     });
                 }
@@ -1177,7 +1193,7 @@ namespace ObjectCloud.Disk.FileHandlers
             parentFile.FileHandler.OnRelationshipDeleted(new RelationshipEventArgs(relatedFile, relationship));
         }
 
-        public void Chown(IUser changer, ID<IFileContainer, long> fileId, ID<IUserOrGroup, Guid>? newOwnerId)
+        public void Chown(IUser changer, IFileId fileId, ID<IUserOrGroup, Guid>? newOwnerId)
         {
             IFile_Readable oldFile = DatabaseConnection.File.SelectSingle(File_Table.FileId == fileId);
 			if (null == oldFile)
@@ -1211,9 +1227,9 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <summary>
         /// Cache of owner IDs
         /// </summary>
-        private Cache<ID<IFileContainer, long>, Wrapped<ID<IUserOrGroup, Guid>?>> OwnerIdCache;
+        private Cache<IFileId, Wrapped<ID<IUserOrGroup, Guid>?>> OwnerIdCache;
 
-        public ID<IUserOrGroup, Guid>? GetOwnerId(ID<IFileContainer, long> fileId)
+        public ID<IUserOrGroup, Guid>? GetOwnerId(IFileId fileId)
         {
             return OwnerIdCache[fileId].Value;
         }
@@ -1223,12 +1239,12 @@ namespace ObjectCloud.Disk.FileHandlers
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        private Wrapped<ID<IUserOrGroup, Guid>?> LoadOwnerIdForCache(ID<IFileContainer, long> fileId)
+        private Wrapped<ID<IUserOrGroup, Guid>?> LoadOwnerIdForCache(IFileId fileId)
         {
             return DatabaseConnection.File.SelectSingle(File_Table.FileId == fileId).OwnerId;
         }
 
-        public void SetNamedPermission(ID<IFileContainer, long> fileId, string namedPermission, ID<IUserOrGroup, Guid> userOrGroupId, bool inherit)
+        public void SetNamedPermission(IFileId fileId, string namedPermission, ID<IUserOrGroup, Guid> userOrGroupId, bool inherit)
         {
             DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
             {
@@ -1239,7 +1255,7 @@ namespace ObjectCloud.Disk.FileHandlers
                 {
                     DatabaseConnection.NamedPermission.Insert(delegate(INamedPermission_Writable np_w)
                     {
-                        np_w.FileId = fileId;
+                        np_w.FileId = (FileId)fileId;
                         np_w.Inherit = inherit;
                         np_w.NamedPermission = namedPermission;
                         np_w.UserOrGroup = userOrGroupId;
@@ -1251,7 +1267,7 @@ namespace ObjectCloud.Disk.FileHandlers
                         NamedPermission_Table.FileId == fileId & NamedPermission_Table.NamedPermission == namedPermission & NamedPermission_Table.UserOrGroup == userOrGroupId,
                         delegate(INamedPermission_Writable np_w)
                         {
-                            np_w.FileId = fileId;
+                            np_w.FileId = (FileId)fileId;
                             np_w.Inherit = inherit;
                             np_w.NamedPermission = namedPermission;
                             np_w.UserOrGroup = userOrGroupId;
@@ -1262,25 +1278,25 @@ namespace ObjectCloud.Disk.FileHandlers
             });
         }
 
-        public void RemoveNamedPermission(ID<IFileContainer, long> fileId, string namedPermission, ID<IUserOrGroup, Guid> userOrGroupId)
+        public void RemoveNamedPermission(IFileId fileId, string namedPermission, ID<IUserOrGroup, Guid> userOrGroupId)
         {
             DatabaseConnection.NamedPermission.Delete(
                 NamedPermission_Table.FileId == fileId & NamedPermission_Table.NamedPermission == namedPermission & NamedPermission_Table.UserOrGroup == userOrGroupId);
         }
 
-        public bool HasNamedPermissions(ID<IFileContainer, long> fileId, IEnumerable<string> namedPermissions, ID<IUserOrGroup, Guid> userId)
+        public bool HasNamedPermissions(IFileId fileId, IEnumerable<string> namedPermissions, ID<IUserOrGroup, Guid> userId)
         {
             IEnumerable<ID<IUserOrGroup, Guid>> userAndGroupsIds = GetAllUserAndGroupIdsThatApplyToUser(userId);
-            return HasNamedPermissions(new ID<IFileContainer, long>[] { fileId }, namedPermissions, userAndGroupsIds, true);
+            return HasNamedPermissions(new IFileId[] { fileId }, namedPermissions, userAndGroupsIds, true);
         }
 
-        public bool HasNamedPermissions(IEnumerable<ID<IFileContainer, long>> fileIds, IEnumerable<string> namedPermissions, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, bool checkInherit)
+        public bool HasNamedPermissions(IEnumerable<IFileId> fileIds, IEnumerable<string> namedPermissions, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, bool checkInherit)
         {
             return HasNamedPermissions(fileIds, namedPermissions, userOrGroupIds, checkInherit, 0);
         }
 
         private bool HasNamedPermissions(
-            IEnumerable<ID<IFileContainer, long>> fileIds,
+            IEnumerable<IFileId> fileIds,
             IEnumerable<string> namedPermissions,
             IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds,
             bool checkInherit,
@@ -1320,15 +1336,15 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <param name="userOrGroupIds"></param>
         /// <returns></returns>
         private bool HasNamedPermissionThroughRelationship(
-            IEnumerable<ID<IFileContainer, long>> fileIds, IEnumerable<string> namedPermissions, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, uint numCalls)
+            IEnumerable<IFileId> fileIds, IEnumerable<string> namedPermissions, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, uint numCalls)
         {
             List<IRelationships_Readable> relationships = new List<IRelationships_Readable>(
                 DatabaseConnection.Relationships.Select(Relationships_Table.ReferencedFileId.In(fileIds) & Relationships_Table.Relationship.In(namedPermissions)));
 
-            List<ID<IFileContainer, long>> parentFileIds = new List<ID<IFileContainer,long>>();
+            List<IFileId> parentFileIds = new List<IFileId>();
 
             foreach (IRelationships_Readable relationship in relationships)
-                parentFileIds.Add(relationship.FileId);
+                parentFileIds.Add(new FileId(relationship.FileId.Value));
 
             if (parentFileIds.Count > 0 && numCalls < 150) // prevent infinate recursion
                 return HasNamedPermissions(parentFileIds, namedPermissions, userOrGroupIds, false, numCalls++);
@@ -1336,13 +1352,13 @@ namespace ObjectCloud.Disk.FileHandlers
             return false;
         }
 
-        public IEnumerable<NamedPermission> GetNamedPermissions(ID<IFileContainer, long> fileId, string namedPermission)
+        public IEnumerable<NamedPermission> GetNamedPermissions(IFileId fileId, string namedPermission)
         {
             foreach (INamedPermission_Readable np in DatabaseConnection.NamedPermission.Select(
                 NamedPermission_Table.FileId == fileId & NamedPermission_Table.NamedPermission == namedPermission))
             {
                 NamedPermission toYeild = new NamedPermission();
-                toYeild.FileId = np.FileId;
+                toYeild.FileId = (FileId)np.FileId;
                 toYeild.Inherit = np.Inherit;
                 toYeild.Name = np.NamedPermission;
                 toYeild.UserOrGroupId = np.UserOrGroup;
@@ -1357,5 +1373,5 @@ namespace ObjectCloud.Disk.FileHandlers
     /// </summary>
     /// <param name="path"></param>
     /// <returns></returns>
-    internal delegate IFileHandler CreateFileDelegate(ID<IFileContainer, long> fileId);
+    internal delegate void CreateFileDelegate(IFileId fileId);
 }

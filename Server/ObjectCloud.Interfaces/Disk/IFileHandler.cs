@@ -14,7 +14,7 @@ namespace ObjectCloud.Interfaces.Disk
     /// <summary>
     /// Handles access to a file; provides an API for file access
     /// </summary>
-    public interface IFileHandler
+    public interface IFileHandler : IDisposable
     {
         /// <summary>
         /// Dumps the file to the given path.  The FileHandler should be locked prior to calling this method

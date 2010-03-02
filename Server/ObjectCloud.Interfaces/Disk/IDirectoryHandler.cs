@@ -78,7 +78,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <returns></returns>
         IEnumerable<IFileContainer> GetRelatedFiles(
             ID<IUserOrGroup, Guid> userId,
-            ID<IFileContainer, long> parentFileId,
+            IFileId parentFileId,
             IEnumerable<string> relationships,
             IEnumerable<string> extensions,
             DateTime? newest,
@@ -201,14 +201,14 @@ namespace ObjectCloud.Interfaces.Disk
         /// </summary>
         /// <param name="changer"></param>
         /// <param name="newOwner"></param>
-        void Chown(IUser changer, ID<IFileContainer, long> fileId, ID<IUserOrGroup, Guid>? newOwner);
+        void Chown(IUser changer, IFileId fileId, ID<IUserOrGroup, Guid>? newOwner);
 
         /// <summary>
         /// Returns the owner of the file
         /// </summary>
         /// <param name="fileId"></param>
         /// <returns></returns>
-        ID<IUserOrGroup, Guid>? GetOwnerId(ID<IFileContainer, long> fileId);
+        ID<IUserOrGroup, Guid>? GetOwnerId(IFileId fileId);
 
         /// <summary>
         /// Sets a named permission
@@ -217,7 +217,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="namedPermission"></param>
         /// <param name="userOrGroupId"></param>
         /// <param name="inherit"></param>
-        void SetNamedPermission(ID<IFileContainer, long> fileId, string namedPermission, ID<IUserOrGroup, Guid> userOrGroupId, bool inherit);
+        void SetNamedPermission(IFileId fileId, string namedPermission, ID<IUserOrGroup, Guid> userOrGroupId, bool inherit);
 
         /// <summary>
         /// Removes a named permission
@@ -225,7 +225,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="fileId"></param>
         /// <param name="namedPermission"></param>
         /// <param name="userOrGroupId"></param>
-        void RemoveNamedPermission(ID<IFileContainer, long> fileId, string namedPermission, ID<IUserOrGroup, Guid> userOrGroupId);
+        void RemoveNamedPermission(IFileId fileId, string namedPermission, ID<IUserOrGroup, Guid> userOrGroupId);
 
         /// <summary>
         /// True if any of the users or groups has the named permission
@@ -235,7 +235,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="userOrGroupIds"></param>
         /// <param name="checkInherit">True to check parent directories</param>
         /// <returns></returns>
-        bool HasNamedPermissions(IEnumerable<ID<IFileContainer, long>> fileIds, IEnumerable<string> namedPermission, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, bool checkInherit);
+        bool HasNamedPermissions(IEnumerable<IFileId> fileIds, IEnumerable<string> namedPermission, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, bool checkInherit);
 
         /// <summary>
         /// True if the user has the named permission
@@ -245,7 +245,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="userOrGroupIds"></param>
         /// <param name="checkInherit">True to check parent directories</param>
         /// <returns></returns>
-        bool HasNamedPermissions(ID<IFileContainer, long> fileId, IEnumerable<string> namedPermission, ID<IUserOrGroup, Guid> userId);
+        bool HasNamedPermissions(IFileId fileId, IEnumerable<string> namedPermission, ID<IUserOrGroup, Guid> userId);
 
         /// <summary>
         /// Returns all of the named permissions for the given file with the given name
@@ -253,7 +253,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="fileId"></param>
         /// <param name="namedPermission"></param>
         /// <returns></returns>
-        IEnumerable<NamedPermission> GetNamedPermissions(ID<IFileContainer, long> fileId, string namedPermission);
+        IEnumerable<NamedPermission> GetNamedPermissions(IFileId fileId, string namedPermission);
     }
 
     /// <summary>
@@ -264,12 +264,12 @@ namespace ObjectCloud.Interfaces.Disk
         /// <summary>
         /// The file ID
         /// </summary>
-        public ID<IFileContainer, long> FileId
+        public IFileId FileId
         {
             get { return _FileId; }
             set { _FileId = value; }
         }
-        ID<IFileContainer, long> _FileId;
+        IFileId _FileId;
 
         /// <summary>
         /// The named permission

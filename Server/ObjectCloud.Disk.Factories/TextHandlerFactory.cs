@@ -18,16 +18,14 @@ namespace ObjectCloud.Disk.Factories
 {
     public class TextHandlerFactory : FileHandlerFactory<ITextHandler>
     {
-        public override ITextHandler CreateFile(string path)
+        public override void CreateFile(string path, FileId fileId)
         {
             string subPath = CreateTextFilename(path);
 
             System.IO.File.WriteAllText(subPath, "");
-
-            return new TextHandler(subPath, FileHandlerFactoryLocator);
         }
 
-        public override ITextHandler OpenFile(string path)
+        public override ITextHandler OpenFile(string path, FileId fileId)
         {
             return new TextHandler(CreateTextFilename(path), FileHandlerFactoryLocator);
         }
@@ -42,23 +40,21 @@ namespace ObjectCloud.Disk.Factories
             return string.Format("{0}{1}file.txt", path, Path.DirectorySeparatorChar);
         }
 
-        public override IFileHandler CopyFile(IFileHandler sourceFileHandler, ID<IFileContainer, long> fileId, ID<IUserOrGroup, Guid>? ownerID)
-        {
-            ITextHandler toReturn = CreateFile(fileId);
-            toReturn.WriteAll(null, ((ITextHandler)sourceFileHandler).ReadAll());
 
-            return toReturn;
+        public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID)
+        {
+            CreateFile(fileId);
+            System.IO.File.WriteAllText(
+                CreateTextFilename(FileSystem.GetFullPath(fileId)),
+                sourceFileHandler.FileContainer.CastFileHandler<ITextHandler>().ReadAll());
         }
 
-        public override IFileHandler RestoreFile(ID<IFileContainer, long> fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
+        public override void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
         {
-            ITextHandler toReturn = CreateFile(fileId);
-
-            IUser user = FileHandlerFactoryLocator.UserManagerHandler.GetUserNoException(userId);
-
-            toReturn.WriteAll(user, File.ReadAllText(pathToRestoreFrom));
-
-            return toReturn;
+            CreateFile(fileId);
+            System.IO.File.WriteAllText(
+                CreateTextFilename(FileSystem.GetFullPath(fileId)),
+                File.ReadAllText(pathToRestoreFrom));
         }
     }
 }

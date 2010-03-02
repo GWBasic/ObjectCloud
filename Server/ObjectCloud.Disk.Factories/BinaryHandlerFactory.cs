@@ -15,16 +15,14 @@ namespace ObjectCloud.Disk.Factories
 {
     public class BinaryHandlerFactory : FileHandlerFactory<IBinaryHandler>
     {
-        public override IBinaryHandler CreateFile(string path)
+        public override void CreateFile(string path, FileId fileId)
         {
             string subPath = CreateBinaryFilename(path);
 
             System.IO.File.WriteAllBytes(subPath, new byte[0]);
-
-            return new BinaryHandler(subPath, FileHandlerFactoryLocator);
         }
 
-        public override IBinaryHandler OpenFile(string path)
+        public override IBinaryHandler OpenFile(string path, FileId fileId)
         {
             return new BinaryHandler(CreateBinaryFilename(path), FileHandlerFactoryLocator);
         }
@@ -39,21 +37,20 @@ namespace ObjectCloud.Disk.Factories
             return string.Format("{0}{1}file.bin", path, Path.DirectorySeparatorChar);
         }
 
-        public override IFileHandler CopyFile(IFileHandler sourceFileHandler, ID<IFileContainer, long> fileId, ID<IUserOrGroup, Guid>? ownerID)
+        public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID)
         {
-            IBinaryHandler toReturn = CreateFile(fileId);
-            toReturn.WriteAll(((IBinaryHandler)sourceFileHandler).ReadAll());
-
-            return toReturn;
+            CreateFile(fileId);
+            System.IO.File.WriteAllBytes(
+                CreateBinaryFilename(FileSystem.GetFullPath(fileId)),
+                sourceFileHandler.FileContainer.CastFileHandler<IBinaryHandler>().ReadAll());
         }
 
-        public override IFileHandler RestoreFile(ID<IFileContainer, long> fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
+        public override void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
         {
-            IBinaryHandler toReturn = CreateFile(fileId);
-
-            toReturn.WriteAll(File.ReadAllBytes(pathToRestoreFrom));
-
-            return toReturn;
+            CreateFile(fileId);
+            System.IO.File.WriteAllBytes(
+                CreateBinaryFilename(FileSystem.GetFullPath(fileId)),
+                File.ReadAllBytes(pathToRestoreFrom));
         }
     }
 }

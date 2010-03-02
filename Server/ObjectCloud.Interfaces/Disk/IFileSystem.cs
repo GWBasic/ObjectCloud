@@ -17,12 +17,12 @@ namespace ObjectCloud.Interfaces.Disk
         /// </summary>
         /// <param name="fileId"></param>
         /// <returns></returns>
-        bool IsFilePresent(ID<IFileContainer, long> fileId);
+        bool IsFilePresent(IFileId fileId);
 
         /// <summary>
         /// Deletes the file with the given ID
         /// </summary>
         /// <param name="fileId"></param>
-        void DeleteFile(ID<IFileContainer, long> fileId);
+        void DeleteFile(IFileId fileId);
     }
 }

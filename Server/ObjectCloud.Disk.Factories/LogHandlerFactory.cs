@@ -31,7 +31,7 @@ namespace ObjectCloud.Disk.Factories
         }
         private bool _WriteToConsole = false;
 
-        public override LogHandler CreateFile(string path)
+        public override void CreateFile(string path, FileId fileId)
         {
             Directory.CreateDirectory(path);
 
@@ -39,19 +39,16 @@ namespace ObjectCloud.Disk.Factories
 
             DataAccessLocator.DatabaseCreator.Create(databaseFilename);
 
-            LogHandler logHandler = ConstructLogHander(databaseFilename);
-
-            foreach (LoggingLevel level in Enum<LoggingLevel>.Values)
-                logHandler.DatabaseConnection.Lifespan.Insert(delegate(ILifespan_Writable lifespan)
-                {
-                    lifespan.Level = level;
-                    lifespan.Timespan = TimeSpan.FromDays(14);
-                });
-
-            return logHandler;
+            using (LogHandler logHandler = ConstructLogHander(databaseFilename))
+                foreach (LoggingLevel level in Enum<LoggingLevel>.Values)
+                    logHandler.DatabaseConnection.Lifespan.Insert(delegate(ILifespan_Writable lifespan)
+                    {
+                        lifespan.Level = level;
+                        lifespan.Timespan = TimeSpan.FromDays(14);
+                    });
         }
 
-        public override LogHandler OpenFile(string path)
+        public override LogHandler OpenFile(string path, FileId fileId)
         {
             return ConstructLogHander(CreateDatabaseFilename(path));
         }
@@ -81,12 +78,12 @@ namespace ObjectCloud.Disk.Factories
             return toReturn;
         }
 
-        public override IFileHandler CopyFile(IFileHandler sourceFileHandler, ID<IFileContainer, long> fileId, ID<IUserOrGroup, Guid>? ownerID)
+        public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID)
         {
 			throw new NotImplementedException();
         }
 
-        public override IFileHandler RestoreFile(ID<IFileContainer, long> fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
+        public override void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
         {
 			throw new NotImplementedException();
         }

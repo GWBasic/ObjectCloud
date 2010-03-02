@@ -27,7 +27,7 @@ namespace ObjectCloud.Disk.Factories
         }
         private IEmbeddedDatabaseConnector _EmbeddedDatabaseConnector;
 
-		public override IDatabaseHandler CreateFile(string path)
+        public override void CreateFile(string path, FileId fileId)
         {
             Directory.CreateDirectory(path);
 
@@ -35,13 +35,11 @@ namespace ObjectCloud.Disk.Factories
 			
 			EmbeddedDatabaseConnector.CreateFile(databaseFilename);
 
-            DatabaseHandler toReturn = new DatabaseHandler(databaseFilename, EmbeddedDatabaseConnector, FileHandlerFactoryLocator);
-			toReturn.Version = null;
-			
-			return toReturn;
+            using (DatabaseHandler toReturn = new DatabaseHandler(databaseFilename, EmbeddedDatabaseConnector, FileHandlerFactoryLocator))
+			    toReturn.Version = null;
         }
 
-        public override IDatabaseHandler OpenFile(string path)
+        public override IDatabaseHandler OpenFile(string path, FileId fileId)
         {
             string databaseFilename = CreateDatabaseFilename(path);
 
@@ -58,7 +56,7 @@ namespace ObjectCloud.Disk.Factories
             return string.Format("{0}{1}embedded.sqlite", path, Path.DirectorySeparatorChar);
         }
 
-        public override IFileHandler CopyFile(IFileHandler sourceFileHandler, ID<IFileContainer, long> fileId, ID<IUserOrGroup, Guid>? ownerID)
+        public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID)
 		{
             string path = FileSystem.GetFullPath(fileId);
 
@@ -69,20 +67,17 @@ namespace ObjectCloud.Disk.Factories
 			
 			File.Copy(sourceDatabaseHandler.DatabaseFilename, CreateDatabaseFilename(path));
 			
-            IDatabaseHandler toReturn = OpenFile(path);
-            toReturn.Version = sourceDatabaseHandler.Version;
-
-            return toReturn;
+            using (IDatabaseHandler toReturn = OpenFile(fileId))
+                toReturn.Version = sourceDatabaseHandler.Version;
 		}
 
-        public override IFileHandler RestoreFile(ID<IFileContainer, long> fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
+        public override void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
 		{
             string path = FileSystem.GetFullPath(fileId);
 
             Directory.CreateDirectory(path);
 
 			File.Copy(pathToRestoreFrom, CreateDatabaseFilename(path));
-			return OpenFile(path);
 		}
     }
 }

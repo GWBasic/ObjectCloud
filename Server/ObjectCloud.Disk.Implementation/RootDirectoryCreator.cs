@@ -20,15 +20,9 @@ namespace ObjectCloud.Disk.Implementation
         public virtual void CreateRootDirectoryHandler(IFileContainer rootDirectoryContainer)
         {
             // Construct the root directory on disk
-            IDirectoryHandler rootDirectoryHandler = FileHandlerFactoryLocator.DirectoryFactory.CreateFile(
-                new ID<IFileContainer, long>(FileHandlerFactoryLocator.FileSystemResolver.RootDirectoryId));
+            FileHandlerFactoryLocator.DirectoryFactory.CreateFile(FileHandlerFactoryLocator.FileSystemResolver.RootDirectoryId);
 
-            // These weird lines ensure that there is only one rootDirectoryHandler in memory.  The FileContainer always re-constructs
-            // the FileHandler; therefore, the one made in the above line will result in a duplicate in-memory object
-            if (rootDirectoryHandler is IDisposable)
-                ((IDisposable)rootDirectoryHandler).Dispose();
-
-            rootDirectoryHandler = rootDirectoryContainer.CastFileHandler<IDirectoryHandler>();
+            IDirectoryHandler rootDirectoryHandler = rootDirectoryContainer.CastFileHandler<IDirectoryHandler>();
 
             // Create users folder
             IDirectoryHandler usersDirectory = (IDirectoryHandler)rootDirectoryHandler.CreateFile("Users", "directory", null);

@@ -16,20 +16,18 @@ namespace ObjectCloud.Disk.Factories
 {
     public class UserHandlerFactory : SystemFileHandlerFactory<UserHandler>
     {
-        public override UserHandler CreateFile(string path)
+        public override void CreateFile(string path, FileId fileId)
         {
             throw new SecurityException("Users can not be created");
         }
 
-        public override IFileHandler CreateSystemFile(string path)
+        public override void CreateSystemFile(string path, FileId fileId)
         {
             Directory.CreateDirectory(path);
 
             string databaseFilename = CreateDatabaseFilename(path);
 
             DataAccessLocator.DatabaseCreator.Create(databaseFilename);
-
-            return ConstructNameValuePairsHander(databaseFilename);
         }
 
         /// <summary>
@@ -42,7 +40,7 @@ namespace ObjectCloud.Disk.Factories
         }
         private DataAccessLocator _DataAccessLocator;
 
-        public override UserHandler OpenFile(string path)
+        public override UserHandler OpenFile(string path, FileId fileId)
         {
             return ConstructNameValuePairsHander(CreateDatabaseFilename(path));
         }
@@ -71,12 +69,12 @@ namespace ObjectCloud.Disk.Factories
             return toReturn;
         }
 
-        public override IFileHandler CopyFile(IFileHandler sourceFileHandler, ID<IFileContainer, long> fileId, ID<IUserOrGroup, Guid>? ownerID)
+        public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID)
         {
             throw new NotImplementedException("Users can not be copied");
         }
 
-        public override IFileHandler RestoreFile(ID<IFileContainer, long> fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
+        public override void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
         {
             throw new NotImplementedException("Users can not be copied");
         }

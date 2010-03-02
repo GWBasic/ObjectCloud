@@ -24,14 +24,14 @@ namespace ObjectCloud.Disk.Implementation
     {
         private static ILog log = LogManager.GetLogger<FileSystemResolver>();
 
-        Cache<ID<IFileContainer, long>, IFileHandler, string> FileHandlers;
-        Cache<ID<IFileContainer, long>, WebHandlers, IFileContainer> WebHandlers;
+        Cache<IFileId, IFileHandler, string> FileHandlers;
+        Cache<IFileId, WebHandlers, IFileContainer> WebHandlers;
 
         public FileSystemResolver()
             : base()
         {
-            FileHandlers = new Cache<ID<IFileContainer, long>, IFileHandler, string>(CreateFileHandlerForCache);
-            WebHandlers = new Cache<ID<IFileContainer, long>, WebHandlers, IFileContainer>(CreateWebHandlersForCache);
+            FileHandlers = new Cache<IFileId, IFileHandler, string>(CreateFileHandlerForCache);
+            WebHandlers = new Cache<IFileId, WebHandlers, IFileContainer>(CreateWebHandlersForCache);
         }
 
         public FileHandlerFactoryLocator FileHandlerFactoryLocator
@@ -44,12 +44,12 @@ namespace ObjectCloud.Disk.Implementation
         /// <summary>
         /// The ID of the root object
         /// </summary>
-        public long RootDirectoryId
+        public IFileId RootDirectoryId
         {
             get { return _RootDirectoryId; }
             set { _RootDirectoryId = value; }
         }
-        private long _RootDirectoryId;
+        private IFileId _RootDirectoryId;
 
         public IDirectoryHandler RootDirectoryHandler
         {
@@ -87,36 +87,6 @@ namespace ObjectCloud.Disk.Implementation
             }
         }
         private IFileContainer _RootDirectoryContainer;
-
-        private static object CreateFileKey = new object();
-
-        public IFileHandler CreateFile(FileCreatorDelegate fileCreatorDelegate, String fileType)
-        {
-            ID<IFileContainer, long> id;
-
-            int ctr = 0;
-
-            using (TimedLock.Lock(CreateFileKey))
-            {
-                do
-                {
-                    id = new ID<IFileContainer, long>(SRandom.Next<long>());
-
-                    ctr++;
-
-                    if (ctr > 500)
-                        throw new CanNotCreateFile("Tried too many times to create a file");
-
-                } while (FileHandlerFactoryLocator.FileSystem.IsFilePresent(id));
-
-            }
-
-            IFileHandler toReturn = fileCreatorDelegate(id);
-
-            FileHandlers.Set(id, toReturn);
-
-            return toReturn;
-        }
 
         public IFileHandlerFactory GetFactoryForFileType(string fileType)
         {
@@ -203,7 +173,7 @@ namespace ObjectCloud.Disk.Implementation
             }
         }
 
-        public IFileHandler LoadFile(ID<IFileContainer, long> id, string fileType)
+        public IFileHandler LoadFile(IFileId id, string fileType)
         {
             return FileHandlers.Get(id, fileType);
         }
@@ -218,7 +188,7 @@ namespace ObjectCloud.Disk.Implementation
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        private IFileHandler CreateFileHandlerForCache(ID<IFileContainer, long> id, string filetype)
+        private IFileHandler CreateFileHandlerForCache(IFileId id, string filetype)
         {
             if (FileHandlerFactoryLocator.FileSystem.IsFilePresent(id))
             {
@@ -237,7 +207,7 @@ namespace ObjectCloud.Disk.Implementation
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        private WebHandlers CreateWebHandlersForCache(ID<IFileContainer, long> id, IFileContainer fileContainer)
+        private WebHandlers CreateWebHandlersForCache(IFileId id, IFileContainer fileContainer)
         {
             Type webHandlerType = FileHandlerFactoryLocator.WebHandlerClasses[fileContainer.TypeId];
             object webHandlerObj = Activator.CreateInstance(webHandlerType);
@@ -279,7 +249,7 @@ namespace ObjectCloud.Disk.Implementation
             return toReturn;
         }
 
-        public void DeleteFile(ID<IFileContainer, long> id)
+        public void DeleteFile(IFileId id)
         {
             FileHandlers.Remove(id);
             WebHandlers.Remove(id);
@@ -356,19 +326,18 @@ namespace ObjectCloud.Disk.Implementation
                 plugin.Initialize();
 
             log.Info("Starting ObjectCloud's File System...");
-            ID<IFileContainer,long> rootDirectoryId = new ID<IFileContainer,long>(RootDirectoryId);
 
             if (null == _RootDirectoryContainer)
             {
                 DateTime rootDirectoryCreateTime;
-                if (FileHandlerFactoryLocator.FileSystem.IsFilePresent(rootDirectoryId))
-                    rootDirectoryCreateTime = FileHandlerFactoryLocator.FileHandlerFactories["directory"].EstimateCreationTime(rootDirectoryId);
+                if (FileHandlerFactoryLocator.FileSystem.IsFilePresent(RootDirectoryId))
+                    rootDirectoryCreateTime = FileHandlerFactoryLocator.FileHandlerFactories["directory"].EstimateCreationTime(RootDirectoryId);
                 else
                     rootDirectoryCreateTime = DateTime.UtcNow;
 
-                _RootDirectoryContainer = new FileContainer(null, new ID<IFileContainer, long>(RootDirectoryId), "directory", "", null, FileHandlerFactoryLocator, rootDirectoryCreateTime);
+                _RootDirectoryContainer = new FileContainer(null, RootDirectoryId, "directory", "", null, FileHandlerFactoryLocator, rootDirectoryCreateTime);
 
-                if (FileHandlerFactoryLocator.FileSystem.IsFilePresent(rootDirectoryId))
+                if (FileHandlerFactoryLocator.FileSystem.IsFilePresent(RootDirectoryId))
                     FileHandlerFactoryLocator.RootDirectoryCreator.Syncronize(RootDirectoryHandler);
                 else
                 {

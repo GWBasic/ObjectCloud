@@ -13,7 +13,7 @@ namespace ObjectCloud.Interfaces.Disk
     /// </summary>
     public class InvalidFileId : DiskException
     {
-        public InvalidFileId(ID<IFileContainer, long> id)
+        public InvalidFileId(IFileId id)
             :
             base("\"" + id.ToString() + "\" is an invalid file id") { }
     }

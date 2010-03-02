@@ -28,18 +28,16 @@ namespace ObjectCloud.Disk.Factories
         }
         private DataAccessLocator _DataAccessLocator;
 
-        public override NameValuePairsHandler CreateFile(string path)
+        public override void CreateFile(string path, FileId fileId)
         {
             Directory.CreateDirectory(path);
 
             string databaseFilename = CreateDatabaseFilename(path);
 
             DataAccessLocator.DatabaseCreator.Create(databaseFilename);
-
-            return ConstructNameValuePairsHander(databaseFilename);
         }
 
-        public override NameValuePairsHandler OpenFile(string path)
+        public override NameValuePairsHandler OpenFile(string path, FileId fileId)
         {
             return ConstructNameValuePairsHander(CreateDatabaseFilename(path));
         }
@@ -68,42 +66,41 @@ namespace ObjectCloud.Disk.Factories
             return toReturn;
         }
 
-        public override IFileHandler CopyFile(IFileHandler sourceFileHandler, ID<IFileContainer, long> fileId, ID<IUserOrGroup, Guid>? ownerID)
+        public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID)
         {
-            NameValuePairsHandler toReturn = CreateFile(FileSystem.GetFullPath(fileId));
-            toReturn.WriteAll(null, (NameValuePairsHandler)sourceFileHandler, false);
-
-            return toReturn;
+            CreateFile(fileId);
+            using (NameValuePairsHandler target = OpenFile(fileId))
+                target.WriteAll(null, (NameValuePairsHandler)sourceFileHandler, false);
         }
 
-        public override IFileHandler RestoreFile(ID<IFileContainer, long> fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
+        public override void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
         {
             IUser user = FileHandlerFactoryLocator.UserManagerHandler.GetUserNoException(userId);
 
-            NameValuePairsHandler toReturn = CreateFile(FileSystem.GetFullPath(fileId));
-
-            using (TextReader tr = File.OpenText(pathToRestoreFrom))
-            using (XmlReader xmlReader = XmlReader.Create(tr))
+            CreateFile(fileId);
+            using (NameValuePairsHandler target = OpenFile(fileId))
             {
-                xmlReader.MoveToContent();
-
-                while (!xmlReader.Name.Equals("NameValuePairs"))
-                    if (!xmlReader.Read())
-                        throw new SystemFileException("<NameValuePairs> tag missing");
-
-                while (xmlReader.Read())
+                using (TextReader tr = File.OpenText(pathToRestoreFrom))
+                using (XmlReader xmlReader = XmlReader.Create(tr))
                 {
-                    if ("NameValuePair".Equals(xmlReader.Name))
-                    {
-                        string name = xmlReader.GetAttribute("Name");
-                        string value = xmlReader.GetAttribute("Value");
+                    xmlReader.MoveToContent();
 
-                        toReturn.Set(user, name, value);
+                    while (!xmlReader.Name.Equals("NameValuePairs"))
+                        if (!xmlReader.Read())
+                            throw new SystemFileException("<NameValuePairs> tag missing");
+
+                    while (xmlReader.Read())
+                    {
+                        if ("NameValuePair".Equals(xmlReader.Name))
+                        {
+                            string name = xmlReader.GetAttribute("Name");
+                            string value = xmlReader.GetAttribute("Value");
+
+                            target.Set(user, name, value);
+                        }
                     }
                 }
             }
-
-            return toReturn;
         }
     }
 }

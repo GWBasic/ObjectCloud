@@ -5,6 +5,7 @@
 using System;
 
 using ObjectCloud.Common;
+using ObjectCloud.Disk.FileHandlers;
 using ObjectCloud.Interfaces.Disk;
 
 namespace ObjectCloud.Disk.Factories
@@ -12,11 +13,11 @@ namespace ObjectCloud.Disk.Factories
 	public abstract class SystemFileHandlerFactory<TFileHandler> : FileHandlerFactory<TFileHandler>, ISystemFileHandlerFactory
 		where TFileHandler : IFileHandler
 	{
-        public IFileHandler CreateSystemFile(ID<IFileContainer, long> fileId)
+        public void CreateSystemFile(IFileId fileId)
         {
-            return CreateSystemFile(FileSystem.GetFullPath(fileId));
+            CreateSystemFile(FileSystem.GetFullPath(fileId), (FileId)fileId);
         }
     
-        public abstract IFileHandler CreateSystemFile(string path);
+        public abstract void CreateSystemFile(string path, FileId fileId);
     }
 }

@@ -27,14 +27,6 @@ namespace ObjectCloud.Interfaces.Disk
         IFileContainer RootDirectoryContainer { get;}
 
         /// <summary>
-        /// Creates a file Id
-        /// </summary>
-        /// <param name="fileCreator">This object must create the corresponding file</param>
-        /// <param name="fileType"></param>
-        /// <returns></returns>
-        IFileHandler CreateFile(FileCreatorDelegate fileCreator, string fileType);
-
-        /// <summary>
         /// Returns the correct factory for the given file type 
         /// </summary>
         /// <param name="fileType">This must be all lower-case</param>
@@ -62,7 +54,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="fileType">The file's type</param>
         /// <returns></returns>
         /// <exception cref="InvalidFileId">Bad file ID</exception>
-        IFileHandler LoadFile(ID<IFileContainer, long> id, string fileType);
+        IFileHandler LoadFile(IFileId id, string fileType);
 
         /// <summary>
         /// Loads the web handler
@@ -77,7 +69,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// Deletes the file with the given FileID
         /// </summary>
         /// <param name="id"></param>
-        void DeleteFile(ID<IFileContainer, long> id);
+        void DeleteFile(IFileId id);
 
         /// <summary>
         /// Copies the file
@@ -110,7 +102,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <summary>
         /// The ID of the root object
         /// </summary>
-        long RootDirectoryId { get; set; }
+        IFileId RootDirectoryId { get; set; }
 
         /// <summary>
         /// The characters that are forbidden in filenames

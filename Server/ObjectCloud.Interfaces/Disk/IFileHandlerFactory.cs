@@ -19,21 +19,21 @@ namespace ObjectCloud.Interfaces.Disk
         /// </summary>
         /// <param name="fileId">The file's unique ID</param>
         /// <returns>An IFileHandler object that handles the file.  This must be closed</returns>
-        IFileHandler CreateFile(ID<IFileContainer, long> fileId);
+        void CreateFile(IFileId fileId);
 
         /// <summary>
         /// Opens a file at the given path
         /// </summary>
         /// <param name="fileId">The file's unique ID</param>
         /// <returns>An IFileHandler object that handles the file.  This must be closed</returns>
-        IFileHandler OpenFile(ID<IFileContainer, long> fileId);
+        IFileHandler OpenFile(IFileId fileId);
 
         /// <summary>
         /// Copies a file
         /// </summary>
         /// <param name="sourceFileHandler">The source file handler to copy</param>
         /// <param name="fileId">The file's unique ID</param>
-        IFileHandler CopyFile(IFileHandler sourceFileHandler, ID<IFileContainer, long> fileId, ID<IUserOrGroup, Guid>? ownerID);
+        void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID);
 
         /// <summary>
         /// Restores a file at the given path
@@ -41,7 +41,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="fileId">The file's unique ID</param>
         /// <param name="pathToRestoreFrom">The path that contains the dump of a file to restore</param>
         /// <returns>An IFileHandler object that handles the file.  This must be closed</returns>
-        IFileHandler RestoreFile(ID<IFileContainer, long> fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId);
+        void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId);
 
         /// <summary>
         /// The service locator
@@ -53,7 +53,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// </summary>
         /// <param name="fileId"></param>
         /// <returns></returns>
-        DateTime EstimateCreationTime(ID<IFileContainer, long> fileId);
+        DateTime EstimateCreationTime(IFileId fileId);
     }
 
     public interface IFileHandlerFactory<TFileHandler> : IFileHandlerFactory
@@ -64,13 +64,13 @@ namespace ObjectCloud.Interfaces.Disk
         /// </summary>
         /// <param name="fileId">The file's unique ID</param>
         /// <returns>An IFileHandler object that handles the file.  This must be closed</returns>
-        new TFileHandler CreateFile(ID<IFileContainer, long> fileId);
+        new void CreateFile(IFileId fileId);
 
         /// <summary>
         /// Opens a file at the given path
         /// </summary>
         /// <param name="fileId">The file's unique ID</param>
         /// <returns>An IFileHandler object that handles the file.  This must be closed</returns>
-        new TFileHandler OpenFile(ID<IFileContainer, long> fileId);
+        new TFileHandler OpenFile(IFileId fileId);
     }
 }

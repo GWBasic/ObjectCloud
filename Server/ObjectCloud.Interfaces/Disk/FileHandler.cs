@@ -28,7 +28,7 @@ namespace ObjectCloud.Interfaces.Disk
         }
 
 #if DEBUG
-        internal static Dictionary<ID<IFileContainer, long>, WeakReference> ExistingFileHandlers = new Dictionary<ID<IFileContainer, long>, WeakReference>();
+        internal static Dictionary<IFileId, WeakReference> ExistingFileHandlers = new Dictionary<IFileId, WeakReference>();
 #endif
 
         public IFileContainer FileContainer

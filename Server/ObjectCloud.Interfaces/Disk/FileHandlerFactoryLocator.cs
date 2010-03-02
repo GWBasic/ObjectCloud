@@ -233,5 +233,22 @@ namespace ObjectCloud.Interfaces.Disk
             set { _Plugins = value; }
         }
         private List<Plugin> _Plugins = new List<Plugin>();
+
+        /*// <summary>
+        /// Delegate that parses a FileId from a string
+        /// </summary>
+        public ParseFileIdDelegate ParseFileId
+        {
+            get { return _ParseFileId; }
+            set { _ParseFileId = value; }
+        }
+        private ParseFileIdDelegate _ParseFileId;*/
     }
+
+    /*// <summary>
+    /// Delegate for parsing file IDs
+    /// </summary>
+    /// <param name="fileIdAsString"></param>
+    /// <returns></returns>
+    public delegate IFileId ParseFileIdDelegate(string fileIdAsString);*/
 }

@@ -26,18 +26,16 @@ namespace ObjectCloud.Disk.Factories
         }
         private DataAccessLocator _DataAccessLocator;
 
-        public override IDirectoryHandler CreateFile(string path)
+        public override void CreateFile(string path, FileId fileId)
         {
             Directory.CreateDirectory(path);
 
             string databaseFilename = CreateDatabaseFilename(path);
 
             DataAccessLocator.DatabaseCreator.Create(databaseFilename);
-
-            return new DirectoryHandler(CreateDatabaseConnector(databaseFilename, DataAccessLocator), FileHandlerFactoryLocator);
         }
 
-        public override IDirectoryHandler OpenFile(string path)
+        public override IDirectoryHandler OpenFile(string path, FileId fileId)
         {
             string databaseFilename = CreateDatabaseFilename(path);
 
@@ -64,79 +62,79 @@ namespace ObjectCloud.Disk.Factories
             return dataAccessLocator.DatabaseConnectorFactory.CreateConnectorForEmbedded(path);
         }
 
-        public override IFileHandler CopyFile(IFileHandler sourceFileHandler, ID<IFileContainer, long> fileId, ID<IUserOrGroup, Guid>? ownerID)
+        public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID)
         {
-            IDirectoryHandler toReturn = CreateFile(fileId);
-
-            foreach (IFileContainer toCopy in ((IDirectoryHandler)sourceFileHandler).Files)
-                try
-                {
-                    toReturn.CopyFile(null, toCopy, toCopy.Filename, ownerID);
-                }
+            CreateFile(fileId);
+            using (IDirectoryHandler target = OpenFile(fileId))
+            {
+                foreach (IFileContainer toCopy in ((IDirectoryHandler)sourceFileHandler).Files)
+                    try
+                    {
+                        target.CopyFile(null, toCopy, toCopy.Filename, ownerID);
+                    }
                     // If the user doesn't have permission, just bypass
-                catch (SecurityException) { }
-
-            return toReturn;
+                    catch (SecurityException) { }
+            }
         }
 
-        public override IFileHandler RestoreFile(ID<IFileContainer, long> fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
+        public override void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
         {
-            IDirectoryHandler toReturn = CreateFile(fileId);
-			
-			string metadataPath = Path.GetFullPath(pathToRestoreFrom + Path.DirectorySeparatorChar + "metadata.xml");
-
-			using (TextReader tr = File.OpenText(metadataPath))
-            using (XmlReader xmlReader = XmlReader.Create(tr))
+            CreateFile(fileId);
+            using (IDirectoryHandler target = OpenFile(fileId))
             {
-                xmlReader.MoveToContent();
+                string metadataPath = Path.GetFullPath(pathToRestoreFrom + Path.DirectorySeparatorChar + "metadata.xml");
 
-                toReturn.IndexFile = xmlReader.GetAttribute("IndexFile");
+                using (TextReader tr = File.OpenText(metadataPath))
+                using (XmlReader xmlReader = XmlReader.Create(tr))
+                {
+                    xmlReader.MoveToContent();
 
-                // Note:  Permission tags are contained within File tags
-                // The nature of the XmlReader makes it such that trying to read sub-tags gets tripped up
-                // when reading <File ... /> tags, as trying to read the next tag to look for permissions
-                // ends up skipping the next file tag.
-                string filename = null;
+                    target.IndexFile = xmlReader.GetAttribute("IndexFile");
 
-                while (xmlReader.Read())
-                    if (xmlReader.NodeType == XmlNodeType.Element)
-                        if ("File".Equals(xmlReader.Name))
-                        {
-                            string typeId = xmlReader.GetAttribute("TypeId");
-                            filename = xmlReader.GetAttribute("Name");
+                    // Note:  Permission tags are contained within File tags
+                    // The nature of the XmlReader makes it such that trying to read sub-tags gets tripped up
+                    // when reading <File ... /> tags, as trying to read the next tag to look for permissions
+                    // ends up skipping the next file tag.
+                    string filename = null;
 
-                            ID<IUserOrGroup, Guid>? ownerId = null;
-                            string ownerIdString = xmlReader.GetAttribute("OwnerId");
+                    while (xmlReader.Read())
+                        if (xmlReader.NodeType == XmlNodeType.Element)
+                            if ("File".Equals(xmlReader.Name))
+                            {
+                                string typeId = xmlReader.GetAttribute("TypeId");
+                                filename = xmlReader.GetAttribute("Name");
 
-                            if (null != ownerIdString)
-                                ownerId = new ID<IUserOrGroup, Guid>(new Guid(ownerIdString));
-                            else
-                                ownerId = userId;
+                                ID<IUserOrGroup, Guid>? ownerId = null;
+                                string ownerIdString = xmlReader.GetAttribute("OwnerId");
 
-                            toReturn.RestoreFile(
-                                filename, typeId, pathToRestoreFrom + Path.DirectorySeparatorChar + filename, ownerId.Value);
-                        }
-                        else if ("Permission".Equals(xmlReader.Name))
-                        {
-                            string userOrGroupIdString = xmlReader.GetAttribute("UserOrGroupId");
-                            string levelString = xmlReader.GetAttribute("Level");
-							string inheritString = xmlReader.GetAttribute("Inherit");
-                            string sendNotificationsString = xmlReader.GetAttribute("SendNotifications");
+                                if (null != ownerIdString)
+                                    ownerId = new ID<IUserOrGroup, Guid>(new Guid(ownerIdString));
+                                else
+                                    ownerId = userId;
 
-                            ID<IUserOrGroup, Guid> userOrGroupId = new ID<IUserOrGroup, Guid>(new Guid(userOrGroupIdString));
-                            FilePermissionEnum level = Enum<FilePermissionEnum>.Parse(levelString);
-					
-							bool inherit = false;
-							bool.TryParse(inheritString, out inherit);
+                                target.RestoreFile(
+                                    filename, typeId, pathToRestoreFrom + Path.DirectorySeparatorChar + filename, ownerId.Value);
+                            }
+                            else if ("Permission".Equals(xmlReader.Name))
+                            {
+                                string userOrGroupIdString = xmlReader.GetAttribute("UserOrGroupId");
+                                string levelString = xmlReader.GetAttribute("Level");
+                                string inheritString = xmlReader.GetAttribute("Inherit");
+                                string sendNotificationsString = xmlReader.GetAttribute("SendNotifications");
 
-                            bool sendNotifications = false;
-                            bool.TryParse(sendNotificationsString, out sendNotifications);
+                                ID<IUserOrGroup, Guid> userOrGroupId = new ID<IUserOrGroup, Guid>(new Guid(userOrGroupIdString));
+                                FilePermissionEnum level = Enum<FilePermissionEnum>.Parse(levelString);
 
-                            toReturn.SetPermission(null, filename, userOrGroupId, level, inherit, sendNotifications);
-                        }
-				}
+                                bool inherit = false;
+                                bool.TryParse(inheritString, out inherit);
 
-            return toReturn;
+                                bool sendNotifications = false;
+                                bool.TryParse(sendNotificationsString, out sendNotifications);
+
+                                target.SetPermission(null, filename, userOrGroupId, level, inherit, sendNotifications);
+                            }
+                }
+            }
         }
     }
 }

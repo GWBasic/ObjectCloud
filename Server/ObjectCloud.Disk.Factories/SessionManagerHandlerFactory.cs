@@ -26,18 +26,16 @@ namespace ObjectCloud.Disk.Factories
         }
         private DataAccessLocator _DataAccessLocator;
 
-        public override ISessionManagerHandler CreateFile(string path)
+        public override void CreateFile(string path, FileId fileId)
         {
             Directory.CreateDirectory(path);
 
             string databaseFilename = CreateDatabaseFilename(path);
 
             DataAccessLocator.DatabaseCreator.Create(databaseFilename);
-
-            return new SessionManagerHandler(CreateDatabaseConnector(databaseFilename), FileHandlerFactoryLocator);
         }
 
-        public override ISessionManagerHandler OpenFile(string path)
+        public override ISessionManagerHandler OpenFile(string path, FileId fileId)
         {
             string databaseFilename = CreateDatabaseFilename(path);
 
@@ -64,12 +62,12 @@ namespace ObjectCloud.Disk.Factories
             return DataAccessLocator.DatabaseConnectorFactory.CreateConnectorForEmbedded(path);
         }
 
-        public override IFileHandler CopyFile(IFileHandler sourceFileHandler, ID<IFileContainer, long> fileId, ID<IUserOrGroup, Guid>? ownerID)
+        public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID)
         {
             throw new NotImplementedException();
         }
 
-        public override IFileHandler RestoreFile(ID<IFileContainer, long> fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
+        public override void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
         {
             throw new NotImplementedException();
         }

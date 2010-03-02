@@ -56,7 +56,6 @@
     <Compile Include="Disk\DiskException.cs" />
     <Compile Include="Disk\DuplicateFile.cs" />
     <Compile Include="Disk\FileContainerUtils.cs" />
-    <Compile Include="Disk\FileCreatorDelegate.cs" />
     <Compile Include="Disk\FileDoesNotExist.cs" />
     <Compile Include="Disk\FileHandler.cs" />
     <Compile Include="Disk\FileHandlerFactoryLocator.cs" />
@@ -68,6 +67,7 @@
     <Compile Include="Disk\IFileContainer.cs" />
     <Compile Include="Disk\IFileHandler.cs" />
     <Compile Include="Disk\IFileHandlerFactory.cs" />
+    <Compile Include="Disk\IFileId.cs" />
     <Compile Include="Disk\IFileSystem.cs" />
     <Compile Include="Disk\IFileSystemResolver.cs" />
     <Compile Include="Disk\INameValuePairsHandler.cs" />

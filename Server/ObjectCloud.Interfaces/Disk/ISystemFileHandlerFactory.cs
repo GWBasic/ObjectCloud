@@ -19,6 +19,6 @@ namespace ObjectCloud.Interfaces.Disk
         /// Creates a system file
         /// </summary>
         /// <param name="path"></param>
-        IFileHandler CreateSystemFile(ID<IFileContainer, long> fileId);
+        void CreateSystemFile(IFileId fileId);
     }
 }
