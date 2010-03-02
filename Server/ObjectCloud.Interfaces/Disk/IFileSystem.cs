@@ -28,6 +28,17 @@ namespace ObjectCloud.Interfaces.Disk
         /// <summary>
         /// Returns when the directory was created; intended for use with the Root Directory as it has no parent directory to track its creation time
         /// </summary>
-        DateTime GetDirectoryCreationTime(IFileId fileId);
+        DateTime GetRootDirectoryCreationTime();
+
+        /// <summary>
+        /// The root directory's ID
+        /// </summary>
+        IFileId RootDirectoryId { get; set; }
+
+        /// <summary>
+        /// Returns true if the root directory is present, false otherwise
+        /// </summary>
+        /// <returns></returns>
+        bool IsRootDirectoryPresent();
     }
 }

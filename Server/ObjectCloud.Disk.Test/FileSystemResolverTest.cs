@@ -40,7 +40,7 @@ namespace ObjectCloud.Disk.Test
             Assert.AreEqual(
                 "." + Path.DirectorySeparatorChar + "FileSystem",
                 ((FileSystem)fileSystemResolver.FileHandlerFactoryLocator.FileSystem).ConnectionString);
-            Assert.AreEqual("0", fileSystemResolver.RootDirectoryId.ToString());
+            Assert.AreEqual("0", fileSystemResolver.FileHandlerFactoryLocator.FileSystem.RootDirectoryId.ToString());
 
             Assert.IsNotNull(FileHandlerFactoryLocator.DirectoryFactory);
             Assert.IsTrue(FileHandlerFactoryLocator.DirectoryFactory is IFileHandlerFactory);

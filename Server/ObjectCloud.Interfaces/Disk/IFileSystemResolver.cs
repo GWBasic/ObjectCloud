@@ -98,11 +98,6 @@ namespace ObjectCloud.Interfaces.Disk
         /// Returns true once the file system is started
         /// </summary>
         bool IsStarted { get; }
-        
-        /// <summary>
-        /// The ID of the root object
-        /// </summary>
-        IFileId RootDirectoryId { get; set; }
 
         /// <summary>
         /// The characters that are forbidden in filenames

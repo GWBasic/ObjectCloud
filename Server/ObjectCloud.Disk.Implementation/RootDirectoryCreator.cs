@@ -20,7 +20,7 @@ namespace ObjectCloud.Disk.Implementation
         public virtual void CreateRootDirectoryHandler(IFileContainer rootDirectoryContainer)
         {
             // Construct the root directory on disk
-            FileHandlerFactoryLocator.DirectoryFactory.CreateFile(FileHandlerFactoryLocator.FileSystemResolver.RootDirectoryId);
+            FileHandlerFactoryLocator.DirectoryFactory.CreateFile(FileHandlerFactoryLocator.FileSystem.RootDirectoryId);
 
             IDirectoryHandler rootDirectoryHandler = rootDirectoryContainer.CastFileHandler<IDirectoryHandler>();
 

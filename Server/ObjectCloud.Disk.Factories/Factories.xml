@@ -11,7 +11,13 @@
 
 -->
 
-  <object id="FileSystem" type="ObjectCloud.Disk.Factories.FileSystem, ObjectCloud.Disk.Factories" />
+  <object id="FileSystem" type="ObjectCloud.Disk.Factories.FileSystem, ObjectCloud.Disk.Factories">
+    <property name="RootDirectoryId">
+      <object id="RootDirectoryId" type="ObjectCloud.Disk.FileHandlers.FileId, ObjectCloud.Disk.FileHandlers">
+        <constructor-arg name="value" value="0" />
+      </object>
+    </property>
+  </object>
 
   <!-- These are all of the factories for different file types -->
 

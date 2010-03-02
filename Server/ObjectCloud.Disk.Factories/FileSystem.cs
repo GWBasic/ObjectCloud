@@ -96,9 +96,25 @@ namespace ObjectCloud.Disk.Factories
             	log.Warn(pathToDelete + " not deleted");
         }
 
-        public DateTime GetDirectoryCreationTime(IFileId fileId)
+        public DateTime GetRootDirectoryCreationTime()
         {
-            return Directory.GetCreationTime(GetFullPath(fileId));
+            return Directory.GetCreationTime(GetFullPath(RootDirectoryId));
+        }
+
+        /// <summary>
+        /// The ID of the root object
+        /// </summary>
+        public IFileId RootDirectoryId
+        {
+            get { return _RootDirectoryId; }
+            set { _RootDirectoryId = value; }
+        }
+        private IFileId _RootDirectoryId;
+
+
+        public bool IsRootDirectoryPresent()
+        {
+            return IsFilePresent(RootDirectoryId);
         }
     }
 }

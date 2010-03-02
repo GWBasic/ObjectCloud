@@ -41,16 +41,6 @@ namespace ObjectCloud.Disk.Implementation
         }
         private FileHandlerFactoryLocator _FileHandlerFactoryLocator;
 
-        /// <summary>
-        /// The ID of the root object
-        /// </summary>
-        public IFileId RootDirectoryId
-        {
-            get { return _RootDirectoryId; }
-            set { _RootDirectoryId = value; }
-        }
-        private IFileId _RootDirectoryId;
-
         public IDirectoryHandler RootDirectoryHandler
         {
             get { return RootDirectoryContainer.CastFileHandler<IDirectoryHandler>(); }
@@ -324,19 +314,31 @@ namespace ObjectCloud.Disk.Implementation
 
             if (null == _RootDirectoryContainer)
             {
-                DateTime rootDirectoryCreateTime;
-                if (FileHandlerFactoryLocator.FileSystem.IsFilePresent(RootDirectoryId))
-                    rootDirectoryCreateTime = FileHandlerFactoryLocator.FileSystem.GetDirectoryCreationTime(RootDirectoryId);
-                else
-                    rootDirectoryCreateTime = DateTime.UtcNow;
+                if (FileHandlerFactoryLocator.FileSystem.IsFilePresent(FileHandlerFactoryLocator.FileSystem.RootDirectoryId))
+                {
+                    _RootDirectoryContainer = new FileContainer(
+                        null,
+                        FileHandlerFactoryLocator.FileSystem.RootDirectoryId,
+                        "directory",
+                        "",
+                        null,
+                        FileHandlerFactoryLocator,
+                        FileHandlerFactoryLocator.FileSystem.GetRootDirectoryCreationTime());
 
-                _RootDirectoryContainer = new FileContainer(null, RootDirectoryId, "directory", "", null, FileHandlerFactoryLocator, rootDirectoryCreateTime);
-
-                if (FileHandlerFactoryLocator.FileSystem.IsFilePresent(RootDirectoryId))
                     FileHandlerFactoryLocator.RootDirectoryCreator.Syncronize(RootDirectoryHandler);
+                }
                 else
                 {
                     log.Info("... Creating the Root Directory ...");
+
+                    _RootDirectoryContainer = new FileContainer(
+                        null,
+                        FileHandlerFactoryLocator.FileSystem.RootDirectoryId,
+                        "directory",
+                        "",
+                        null,
+                        FileHandlerFactoryLocator,
+                        DateTime.UtcNow);
 
                     try
                     {

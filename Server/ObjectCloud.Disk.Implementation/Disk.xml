@@ -15,11 +15,6 @@
 
   <object id="FileSystemResolver" type="ObjectCloud.Disk.Implementation.FileSystemResolver, ObjectCloud.Disk.Implementation">
     <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
-    <property name="RootDirectoryId">
-      <object id="RootDirectoryId" type="ObjectCloud.Disk.FileHandlers.FileId, ObjectCloud.Disk.FileHandlers">
-        <constructor-arg name="value" value="0" />
-      </object>
-    </property>
     <property name="FilenameForbiddenCharacters" value="[]/=%*?!@#$^&amp;()" />
   </object>
 
