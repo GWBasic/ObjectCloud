@@ -20,7 +20,7 @@ namespace ObjectCloud.Disk.Factories
     
         public abstract void CreateSystemFile(string path, FileId fileId);
 
-        public override void CreateFile(FileId fileId)
+        public override void CreateFile(string path, FileId fileId)
         {
             throw new SecurityException("This kind of file is a system file and can not be created");
         }
