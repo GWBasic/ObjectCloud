@@ -22,6 +22,17 @@ namespace ObjectCloud.Common
                 foreach (T val in enumerable)
                     yield return val;
         }
+
+        /// <summary>
+        /// Casts all of the objects in the enumeration to T
+        /// </summary>
+        /// <param name="toCast"></param>
+        /// <returns></returns>
+        public static IEnumerable<T> Cast(IEnumerable toCast)
+        {
+            foreach (object o in toCast)
+                yield return (T)o;
+        }
     }
 
     public static class Enumerable

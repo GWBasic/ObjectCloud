@@ -16,6 +16,12 @@ namespace ObjectCloud.Common
     {
         public Set() { }
 
+        public Set(params T[] contents)
+        {
+            foreach (T item in contents)
+                Add(item);
+        }
+
         public Set(IEnumerable<T> contents)
         {
             foreach (T item in contents)
