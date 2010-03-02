@@ -17,16 +17,6 @@ namespace ObjectCloud.Interfaces.Disk
     public class FileHandlerFactoryLocator
     {
         /// <summary>
-        /// Used to access directory objects
-        /// </summary>
-        public IFileHandlerFactory<IDirectoryHandler> DirectoryFactory
-        {
-            get { return _DirectoryFactory; }
-            set { _DirectoryFactory = value; }
-        }
-        private IFileHandlerFactory<IDirectoryHandler> _DirectoryFactory;
-
-        /// <summary>
         /// The file handler factories
         /// </summary>
         public Dictionary<string, IFileHandlerFactory> FileHandlerFactories
@@ -109,24 +99,28 @@ namespace ObjectCloud.Interfaces.Disk
         private IRootDirectoryCreator _RootDirectoryCreator;
 
         /// <summary>
+        /// Used to access directory objects
+        /// </summary>
+        public IFileHandlerFactory<IDirectoryHandler> DirectoryFactory
+        {
+            get { return (IFileHandlerFactory<IDirectoryHandler>)FileHandlerFactories["directory"]; }
+        }
+
+        /// <summary>
         /// Creates a user handler
         /// </summary>
         public ISystemFileHandlerFactory UserHandlerFactory
         {
-            get { return _UserHandlerFactory; }
-            set { _UserHandlerFactory = value; }
+            get { return (ISystemFileHandlerFactory)FileHandlerFactories["user"]; }
         }
-        private ISystemFileHandlerFactory _UserHandlerFactory;
 
         /// <summary>
         /// Creates the user manager
         /// </summary>
         public ISystemFileHandlerFactory UserManagerHandlerFactory
         {
-            get { return _UserManagerHandlerFactory; }
-            set { _UserManagerHandlerFactory = value; }
+            get { return (ISystemFileHandlerFactory)FileHandlerFactories["usermanager"]; }
         }
-        private ISystemFileHandlerFactory _UserManagerHandlerFactory;
 
         /// <summary>
         /// The user manager
@@ -233,22 +227,5 @@ namespace ObjectCloud.Interfaces.Disk
             set { _Plugins = value; }
         }
         private List<Plugin> _Plugins = new List<Plugin>();
-
-        /*// <summary>
-        /// Delegate that parses a FileId from a string
-        /// </summary>
-        public ParseFileIdDelegate ParseFileId
-        {
-            get { return _ParseFileId; }
-            set { _ParseFileId = value; }
-        }
-        private ParseFileIdDelegate _ParseFileId;*/
     }
-
-    /*// <summary>
-    /// Delegate for parsing file IDs
-    /// </summary>
-    /// <param name="fileIdAsString"></param>
-    /// <returns></returns>
-    public delegate IFileId ParseFileIdDelegate(string fileIdAsString);*/
 }

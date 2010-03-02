@@ -133,11 +133,8 @@
     </property>
 
     <property name="FileSystemResolver" ref="FileSystemResolver" />
-    <property name="DirectoryFactory" ref="DirectoryHandlerFactory" />
     <property name="RootDirectoryCreator" ref="RootDirectoryCreator" />
-    <property name="UserHandlerFactory" ref="UserHandlerFactory" />
     <property name="UserFactory" ref="UserFactory" />
-    <property name="UserManagerHandlerFactory" ref="UserManagerHandlerFactory" />
     <property name="ExecutionEnvironmentFactory">
       <object id="ExecutionEnvironmentFactory" type="ObjectCloud.Javascript.ExecutionEnvironmentFactory, ObjectCloud.Javascript" />
     </property>
