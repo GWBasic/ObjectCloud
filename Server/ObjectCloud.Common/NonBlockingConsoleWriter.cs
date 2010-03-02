@@ -12,8 +12,6 @@ namespace ObjectCloud.Common
     public static class NonBlockingConsoleWriter
     {
         static volatile bool Running = false;
-        static object Key = new object();
-        static Queue<string> QueuedStrings = new Queue<string>();
 
         /// <summary>
         /// Prints the text to the console.  Does not block in release builds.  All text is queued up to be printed
@@ -39,7 +37,11 @@ namespace ObjectCloud.Common
 #endif
         }
 
-        /// <summary>
+#if !DEBUG
+        static object Key = new object();
+        static Queue<string> QueuedStrings = new Queue<string>();
+
+		/// <summary>
         /// Runs on the Thread to keep printing on the console
         /// </summary>
         static void Work(object state)
@@ -80,5 +82,6 @@ namespace ObjectCloud.Common
             if (toWrite.Length > 0)
                 Console.Write(toWrite.ToString());
         }
+#endif
     }
 }
