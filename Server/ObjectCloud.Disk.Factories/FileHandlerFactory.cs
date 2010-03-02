@@ -92,11 +92,6 @@ namespace ObjectCloud.Disk.Factories
         {
             get { return (FileSystem)FileHandlerFactoryLocator.FileSystem; }
         }
-
-        public DateTime EstimateCreationTime(IFileId fileId)
-        {
-            return Directory.GetCreationTime(FileSystem.GetFullPath(fileId));
-        }
     }
 
     /// <summary>

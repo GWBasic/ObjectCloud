@@ -331,7 +331,7 @@ namespace ObjectCloud.Disk.Implementation
             {
                 DateTime rootDirectoryCreateTime;
                 if (FileHandlerFactoryLocator.FileSystem.IsFilePresent(RootDirectoryId))
-                    rootDirectoryCreateTime = FileHandlerFactoryLocator.FileHandlerFactories["directory"].EstimateCreationTime(RootDirectoryId);
+                    rootDirectoryCreateTime = FileHandlerFactoryLocator.FileSystem.GetDirectoryCreationTime(RootDirectoryId);
                 else
                     rootDirectoryCreateTime = DateTime.UtcNow;
 

@@ -95,5 +95,10 @@ namespace ObjectCloud.Disk.Factories
             if (Directory.Exists(pathToDelete) || File.Exists(pathToDelete))
             	log.Warn(pathToDelete + " not deleted");
         }
+
+        public DateTime GetDirectoryCreationTime(IFileId fileId)
+        {
+            return Directory.GetCreationTime(GetFullPath(fileId));
+        }
     }
 }

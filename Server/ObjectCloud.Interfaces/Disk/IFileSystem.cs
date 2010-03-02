@@ -24,5 +24,10 @@ namespace ObjectCloud.Interfaces.Disk
         /// </summary>
         /// <param name="fileId"></param>
         void DeleteFile(IFileId fileId);
+
+        /// <summary>
+        /// Returns when the directory was created; intended for use with the Root Directory as it has no parent directory to track its creation time
+        /// </summary>
+        DateTime GetDirectoryCreationTime(IFileId fileId);
     }
 }

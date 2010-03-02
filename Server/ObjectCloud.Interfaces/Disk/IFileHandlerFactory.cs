@@ -47,13 +47,6 @@ namespace ObjectCloud.Interfaces.Disk
         /// The service locator
         /// </summary>
         FileHandlerFactoryLocator FileHandlerFactoryLocator { get; set; }
-
-        /// <summary>
-        /// Returns when a file was created
-        /// </summary>
-        /// <param name="fileId"></param>
-        /// <returns></returns>
-        DateTime EstimateCreationTime(IFileId fileId);
     }
 
     public interface IFileHandlerFactory<TFileHandler> : IFileHandlerFactory
