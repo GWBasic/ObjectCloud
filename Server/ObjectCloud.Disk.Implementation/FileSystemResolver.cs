@@ -314,7 +314,7 @@ namespace ObjectCloud.Disk.Implementation
 
             if (null == _RootDirectoryContainer)
             {
-                if (FileHandlerFactoryLocator.FileSystem.IsFilePresent(FileHandlerFactoryLocator.FileSystem.RootDirectoryId))
+                if (FileHandlerFactoryLocator.FileSystem.IsRootDirectoryPresent())
                 {
                     _RootDirectoryContainer = new FileContainer(
                         null,
