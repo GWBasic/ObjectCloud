@@ -18,7 +18,7 @@ namespace ObjectCloud.Disk.Test
 {
     public abstract class TestBase : ObjectCloud.UnitTestHelpers.UnitTestBase
     {
-        public TestBase() : base("file://Database.xml", "file://Disk.xml") {}
+        public TestBase() : base("file://Database.xml", "file://Factories.xml", "file://Disk.xml") { }
 
         public FileHandlerFactoryLocator FileHandlerFactoryLocator
         {

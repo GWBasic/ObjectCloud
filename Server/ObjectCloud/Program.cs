@@ -28,7 +28,7 @@ namespace ObjectCloud
             try
             {
                 List<string> springFilesToLoad = new List<string>(
-                    new string[] { "file://Database.xml", "file://Disk.xml", "file://WebServer.xml" });
+                    new string[] { "file://Database.xml", "file://Factories.xml", "file://Disk.xml", "file://WebServer.xml" });
 
                 // Get all of the plugins
                 foreach (string pluginFilename in Directory.GetFiles(".", "Plugin.*.xml"))

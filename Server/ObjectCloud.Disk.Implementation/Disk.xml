@@ -84,46 +84,6 @@
     </property>
   </object>
 
-  <!-- These are all of the factories for different file types -->
-
-  <object id="DirectoryHandlerFactory" type="ObjectCloud.Disk.Factories.DirectoryHandlerFactory, ObjectCloud.Disk.Factories">
-    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
-    <property name="DataAccessLocator" ref="DirectoryDataAccessLocator" />
-  </object>
-  <object id="NameValuePairsHandlerFactory" type="ObjectCloud.Disk.Factories.NameValuePairsHandlerFactory, ObjectCloud.Disk.Factories">
-    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
-    <property name="DataAccessLocator" ref="NameValuePairsDataAccessLocator" />
-  </object>
-  <object id="TextHandlerFactory" type="ObjectCloud.Disk.Factories.TextHandlerFactory, ObjectCloud.Disk.Factories">
-    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
-  </object>
-  <object id="BinaryHandlerFactory" type="ObjectCloud.Disk.Factories.BinaryHandlerFactory, ObjectCloud.Disk.Factories">
-    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
-  </object>
-  <object id="UserHandlerFactory" type="ObjectCloud.Disk.Factories.UserHandlerFactory, ObjectCloud.Disk.Factories">
-    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
-    <property name="DataAccessLocator" ref="UserDataAccessLocator" />
-  </object>
-  <object id="UserManagerHandlerFactory" type="ObjectCloud.Disk.Factories.UserManagerHandlerFactory, ObjectCloud.Disk.Factories">
-    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
-    <property name="DataAccessLocator" ref="UserManagerDataAccessLocator" />
-  </object>
-  <object id="DatabaseHandlerFactory" type="ObjectCloud.Disk.Factories.DatabaseHandlerFactory, ObjectCloud.Disk.Factories" >
-    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
-    <property name="EmbeddedDatabaseConnector" ref="EmbeddedDatabaseConnector" />
-  </object>
-  <object id="SessionManagerHandlerFactory" type="ObjectCloud.Disk.Factories.SessionManagerHandlerFactory, ObjectCloud.Disk.Factories" >
-    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
-    <property name="DataAccessLocator" ref="SessionManagerDataAccessLocator" />
-  </object>
-  <object id="FileHandlerFactory" type="ObjectCloud.Disk.Factories.FileHandlerFactory, ObjectCloud.Disk.Factories" >
-    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
-  </object>
-  <object id="LogHandlerFactory" type="ObjectCloud.Disk.Factories.LogHandlerFactory, ObjectCloud.Disk.Factories" >
-    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
-    <property name="DataAccessLocator" ref="LogDataAccessLocator" />
-  </object>
-
   <!-- The FileHandlerFactoryLocator avoids the need for everyone to directly talk to Spring -->
 
   <object id="FileHandlerFactoryLocator" type="ObjectCloud.Interfaces.Disk.FileHandlerFactoryLocator, ObjectCloud.Interfaces">

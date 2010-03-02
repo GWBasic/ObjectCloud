@@ -26,7 +26,7 @@ namespace ObjectCloud.WebServer.Test
 {
     public abstract class WebServerTestBase : ObjectCloud.UnitTestHelpers.UnitTestBase
     {
-        public WebServerTestBase() : base ("file://Database.xml", "file://Disk.xml", "file://WebServer.xml") {}
+        public WebServerTestBase() : base("file://Database.xml", "file://Factories.xml", "file://Disk.xml", "file://WebServer.xml") { }
 
         /// <summary>
         /// The web server object
