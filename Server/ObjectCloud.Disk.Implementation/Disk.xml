@@ -13,8 +13,6 @@
 
   <!-- Instanciate the object that directly manages the file system -->
 
-  <object id="FileSystem" type="ObjectCloud.Disk.Factories.FileSystem, ObjectCloud.Disk.Factories" />
-
   <object id="FileSystemResolver" type="ObjectCloud.Disk.Implementation.FileSystemResolver, ObjectCloud.Disk.Implementation">
     <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
     <property name="RootDirectoryId">
