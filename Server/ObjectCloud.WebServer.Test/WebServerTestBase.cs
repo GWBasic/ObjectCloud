@@ -9,9 +9,6 @@ using System.Net;
 using System.Text;
 using System.Threading;
 
-using Spring.Context;
-using Spring.Context.Support;
-
 using NUnit.Framework;
 
 using JsonFx.Json;
@@ -24,24 +21,33 @@ using ObjectCloud.Spring.Config;
 
 namespace ObjectCloud.WebServer.Test
 {
-    public abstract class WebServerTestBase : ObjectCloud.UnitTestHelpers.UnitTestBase
+    public abstract class WebServerTestBase
     {
-        public WebServerTestBase() : base("file://Database.xml", "file://Factories.xml", "file://Disk.xml", "file://WebServer.xml") { }
-
         /// <summary>
         /// The web server object
         /// </summary>
         public IWebServer WebServer
         {
-            get { return _WebServer; }
-            set { _WebServer = value; }
+            get { return FileHandlerFactoryLocator.WebServer; }
         }
-        private IWebServer _WebServer;
+        
+        public FileHandlerFactoryLocator FileHandlerFactoryLocator
+        {
+            get
+            {
+                if (null == _FileHandlerFactoryLocator)
+                    _FileHandlerFactoryLocator =
+                        ContextLoader.GetFileHandlerFactoryLocatorForConfigurationFile("Test.ObjectCloudConfig.xml");
+
+                return _FileHandlerFactoryLocator;
+            }
+        }
+        private FileHandlerFactoryLocator _FileHandlerFactoryLocator = null;
+
 
         [TestFixtureSetUp]
         public void SetUpWebServer()
         {
-            WebServer = (IWebServer)SpringContext.GetObject("WebServer");
             WebServer.StartServer();
 
             HttpWebClient.DefaultTimeout = TimeSpan.FromSeconds(45);
@@ -93,6 +99,36 @@ namespace ObjectCloud.WebServer.Test
             Assert.AreEqual("logged out", webResponse.AsString(), "Unexpected response");
         }
 
+        public void Login(HttpWebClient httpWebClient, string username, string password)
+        {
+            // Log in as root
+            HttpResponseHandler webResponse = httpWebClient.Post(
+                "http://localhost:" + WebServer.Port + "/Users/UserDB?Method=Login",
+                new KeyValuePair<string, string>("username", username),
+                new KeyValuePair<string, string>("password", password));
+
+            Assert.AreEqual(HttpStatusCode.Accepted, webResponse.StatusCode, "Bad status code");
+            Assert.AreEqual(username + " logged in", webResponse.AsString(), "Unexpected response");
+        }
+
+        public static void AssertWebStatus(HttpStatusCode httpStatusCode, HttpResponseHandler httpResponseHandler)
+        {
+            if (httpResponseHandler.StatusCode != httpStatusCode)
+            {
+                string message = null;
+                try
+                {
+                    message = httpResponseHandler.AsString();
+                }
+                catch { }
+
+                if (null == message)
+                    message = "Unexpected HTTP status";
+
+                throw new AssertionException(message + "\n\tExpected: " + httpStatusCode.ToString() + "\n\t:Actual: " + httpResponseHandler.StatusCode.ToString());
+            }
+        }
+
         public void CreateFile(IWebServer webServer, HttpWebClient httpWebClient, string directory, string filename, string typeid)
         {
             CreateFile(webServer, httpWebClient, directory, filename, typeid, HttpStatusCode.Created);
@@ -107,18 +143,5 @@ namespace ObjectCloud.WebServer.Test
         
             Assert.AreEqual(expectedStatusCode, webResponse.StatusCode, "Bad status code");
         }
-
-        public FileHandlerFactoryLocator FileHandlerFactoryLocator
-        {
-            get
-            {
-                if (null == _FileHandlerFactoryLocator)
-                    _FileHandlerFactoryLocator = (FileHandlerFactoryLocator)SpringContext["FileHandlerFactoryLocator"];
-
-                return _FileHandlerFactoryLocator;
-            }
-            set { _FileHandlerFactoryLocator = value; }
-        }
-        private FileHandlerFactoryLocator _FileHandlerFactoryLocator = null;
     }
 }

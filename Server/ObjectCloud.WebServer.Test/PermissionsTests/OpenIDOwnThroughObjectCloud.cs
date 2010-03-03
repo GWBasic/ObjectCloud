@@ -9,9 +9,6 @@ using System.Net;
 using System.Text;
 using System.Threading;
 
-using Spring.Context;
-using Spring.Context.Support;
-
 using NUnit.Framework;
 
 using JsonFx.Json;
@@ -28,20 +25,18 @@ namespace ObjectCloud.WebServer.Test.PermissionsTests
     [TestFixture]
     public class OpenIDOwnThroughObjectCloud : HasSecondContext
     {
-        /// <summary>
-        /// The second web server object for loopback OpenID tests
-        /// </summary>
-        private IWebServer SecondWebServer;
-
 		protected override void DoAdditionalSetup ()
 		{
-            SecondWebServer = (IWebServer)SecondContext.GetObject("WebServer");
+            base.DoAdditionalSetup();
+
             SecondWebServer.StartServer();
         }
 
 		protected override void DoAdditionalTearDown ()
 		{
             SecondWebServer.Dispose();
+
+            base.DoAdditionalTearDown();
         }
 
         protected override IUserLogoner Owner

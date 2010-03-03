@@ -8,9 +8,6 @@ using System.Text;
 
 using NUnit.Framework;
 
-using Spring.Context;
-using Spring.Context.Support;
-
 using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;

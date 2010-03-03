@@ -10,9 +10,6 @@ using System.Text;
 using System.Threading;
 using System.Xml;
 
-using Spring.Context;
-using Spring.Context.Support;
-
 using NUnit.Framework;
 
 using JsonFx.Json;

@@ -8,9 +8,6 @@ using System.Data;
 using System.Data.Common;
 using System.IO;
 
-using Spring.Context;
-using Spring.Context.Support;
-
 using NUnit.Framework;
 
 using ObjectCloud.Common;
@@ -29,18 +26,10 @@ namespace ObjectCloud.Disk.Test
         [Test]
         public void TestCreateFileSystemResolver()
         {
-            object fileSystemResolverObj = SpringContext.GetObject("FileSystemResolver");
-
-            Assert.IsNotNull(fileSystemResolverObj);
-            Assert.IsTrue(fileSystemResolverObj is IFileSystemResolver);
-            Assert.IsTrue(fileSystemResolverObj is FileSystemResolver);
-
-            FileSystemResolver fileSystemResolver = (FileSystemResolver)fileSystemResolverObj;
-
             Assert.AreEqual(
                 "." + Path.DirectorySeparatorChar + "FileSystem",
-                ((FileSystem)fileSystemResolver.FileHandlerFactoryLocator.FileSystem).ConnectionString);
-            Assert.AreEqual("0", fileSystemResolver.FileHandlerFactoryLocator.FileSystem.RootDirectoryId.ToString());
+                ((FileSystem)FileHandlerFactoryLocator.FileSystem).ConnectionString);
+            Assert.AreEqual("0", FileHandlerFactoryLocator.FileSystem.RootDirectoryId.ToString());
 
             Assert.IsNotNull(FileHandlerFactoryLocator.DirectoryFactory);
             Assert.IsTrue(FileHandlerFactoryLocator.DirectoryFactory is IFileHandlerFactory);
@@ -50,17 +39,13 @@ namespace ObjectCloud.Disk.Test
         [Test]
         public void TestRootDirectoryPresent()
         {
-            object fileSystemResolverObj = SpringContext.GetObject("FileSystemResolver");
-            IFileSystemResolver fileSystemResolver = (FileSystemResolver)fileSystemResolverObj;
-
-            Assert.IsNotNull(fileSystemResolver.RootDirectoryHandler);
+            Assert.IsNotNull(FileHandlerFactoryLocator.FileSystemResolver.RootDirectoryHandler);
         }
 
         [Test]
         public void TestCache()
         {
-            object fileSystemResolverObj = SpringContext.GetObject("FileSystemResolver");
-            IFileSystemResolver fileSystemResolver = (FileSystemResolver)fileSystemResolverObj;
+            IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
 
             IDirectoryHandler dh = (IDirectoryHandler)fileSystemResolver.RootDirectoryHandler;
 
@@ -77,8 +62,7 @@ namespace ObjectCloud.Disk.Test
         [Test]
         public void TestCreateSubdirectory()
         {
-            object fileSystemResolverObj = SpringContext.GetObject("FileSystemResolver");
-            IFileSystemResolver fileSystemResolver = (FileSystemResolver)fileSystemResolverObj;
+            IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
 
             IDirectoryHandler dh = (IDirectoryHandler)fileSystemResolver.RootDirectoryHandler;
 
@@ -99,8 +83,7 @@ namespace ObjectCloud.Disk.Test
         [Test]
         public void TestNameValuePairs()
         {
-            object fileSystemResolverObj = SpringContext.GetObject("FileSystemResolver");
-            IFileSystemResolver fileSystemResolver = (FileSystemResolver)fileSystemResolverObj;
+            IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
 
             IDirectoryHandler dh = (IDirectoryHandler)fileSystemResolver.RootDirectoryHandler;
 
@@ -128,8 +111,7 @@ namespace ObjectCloud.Disk.Test
         [Test]
         public void TestCopyNameValuePairs()
         {
-            object fileSystemResolverObj = SpringContext.GetObject("FileSystemResolver");
-            IFileSystemResolver fileSystemResolver = (FileSystemResolver)fileSystemResolverObj;
+            IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
 
             IDirectoryHandler dh = (IDirectoryHandler)fileSystemResolver.RootDirectoryHandler;
 
@@ -157,8 +139,7 @@ namespace ObjectCloud.Disk.Test
         [Test]
         public void TestText()
         {
-            object fileSystemResolverObj = SpringContext.GetObject("FileSystemResolver");
-            IFileSystemResolver fileSystemResolver = (FileSystemResolver)fileSystemResolverObj;
+            IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
 
             IDirectoryHandler dh = (IDirectoryHandler)fileSystemResolver.RootDirectoryHandler;
 
@@ -178,8 +159,7 @@ namespace ObjectCloud.Disk.Test
         [Test]
         public void TestCopyText()
         {
-            object fileSystemResolverObj = SpringContext.GetObject("FileSystemResolver");
-            IFileSystemResolver fileSystemResolver = (FileSystemResolver)fileSystemResolverObj;
+            IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
 
             IDirectoryHandler dh = (IDirectoryHandler)fileSystemResolver.RootDirectoryHandler;
 
@@ -205,8 +185,7 @@ namespace ObjectCloud.Disk.Test
         [Test]
         public void TestBinary()
         {
-            object fileSystemResolverObj = SpringContext.GetObject("FileSystemResolver");
-            IFileSystemResolver fileSystemResolver = (FileSystemResolver)fileSystemResolverObj;
+            IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
 
             IDirectoryHandler dh = (IDirectoryHandler)fileSystemResolver.RootDirectoryHandler;
 
@@ -228,8 +207,7 @@ namespace ObjectCloud.Disk.Test
         [Test]
         public void TestCopyBinary()
         {
-            object fileSystemResolverObj = SpringContext.GetObject("FileSystemResolver");
-            IFileSystemResolver fileSystemResolver = (FileSystemResolver)fileSystemResolverObj;
+            IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
 
             IDirectoryHandler dh = (IDirectoryHandler)fileSystemResolver.RootDirectoryHandler;
 
@@ -257,8 +235,7 @@ namespace ObjectCloud.Disk.Test
         [Test]
         public void TestDefaultDirectorySetup()
         {
-            object fileSystemResolverObj = SpringContext.GetObject("FileSystemResolver");
-            IFileSystemResolver fileSystemResolver = (FileSystemResolver)fileSystemResolverObj;
+            IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
 
             IUserManagerHandler userManager = fileSystemResolver.ResolveFile("Users/UserDB").CastFileHandler<IUserManagerHandler>();
             Assert.IsNotNull(userManager, "User manager object doesn't exist");
@@ -281,8 +258,7 @@ namespace ObjectCloud.Disk.Test
         [ExpectedException(typeof(BadFileName))]
         public void TestOpenBraceIsInvalid()
         {
-            object fileSystemResolverObj = SpringContext.GetObject("FileSystemResolver");
-            IFileSystemResolver fileSystemResolver = (FileSystemResolver)fileSystemResolverObj;
+            IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
 
             fileSystemResolver.RootDirectoryHandler.CreateFile("vfas[frea", "text", null);
         }
@@ -291,8 +267,7 @@ namespace ObjectCloud.Disk.Test
         [ExpectedException(typeof(BadFileName))]
         public void TestCloseBraceIsInvalid()
         {
-            object fileSystemResolverObj = SpringContext.GetObject("FileSystemResolver");
-            IFileSystemResolver fileSystemResolver = (FileSystemResolver)fileSystemResolverObj;
+            IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
 
             fileSystemResolver.RootDirectoryHandler.CreateFile("vfas]frea", "text", null);
         }
@@ -300,8 +275,7 @@ namespace ObjectCloud.Disk.Test
         [Test]
         public void TestDelete()
         {
-            object fileSystemResolverObj = SpringContext.GetObject("FileSystemResolver");
-            IFileSystemResolver fileSystemResolver = (FileSystemResolver)fileSystemResolverObj;
+            IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
 
             IDirectoryHandler dh = (IDirectoryHandler)fileSystemResolver.RootDirectoryHandler;
 
@@ -324,8 +298,7 @@ namespace ObjectCloud.Disk.Test
         [Test]
         public void TestRecursiveDelete()
         {
-            object fileSystemResolverObj = SpringContext.GetObject("FileSystemResolver");
-            IFileSystemResolver fileSystemResolver = (FileSystemResolver)fileSystemResolverObj;
+            IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
 
             IDirectoryHandler dh = (IDirectoryHandler)fileSystemResolver.RootDirectoryHandler;
 
@@ -399,8 +372,7 @@ namespace ObjectCloud.Disk.Test
         [ExpectedException(typeof(DuplicateFile))]
         public void TestCreateDuplicateFile()
         {
-            object fileSystemResolverObj = SpringContext.GetObject("FileSystemResolver");
-            IFileSystemResolver fileSystemResolver = (FileSystemResolver)fileSystemResolverObj;
+            IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
 
             IDirectoryHandler dh = (IDirectoryHandler)fileSystemResolver.RootDirectoryHandler;
 
@@ -420,8 +392,7 @@ namespace ObjectCloud.Disk.Test
         [Test]
         public void TestEnumerateFilesInDirectory()
         {
-            object fileSystemResolverObj = SpringContext.GetObject("FileSystemResolver");
-            IFileSystemResolver fileSystemResolver = (FileSystemResolver)fileSystemResolverObj;
+            IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
 
             IDirectoryHandler dh = (IDirectoryHandler)fileSystemResolver.RootDirectoryHandler;
 
@@ -450,8 +421,7 @@ namespace ObjectCloud.Disk.Test
         [Test]
         public void TestCopyDirectory()
         {
-            object fileSystemResolverObj = SpringContext.GetObject("FileSystemResolver");
-            IFileSystemResolver fileSystemResolver = (FileSystemResolver)fileSystemResolverObj;
+            IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
 
             IDirectoryHandler dh = (IDirectoryHandler)fileSystemResolver.RootDirectoryHandler;
 
@@ -480,8 +450,7 @@ namespace ObjectCloud.Disk.Test
         [Test]
         public void TestIsFilePresent()
         {
-            object fileSystemResolverObj = SpringContext.GetObject("FileSystemResolver");
-            IFileSystemResolver fileSystemResolver = (FileSystemResolver)fileSystemResolverObj;
+            IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
 
             IDirectoryHandler dh = (IDirectoryHandler)fileSystemResolver.RootDirectoryHandler;
 
@@ -496,8 +465,7 @@ namespace ObjectCloud.Disk.Test
         [Test]
         public void TestIsFileNotPresent()
         {
-            object fileSystemResolverObj = SpringContext.GetObject("FileSystemResolver");
-            IFileSystemResolver fileSystemResolver = (FileSystemResolver)fileSystemResolverObj;
+            IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
 
             IDirectoryHandler dh = (IDirectoryHandler)fileSystemResolver.RootDirectoryHandler;
 
@@ -511,8 +479,7 @@ namespace ObjectCloud.Disk.Test
         [Test]
         public void TestRename()
         {
-            object fileSystemResolverObj = SpringContext.GetObject("FileSystemResolver");
-            IFileSystemResolver fileSystemResolver = (FileSystemResolver)fileSystemResolverObj;
+            IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
 
             IDirectoryHandler dh = (IDirectoryHandler)fileSystemResolver.RootDirectoryHandler;
 
@@ -537,8 +504,7 @@ namespace ObjectCloud.Disk.Test
         [Test]
         public void TestCreateEmbeddedDatabase()
         {
-            object fileSystemResolverObj = SpringContext.GetObject("FileSystemResolver");
-            IFileSystemResolver fileSystemResolver = (FileSystemResolver)fileSystemResolverObj;
+            IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
 
             IDirectoryHandler dh = (IDirectoryHandler)fileSystemResolver.RootDirectoryHandler;
 
@@ -593,8 +559,7 @@ namespace ObjectCloud.Disk.Test
         [Test]
         public void TestEmbeddedDatabaseRoundTrip()
         {
-            object fileSystemResolverObj = SpringContext.GetObject("FileSystemResolver");
-            IFileSystemResolver fileSystemResolver = (FileSystemResolver)fileSystemResolverObj;
+            IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
 
             IDirectoryHandler dh = (IDirectoryHandler)fileSystemResolver.RootDirectoryHandler;
 
@@ -637,8 +602,7 @@ namespace ObjectCloud.Disk.Test
         [Test]
         public void TestCopyEmbeddedDatabase()
         {
-            object fileSystemResolverObj = SpringContext.GetObject("FileSystemResolver");
-            IFileSystemResolver fileSystemResolver = (FileSystemResolver)fileSystemResolverObj;
+            IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
 
             IDirectoryHandler dh = (IDirectoryHandler)fileSystemResolver.RootDirectoryHandler;
 
@@ -685,8 +649,7 @@ namespace ObjectCloud.Disk.Test
         [Test]
         public void TestIndexFile()
         {
-            object fileSystemResolverObj = SpringContext.GetObject("FileSystemResolver");
-            IFileSystemResolver fileSystemResolver = (FileSystemResolver)fileSystemResolverObj;
+            IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
 
             IDirectoryHandler dh = (IDirectoryHandler)fileSystemResolver.RootDirectoryHandler;
 

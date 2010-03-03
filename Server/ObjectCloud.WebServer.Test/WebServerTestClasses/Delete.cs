@@ -9,9 +9,6 @@ using System.Net;
 using System.Text;
 using System.Threading;
 
-using Spring.Context;
-using Spring.Context.Support;
-
 using NUnit.Framework;
 
 using JsonFx.Json;

@@ -8,28 +8,23 @@ using System.Text;
 
 using NUnit.Framework;
 
-using Spring.Context;
-using Spring.Context.Support;
-
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Spring.Config;
 
 namespace ObjectCloud.Disk.Test
 {
-    public abstract class TestBase : ObjectCloud.UnitTestHelpers.UnitTestBase
+    public abstract class TestBase
     {
-        public TestBase() : base("file://Database.xml", "file://Factories.xml", "file://Disk.xml") { }
-
         public FileHandlerFactoryLocator FileHandlerFactoryLocator
         {
             get
             {
                 if (null == _FileHandlerFactoryLocator)
-                    _FileHandlerFactoryLocator = (FileHandlerFactoryLocator)SpringContext["FileHandlerFactoryLocator"];
+                    _FileHandlerFactoryLocator =
+                        ContextLoader.GetFileHandlerFactoryLocatorForConfigurationFile("Test.ObjectCloudConfig.xml");
 
                 return _FileHandlerFactoryLocator; 
             }
-            set { _FileHandlerFactoryLocator = value; }
         }
         private FileHandlerFactoryLocator _FileHandlerFactoryLocator = null;
 

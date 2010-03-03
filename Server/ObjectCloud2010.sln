@@ -54,8 +54,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectCloud.ORM.DataAccess.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\UnitTests.csproj", "{115C97F1-B6E0-487D-915A-A4FA9EB3C629}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectCloud.UnitTestHelpers", "ObjectCloud.UnitTestHelpers\ObjectCloud.UnitTestHelpers.csproj", "{8959868B-5224-4621-B868-FA75FA66CAB4}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectCloud.Logger", "ObjectCloud.Logger\ObjectCloud.Logger.csproj", "{445C9C48-8721-458E-9C19-C833157301B3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectCloud.WebAccessCodeGenerators", "ObjectCloud.WebAccessCodeGenerators\ObjectCloud.WebAccessCodeGenerators.csproj", "{B2052165-C0FE-44F7-8F23-B48FB77AE2CA}"
@@ -275,15 +273,6 @@ Global
 		{115C97F1-B6E0-487D-915A-A4FA9EB3C629}.Signed|Any CPU.ActiveCfg = Release|Any CPU
 		{115C97F1-B6E0-487D-915A-A4FA9EB3C629}.Signed|Any CPU.Build.0 = Release|Any CPU
 		{115C97F1-B6E0-487D-915A-A4FA9EB3C629}.Signed|x86.ActiveCfg = Release|Any CPU
-		{8959868B-5224-4621-B868-FA75FA66CAB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8959868B-5224-4621-B868-FA75FA66CAB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8959868B-5224-4621-B868-FA75FA66CAB4}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{8959868B-5224-4621-B868-FA75FA66CAB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8959868B-5224-4621-B868-FA75FA66CAB4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8959868B-5224-4621-B868-FA75FA66CAB4}.Release|x86.ActiveCfg = Release|Any CPU
-		{8959868B-5224-4621-B868-FA75FA66CAB4}.Signed|Any CPU.ActiveCfg = Release|Any CPU
-		{8959868B-5224-4621-B868-FA75FA66CAB4}.Signed|Any CPU.Build.0 = Release|Any CPU
-		{8959868B-5224-4621-B868-FA75FA66CAB4}.Signed|x86.ActiveCfg = Release|Any CPU
 		{445C9C48-8721-458E-9C19-C833157301B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{445C9C48-8721-458E-9C19-C833157301B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{445C9C48-8721-458E-9C19-C833157301B3}.Debug|x86.ActiveCfg = Debug|Any CPU

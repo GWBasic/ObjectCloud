@@ -27,22 +27,10 @@ namespace ObjectCloud
         {
             try
             {
-                List<string> springFilesToLoad = new List<string>(
-                    new string[] { "file://Database.xml", "file://Factories.xml", "file://Disk.xml", "file://WebServer.xml" });
-
-                // Get all of the plugins
-                foreach (string pluginFilename in Directory.GetFiles(".", "Plugin.*.xml"))
-                    springFilesToLoad.Add("file://" + pluginFilename);
-
-                // Load objects declared in Spring
-                IApplicationContext context = new XmlApplicationContext(springFilesToLoad.ToArray());
-                ContextRegistry.RegisterContext(context);
-
-                // Load configuration file for options that can be set up in simplified XML
-                ConfigurationFileReader.ReadConfigFile(context, "ObjectCloudConfig.xml");
+                FileHandlerFactoryLocator fileHandlerFactoryLocator =
+                    ContextLoader.GetFileHandlerFactoryLocatorForConfigurationFile("ObjectCloudConfig.xml");
 
                 // If the hostname isn't specified, then use the current IP
-                FileHandlerFactoryLocator fileHandlerFactoryLocator = (FileHandlerFactoryLocator)context["FileHandlerFactoryLocator"];
                 if (null == fileHandlerFactoryLocator.Hostname)
                 {
                     string hostname = Dns.GetHostName();
@@ -61,7 +49,7 @@ namespace ObjectCloud
                 }
 
                 if (0 == args.Length)
-                    using (IWebServer webServer = (IWebServer)context["WebServer"])
+                    using (IWebServer webServer = fileHandlerFactoryLocator.WebServer)
                     {
                         webServer.StartServer();
                         

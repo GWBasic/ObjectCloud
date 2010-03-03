@@ -33,6 +33,9 @@
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
+  <PropertyGroup>
+    <RootNamespace>ObjectCloud.Spring.Config</RootNamespace>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Common.Logging, Version=2.0.0.0, Culture=neutral, PublicKeyToken=af08829b84f0328e">
       <SpecificVersion>False</SpecificVersion>
@@ -48,6 +51,22 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="ConfigurationFileReader.cs" />
+    <Compile Include="ContextLoader.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="SpringFiles.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ObjectCloud.Common\ObjectCloud.Common.csproj">
+      <Project>{4E351911-60AC-4BCE-99D7-066C3C9DA67E}</Project>
+      <Name>ObjectCloud.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ObjectCloud.Interfaces\ObjectCloud.Interfaces.csproj">
+      <Project>{DBA3E72A-7B35-4107-88EF-2BD8FB782BAC}</Project>
+      <Name>ObjectCloud.Interfaces</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

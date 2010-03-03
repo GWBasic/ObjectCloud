@@ -58,10 +58,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Dependancies\nunit.framework.dll</HintPath>
     </Reference>
-    <Reference Include="Spring.Core, Version=1.2.0.20001, Culture=neutral, PublicKeyToken=null">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependancies\Spring.Core.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -110,10 +106,6 @@
     <ProjectReference Include="..\ObjectCloud.Spring.Config\ObjectCloud.Spring.Config.csproj">
       <Project>{F4558003-7B34-4081-B99C-78A2FDE4AC3E}</Project>
       <Name>ObjectCloud.Spring.Config</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ObjectCloud.UnitTestHelpers\ObjectCloud.UnitTestHelpers.csproj">
-      <Project>{8959868B-5224-4621-B868-FA75FA66CAB4}</Project>
-      <Name>ObjectCloud.UnitTestHelpers</Name>
     </ProjectReference>
     <ProjectReference Include="..\ObjectCloud.DataAccess\ObjectCloud.DataAccess.csproj">
       <Project>{94994068-0772-49E0-9D4B-0BDBB32AD730}</Project>

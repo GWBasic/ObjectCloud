@@ -8,9 +8,6 @@ using System.IO;
 using System.Net;
 using System.Text;
 
-using Spring.Context;
-using Spring.Context.Support;
-
 using NUnit.Framework;
 
 using ObjectCloud.Common;

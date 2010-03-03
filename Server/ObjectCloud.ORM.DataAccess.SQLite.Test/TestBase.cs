@@ -6,15 +6,12 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-using Spring.Context;
-using Spring.Context.Support;
-
 using ObjectCloud.Spring.Config;
 
 namespace ObjectCloud.ORM.DataAccess.SQLite.Test
 {
-    public abstract class TestBase : ObjectCloud.UnitTestHelpers.UnitTestBase
+    public abstract class TestBase
     {
-        public TestBase() : base ("file://Database.xml") {}
+        public TestBase() {}
     }
 }

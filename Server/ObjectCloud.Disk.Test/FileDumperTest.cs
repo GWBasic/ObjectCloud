@@ -10,9 +10,6 @@ using System.IO;
 using System.Text;
 using System.Xml;
 
-using Spring.Context;
-using Spring.Context.Support;
-
 using NUnit.Framework;
 
 using ObjectCloud.Common;

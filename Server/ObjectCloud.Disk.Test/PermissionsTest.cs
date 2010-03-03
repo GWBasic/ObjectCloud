@@ -5,9 +5,6 @@
 using System;
 using System.Collections.Generic;
 
-using Spring.Context;
-using Spring.Context.Support;
-
 using NUnit.Framework;
 
 using ObjectCloud.Common;

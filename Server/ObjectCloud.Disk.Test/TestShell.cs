@@ -4,9 +4,6 @@
 
 using System;
 
-using Spring.Context;
-using Spring.Context.Support;
-
 using NUnit.Framework;
 
 using ObjectCloud.Common;

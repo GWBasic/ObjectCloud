@@ -6,46 +6,40 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-using Spring.Context;
-
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.WebServer;
+using ObjectCloud.Spring.Config;
 using ObjectCloud.WebServer.Test;
 
 namespace ObjectCloud.WebServer.Test
 {
     public abstract class HasSecondServer : WebServerTestBase
     {
-        /// <summary>
-        /// The second context, statically cached
-        /// </summary>
-        public IApplicationContext SecondContext
+        public FileHandlerFactoryLocator SecondFileHandlerFactoryLocator
         {
             get
             {
-                if (null == _SecondContext)
-                    _SecondContext = this.LoadContext("Test.SecondWebServer.ObjectCloudConfig.xml");
+                if (null == _SecondFileHandlerFactoryLocator)
+                    _SecondFileHandlerFactoryLocator =
+                        ContextLoader.GetFileHandlerFactoryLocatorForConfigurationFile("Test.SecondWebServer.ObjectCloudConfig.xml");
 
-                return _SecondContext;
+                return _SecondFileHandlerFactoryLocator;
             }
         }
-        private static IApplicationContext _SecondContext = null;
+        private FileHandlerFactoryLocator _SecondFileHandlerFactoryLocator = null;
 
         /// <summary>
         /// The second web server object for loopback OpenID tests
         /// </summary>
         public IWebServer SecondWebServer
         {
-            get { return _SecondWebServer; }
-            set { _SecondWebServer = value; }
+            get { return FileHandlerFactoryLocator.WebServer; }
         }
-        private IWebServer _SecondWebServer;
 
         protected override void DoAdditionalSetup()
         {
             base.DoAdditionalSetup();
 
-            SecondWebServer = (IWebServer)SecondContext.GetObject("WebServer");
             SecondWebServer.StartServer();
         }
 
@@ -55,18 +49,5 @@ namespace ObjectCloud.WebServer.Test
 
             base.DoAdditionalTearDown();
         }
-
-        public FileHandlerFactoryLocator SecondFileHandlerFactoryLocator
-        {
-            get
-            {
-                if (null == _SecondFileHandlerFactoryLocator)
-                    _SecondFileHandlerFactoryLocator = (FileHandlerFactoryLocator)SecondContext["FileHandlerFactoryLocator"];
-
-                return _SecondFileHandlerFactoryLocator;
-            }
-            set { _SecondFileHandlerFactoryLocator = value; }
-        }
-        private FileHandlerFactoryLocator _SecondFileHandlerFactoryLocator = null;
     }
 }

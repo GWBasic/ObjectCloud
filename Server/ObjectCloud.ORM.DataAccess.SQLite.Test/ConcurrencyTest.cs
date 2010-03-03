@@ -13,6 +13,7 @@ using NUnit.Framework;
 using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Database;
 using ObjectCloud.ORM.DataAccess.Test;
+using ObjectCloud.Spring.Config;
 
 namespace ObjectCloud.ORM.DataAccess.SQLite.Test
 {
@@ -24,8 +25,10 @@ namespace ObjectCloud.ORM.DataAccess.SQLite.Test
 
         public ConcurrencyTest()
         {
-            EmbeddedDatabaseCreator.EmbeddedDatabaseConnector = (IEmbeddedDatabaseConnector)SpringContext["EmbeddedDatabaseConnector"];
-            DatabaseConnectorFactory.EmbeddedDatabaseConnector = (IEmbeddedDatabaseConnector)SpringContext["EmbeddedDatabaseConnector"];
+            EmbeddedDatabaseCreator.EmbeddedDatabaseConnector = (IEmbeddedDatabaseConnector)ContextLoader.GetObjectFromConfigurationFile(
+                "Test.ObjectCloudConfig.xml", "EmbeddedDatabaseConnector");
+            DatabaseConnectorFactory.EmbeddedDatabaseConnector = (IEmbeddedDatabaseConnector)ContextLoader.GetObjectFromConfigurationFile(
+                "Test.ObjectCloudConfig.xml", "EmbeddedDatabaseConnector");
         }
 
         [Test]

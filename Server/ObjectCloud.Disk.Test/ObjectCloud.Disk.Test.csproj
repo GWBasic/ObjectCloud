@@ -84,10 +84,6 @@
       <HintPath>..\..\Dependancies\System.Data.SQLite.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml" />
-    <Reference Include="Spring.Core, Version=1.2.0.20001, Culture=neutral, PublicKeyToken=null">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependancies\Spring.Core.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FileRelationshipsTest.cs" />
@@ -132,10 +128,6 @@
     <ProjectReference Include="..\ObjectCloud.ORM.DataAccess.SQLite\ObjectCloud.ORM.DataAccess.SQLite.csproj">
       <Project>{8420B7F6-5479-4CBB-909D-7AAEE909C336}</Project>
       <Name>ObjectCloud.ORM.DataAccess.SQLite</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ObjectCloud.UnitTestHelpers\ObjectCloud.UnitTestHelpers.csproj">
-      <Project>{8959868B-5224-4621-B868-FA75FA66CAB4}</Project>
-      <Name>ObjectCloud.UnitTestHelpers</Name>
     </ProjectReference>
     <ProjectReference Include="..\ObjectCloud.WebServer.Implementation\ObjectCloud.WebServer.Implementation.csproj">
       <Project>{34B1F8C9-E830-4BD6-8854-9FB7DEDA5EE5}</Project>
