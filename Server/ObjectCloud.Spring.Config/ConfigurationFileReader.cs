@@ -16,7 +16,7 @@ namespace ObjectCloud.Spring.Config
     /// <summary>
     /// Assists in configuring objects instanciated with Spring using a simpler XML format.  This allows easy exposure of configuration to technical people without them seeing lots of Spring cruft
     /// </summary>
-    internal static class ConfigurationFileReader
+    public static class ConfigurationFileReader
     {
         private static ILog log = LogManager.GetLogger(typeof(ConfigurationFileReader));
 
