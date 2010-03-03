@@ -270,41 +270,42 @@ namespace ObjectCloud.Disk.Test
 
                 restoredDir = (IDirectoryHandler)rootDir.RestoreFile(
                     restoredFileName, "directory", dumpDestination, RootUserId);
+
+                Dictionary<string, IFileContainer> restoredFiles = new Dictionary<string, IFileContainer>();
+                foreach (IFileContainer fileContainer in restoredDir.Files)
+                    restoredFiles[fileContainer.Filename] = fileContainer;
+
+                Assert.AreEqual(1, restoredFiles.Count, "Wrong number of files resored");
+
+                Assert.IsTrue(restoredFiles.ContainsKey("text"), "text file not present");
+                string restoredTextContents = restoredFiles["text"].CastFileHandler<ITextHandler>().ReadAll();
+                Assert.AreEqual(textContents, restoredTextContents, "Text file saved incorrectly");
+
+                Dictionary<ID<IUserOrGroup, Guid>, FilePermission> permissionsByUserId = new Dictionary<ID<IUserOrGroup, Guid>, FilePermission>();
+                foreach (FilePermission permission in restoredDir.GetPermissions("text"))
+                    permissionsByUserId[permission.UserOrGroupId] = permission;
+
+                Assert.IsFalse(permissionsByUserId.ContainsKey(trashId), "Non-system userIds aren't supposed to be dumped");
+
+                Assert.Contains(userFactory.AnonymousUser.Id, permissionsByUserId.Keys, "Anonymous user ID missing");
+                Assert.AreEqual(true, permissionsByUserId[userFactory.AnonymousUser.Id].Inherit, "Wrong value for inherit saved");
+
+                Assert.Contains(userFactory.AuthenticatedUsers.Id, permissionsByUserId.Keys, "Authenticated user ID missing");
+                Assert.AreEqual(false, permissionsByUserId[userFactory.AuthenticatedUsers.Id].Inherit, "Wrong value for inherit saved");
+
+                Assert.Contains(userFactory.LocalUsers.Id, permissionsByUserId.Keys, "Local user ID missing");
+                Assert.AreEqual(true, permissionsByUserId[userFactory.LocalUsers.Id].Inherit, "Wrong value for inherit saved");
+
+                Assert.AreEqual(3, permissionsByUserId.Count, "Wrong number of permissions saved");
             }
             finally
             {
-				try
-				{
-                		Directory.Delete(dumpDestination, true);
-				} catch {}
+                try
+                {
+                    Directory.Delete(dumpDestination, true);
+                }
+                catch { }
             }
-
-            Dictionary<string, IFileContainer> restoredFiles = new Dictionary<string, IFileContainer>();
-            foreach (IFileContainer fileContainer in restoredDir.Files)
-                restoredFiles[fileContainer.Filename] = fileContainer;
-
-            Assert.AreEqual(1, restoredFiles.Count, "Wrong number of files resored");
-
-            Assert.IsTrue(restoredFiles.ContainsKey("text"), "text file not present");
-            string restoredTextContents = restoredFiles["text"].CastFileHandler<ITextHandler>().ReadAll();
-            Assert.AreEqual(textContents, restoredTextContents, "Text file saved incorrectly");
-
-            Dictionary<ID<IUserOrGroup, Guid>, FilePermission> permissionsByUserId = new Dictionary<ID<IUserOrGroup, Guid>, FilePermission>();
-            foreach (FilePermission permission in restoredDir.GetPermissions("text"))
-                permissionsByUserId[permission.UserOrGroupId] = permission;
-
-            Assert.IsFalse(permissionsByUserId.ContainsKey(trashId), "Non-system userIds aren't supposed to be dumped");
-
-            Assert.Contains(userFactory.AnonymousUser.Id, permissionsByUserId.Keys, "Anonymous user ID missing");
-            Assert.AreEqual(true, permissionsByUserId[userFactory.AnonymousUser.Id].Inherit, "Wrong value for inherit saved");
-
-            Assert.Contains(userFactory.AuthenticatedUsers.Id, permissionsByUserId.Keys, "Authenticated user ID missing");
-            Assert.AreEqual(false, permissionsByUserId[userFactory.AuthenticatedUsers.Id].Inherit, "Wrong value for inherit saved");
-
-            Assert.Contains(userFactory.LocalUsers.Id, permissionsByUserId.Keys, "Local user ID missing");
-            Assert.AreEqual(true, permissionsByUserId[userFactory.LocalUsers.Id].Inherit, "Wrong value for inherit saved");
-
-            Assert.AreEqual(3, permissionsByUserId.Count, "Wrong number of permissions saved");
         }
 
         [Test]
