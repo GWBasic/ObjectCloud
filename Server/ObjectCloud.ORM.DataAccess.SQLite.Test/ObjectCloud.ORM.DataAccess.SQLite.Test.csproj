@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
+    <ProductVersion>8.0.50727</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{13683DFC-8853-4CC1-9D98-BD7C594F2807}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -117,6 +117,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="ObjectCloud.ORM.DataAccess.SQLite.Test.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Test.ObjectCloudConfig.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
