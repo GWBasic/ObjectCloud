@@ -111,7 +111,7 @@ namespace ObjectCloud.Disk.Factories
             throw new NotImplementedException("The method or operation is not implemented.");
         }
 
-        public class DoNothingFileHandler : FileHandler
+        public class DoNothingFileHandler : LastModifiedFileHandler
         {
             public DoNothingFileHandler() : base(null, null) { }
 

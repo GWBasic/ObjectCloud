@@ -46,7 +46,7 @@ namespace ObjectCloud.Javascript
 
             using (TimedLock.Lock(javascriptTextHandler))
             {
-                _JavascriptLastModified = javascriptTextHandler.LastModified;
+                _JavascriptLastModified = javascriptTextHandler.FileContainer.LastModified;
                 javascript = javascriptTextHandler.ReadLines();
             }
 

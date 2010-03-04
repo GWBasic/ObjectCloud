@@ -17,14 +17,13 @@ namespace ObjectCloud.Interfaces.Disk
     /// <summary>
     /// Provides rudimentary IFileHandler functionality
     /// </summary>
-    public abstract class FileHandler : IFileHandler, IDisposable
+    public abstract class FileHandler : IFileHandler
     {
         private static readonly ILog log = LogManager.GetLogger<FileHandler>();
 
-        public FileHandler(FileHandlerFactoryLocator fileHandlerFactoryLocator, string filename)
+        public FileHandler(FileHandlerFactoryLocator fileHandlerFactoryLocator)
         {
             _FileHandlerFactoryLocator = fileHandlerFactoryLocator;
-            _Filename = filename;
         }
 
 #if DEBUG
@@ -52,16 +51,6 @@ namespace ObjectCloud.Interfaces.Disk
         }
         private IFileContainer _FileContainer;
 
-        /// <summary>
-        /// The Filename of the file used on the filesystem.  This is primarily used to determine LastModified.  It can be left as null if LastModified is virtual
-        /// </summary>
-        public string Filename
-        {
-            get { return _Filename; }
-            set { _Filename = value; }
-        }
-        private string _Filename;
-
         public abstract void Dump(string path, ObjectCloud.Common.ID<ObjectCloud.Interfaces.Security.IUserOrGroup, Guid> userId);
 
         public virtual void OnDelete(IUser changer) { }
@@ -71,25 +60,6 @@ namespace ObjectCloud.Interfaces.Disk
             get { return _FileHandlerFactoryLocator; }
         }
         private readonly FileHandlerFactoryLocator _FileHandlerFactoryLocator;
-
-        public virtual DateTime LastModified
-        {
-            get
-            {
-                if (null == Filename)
-                {
-#if DEBUG
-                    if (System.Diagnostics.Debugger.IsAttached)
-                        // You should override this property or set Filename
-                        System.Diagnostics.Debugger.Break();
-#endif
-
-                    return DateTime.MinValue;
-                }
-
-                return File.GetLastWriteTimeUtc(Filename);
-            }
-        }
 
         /// <summary>
         /// The default title is the objectUrl, but it can be overridden

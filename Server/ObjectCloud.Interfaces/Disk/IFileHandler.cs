@@ -35,11 +35,6 @@ namespace ObjectCloud.Interfaces.Disk
 		IFileContainer FileContainer { get; set; }
 
         /// <summary>
-        /// Returns the last time that the file was modified
-        /// </summary>
-        DateTime LastModified { get; }
-
-        /// <summary>
         /// Sends a notification to all of the recipients as originating from this object
         /// </summary>
         /// <param name="recipients"></param>

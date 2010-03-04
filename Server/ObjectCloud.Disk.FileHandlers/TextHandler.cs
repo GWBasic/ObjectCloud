@@ -14,7 +14,7 @@ using ObjectCloud.Interfaces.Security;
 
 namespace ObjectCloud.Disk.FileHandlers
 {
-    public class TextHandler : FileHandler, ITextHandler
+    public class TextHandler : LastModifiedFileHandler, ITextHandler
     {
         string Path;
 

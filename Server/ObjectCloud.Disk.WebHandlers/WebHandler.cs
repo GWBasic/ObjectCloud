@@ -1201,7 +1201,7 @@ namespace ObjectCloud.Disk.WebHandlers
             toReturn["FullPath"] = file.FullPath;
             toReturn["FileId"] = file.FileId.ToString();
             toReturn["TypeId"] = file.TypeId;
-            toReturn["LastModified"] = file.FileHandler.LastModified;
+            toReturn["LastModified"] = file.LastModified;
             toReturn["Created"] = file.Created;
             toReturn["Permission"] = file.LoadPermission(session.User.Id);
 
@@ -1353,7 +1353,7 @@ namespace ObjectCloud.Disk.WebHandlers
                         _ExecutionEnvironment = factory.Create(FileHandlerFactoryLocator, FileContainer, javascriptContainer);
                     else if (_ExecutionEnvironment.JavascriptContainer != javascriptContainer)
                         _ExecutionEnvironment = factory.Create(FileHandlerFactoryLocator, FileContainer, javascriptContainer);
-                    else if (javascriptContainer.FileHandler.LastModified > _ExecutionEnvironment.JavascriptLastModified)
+                    else if (javascriptContainer.LastModified > _ExecutionEnvironment.JavascriptLastModified)
                         _ExecutionEnvironment = factory.Create(FileHandlerFactoryLocator, FileContainer, javascriptContainer);
 
                     // using a local version of the object outside of the lock avoids a potential null reference issue if the file is deleted while its javascript is run

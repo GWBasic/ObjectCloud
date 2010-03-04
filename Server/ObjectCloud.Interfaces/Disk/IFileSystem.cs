@@ -40,5 +40,25 @@ namespace ObjectCloud.Interfaces.Disk
         /// </summary>
         /// <returns></returns>
         bool IsRootDirectoryPresent();
+
+        /// <summary>
+        /// Constructs a FileContainer
+        /// </summary>
+        /// <param name="fileHandler"></param>
+        /// <param name="fileId"></param>
+        /// <param name="typeId"></param>
+        /// <param name="filename"></param>
+        /// <param name="parentDirectoryHandler"></param>
+        /// <param name="fileHandlerFactoryLocator"></param>
+        /// <param name="created"></param>
+        /// <returns></returns>
+        IFileContainer ConstructFileContainer(
+            IFileHandler fileHandler,
+            IFileId fileId,
+            string typeId,
+            string filename,
+            IDirectoryHandler parentDirectoryHandler,
+            FileHandlerFactoryLocator fileHandlerFactoryLocator,
+            DateTime created);
     }
 }

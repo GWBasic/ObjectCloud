@@ -55,9 +55,12 @@
     <Compile Include="Disk\CanNotOpenFile.cs" />
     <Compile Include="Disk\DiskException.cs" />
     <Compile Include="Disk\DuplicateFile.cs" />
+    <Compile Include="Disk\FileContainerBase.cs" />
     <Compile Include="Disk\FileContainerUtils.cs" />
     <Compile Include="Disk\FileDoesNotExist.cs" />
-    <Compile Include="Disk\FileHandler.cs" />
+    <Compile Include="Disk\FileHandler.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Disk\FileHandlerFactoryLocator.cs" />
     <Compile Include="Disk\FileIsNotADirectory.cs" />
     <Compile Include="Disk\FileTypePlugin.cs" />
@@ -139,7 +142,6 @@
     <Compile Include="Security\FilePermission.cs" />
     <Compile Include="Disk\CanNotDeleteBuiltInUserOrGroup.cs" />
     <Compile Include="Disk\CanNotEditMembershipOfSystemGroup.cs" />
-    <Compile Include="Disk\FileContainer.cs" />
     <Compile Include="WebServer\WebResults\JSONWebResults.cs" />
     <Compile Include="WebServer\WebResults\StreamWebResults.cs" />
     <Compile Include="WebServer\WebResults\StringWebResults.cs" />

@@ -16,7 +16,7 @@ namespace ObjectCloud.Disk.FileHandlers
     /// <summary>
     /// Handles binary files
     /// </summary>
-	public class BinaryHandler : FileHandler, IBinaryHandler
+	public class BinaryHandler : LastModifiedFileHandler, IBinaryHandler
 	{
         public BinaryHandler(string path, FileHandlerFactoryLocator fileHandlerFactoryLocator)
             : base(fileHandlerFactoryLocator, path)

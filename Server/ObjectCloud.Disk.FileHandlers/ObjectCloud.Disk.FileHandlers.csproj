@@ -40,8 +40,10 @@
     <Compile Include="BinaryHandler.cs" />
     <Compile Include="DatabaseHandler.cs" />
     <Compile Include="DirectoryHandler.cs" />
+    <Compile Include="FileContainer.cs" />
     <Compile Include="FileId.cs" />
     <Compile Include="HasDatabaseFileHandler.cs" />
+    <Compile Include="LastModifiedFileHandler.cs" />
     <Compile Include="NameValuePairsHandler.cs" />
     <Compile Include="Particle\Endpoints.cs" />
     <Compile Include="Session.cs" />

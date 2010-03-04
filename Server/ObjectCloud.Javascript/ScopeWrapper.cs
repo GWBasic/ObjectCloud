@@ -426,7 +426,7 @@ namespace ObjectCloud.Javascript
                 try
                 {
                     textHandler = fileContainer.CastFileHandler<ITextHandler>();
-                    LoadedLibrariesLastModified[toLoad] = fileContainer.FileHandler.LastModified;
+                    LoadedLibrariesLastModified[toLoad] = fileContainer.LastModified;
                 }
                 catch (Exception e)
                 {
@@ -445,7 +445,7 @@ namespace ObjectCloud.Javascript
             }
 
             // If the dependant library has been modified, reload it
-            if (LoadedLibrariesLastModified[toLoad] != FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(toLoad).FileHandler.LastModified)
+            if (LoadedLibrariesLastModified[toLoad] != FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(toLoad).FileHandler.FileContainer.LastModified)
             {
                 LoadedLibraries.Remove(toLoad);
                 return Use(functionCallContext, toLoad);

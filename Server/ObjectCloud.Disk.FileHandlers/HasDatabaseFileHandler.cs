@@ -23,7 +23,7 @@ namespace ObjectCloud.Disk.FileHandlers
     /// </summary>
     /// <typeparam name="TDatabaseConnection"></typeparam>
     /// <typeparam name="TDatabaseTransaction"></typeparam>
-    public abstract class HasDatabaseFileHandler<TDatabaseConnector, TDatabaseConnection, TDatabaseTransaction> : FileHandler, IDatabaseHandler
+    public abstract class HasDatabaseFileHandler<TDatabaseConnector, TDatabaseConnection, TDatabaseTransaction> : LastModifiedFileHandler, IDatabaseHandler
         where TDatabaseConnector : IDatabaseConnector<TDatabaseConnector, TDatabaseConnection, TDatabaseTransaction>
         where TDatabaseConnection : IDatabaseConnection<TDatabaseTransaction>
         where TDatabaseTransaction : IDatabaseTransaction

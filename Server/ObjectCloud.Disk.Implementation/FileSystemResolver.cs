@@ -316,7 +316,7 @@ namespace ObjectCloud.Disk.Implementation
             {
                 if (FileHandlerFactoryLocator.FileSystem.IsRootDirectoryPresent())
                 {
-                    _RootDirectoryContainer = new FileContainer(
+                    _RootDirectoryContainer = FileHandlerFactoryLocator.FileSystem.ConstructFileContainer(
                         null,
                         FileHandlerFactoryLocator.FileSystem.RootDirectoryId,
                         "directory",
@@ -331,7 +331,7 @@ namespace ObjectCloud.Disk.Implementation
                 {
                     log.Info("... Creating the Root Directory ...");
 
-                    _RootDirectoryContainer = new FileContainer(
+                    _RootDirectoryContainer = FileHandlerFactoryLocator.FileSystem.ConstructFileContainer(
                         null,
                         FileHandlerFactoryLocator.FileSystem.RootDirectoryId,
                         "directory",

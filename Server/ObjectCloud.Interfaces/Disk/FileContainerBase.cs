@@ -13,9 +13,9 @@ using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.Interfaces.Disk
 {
-    public class FileContainer : IFileContainer
+    public abstract class FileContainerBase : IFileContainer
     {
-        public FileContainer(
+        public FileContainerBase(
             IFileHandler fileHandler,
             IFileId fileId,
             string typeId,
@@ -28,7 +28,7 @@ namespace ObjectCloud.Interfaces.Disk
             _FileHandler = fileHandler;
         }
 
-        public FileContainer(
+        public FileContainerBase(
             IFileId fileId, 
             string typeId, 
             string filename, 
@@ -185,12 +185,12 @@ namespace ObjectCloud.Interfaces.Disk
             return ParentDirectoryHandler.HasNamedPermissions(FileId, namedPermissions, userId);
         }
 
-        public static bool operator ==(FileContainer r, FileContainer l)
+        public static bool operator ==(FileContainerBase r, FileContainerBase l)
         {
             return r.FileHandler == l.FileHandler;
         }
 
-        public static bool operator !=(FileContainer r, FileContainer l)
+        public static bool operator !=(FileContainerBase r, FileContainerBase l)
         {
             return r.FileHandler != l.FileHandler;
         }
@@ -299,5 +299,7 @@ namespace ObjectCloud.Interfaces.Disk
             get { return _Created; }
         }
         private DateTime _Created;
+
+        public abstract DateTime LastModified { get; }
     }
 }

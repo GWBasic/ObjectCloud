@@ -104,5 +104,10 @@ namespace ObjectCloud.Interfaces.Disk
         /// When the file was created
         /// </summary>
         DateTime Created { get; }
+
+        /// <summary>
+        /// Returns the last time that the file was modified
+        /// </summary>
+        DateTime LastModified { get; }
     }
 }

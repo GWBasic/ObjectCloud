@@ -15,7 +15,7 @@ using ObjectCloud.ORM.DataAccess.SQLite;
 
 namespace ObjectCloud.Disk.FileHandlers
 {
-	public class DatabaseHandler : FileHandler, IDatabaseHandler
+	public class DatabaseHandler : LastModifiedFileHandler, IDatabaseHandler
 	{
         public DatabaseHandler(string databaseFilename, IEmbeddedDatabaseConnector embeddedDatabaseConnector, FileHandlerFactoryLocator fileHandlerFactoryLocator)
             : base(fileHandlerFactoryLocator, databaseFilename)

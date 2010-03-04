@@ -146,7 +146,7 @@ namespace ObjectCloud.WebServer.Implementation
 
                                 foreach (IFileContainer fileContainer in touchedFiles)
                                     if (WebServer.FileHandlerFactoryLocator.SessionManagerHandler.FileContainer != fileContainer)
-                                        if (fileContainer.FileHandler.LastModified > ifModifiedSince)
+                                        if (fileContainer.LastModified > ifModifiedSince)
                                         {
                                             useCached = false;
                                             break;
@@ -209,8 +209,8 @@ namespace ObjectCloud.WebServer.Implementation
                                 // Figure out the most recent file touched
                                 DateTime mostRecentChange = DateTime.MinValue;
                                 foreach (IFileContainer fileContainer in TouchedFiles)
-                                    if (fileContainer.FileHandler.LastModified > mostRecentChange)
-                                        mostRecentChange = fileContainer.FileHandler.LastModified;
+                                    if (fileContainer.LastModified > mostRecentChange)
+                                        mostRecentChange = fileContainer.LastModified;
 
                                 webResults.Headers["Last-Modified"] = mostRecentChange.ToString("r");
                                 webResults.Headers["Cache-Control"] = "private, must-revalidate";
