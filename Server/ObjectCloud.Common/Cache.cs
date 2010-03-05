@@ -67,6 +67,18 @@ namespace ObjectCloud.Common
             _CreateForCache = createForCache;
         }
 
+#if DEBUG
+        /// <summary>
+        /// Allows the cache to be turned off in debug builds
+        /// </summary>
+        public bool Enabled
+        {
+            get { return _Enabled; }
+            set { _Enabled = value; }
+        }
+        private bool _Enabled = true;
+#endif
+
         /// <summary>
         /// Gets or creates a cache handle for the given key
         /// </summary>
@@ -93,6 +105,11 @@ namespace ObjectCloud.Common
         /// <returns></returns>
         public TValue Get(TKey key, TConstructorArg constructorArg)
         {
+#if DEBUG
+            if (!Enabled)
+                return _CreateForCache(key, constructorArg);
+
+#endif
             CacheHandle cacheHandle = GetCacheHandle(key);
             return cacheHandle.GetValue(constructorArg);
         }
