@@ -63,6 +63,36 @@ namespace ObjectCloud.Disk.Test
         }
 
         [Test]
+        public void TestGetNamedPermissionSanity()
+        {
+            string filename = SRandom.Next<long>().ToString();
+            IFileContainer fileContainer = rootDirectoryHandler.CreateFile(filename, "text", TestUser_1.Id).FileContainer;
+
+            rootDirectoryHandler.SetNamedPermission(fileContainer.FileId, "test", TestUser_2.Id, false);
+
+            Assert.IsTrue(
+                rootDirectoryHandler.HasNamedPermissions(fileContainer.FileId, new string[] { "test" }, TestUser_2.Id),
+                "Named permission not found");
+        }
+
+        [Test]
+        public void TestGetNamedPermissionGroups()
+        {
+            string filename = SRandom.Next<long>().ToString();
+            IFileContainer fileContainer = rootDirectoryHandler.CreateFile(filename, "text", TestUser_1.Id).FileContainer;
+
+            rootDirectoryHandler.SetNamedPermission(
+                fileContainer.FileId,
+                "test",
+                FileHandlerFactoryLocator.UserFactory.Everybody.Id,
+                false);
+
+            Assert.IsTrue(
+                rootDirectoryHandler.HasNamedPermissions(fileContainer.FileId, new string[] { "test" }, TestUser_2.Id),
+                "Named permission not found");
+        }
+
+        [Test]
         public void TestUpdatePermission()
         {
             string filename = SRandom.Next<long>().ToString();
