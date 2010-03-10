@@ -83,14 +83,22 @@ namespace ObjectCloud.Common
         {
             get 
             {
-                if (null == _Values)
-                    _Values = GetValues();
-
-                foreach (TEnum value in _Values)
+                foreach (TEnum value in ValuesArray)
                     yield return value;
             }
         }
-        private static IEnumerable<TEnum> _Values;
+
+        public static TEnum[] ValuesArray
+        {
+            get
+            {
+                if (null == _ValuesArray)
+                    _ValuesArray = GetValues();
+
+                return _ValuesArray;
+            }
+        }
+        private static TEnum[] _ValuesArray;
 
         /// <summary>
         /// Returns an indication whether a constant with a specified value exists in a specified enumeration. 
@@ -100,6 +108,17 @@ namespace ObjectCloud.Common
         public static bool IsDefined(object value)
         {
             return Enum.IsDefined(typeof(TEnum), value);
+        }
+
+        /// <summary>
+        /// Returns a random value from the enumeration
+        /// </summary>
+        /// <returns></returns>
+        public static TEnum Random()
+        {
+            TEnum[] valuesArray = ValuesArray;
+
+            return valuesArray[SRandom.Next(0, valuesArray.Length)];
         }
     }
 }
