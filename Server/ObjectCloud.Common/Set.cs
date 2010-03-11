@@ -41,6 +41,16 @@ namespace ObjectCloud.Common
         }
 
         /// <summary>
+        /// Adds a range of items to the set
+        /// </summary>
+        /// <param name="items"></param>
+        public void AddRange(IEnumerable<T> items)
+        {
+            foreach (T item in items)
+                Add(item);
+        }
+
+        /// <summary>
         /// Removes all items from the Set.
         /// </summary>
         public void Clear()

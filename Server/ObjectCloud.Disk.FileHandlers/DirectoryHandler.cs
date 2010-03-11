@@ -1099,6 +1099,13 @@ namespace ObjectCloud.Disk.FileHandlers
                     inspectPermissions = false;
             }
 
+            // Check to see if the user has named permissions with the relationship name, if so, then permissions do not need to be inspected
+            /*if (inspectPermissions)
+            {
+                if (HasNamedPermissions(parentFileId, relationships, userId))
+                    inspectPermissions = false;
+            }*/
+
             if (inspectPermissions)
             {
                 IEnumerable<IPermission_Readable> permissions = DatabaseConnection.Permission.Select(
