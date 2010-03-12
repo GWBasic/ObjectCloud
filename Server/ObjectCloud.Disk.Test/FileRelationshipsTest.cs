@@ -214,5 +214,38 @@ namespace ObjectCloud.Disk.Test
             Assert.AreEqual(1, relatedFiles.Count, "No related files found via permissions");
             Assert.AreEqual(relatedContainer, relatedFiles[0], "Wrong related file found");
         }
+
+        [Test]
+        public void TestCorrectRelationshipsTraveresed()
+        {
+            IDirectoryHandler directory = (IDirectoryHandler)FileHandlerFactoryLocator.FileSystemResolver.RootDirectoryHandler.CreateFile(
+                "TestCorrectRelationshipsTraveresed" + SRandom.Next<uint>(),
+                "directory",
+                FileHandlerFactoryLocator.UserFactory.RootUser.Id);
+
+            IFileContainer parentContainer = directory.CreateFile("parent", "text", User1.Id).FileContainer;
+            directory.SetNamedPermission(parentContainer.FileId, "aaa", User2.Id, false);
+            directory.SetNamedPermission(parentContainer.FileId, "aaa", User3.Id, false);
+            directory.SetNamedPermission(parentContainer.FileId, "bbb", User2.Id, false);
+            directory.SetNamedPermission(parentContainer.FileId, "bbb", User3.Id, false);
+            directory.SetPermission(null, parentContainer.Filename, User3.Id, FilePermissionEnum.Read, false, false);
+
+            IFileContainer relatedContainerA = directory.CreateFile("relatedA.txt", "text", User2.Id).FileContainer;
+            directory.AddRelationship(parentContainer, relatedContainerA, "aaa");
+            IFileContainer relatedContainerB = directory.CreateFile("relatedB.txt", "text", User2.Id).FileContainer;
+            directory.AddRelationship(parentContainer, relatedContainerB, "bbb");
+
+            List<IFileContainer> relatedFiles = new List<IFileContainer>(
+                directory.GetRelatedFiles(User3.Id, parentContainer.FileId, new string[] { "aaa" }, null, null, null, null));
+
+            Assert.AreEqual(1, relatedFiles.Count, "No related files found via permissions");
+            Assert.AreEqual(relatedContainerA, relatedFiles[0], "Wrong related file found");
+
+            relatedFiles = new List<IFileContainer>(
+                directory.GetRelatedFiles(User3.Id, parentContainer.FileId, new string[] { "bbb" }, null, null, null, null));
+
+            Assert.AreEqual(1, relatedFiles.Count, "No related files found via permissions");
+            Assert.AreEqual(relatedContainerB, relatedFiles[0], "Wrong related file found");
+        }
     }
 }
