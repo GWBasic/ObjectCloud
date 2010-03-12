@@ -19,6 +19,31 @@ namespace ObjectCloud.Disk.Test
     [TestFixture]
     public class FileRelationshipsTest : TestBase
     {
+        protected override void DoAdditionalSetup()
+        {
+            base.DoAdditionalSetup();
+
+            User1 = FileHandlerFactoryLocator.UserManagerHandler.CreateUser("User" + SRandom.Next<uint>().ToString(), "pw");
+            User2 = FileHandlerFactoryLocator.UserManagerHandler.CreateUser("User" + SRandom.Next<uint>().ToString(), "pw");
+            User3 = FileHandlerFactoryLocator.UserManagerHandler.CreateUser("User" + SRandom.Next<uint>().ToString(), "pw");
+            Group = FileHandlerFactoryLocator.UserManagerHandler.CreateGroup("Group" + SRandom.Next<uint>().ToString(), null, GroupType.Private);
+        }
+
+        protected override void DoAdditionalTearDown()
+        {
+            FileHandlerFactoryLocator.UserManagerHandler.DeleteUser(User1.Name);
+            FileHandlerFactoryLocator.UserManagerHandler.DeleteUser(User2.Name);
+            FileHandlerFactoryLocator.UserManagerHandler.DeleteUser(User3.Name);
+            FileHandlerFactoryLocator.UserManagerHandler.DeleteGroup(Group.Name);
+
+            base.DoAdditionalTearDown();
+        }
+
+        IUser User1;
+        IUser User2;
+        IUser User3;
+        IGroup Group;
+
         [Test]
         public void TestAddRelationshipSanity()
         {
@@ -104,14 +129,14 @@ namespace ObjectCloud.Disk.Test
             fileContainers = new List<IFileContainer>(
                 directory.GetRelatedFiles(FileHandlerFactoryLocator.UserFactory.RootUser.Id, parentContainer.FileId, null, null, null, null, null));
 
-            Assert.IsTrue(0 == fileContainers.Count);
+            Assert.AreEqual(0, fileContainers.Count, "Unexpected file containers returned");
         }
 
         [Test]
         public void TestPermissions()
         {
             IDirectoryHandler directory = (IDirectoryHandler)FileHandlerFactoryLocator.FileSystemResolver.RootDirectoryHandler.CreateFile(
-                "TestAddRelationshipSanity" + SRandom.Next<uint>(),
+                "TestPermissions" + SRandom.Next<uint>(),
                 "directory",
                 FileHandlerFactoryLocator.UserFactory.RootUser.Id);
 
@@ -128,22 +153,18 @@ namespace ObjectCloud.Disk.Test
             directory.AddRelationship(parentContainer, related4Container, "bbb");
 
             // Create users and group
-            IUser user1 = FileHandlerFactoryLocator.UserManagerHandler.CreateUser("User" + SRandom.Next<uint>().ToString(), "pw");
-            IUser user2 = FileHandlerFactoryLocator.UserManagerHandler.CreateUser("User" + SRandom.Next<uint>().ToString(), "pw");
-            IUser user3 = FileHandlerFactoryLocator.UserManagerHandler.CreateUser("User" + SRandom.Next<uint>().ToString(), "pw");
-            IGroup group = FileHandlerFactoryLocator.UserManagerHandler.CreateGroup("Group" + SRandom.Next<uint>().ToString(), null, GroupType.Private);
-            FileHandlerFactoryLocator.UserManagerHandler.AddUserToGroup(user1.Id, group.Id);
+            FileHandlerFactoryLocator.UserManagerHandler.AddUserToGroup(User1.Id, Group.Id);
 
-            directory.SetPermission(null, related1Container.Filename, user1.Id, FilePermissionEnum.Read, false, false);
-            directory.SetPermission(null, related2Container.Filename, group.Id, FilePermissionEnum.Read, false, false);
-            directory.SetPermission(null, related3Container.Filename, user2.Id, FilePermissionEnum.Read, false, false);
-            directory.FileContainer.ParentDirectoryHandler.SetPermission(null, directory.FileContainer.Filename, user3.Id, FilePermissionEnum.Read, true, false);
+            directory.SetPermission(null, related1Container.Filename, User1.Id, FilePermissionEnum.Read, false, false);
+            directory.SetPermission(null, related2Container.Filename, Group.Id, FilePermissionEnum.Read, false, false);
+            directory.SetPermission(null, related3Container.Filename, User2.Id, FilePermissionEnum.Read, false, false);
+            directory.FileContainer.ParentDirectoryHandler.SetPermission(null, directory.FileContainer.Filename, User3.Id, FilePermissionEnum.Read, true, false);
 
             List<IFileContainer> fileContainers;
 
             // Test user1
             fileContainers = new List<IFileContainer>(
-                directory.GetRelatedFiles(user1.Id, parentContainer.FileId, null, null, null, null, null));
+                directory.GetRelatedFiles(User1.Id, parentContainer.FileId, null, null, null, null, null));
 
             Assert.IsTrue(fileContainers.Contains(related1Container), "File missing");
             Assert.IsTrue(fileContainers.Contains(related2Container), "File missing");
@@ -152,7 +173,7 @@ namespace ObjectCloud.Disk.Test
 
             // Test user2
             fileContainers = new List<IFileContainer>(
-                directory.GetRelatedFiles(user2.Id, parentContainer.FileId, null, null, null, null, null));
+                directory.GetRelatedFiles(User2.Id, parentContainer.FileId, null, null, null, null, null));
 
             Assert.IsTrue(!fileContainers.Contains(related1Container), "File missing");
             Assert.IsTrue(!fileContainers.Contains(related2Container), "File missing");
@@ -161,12 +182,37 @@ namespace ObjectCloud.Disk.Test
 
             // Test user3
             fileContainers = new List<IFileContainer>(
-                directory.GetRelatedFiles(user3.Id, parentContainer.FileId, null, null, null, null, null));
+                directory.GetRelatedFiles(User3.Id, parentContainer.FileId, null, null, null, null, null));
 
             Assert.IsTrue(fileContainers.Contains(related1Container), "File missing");
             Assert.IsTrue(fileContainers.Contains(related2Container), "File missing");
             Assert.IsTrue(fileContainers.Contains(related3Container), "File missing");
             Assert.IsTrue(fileContainers.Contains(related4Container), "File missing");
+        }
+
+        [Test]
+        public void TestPermissionsWorkThroughRelationships()
+        {
+            IDirectoryHandler directory = (IDirectoryHandler)FileHandlerFactoryLocator.FileSystemResolver.RootDirectoryHandler.CreateFile(
+                "TestPermissionsWorkThroughRelationships" + SRandom.Next<uint>(),
+                "directory",
+                FileHandlerFactoryLocator.UserFactory.RootUser.Id);
+
+            IFileContainer parentContainer = directory.CreateFile("parent", "text", User1.Id).FileContainer;
+            directory.SetNamedPermission(parentContainer.FileId, "aaa", User2.Id, false);
+            directory.SetNamedPermission(parentContainer.FileId, "aaa", User3.Id, false);
+            directory.SetPermission(null, parentContainer.Filename, User3.Id, FilePermissionEnum.Read, false, false);
+
+            IFileContainer relatedContainer = directory.CreateFile("related.txt", "text", User2.Id).FileContainer;
+            directory.AddRelationship(parentContainer, relatedContainer, "aaa");
+
+            Assert.AreEqual(FilePermissionEnum.Read, relatedContainer.LoadPermission(User3.Id), "User did not have permission for a related file");
+
+            List<IFileContainer> relatedFiles = new List<IFileContainer>(
+                directory.GetRelatedFiles(User3.Id, parentContainer.FileId, new string[] { "aaa" }, null, null, null, null));
+
+            Assert.AreEqual(1, relatedFiles.Count, "No related files found via permissions");
+            Assert.AreEqual(relatedContainer, relatedFiles[0], "Wrong related file found");
         }
     }
 }
