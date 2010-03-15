@@ -46,6 +46,63 @@ namespace ObjectCloud.Disk.WebHandlers
             return WebResults.FromString(Status._200_OK, FileHandler.Identity);
         }
 
+		/// <summary>
+		/// Gets all of the user's public metadata 
+		/// </summary>
+		/// <param name="webConnection">
+		/// A <see cref="IWebConnection"/>
+		/// </param>
+		/// <returns>
+		/// A <see cref="IWebResults"/>
+		/// </returns>
+		[WebCallable(WebCallingConvention.GET, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Read)]
+		public IWebResults GetPublicData(IWebConnection webConnection)
+		{
+			Dictionary<string, object> toReturn = new Dictionary<string, object>();
+			
+			IEnumerable<string> publicMetadataItems = StringParser.ParseCommaSeperated(
+				FileHandler["PublicMetadataItems"]);
+			
+			foreach (string publicMetadataItem in publicMetadataItems)
+				toReturn[publicMetadataItem] = FileHandler[publicMetadataItem];
+			
+			return WebResults.ToJson(toReturn);
+		}
+		
+        /// <summary>
+        /// Gets all of the name-values, returns a JSON object with names and values as strings
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.GET, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Administer)]
+        public IWebResults GetAllData(IWebConnection webConnection)
+        {
+            Dictionary<string, string> toWrite = new Dictionary<string, string>();
+
+            foreach (KeyValuePair<string, string> pair in FileHandler)
+                toWrite.Add(pair.Key, pair.Value);
+
+            return WebResults.ToJson(toWrite);
+        }
+		
+        /// <summary>
+        /// Sets all of the values based on the results of a POST query
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Administer)]
+        public IWebResults SetAllData(IWebConnection webConnection)
+        {
+            // Decode the new pairs
+            IDictionary<string, string> newPairs;
+
+            newPairs = webConnection.PostParameters;
+
+            FileHandler.WriteAll(webConnection.Session.User, newPairs, true);
+
+            return WebResults.FromString(Status._202_Accepted, "Saved");
+        }
+
         /// <summary>
         /// Returns the page that's used when a user from this server is logging into another server.  (TODO, verify)
         /// </summary>
