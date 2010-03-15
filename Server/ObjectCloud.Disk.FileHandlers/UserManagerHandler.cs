@@ -422,6 +422,20 @@ namespace ObjectCloud.Disk.FileHandlers
                 yield return CreateGroupObject(group);
         }
 
+        /// <summary>
+        /// Untested
+        /// </summary>
+        /// <param name="names"></param>
+        /// <returns></returns>
+        public IEnumerable<IUserOrGroup> GetUsersAndGroups(IEnumerable<string> names)
+        {
+            foreach (IUsers_Readable user in DatabaseConnection.Users.Select(Users_Table.Name.In(names)))
+                yield return CreateUserObject(user);
+
+            foreach (IGroups_Readable group in DatabaseConnection.Groups.Select(Groups_Table.Name.In(names)))
+                yield return CreateGroupObject(group);
+        }
+
         public IEnumerable<IUser> GetUsersAndResolveGroupsToUsers(IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds)
         {
             Set<IUser> toReturn = new Set<IUser>();

@@ -134,6 +134,17 @@ namespace ObjectCloud.Interfaces.Disk
         IEnumerable<IUserOrGroup> GetUsersAndGroups(IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds);
 
         /// <summary>
+        /// Gets the users and groups with corresponding names
+        /// </summary>
+        /// <param name="userOrGroupIds">
+        /// A <see cref="IEnumerable"/>
+        /// </param>
+        /// <returns>
+        /// A <see cref="IEnumerable"/>
+        /// </returns>
+        IEnumerable<IUserOrGroup> GetUsersAndGroups(IEnumerable<string> names);
+
+        /// <summary>
         /// Gets all the users from the given IDs.  If any of the IDs are groupIds, then the users in the groups are returned
         /// </summary>
         /// <param name="userOrGroupIds">
