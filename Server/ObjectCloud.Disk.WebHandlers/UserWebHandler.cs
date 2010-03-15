@@ -102,6 +102,28 @@ namespace ObjectCloud.Disk.WebHandlers
 
             return WebResults.FromString(Status._202_Accepted, "Saved");
         }
+		
+        /// <summary>
+        /// Sets all of the values based on the results of a POST query
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Administer)]
+        public IWebResults SetAllDataJson(IWebConnection webConnection, JsonReader data)
+        {
+            // Decode the new pairs
+            Dictionary<string, string> newPairs = new Dictionary<string, string>();
+
+			foreach (KeyValuePair<string, object> kvp in (IEnumerable<KeyValuePair<string, object>>)data.Deserialize())
+				if (kvp.Value is string)
+					newPairs.Add(kvp.Key, kvp.Value.ToString());
+				else
+					newPairs.Add(kvp.Key, JsonWriter.Serialize(kvp.Value));
+
+            FileHandler.WriteAll(webConnection.Session.User, newPairs, true);
+
+            return WebResults.FromString(Status._202_Accepted, "Saved");
+        }
 
         /// <summary>
         /// Returns the page that's used when a user from this server is logging into another server.  (TODO, verify)
