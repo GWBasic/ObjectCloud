@@ -179,7 +179,10 @@ namespace ObjectCloud.WebServer.Implementation
                             string redirectUrl = "http://" + WebServer.FileHandlerFactoryLocator.HostnameAndPort + RequestedFile;
 
                             if (GetParameters.Count > 0)
-                                redirectUrl += "&" + GetParameters.ToURLEncodedString();
+								if (redirectUrl.Contains("?"))
+	                                redirectUrl += "&" + GetParameters.ToURLEncodedString();
+								else
+        		                        redirectUrl += "?" + GetParameters.ToURLEncodedString();
 
                             webResults = WebResults.Redirect(redirectUrl);
                         }
