@@ -28,7 +28,7 @@ All original ObjectCloud source code is copyright (c) 2009, 2010 Andrew Rondeau.
    <li>Modify any of the included Javascript server-side classes, provided the changes are also released according to the terms of the <a href="http://opensource.org/licenses/simpl-2.0.html">SimPL 2.0</a>.</li>
    <li>Create and distribute proprietary libraries such as .dll files that inherit from classes in, implement interfaces from, or call APIs in any .dll that is included with ObjectCloud</li>
    <li>Utilize dependency injection to replace any ObjectCloud class, module, and/or dll with an independently-developed class, module, or dll that is released under a licensee of your choice.</li>
-   <li>Utilize dependency injection to include additional functionality from independently-developed classes, modules, and/or dll that is released under a licensee of your choice.</li>
+   <li>Utilize dependency injection to include additional functionality from independently-developed classes, modules, and/or dll that is released under a license of your choice.</li>
 </ul>
 
 <p>The <a href="http://opensource.org/licenses/simpl-2.0.html">SimPL 2.0</a> may grant you additional rights that are not documented here.</p>
