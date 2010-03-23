@@ -42,8 +42,7 @@ and its state.</p>
 	</li><li><p class="numbering-1-western"><b>timeStamp</b><span style="font-weight: normal;">:
 	 The exact date/time that the row was created.  Not null, and if
 	possible, the schema should automatically create the timeStamp.</span></p>
-	</li><li><p class="numbering-1-western"><b>state</b><span style="font-weight: normal;">:
-	 “r” for read.  Any other value, including null, implies unread.</span></p>
+	</li><li><p class="numbering-1-western"><b>state</b><span style="font-weight: normal;">: "r" for read.  Any other value, including null, implies unread.</span></p>
 	</li><li><p class="numbering-1-western"><b>sender</b><span style="font-weight: normal;">:
 	 The notification's sender's OpenId.  Not null.</span></p>
 	</li><li><p class="numbering-1-western"><b>objectUrl</b><span style="font-weight: normal;">:
@@ -108,8 +107,7 @@ is unignore.</p>
 <p style="font-weight: normal;">Columns:</p>
 <ul><li><p><b>objectUrl</b><span style="font-weight: normal;">:  The
 	object's URL that is sent with a notification.  Not null.</span></p>
-	</li><li><p><b>objectState</b><span style="font-weight: normal;">:  Either
-	“i” for ignore, “d” for deleted, or “s” for silently
+	</li><li><p><b>objectState</b><span style="font-weight: normal;">:  Either "i" for ignore, "d" for deleted, or "s" for silently
 	deleted.  Not null.</span></p>
 </li></ul>
 <p style="font-weight: normal;">If an object is to be unignored, then
@@ -161,7 +159,7 @@ endpoints in RAM instead of the database.  This is to increase speed
 and give a natural way for endpoints to be regularly refreshed. 
 Logic will exist to delete endpoints older then 24 hours.</p>
 <p style="font-weight: normal;">When any of the particle events need
-to use an endpoint, they will call the “GetEndpoints” server-side
+to use an endpoint, they will call the "GetEndpoints" server-side
 Javascript method.  It takes two arguments:</p>
 <ol><li><p><b>openID</b><span style="font-weight: normal;">:  The OpenID,
 	string.</span></p>
@@ -203,7 +201,7 @@ more then 24 hours old</p>
 <p style="margin-left: 0.98in;">refresh</p>
 <h2 class="western" style="font-weight: normal;">particle.establishTrust</h2>
 <p style="font-weight: normal;">Implemented in the server-side
-Javascript “EstablishTrust” method.</p>
+Javascript "EstablishTrust" method.</p>
 <ol><li><p style="font-weight: normal;">The senders endpoints are found
 	by calling GetEndpoints for the given OpenID.</p>
 	</li><li><p style="font-weight: normal;">A new senderToken is randomly
@@ -221,7 +219,7 @@ attacks that would invalidate senderTokens.</p>
 Getting a senderToken.</h2>
 <p style="font-weight: normal;">This server-side Javascript method is
 used internally, such as when a notification is sent.  The method is
-named “GetSenderToken”.  It takes two arguments:</p>
+named "GetSenderToken".  It takes two arguments:</p>
 <ol><li value="1"><p><b>openID</b><span style="font-weight: normal;">:  The
 	OpenID, string.</span></p>
 	</li><li><p><b>forceRefresh</b><span style="font-weight: normal;">: 
@@ -260,7 +258,7 @@ claims to be by calling respondTrust.</p>
 <p style="font-weight: normal;">When establishing trust with a
 recipient, the recipient calls this endpoint to verify that the
 sender is as claimed.  This is to prevent spoofing.  It is
-implemented in server-side Javascript as “RespondTrust”, and
+implemented in server-side Javascript as "RespondTrust", and
 takes two arguments:</p>
 <ol><li><p><b>token</b><span style="font-weight: normal;">:  The token
 	that this user sent to the recipient.</span></p>
@@ -279,14 +277,12 @@ takes two arguments:</p>
 	deleted.</p>
 </li></ol>
 <h2 class="western" style="font-weight: normal;">particle.receiveNotification</h2>
-<p style="font-weight: normal;">This endpoint is implemented as the
-“receiveNotification” server-side Javascript method.</p>
+<p style="font-weight: normal;">This endpoint is implemented as the "receiveNotification" server-side Javascript method.</p>
 <p style="font-weight: normal;">(See the particle notification spec
 for the arguments, no use copying)</p>
 <ol><li><p style="font-weight: normal;">The Sender table is queried to
 	find the OpenID from the senderToken.  If no matching senderToken is
-	found, then an HTTP status 424 (failed dependancy.) and the text
-	“senderToken�������������� are returned.</p>
+	found, then an HTTP status 424 (failed dependancy.) and the text &nbsp;"senderToken" are returned.</p>
 	</li><li><p style="font-weight: normal;">The Blocked table is queried for
 	the OpenID.  If it is found, then a 202 is returned and the
 	notification discarded.</p>
@@ -336,7 +332,7 @@ endpoint to see the arguments.)</p>
 		</li><li><p style="font-weight: normal;">The query is ordered by
 		NotificationId in a descending order.</p>
 		</li><li><p style="font-weight: normal;">If maxNotifications is sent,
-		then a “MAX” clause is appended.</p>
+		then a "MAX" clause is appended.</p>
 	</li></ol>
 	</li><li><p style="font-weight: normal;">The results are returned.  As the
 	schema matches the standard, no object conversion needs to be made.</p>
@@ -346,8 +342,7 @@ endpoint to see the arguments.)</p>
 be authenticated and that the client's user has Write access to this
 object.  Typically, this will be the owner, although the owner can
 allow other people to pretend to be him / her by granting Write
-access to this object.  This is implemented as the server-side
-��SendNotification��� method.</p>
+access to this object.  This is implemented as the server-side "SendNotification" method.</p>
 <p style="font-weight: normal;">(See the spec's section for this
 endpoint to see the arguments.)</p>
 <p style="font-weight: normal;">The additional optional arguments are
@@ -384,7 +379,7 @@ supported:</p>
 	transportErrorDelay and then recurses with forceRefreshEndpoints set
 	to true.  When recursing, maxRetries is decremented.</p>
 	</li><li><p style="font-weight: normal;">If receiveNotification returns a
-	412 and the text ���SenderToken”, then the function recurses with
+	412 and the text "SenderToken", then the function recurses with
 	forceRefreshSenderToken set to true and maxRetries decremented.</p>
 	</li><li><p style="font-weight: normal;">If receiveNotification returns a
 	450 (Blocked), then an entry is made in the Deleted table.  The
@@ -396,7 +391,7 @@ supported:</p>
 <p style="font-weight: normal;">(See the spec's section for this
 endpoint to see the arguments.)</p>
 <p style="font-weight: normal;">This is implemented as a Javascript
-function called “UpdateNotificationState”.  A session must be
+function called "UpdateNotificationState".  A session must be
 established where the user has WRITE access.  It uses an update query
 on the Notification table using the passed NotificationId to update
 the state column to r if read, or null if unread.</p>
@@ -405,17 +400,15 @@ are unblocked.</p>
 <h2 class="western" style="font-weight: normal;">particle.updateObjectState</h2>
 <p style="font-weight: normal;">(See the spec's section for this
 endpoint to see the arguments.)</p>
-<p style="font-weight: normal;">Server-side javascript function named
-“UpdateObjectState���.  A session must be established where the
+<p style="font-weight: normal;">Server-side javascript function named "UpdateObjectState".  A session must be established where the
 user has ADMINISTER access.  An entry in the ObjectState table is
 either created or updated based on the passed-in state.</p>
-<p style="font-weight: normal;">If “delete” or “silentDelete”
-is passed in, then all notifications for the given object are
+<p style="font-weight: normal;">If "delete" or "silentDelete" is passed in, then all notifications for the given object are
 deleted.</p>
 <h2 class="western" style="font-weight: normal;">particle.block</h2>
 <p style="font-weight: normal;">(See the spec's section for this
 endpoint to see the arguments.)</p>
-<p style="font-weight: normal;">Implemented as “Block���.  A session
+<p style="font-weight: normal;">Implemented as "Block".  A session
 must be established where the user has ADMINISTER access.</p>
 <p><span style="font-weight: normal;">The toBlock argument is used to
 make an entry in the Blocked table.  OpenIDorDomain is set from
@@ -427,7 +420,7 @@ returned if there are no errors.</p>
 <h2 class="western" style="font-weight: normal;">particle.unBlock</h2>
 <p style="font-weight: normal;">(See the spec's section for this
 endpoint to see the arguments.)</p>
-<p style="font-weight: normal;">Implemented as “UnBlock”.  A
+<p style="font-weight: normal;">Implemented as "UnBlock".  A
 session must be established where the user has ADMINISTER access.</p>
 <p style="font-weight: normal;">The toUnBlock argument is used to
 remove an entry in the Blocked table where OpenIDorDomain is
@@ -436,7 +429,7 @@ toUnBlock.</p>
 returned if there are no errors.</p>
 <h2 class="western" style="font-weight: normal;">particle.getBlocked</h2>
 <p style="font-weight: normal;">(No arguments.)</p>
-<p style="font-weight: normal;">Implemented as “GetBlocked”.  A
+<p style="font-weight: normal;">Implemented as "GetBlocked".  A
 session must be established where the user has READ access.</p>
 <p style="font-weight: normal;">All blocked domains and endpoints are
 returned as a single Javascript array with a 200 (OK) success code.</p>
