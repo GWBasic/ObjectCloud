@@ -1,7 +1,7 @@
 <? WebComponent("/Pages/header.webcomponent?Title=Blog%20Editor%20" . $_GETENCODE["FileName"]) ?>
 <? Scripts(/API/Prototype.js, <? $_GET["FileName"] ?>?Method=GetJSW&assignToVariable=Blogum) ?>
 
-<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+<!-- This code is released under the Simple Public License (SimPL) 2.0.  Some additional privelages are granted., See /Docs/license.wchtml -->
 
 <table><tr><td>
 

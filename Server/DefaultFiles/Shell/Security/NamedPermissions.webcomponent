@@ -1,4 +1,4 @@
-<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+<!-- This code is released under the Simple Public License (SimPL) 2.0.  Some additional privelages are granted., See /Docs/license.wchtml -->
 
    <? Scripts(<? $_GET["FileName"] ?>?Method=GetJSW&assignToVariable=<? $_GET["NamedPermission"] ?>_File) ?>
 

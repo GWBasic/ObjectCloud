@@ -1,6 +1,6 @@
 // Emulates AJAX requests for server-side javascript
 
-// This code is released under the LGPL
+// This code is released under the Simple Public License (SimPL) 2.0.  Some additional privelages are granted.
 // See /Docs/license.wchtml
 
 if (typeof CreateHttpRequest != 'function')

@@ -1,7 +1,7 @@
 <? WebComponent("/Pages/header.webcomponent?Title=" . $_GETENCODE["Directory"]) ?>
 <? Scripts(/API/Url.js, <? $_GET["Directory"] ?>?Method=GetJSW&assignToVariable=Dir) ?>
 
-<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+<!-- This code is released under the Simple Public License (SimPL) 2.0.  Some additional privelages are granted., See /Docs/license.wchtml -->
 
 <script>
    var supportedFileTypes = <? WebComponent("/Shell/Navigation/Directory.json?Method=ReadAll") ?>;

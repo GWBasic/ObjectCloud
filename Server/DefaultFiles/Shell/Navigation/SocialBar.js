@@ -1,6 +1,6 @@
 // Scripts: /API/Prototype.js, /API/Url.js, /API/Comet/CometProtocol.js, /API/DetectMobile.js
 
-// This code is released under the LGPL
+// This code is released under the Simple Public License (SimPL) 2.0.  Some additional privelages are granted.
 // See /Docs/license.wchtml
 
 var sb_connectedUsers = {};

@@ -1,7 +1,7 @@
 <? WebComponent("/Pages/header.webcomponent?Title=Users%20and%20Groups") ?>
 <? Scripts(/API/Prototype.js, /API/Url.js, /Users/UserDB?Method=GetJSW&assignToVariable=userDB) ?>
 
-<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+<!-- This code is released under the Simple Public License (SimPL) 2.0.  Some additional privelages are granted., See /Docs/license.wchtml -->
 
    <script>
 

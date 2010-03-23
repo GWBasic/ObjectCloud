@@ -1,7 +1,7 @@
 <? WebComponent("/Pages/header.webcomponent?Title=Create%20An%20Account") ?>
 <? Scripts(/API/Prototype.js, /Users/UserDB?Method=GetJSW&assignToVariable=UserDB) ?>
 
-<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+<!-- This code is released under the Simple Public License (SimPL) 2.0.  Some additional privelages are granted., See /Docs/license.wchtml -->
 
    <script>
       function createaccount()

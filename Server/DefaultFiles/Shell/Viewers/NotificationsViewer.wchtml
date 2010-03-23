@@ -3,7 +3,7 @@
 <html>
    <head>
 
-<!-- This code is released under the LGPL, See /Docs/license.wchtml -->
+<!-- This code is released under the Simple Public License (SimPL) 2.0.  Some additional privelages are granted., See /Docs/license.wchtml -->
 
       <? Scripts(/API/Prototype.js, /Users/[name].user?Method=GetJSW&assignToVariable=NotificationsProxy, /Users/[name]?Method=GetJSW&assignToVariable=UserFolder, /API/File.js, /API/Url.js, /API/Comet/CometProtocol.js) ?>
       <link href="/Pages/objectcloud.css" type="text/css" rel="stylesheet" />
