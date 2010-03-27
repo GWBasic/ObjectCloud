@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -13,7 +13,6 @@
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <OldToolsVersion>3.5</OldToolsVersion>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
   </PropertyGroup>
@@ -41,22 +40,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Dependancies\Common.Logging.dll</HintPath>
     </Reference>
-    <Reference Include="IKVM.OpenJDK.Core, Version=0.40.0.1, Culture=neutral, PublicKeyToken=13235d27fcbfff58">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependancies\IKVM.OpenJDK.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Text, Version=0.40.0.1, Culture=neutral, PublicKeyToken=13235d27fcbfff58">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependancies\IKVM.OpenJDK.Text.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Util, Version=0.40.0.1, Culture=neutral, PublicKeyToken=13235d27fcbfff58">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependancies\IKVM.OpenJDK.Util.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.Runtime, Version=0.40.0.1, Culture=neutral, PublicKeyToken=13235d27fcbfff58">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependancies\IKVM.Runtime.dll</HintPath>
-    </Reference>
     <Reference Include="js, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Dependancies\js.dll</HintPath>
@@ -64,7 +47,23 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="IKVM.OpenJDK.Security, Version=0.40.0.1, Culture=neutral, PublicKeyToken=13235d27fcbfff58">
+    <Reference Include="IKVM.OpenJDK.Core, Version=0.42.0.3, Culture=neutral, PublicKeyToken=13235d27fcbfff58">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependancies\IKVM.OpenJDK.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.Text, Version=0.42.0.3, Culture=neutral, PublicKeyToken=13235d27fcbfff58">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependancies\IKVM.OpenJDK.Text.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.Util, Version=0.42.0.3, Culture=neutral, PublicKeyToken=13235d27fcbfff58">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependancies\IKVM.OpenJDK.Util.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.Runtime, Version=0.42.0.3, Culture=neutral, PublicKeyToken=13235d27fcbfff58">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependancies\IKVM.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.Security, Version=0.42.0.3, Culture=neutral, PublicKeyToken=13235d27fcbfff58">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Dependancies\IKVM.OpenJDK.Security.dll</HintPath>
     </Reference>
@@ -107,4 +106,9 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <ProjectExtensions>
+    <MonoDevelop>
+      <Properties InternalTargetFrameworkVersion="3.5" />
+    </MonoDevelop>
+  </ProjectExtensions>
 </Project>
