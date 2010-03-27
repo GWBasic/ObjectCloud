@@ -6,6 +6,8 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -14,12 +16,14 @@ import org.mozilla.javascript.ClassShutter;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.FunctionObject;
+import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 
 public class ScopeWrapper {
 	
-	public ScopeWrapper(OutputStreamWriter outputStreamWriter, int scopeID) {
+	public ScopeWrapper(IOPump ioPump, OutputStreamWriter outputStreamWriter, int scopeID) {
 		
+		this.ioPump = ioPump;
 		this.outputStreamWriter = outputStreamWriter;
 		this.scopeID = new Integer(scopeID);
 		
@@ -57,6 +61,7 @@ public class ScopeWrapper {
         }
 	}
 
+	IOPump ioPump;
 	OutputStreamWriter outputStreamWriter;
 	ScriptableObject scope;
 	Function jsonStringifyFunction;
@@ -65,6 +70,9 @@ public class ScopeWrapper {
 	private final static String callFunctionInParentProcessName = "_____callParentFunction";
 	Map<Object, Object> monitorObjectsByThreadID = new HashMap<Object, Object>();
 	Map<Object, JSONObject> inCommandByThreadID = new HashMap<Object, JSONObject>();
+	Map<Object, Function> callbacks = new HashMap<Object, Function>();
+	
+	static Random random = new Random();
 	
 	// Pairing of ThreadID and ScopeWrapper
 	private class ScopeWrapperAndThreadID {
@@ -132,6 +140,9 @@ public class ScopeWrapper {
 				
 				else if (command.equals("CallFunctionInScope"))
 					callFunctionInScope(context, threadID, data);
+				
+				else if (command.equals("DisposeScope"))
+					ioPump.DisposeScopeWrapper(scopeID);
 				
 				// If this is a response, it means that somehow the parent process is faster then Java!
 				// It's unlikely that this block will be called; it's just here in case of a potential weirdo
@@ -259,72 +270,118 @@ public class ScopeWrapper {
 	// Calls a function in the parent process
 	public static Object callFunctionInParentProcess(final Context context, Object[] args, Function ctorObj, boolean inNewExpr) throws Exception {
 		
-		final ScopeWrapperAndThreadID scopeWrapperAndThreadID = scopeWrapperAndThreadIDsByContext.get(context);
-		
+		ScopeWrapperAndThreadID scopeWrapperAndThreadID = scopeWrapperAndThreadIDsByContext.get(context);
 		return scopeWrapperAndThreadID.scopeWrapper.callFunctionInParentProcessInstance(context, args, scopeWrapperAndThreadID.threadID);
 	}
 	
 	// Calls a function in the parent process
 	public Object callFunctionInParentProcessInstance(final Context context, Object[] args, Object threadID) throws Exception {
-		final ScriptableObject arguments = (ScriptableObject)args[1];
+		ScriptableObject arguments = (ScriptableObject)args[1];
+		JSONArray argumentsForJSON = new JSONArray();
 		
-		/*Class argumentsType = arguments.getClass();
-		Class parent = argumentsType.getSuperclass();
-		Class superparent = parent.getSuperclass();*/
+		// Extract callbacks so that the parent process can identify them and use them
+		// The callbacks must be destroyed after this part of the call stack is complete.  For now, there is no way for
+		// the parent process to hold on to them in the "heap"
+		ArrayList<Object> callbackIDs = new ArrayList<Object>();
 		
-		JSONObject data = new JSONObject();
-		data.put("FunctionName", args[0]);
-		data.put("Arguments", new JSONString() {
+		try {
+			
+			for (Object argumentIndexObj : arguments.getIds()) {
+				
+				int argumentIndex = (Integer)argumentIndexObj;
+				Object argument = arguments.get(argumentIndex, scope);
+				
+				if (Function.class.isInstance(argument)) {
+					Object callbackID = random.nextInt();
+					
+					callbacks.put(callbackID, (Function)argument);
+					callbackIDs.add(callbackID);
+					
+					JSONObject callbackIndicator = new JSONObject();
+					callbackIndicator.put("Callback", true);
+					callbackIndicator.put("CallbackID", callbackID);
+					
+					argumentsForJSON.put(argumentIndex, callbackIndicator);
 
-			@Override
-			public String toJSONString() {
-				return jsonStringifyFunction.call(
-					context,
-					scope,
-					scope,
-					new Object[] { arguments }).toString();
+				} else if (Scriptable.class.isInstance(argument))
+					// use the wrapper that converts to a JSONString
+					argumentsForJSON.put(argumentIndex, new JSONStringFromScriptable(context, (Scriptable)argument));
+				
+				else
+					argumentsForJSON.put(argumentIndex, argument);
 			}
 			
-		});
-		
-		sendCommand("CallParentFunction", threadID, data);
-		
-		Object monitorObject = new Object();
-		
-		do
-		{
+			JSONObject data = new JSONObject();
+			data.put("FunctionName", args[0]);
+			data.put("Arguments", argumentsForJSON);
 			
-			try {
+			sendCommand("CallParentFunction", threadID, data);
+			
+			Object monitorObject = new Object();
+			
+			do
+			{
 				
-				synchronized(monitorObject) {
-					monitorObjectsByThreadID.put(threadID, monitorObject);
-					monitorObject.wait();
+				try {
+					
+					synchronized(monitorObject) {
+						monitorObjectsByThreadID.put(threadID, monitorObject);
+						monitorObject.wait();
+					}
+					
+				} finally {
+					monitorObjectsByThreadID.remove(threadID);
 				}
 				
-			} finally {
-				monitorObjectsByThreadID.remove(threadID);
-			}
-			
-			// pull inCommand out of a map and then re-call handle, unless a response is returned
-			JSONObject inCommand = inCommandByThreadID.get(threadID);
-			inCommandByThreadID.remove(threadID);
-
-			// If the command is a response to the function call, return the data, else, handle the command
-			if (inCommand.getString("Command").equals("RespondCallParentFunction")) {
+				// pull inCommand out of a map and then re-call handle, unless a response is returned
+				JSONObject inCommand = inCommandByThreadID.get(threadID);
+				inCommandByThreadID.remove(threadID);
+	
+				// If the command is a response to the function call, return the data, else, handle the command
+				if (inCommand.getString("Command").equals("RespondCallParentFunction")) {
+					
+					Object toReturn = inCommand.getJSONObject("Data").get("Result");
+	
+					// If the object is a JSONArray or JSONObject, then it can't be directly consumed in Rhino and must be
+					// re-de-serialized in Rhino
+					if (JSONArray.class.isInstance(toReturn) || JSONObject.class.isInstance(toReturn))				
+						return context.evaluateString(scope, "(" + toReturn.toString() + ")", "<cmd>", 1, null);
+					
+					return toReturn;
+				}
 				
-				Object toReturn = inCommand.getJSONObject("Data").get("Result");
-
-				// If the object is a JSONArray or JSONObject, then it can't be directly consumed in Rhino and must be
-				// re-de-serialized in Rhino
-				if (JSONArray.class.isInstance(toReturn) || JSONObject.class.isInstance(toReturn))				
-					return context.evaluateString(scope, "(" + toReturn.toString() + ")", "<cmd>", 1, null);
-				
-				return toReturn;
-			}
+				handle(inCommand);
+	
+			} while (true);
 			
-			handle(inCommand);
-
-		} while (true);
+		} finally {
+			// clean up old callbacks
+			// At some time there might be a way for the parent process to hold onto callbacks in the "heap"
+			
+			for (Object callbackID : callbackIDs)
+				callbacks.remove(callbackID);
+		}
+	}
+	
+	private class JSONStringFromScriptable implements JSONString {
+		
+		public JSONStringFromScriptable(Context context, Scriptable scriptable) {
+		
+			this.context = context;
+			this.scriptable = scriptable;
+		}
+		
+		Context context;
+		Scriptable scriptable;
+		
+		@Override
+		public String toJSONString() {
+			return jsonStringifyFunction.call(
+				context,
+				scope,
+				scope,
+				new Object[] { scriptable }).toString();
+		}
 		
 	}
 	

@@ -50,13 +50,16 @@ public class IOPump {
 			// Get or create the scope wrapper
 			final ScopeWrapper scopeWrapper;
 			int scopeID = inCommand.getInt("ScopeID");
-			if (scopeWrappers.containsKey(scopeID))
-				scopeWrapper = scopeWrappers.get(scopeID);
-			else {
-				scopeWrapper = new ScopeWrapper(outputStreamWriter, scopeID);
-				scopeWrappers.put(scopeID, scopeWrapper);
+			
+			synchronized(scopeWrappers) {
+				if (scopeWrappers.containsKey(scopeID))
+					scopeWrapper = scopeWrappers.get(scopeID);
+				else {
+					scopeWrapper = new ScopeWrapper(this, outputStreamWriter, scopeID);
+					scopeWrappers.put(scopeID, scopeWrapper);
+				}
 			}
-
+			
 			final JSONObject inCommandFinal = inCommand;
 			
 			Thread thread = new Thread(new Runnable() {
@@ -72,6 +75,12 @@ public class IOPump {
 
 			// This is done last before the loop
 			inCommand = new JSONObject(tokener);
+		}
+	}
+	
+	public void DisposeScopeWrapper(int scopeID) {
+		synchronized(scopeWrappers) {
+			scopeWrappers.remove(scopeID);
 		}
 	}
 }

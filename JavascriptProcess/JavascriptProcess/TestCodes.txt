@@ -5,7 +5,7 @@
    "Data":
    {
       "ReturnFunctions":true,
-      "Script": "foo.a = 123; function foo(a){return a + \"!!!\";} aaa(1,2,'3');",
+      "Script": "foo.a = 123; function foo(a){return a + \"!!!\";} aaa(1,2,'3', function(){});",
       "Functions":["aaa","bbb","ccc"]
    }
 }
