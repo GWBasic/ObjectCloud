@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 
 using Common.Logging;
 using JsonFx.Json;
@@ -30,15 +31,18 @@ namespace ObjectCloud.Javascript.SubProcess
 		private static Wrapped<int> IdCtr = 0;
 
 		private int ScopeId;
-		
-        public ScopeWrapper(FileHandlerFactoryLocator fileHandlerFactoryLocator, IWebConnection webConnection, string javascript, IFileContainer theObject)
+
+        SubProcess SubProcess = new SubProcess();
+        Dictionary<string, MethodInfo> FunctionsInScope = new Dictionary<string, MethodInfo>();
+
+        public ScopeWrapper(FileHandlerFactoryLocator fileHandlerFactoryLocator, IWebConnection webConnection, string javascript, IFileContainer fileContainer)
         {
-			using (TimedLock.Lock(IdCtr))
-			{
-				ScopeId = IdCtr.Value;
-				IdCtr.Value++;
-			}
-			
+            using (TimedLock.Lock(IdCtr))
+            {
+                ScopeId = IdCtr.Value;
+                IdCtr.Value++;
+            }
+
             _FileHandlerFactoryLocator = fileHandlerFactoryLocator;
             _User = webConnection.Session.User;
 
@@ -54,126 +58,111 @@ namespace ObjectCloud.Javascript.SubProcess
                     requestedScripts.Add(script.Trim());
             }
 
-            /*IEnumerable<ScriptAndMD5> dependantScriptsAndMD5s = webConnection.WebServer.WebComponentResolver.DetermineDependantScripts(
+            IEnumerable<ScriptAndMD5> dependantScriptsAndMD5s = webConnection.WebServer.WebComponentResolver.DetermineDependantScripts(
                 requestedScripts,
                 new BlockingShellWebConnection(
                     webConnection.WebServer,
                     webConnection.Session,
-                    theObject.FullPath,
+                    fileContainer.FullPath,
                     null,
                     null,
                     webConnection.CookiesFromBrowser,
                     CallingFrom.Web,
-                    WebMethod.GET));*/
+                    WebMethod.GET));
 
 
-                _TheObject = theObject;
+            _FileContainer = fileContainer;
 
-                //_Scope = context.initStandardObjects();
+            // Load static methods that are passed into the Javascript environment as-is
 
-                /*/ Load static methods that are passed into the Javascript environment as-is
-				foreach (Type javascriptFunctionsType in GetTypesThatHaveJavascriptFunctions(theObject))
-				{
-					java.lang.Class javascriptFunctionsClass = javascriptFunctionsType;
-						
-	                foreach (MethodInfo csMethod in javascriptFunctionsType.GetMethods(BindingFlags.Static | BindingFlags.Public))
-	                {
-	                    ParameterInfo[] parameters = csMethod.GetParameters();
-	                    java.lang.Class[] parameterTypes = new java.lang.Class[parameters.Length];
-	                    for (int ctr = 0; ctr < parameters.Length; ctr++)
-	                        parameterTypes[ctr] = parameters[ctr].ParameterType;
-	
-	                    string methodName = csMethod.Name;
-	                    java.lang.reflect.Method javaMethod = javascriptFunctionsClass.getMethod(methodName, parameterTypes);
-	
-	                    Function function = new FunctionObject(methodName, javaMethod, Scope);
-	                    Scope.put(methodName, Scope, function);
-					}
-				}
-				
-                // Load all dependant scripts
-                foreach (ScriptAndMD5 dependantScript in dependantScriptsAndMD5s)
+            foreach (Type javascriptFunctionsType in GetTypesThatHaveJavascriptFunctions(fileContainer))
+                foreach (MethodInfo method in javascriptFunctionsType.GetMethods(BindingFlags.Static | BindingFlags.Public))
+                    FunctionsInScope[method.Name] = method;
+
+            StringBuilder scriptBuilder = new StringBuilder();
+
+            // Load all dependant scripts
+            foreach (ScriptAndMD5 dependantScript in dependantScriptsAndMD5s)
+                scriptBuilder.Append(webConnection.ShellTo(dependantScript.ScriptName).ResultsAsString);
+
+            AddMetadata(webConnection, scriptBuilder);
+
+            // Construct Javascript to shell to the "base" webHandler
+            string baseWrapper = fileContainer.WebHandler.GetJavascriptWrapperForBase(webConnection, "base");
+            scriptBuilder.Append(baseWrapper);
+
+            scriptBuilder.Append(javascript);
+
+            Dictionary<string, object> data;
+
+            FunctionCaller.UseTemporaryCaller(this, FileContainer, webConnection, delegate()
+            {
+                data = SubProcess.EvalScope(
+                    ScopeId,
+                    scriptBuilder.ToString(),
+                    FunctionsInScope.Keys,
+                    true,
+                    Thread.CurrentThread.ManagedThreadId);
+            });
+
+            /*// Load the actual script
+            FunctionCaller.UseTemporaryCaller(this, theObject, Scope, context, webConnection, delegate()
+            {
+                context.evaluateString(Scope, javascript, "<cmd>", 1, null);
+            });*/
+
+            // Initialize each function caller
+
+            /*object[] ids = Scope.getIds();
+
+            foreach (object id in ids)
+                if (id is string)
                 {
-                    string resolvedScript = webConnection.ShellTo(dependantScript.ScriptName).ResultsAsString;
-                    context.evaluateString(Scope, resolvedScript, "<cmd>", 1, null);
-                }
+                    string method = (string)id;
 
-                // Get access to JSON functions from C#
-                try
-                {
-                    Scriptable jsonObject = (Scriptable)Scope.get("JSON", Scope);
-                    _JsonParseFunction = (Function)jsonObject.get("parse", Scope);
-                    _JsonStringifyFunction = (Function)jsonObject.get("stringify", Scope);
-                }
-                catch (Exception e)
-                {
-                    throw new JavascriptException("Can not get JSON functions", e);
-                }
+                    object javascriptMethodObject = Scope.get(method, Scope);
 
-                AddMetadata(webConnection, context);
-
-                // Construct Javascript to shell to the "base" webHandler
-                string baseWrapper = theObject.WebHandler.GetJavascriptWrapperForBase(webConnection, "base");
-                context.evaluateString(Scope, baseWrapper, "<cmd>", 1, null);
-
-                // Load the actual script
-                FunctionCaller.UseTemporaryCaller(this, theObject, Scope, context, webConnection, delegate()
-                {
-                    context.evaluateString(Scope, javascript, "<cmd>", 1, null);
-                });
-
-                // Initialize each function caller
-
-                object[] ids = Scope.getIds();
-
-                foreach (object id in ids)
-                    if (id is string)
+                    // If the value is a Javascript function...
+                    if (javascriptMethodObject is Function)
                     {
-                        string method = (string)id;
+                        Function javascriptMethod = (Function)javascriptMethodObject;
 
-                        object javascriptMethodObject = Scope.get(method, Scope);
-
-                        // If the value is a Javascript function...
-                        if (javascriptMethodObject is Function)
+                        // ... and it's marked as webCallable, create a FunctionCaller
+                        if (javascriptMethod.has("webCallable", Scope))
                         {
-                            Function javascriptMethod = (Function)javascriptMethodObject;
+                            FunctionCaller functionCaller = new FunctionCaller(this, TheObject, method, javascriptMethod, Scope);
 
-                            // ... and it's marked as webCallable, create a FunctionCaller
-                            if (javascriptMethod.has("webCallable", Scope))
-                            {
-                                FunctionCaller functionCaller = new FunctionCaller(this, TheObject, method, javascriptMethod, Scope);
+                            // ... and if the function caller supports the calling convention, then cache it!
 
-                                // ... and if the function caller supports the calling convention, then cache it!
-
-                                if (null != functionCaller.WebDelegate)
-                                    FunctionCallers[method] = functionCaller;
-                            }
+                            if (null != functionCaller.WebDelegate)
+                                FunctionCallers[method] = functionCaller;
                         }
                     }
+                }
 
-                // Get options
-                if (Scope.has("options", Scope))
-                    GetOptions();*/
+            // Get options
+            if (Scope.has("options", Scope))
+                GetOptions();*/
         }
 
-        /*/// <summary>
+        /// <summary>
         /// Adds runtime metadata to the server-side javascript
         /// </summary>
         /// <param name="webConnection"></param>
         /// <param name="context"></param>
-        private void AddMetadata(IWebConnection webConnection, Context context)
+        private void AddMetadata(IWebConnection webConnection, StringBuilder scriptBuilder)
         {
             //Ability to know the following from within Javascript:  File name, file path, owner name, owner ID, connected user name, connected user id
             Dictionary<string, object> fileMetadata = new Dictionary<string, object>();
-            fileMetadata["filename"] = TheObject.Filename;
-            fileMetadata["fullpath"] = TheObject.FullPath;
-            fileMetadata["url"] = TheObject.ObjectUrl;
+            fileMetadata["filename"] = FileContainer.Filename;
+            fileMetadata["fullpath"] = FileContainer.FullPath;
+            fileMetadata["url"] = FileContainer.ObjectUrl;
 
-            if (null != TheObject.OwnerId)
+            if (null != FileContainer.OwnerId)
             {
-                fileMetadata["ownerId"] = TheObject.OwnerId.Value;
+                fileMetadata["ownerId"] = FileContainer.OwnerId.Value;
 
-                IUserOrGroup owner = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupNoException(TheObject.OwnerId.Value);
+                IUserOrGroup owner = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupNoException(FileContainer.OwnerId.Value);
                 if (null != owner)
                 {
                     fileMetadata["owner"] = owner.Name;
@@ -183,7 +172,7 @@ namespace ObjectCloud.Javascript.SubProcess
                 }
             }
 
-            AddObject(context, "fileMetadata", fileMetadata);
+            AddObject(scriptBuilder, "fileMetadata", fileMetadata);
 
             Dictionary<string, object> userMetadata = new Dictionary<string, object>();
             IUser user = webConnection.Session.User;
@@ -192,34 +181,33 @@ namespace ObjectCloud.Javascript.SubProcess
             userMetadata["identity"] = user.Identity;
 			userMetadata["isLocal"] = user.Local;
 
-            AddObject(context, "userMetadata", userMetadata);
+            AddObject(scriptBuilder, "userMetadata", userMetadata);
 
             Dictionary<string, object> hostMetadata = new Dictionary<string, object>();
             hostMetadata["host"] = FileHandlerFactoryLocator.HostnameAndPort;
             hostMetadata["justHost"] = FileHandlerFactoryLocator.Hostname;
             hostMetadata["port"] = FileHandlerFactoryLocator.WebServer.Port;
 
-            AddObject(context, "hostMetadata", hostMetadata);
-        }*/
+            AddObject(scriptBuilder, "hostMetadata", hostMetadata);
+        }
 		
 		/// <summary>
 		/// Returns the types that have static functions to assist with the given FileHandler based on its type 
 		/// </summary>
-		/// <param name="theObject">
+		/// <param name="fileContainer">
 		/// A <see cref="IFileContainer"/>
 		/// </param>
 		/// <returns>
 		/// A <see cref="IEnumerable"/>
 		/// </returns>
-		private static IEnumerable<Type> GetTypesThatHaveJavascriptFunctions(IFileContainer theObject)
+		private static IEnumerable<Type> GetTypesThatHaveJavascriptFunctions(IFileContainer fileContainer)
 		{
-			throw new NotImplementedException();
-			/*yield return typeof(JavascriptFunctions);
+			yield return typeof(JavascriptFunctions);
 			
-			IFileHandler fileHandler = theObject.FileHandler;
+			IFileHandler fileHandler = fileContainer.FileHandler;
 			
 			if (fileHandler is IDatabaseHandler)
-				yield return typeof(JavascriptDatabaseFunctions);*/
+				yield return typeof(JavascriptDatabaseFunctions);
 		}
 
         /// <summary>
@@ -257,11 +245,11 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <summary>
         /// The wrapped object
         /// </summary>
-        public IFileContainer TheObject
+        public IFileContainer FileContainer
         {
-            get { return _TheObject; }
+            get { return _FileContainer; }
         }
-        private readonly IFileContainer _TheObject;
+        private readonly IFileContainer _FileContainer;
 
         /*// <summary>
         /// The function to parse JSON data
@@ -343,19 +331,16 @@ namespace ObjectCloud.Javascript.SubProcess
             }*/
         }
 
-        /*// <summary>
+        /// <summary>
         /// Adds an object to be accessible from within the scope
         /// </summary>
         /// <param name="name"></param>
         /// <param name="?"></param>
-        private void AddObject(Context context, string name, object toAdd)
+        private void AddObject(StringBuilder scriptBuilder, string name, object toAdd)
         {
             string serialized = JsonWriter.Serialize(toAdd);
-
-            string toEvaluate = string.Format("{0} = {1};", name, serialized);
-
-            context.evaluateString(Scope, toEvaluate, "<cmd>", 1, null);
-        }*/
+            scriptBuilder.AppendFormat("{0} = {1};", name, serialized);
+        }
 
         /// <summary>
         /// Loads options from the javascript

@@ -29,12 +29,12 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <summary>
         /// Creates a Javascript execution environment
         /// </summary>
-        /// <param name="theObject">The object that will be accessed through Javascript</param>
+        /// <param name="fileContainer">The object that will be accessed through Javascript</param>
         /// <param name="javascriptContainer">The text file that contains the javascript</param>
-        public ExecutionEnvironment(FileHandlerFactoryLocator fileHandlerFactoryLocator, IFileContainer theObject, IFileContainer javascriptContainer)
+        public ExecutionEnvironment(FileHandlerFactoryLocator fileHandlerFactoryLocator, IFileContainer fileContainer, IFileContainer javascriptContainer)
         {
             _FileHandlerFactoryLocator = fileHandlerFactoryLocator;
-            _TheObject = theObject;
+            _FileContainer = fileContainer;
             _JavascriptContainer = javascriptContainer;
 
             // load both the javascript and its date in a lock
@@ -88,11 +88,11 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <summary>
         /// The object being wrapped
         /// </summary>
-        public IFileContainer TheObject
+        public IFileContainer FileContainer
         {
-            get { return _TheObject; }
+            get { return _FileContainer; }
         }
-        private readonly IFileContainer _TheObject;
+        private readonly IFileContainer _FileContainer;
 
         /// <summary>
         /// The file that contains the JavaScript
@@ -165,7 +165,7 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             try
             {
-                return new ScopeWrapper(FileHandlerFactoryLocator, webConnection, Javascript, TheObject);
+                return new ScopeWrapper(FileHandlerFactoryLocator, webConnection, Javascript, FileContainer);
             }
             catch (Exception e)
             {

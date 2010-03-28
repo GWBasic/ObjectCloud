@@ -6,15 +6,19 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Javascript;
 
 namespace ObjectCloud.Javascript.SubProcess
 {
     public class ExecutionEnvironmentFactory : IExecutionEnvironmentFactory
     {
-        public IExecutionEnvironment Create(ObjectCloud.Interfaces.Disk.FileHandlerFactoryLocator fileHandlerFactoryLocator, ObjectCloud.Interfaces.Disk.IFileContainer theObject, ObjectCloud.Interfaces.Disk.IFileContainer javascriptContainer)
+        public IExecutionEnvironment Create(
+            FileHandlerFactoryLocator fileHandlerFactoryLocator, 
+            IFileContainer fileContainer,
+            IFileContainer javascriptContainer)
         {
-            return new ExecutionEnvironment(fileHandlerFactoryLocator, theObject, javascriptContainer);
+            return new ExecutionEnvironment(fileHandlerFactoryLocator, fileContainer, javascriptContainer);
         }
     }
 }
