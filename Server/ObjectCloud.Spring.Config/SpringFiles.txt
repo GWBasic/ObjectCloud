@@ -1,4 +1,5 @@
-﻿Database.xml
+Database.xml
 Factories.xml
 Disk.xml
+Javascript.xml
 WebServer.xml

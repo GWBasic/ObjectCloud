@@ -14,7 +14,7 @@ namespace ObjectCloud.Javascript.SubProcess
 		public SubProcess ()
 		{
 			Process Process = new Process();
-			Process.StartInfo = new ProcessStartInfo("java", "JavascriptProcess.jar " + Process.GetCurrentProcess().Id.ToString());
+			Process.StartInfo = new ProcessStartInfo("java", "-jar JavascriptProcess.jar " + Process.GetCurrentProcess().Id.ToString());
 			Process.StartInfo.RedirectStandardInput = true;
 			Process.StartInfo.RedirectStandardOutput = true;
 			Process.StartInfo.UseShellExecute = false;
@@ -81,13 +81,13 @@ namespace ObjectCloud.Javascript.SubProcess
 			using (TimedLock.Lock(SendKey))
 				JSONSender.Write(args);
 			
-			Thread.CurrentThread.Suspend();
+			//Thread.CurrentThread.Suspend();
 		}
 		
 		public void Dispose ()
 		{
 			using (TimedLock.Lock(SendKey))
-				JsonWriter.Write(new Dictionary<string, object>());
+				JSONSender.Write(new Dictionary<string, object>());
 			
 			// Make sure process stops on another thread
 			DateTime start = DateTime.UtcNow;

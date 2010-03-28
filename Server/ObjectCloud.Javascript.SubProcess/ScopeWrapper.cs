@@ -54,7 +54,7 @@ namespace ObjectCloud.Javascript.SubProcess
                     requestedScripts.Add(script.Trim());
             }
 
-            IEnumerable<ScriptAndMD5> dependantScriptsAndMD5s = webConnection.WebServer.WebComponentResolver.DetermineDependantScripts(
+            /*IEnumerable<ScriptAndMD5> dependantScriptsAndMD5s = webConnection.WebServer.WebComponentResolver.DetermineDependantScripts(
                 requestedScripts,
                 new BlockingShellWebConnection(
                     webConnection.WebServer,
@@ -64,7 +64,7 @@ namespace ObjectCloud.Javascript.SubProcess
                     null,
                     webConnection.CookiesFromBrowser,
                     CallingFrom.Web,
-                    WebMethod.GET));
+                    WebMethod.GET));*/
 
 
                 _TheObject = theObject;

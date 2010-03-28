@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 
 <objects xmlns="http://www.springframework.net" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
@@ -88,9 +88,7 @@
     <property name="FileSystemResolver" ref="FileSystemResolver" />
     <property name="RootDirectoryCreator" ref="RootDirectoryCreator" />
     <property name="UserFactory" ref="UserFactory" />
-    <property name="ExecutionEnvironmentFactory">
-      <object id="ExecutionEnvironmentFactory" type="ObjectCloud.Javascript.ExecutionEnvironmentFactory, ObjectCloud.Javascript" />
-    </property>
+    <property name="ExecutionEnvironmentFactory" ref="ExecutionEnvironmentFactory" />
 
     <!-- FileHandlerFactories are loaded by reference -->
 
