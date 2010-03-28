@@ -12,6 +12,17 @@
 
 {
    "ScopeID":123,
+   "Command":"CallCallback",
+   "ThreadID":456,
+   "Data":
+   {
+      "CallbackId": 187993981,
+      "Arguments":[]
+   }
+}
+
+{
+   "ScopeID":123,
    "Command":"RespondCallParentFunction",
    "ThreadID":456,
    "Data":

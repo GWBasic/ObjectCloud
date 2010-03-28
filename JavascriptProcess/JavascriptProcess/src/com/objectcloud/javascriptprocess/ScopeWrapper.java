@@ -18,6 +18,7 @@ import org.mozilla.javascript.Function;
 import org.mozilla.javascript.FunctionObject;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
+import org.mozilla.javascript.Undefined;
 
 public class ScopeWrapper {
 	
@@ -135,11 +136,14 @@ public class ScopeWrapper {
 					context,
 					new ScopeWrapperAndThreadID(threadID, this));
 
-				if (command.equals("EvalScope"))
+				if (command.equals("CallFunctionInScope"))
+					callFunctionInScope(context, threadID, data);
+				
+				else if (command.equals("EvalScope"))
 					evalScope(context, threadID, data);
 				
-				else if (command.equals("CallFunctionInScope"))
-					callFunctionInScope(context, threadID, data);
+				else if (command.equals("CallCallback"))
+					callCallback(context, threadID, data);
 				
 				else if (command.equals("DisposeScope"))
 					ioPump.DisposeScopeWrapper(scopeID);
@@ -230,19 +234,34 @@ public class ScopeWrapper {
 		returnResult("RespondCallFunctionInScope", context, threadID, callResults);
 	}
 	
+	private void callCallback(Context context, Object threadID, JSONObject data) throws Exception {
+		
+		Object callbackID = data.get("CallbackId");
+		Function function = callbacks.get(callbackID);
+		
+		ArrayList<Object> arguments = new ArrayList<Object>();
+		for (Object o : data.getJSONArray("Arguments"))
+			arguments.add(o);
+		
+		final Object callResults = function.call(context, scope, scope, arguments.toArray());
+		returnResult("RespondCallCallback", context, threadID, callResults);
+	}
+	
 	private void returnResult(String command, Context context, Object threadID, Object callResults) throws JSONException, IOException {
 		returnResult(command, context, threadID, callResults, new JSONObject());
 	}
 	
 	private void returnResult(String command, final Context context, Object threadID, final Object callResults, JSONObject outData) throws JSONException, IOException {
-		outData.put("Result", new JSONString() {
-
-			@Override
-			public String toJSONString() {
-				return jsonStringifyFunction.call(context, scope, scope, new Object[] { callResults }).toString();
-			}
-			
-		});
+		
+		if (!Undefined.class.isInstance(callResults))
+			outData.put("Result", new JSONString() {
+	
+				@Override
+				public String toJSONString() {
+					return jsonStringifyFunction.call(context, scope, scope, new Object[] { callResults }).toString();
+				}
+				
+			});
 		
 		sendCommand(command, threadID, outData);
 	}

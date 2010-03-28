@@ -16,6 +16,21 @@
 			SendNotifications="False" />
 	</File>
 	<File
+		Name="JavascriptProcess.page"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
+	<File
 		Name="Particle Notification Design.page"
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
@@ -47,21 +62,6 @@
 	</File>
 	<File
 		Name="Scalability.page"
-		TypeId="text"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
-		<Permission
-			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
-			Level="Administer"
-			Inherit="False"
-			SendNotifications="False" />
-		<Permission
-			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
-			Level="Administer"
-			Inherit="False"
-			SendNotifications="False" />
-	</File>
-	<File
-		Name="V8Process.page"
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission

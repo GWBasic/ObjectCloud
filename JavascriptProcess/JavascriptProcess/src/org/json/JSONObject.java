@@ -1417,10 +1417,10 @@ public class JSONObject {
                 value instanceof JSONArray) {
             return value.toString();
         }
-        if (value instanceof Map) {
+        if (value instanceof Map<?, ?>) {
             return new JSONObject((Map<?, ?>)value).toString();
         }
-        if (value instanceof Collection) {
+        if (value instanceof Collection<?>) {
             return new JSONArray((Collection<?>)value).toString();
         }
         if (value.getClass().isArray()) {
@@ -1470,10 +1470,10 @@ public class JSONObject {
         if (value instanceof JSONArray) {
             return ((JSONArray)value).toString(indentFactor, indent);
         }
-        if (value instanceof Map) {
+        if (value instanceof Map<?, ?>) {
             return new JSONObject((Map<?, ?>)value).toString(indentFactor, indent);
         }
-        if (value instanceof Collection) {
+        if (value instanceof Collection<?>) {
             return new JSONArray((Collection<?>)value).toString(indentFactor, indent);
         }
         if (value.getClass().isArray()) {
@@ -1509,13 +1509,13 @@ public class JSONObject {
                  return object;
              }
              
-             if (object instanceof Collection) {
+             if (object instanceof Collection<?>) {
                  return new JSONArray((Collection<?>)object);
              }
              if (object.getClass().isArray()) {
                  return new JSONArray(object);
              }
-             if (object instanceof Map) {
+             if (object instanceof Map<?, ?>) {
                  return new JSONObject((Map<?, ?>)object);
              }
              Package objectPackage = object.getClass().getPackage();
