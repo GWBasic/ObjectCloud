@@ -281,6 +281,7 @@ public class ScopeWrapper {
 		outCommand.put("Command", command);
 
 		outputStreamWriter.write(outCommand.toString());
+		outputStreamWriter.write("\r\n");
 		outputStreamWriter.flush();
 	}
 	
