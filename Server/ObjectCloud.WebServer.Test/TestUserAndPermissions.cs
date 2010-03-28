@@ -166,7 +166,7 @@ namespace ObjectCloud.WebServer.Test
 			object[] result = jsonReader.Deserialize<object[]>();
 			
 			Assert.AreEqual(1, result.Length, "Wrong number of groups");
-			Assert.IsInstanceOfType(typeof(Dictionary<string, object>), result[0], "Wrong type decoded");
+			Assert.IsInstanceOf<Dictionary<string, object>>(result[0], "Wrong type decoded");
 			Dictionary<string, object> group = (Dictionary<string, object>)result[0];
 			
 			Assert.AreEqual(groupname, group["Name"], "Wrong name returned");
@@ -213,7 +213,7 @@ namespace ObjectCloud.WebServer.Test
 			object[] result = jsonReader.Deserialize<object[]>();
 			
 			Assert.AreEqual(1, result.Length, "Wrong number of groups");
-			Assert.IsInstanceOfType(typeof(Dictionary<string, object>), result[0], "Wrong type decoded");
+			Assert.IsInstanceOf<Dictionary<string, object>>(result[0], "Wrong type decoded");
 			Dictionary<string, object> group = (Dictionary<string, object>)result[0];
 			
 			Assert.AreEqual(groupname, group["Name"], "Wrong name returned");
