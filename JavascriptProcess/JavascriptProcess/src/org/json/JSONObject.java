@@ -536,7 +536,7 @@ public class JSONObject {
         String[] names = new String[length];
         int j = 0;
         while (i.hasNext()) {
-            names[j] = (String)i.next();
+            names[j] = i.next();
             j += 1;
         }
         return names;

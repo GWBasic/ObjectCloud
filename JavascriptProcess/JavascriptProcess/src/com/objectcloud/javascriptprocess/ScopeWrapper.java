@@ -100,12 +100,18 @@ public class ScopeWrapper {
 			// If there's a thread waiting on the ThreadID, stuff the inCommand into a map, unblock the other thread, and return
 			// The blocked thread will take over handling the command
 			
-			if (monitorObjectsByThreadID.containsKey(threadID)) {
+			Object monitorObject = null;
+			synchronized (monitorObjectsByThreadID) {
+				if (monitorObjectsByThreadID.containsKey(threadID))
+					monitorObject = monitorObjectsByThreadID.get(threadID);
+			}
 				
-				inCommandByThreadID.put(threadID, inCommand);
+			if (null != monitorObject) {
 				
-				Object monitorObject = monitorObjectsByThreadID.get(threadID);
-
+				synchronized (inCommandByThreadID) {
+					inCommandByThreadID.put(threadID, inCommand);
+				}
+				
 				synchronized (monitorObject) {
 					monitorObject.notifyAll();
 				}
@@ -343,13 +349,18 @@ public class ScopeWrapper {
 				
 				try {
 					
-					synchronized(monitorObject) {
+					synchronized(monitorObjectsByThreadID) {
 						monitorObjectsByThreadID.put(threadID, monitorObject);
+					}
+					
+					synchronized(monitorObject) {
 						monitorObject.wait();
 					}
 					
 				} finally {
-					monitorObjectsByThreadID.remove(threadID);
+					synchronized(monitorObjectsByThreadID) {
+						monitorObjectsByThreadID.remove(threadID);
+					}
 				}
 				
 				// pull inCommand out of a map and then re-call handle, unless a response is returned
