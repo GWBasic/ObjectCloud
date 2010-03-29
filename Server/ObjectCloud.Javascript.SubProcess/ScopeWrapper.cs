@@ -93,56 +93,41 @@ namespace ObjectCloud.Javascript.SubProcess
 
             scriptBuilder.Append(javascript);
 
-            Dictionary<string, object> data;
+            scriptBuilder.Append("\nif (options) options; else null;");
 
-            FunctionCaller.UseTemporaryCaller(this, FileContainer, webConnection, delegate()
-            {
-                data = SubProcess.EvalScope(
-                    ScopeId,
-                    scriptBuilder.ToString(),
-                    FunctionsInScope.Keys,
-                    true,
-                    Thread.CurrentThread.ManagedThreadId);
-            });
-
-            /*// Load the actual script
-            FunctionCaller.UseTemporaryCaller(this, theObject, Scope, context, webConnection, delegate()
-            {
-                context.evaluateString(Scope, javascript, "<cmd>", 1, null);
-            });*/
+            SubProcess.EvalScopeResults data = FunctionCaller.UseTemporaryCaller<SubProcess.EvalScopeResults>(
+                this, FileContainer, webConnection, delegate()
+                {
+                    return SubProcess.EvalScope(
+                        ScopeId,
+                        scriptBuilder.ToString(),
+                        FunctionsInScope.Keys,
+                        true,
+                        Thread.CurrentThread.ManagedThreadId);
+                });
 
             // Initialize each function caller
+            foreach (KeyValuePair<string, Dictionary<string, object>> functionKVP in data.Functions)
+            {
+                string functionName = functionKVP.Key;
+                Dictionary<string, object> functionData = functionKVP.Value;
 
-            /*object[] ids = Scope.getIds();
-
-            foreach (object id in ids)
-                if (id is string)
+                // ... and it's marked as webCallable, create a FunctionCaller
+                object webCallable;
+                if (functionData.ContainsKey("webCallable"))
                 {
-                    string method = (string)id;
+                    FunctionCaller functionCaller = new FunctionCaller(this, FileContainer, functionName, functionData);
 
-                    object javascriptMethodObject = Scope.get(method, Scope);
+                    // ... and if the function caller supports the calling convention, then cache it!
 
-                    // If the value is a Javascript function...
-                    if (javascriptMethodObject is Function)
-                    {
-                        Function javascriptMethod = (Function)javascriptMethodObject;
-
-                        // ... and it's marked as webCallable, create a FunctionCaller
-                        if (javascriptMethod.has("webCallable", Scope))
-                        {
-                            FunctionCaller functionCaller = new FunctionCaller(this, TheObject, method, javascriptMethod, Scope);
-
-                            // ... and if the function caller supports the calling convention, then cache it!
-
-                            if (null != functionCaller.WebDelegate)
-                                FunctionCallers[method] = functionCaller;
-                        }
-                    }
+                    if (null != functionCaller.WebDelegate)
+                        FunctionCallers[functionName] = functionCaller;
                 }
+            }
 
             // Get options
-            if (Scope.has("options", Scope))
-                GetOptions();*/
+            if (data.Result is Dictionary<string, object>)
+                GetOptions((Dictionary<string, object>)data.Result);
         }
 
         /// <summary>
@@ -228,20 +213,11 @@ namespace ObjectCloud.Javascript.SubProcess
         }
         private readonly FileHandlerFactoryLocator _FileHandlerFactoryLocator;
 
-        /*/// <summary>
-        /// The wrapped scope
-        /// </summary>
-        public ScriptableObject Scope
-        {
-            get { return _Scope; }
-        }
-        private readonly ScriptableObject _Scope;
-
         /// <summary>
         /// The Function callers, indexed by function name
         /// </summary>
         private readonly Dictionary<string, FunctionCaller> FunctionCallers = new Dictionary<string,FunctionCaller>();
-		*/
+
         /// <summary>
         /// The wrapped object
         /// </summary>
@@ -276,11 +252,10 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <returns></returns>
         public WebDelegate GetMethod(string method)
         {
-			throw new NotImplementedException();
-            /*if (FunctionCallers.ContainsKey(method))
+            if (FunctionCallers.ContainsKey(method))
                 return FunctionCallers[method].WebDelegate;
             else
-                return null;*/
+                return null;
         }
 
         /// <summary>
@@ -345,12 +320,8 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <summary>
         /// Loads options from the javascript
         /// </summary>
-        private void GetOptions()
+        private void GetOptions(Dictionary<string, object> options)
         {
-            /*object optionsObj = Scope.get("options", Scope);
-            string optionsJson = ConvertObjectFromJavascriptToString(optionsObj);
-            IDictionary<string, object> options = JsonReader.Deserialize<Dictionary<string, object>>(optionsJson);
-
             object blockWebMethods = null;
             if (options.TryGetValue("BlockWebMethods", out blockWebMethods))
                 try
@@ -360,7 +331,7 @@ namespace ObjectCloud.Javascript.SubProcess
                 catch (Exception e)
                 {
                     log.Error("Error when parsing options.BlockWebMethods", e);
-                }*/
+                }
         }
 
         /// <summary>

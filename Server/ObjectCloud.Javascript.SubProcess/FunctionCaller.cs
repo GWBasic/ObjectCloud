@@ -28,32 +28,23 @@ namespace ObjectCloud.Javascript.SubProcess
         /// Note:  The scope must be within a context!
         /// </summary>
         /// <param name="fileContainer"></param>
-        /// <param name="method"></param>
+        /// <param name="functionName"></param>
         /// <param name="javascriptMethod"></param>
         /// <param name="scope"></param>
-        public FunctionCaller(ScopeWrapper scopeWrapper, IFileContainer fileContainer, string method)
+        public FunctionCaller(ScopeWrapper scopeWrapper, IFileContainer fileContainer, string functionName, Dictionary<string, object> functionData)
         {
-            throw new NotImplementedException();
-            /*
             _ScopeWrapper = scopeWrapper;
             _FileContainer = fileContainer;
-            _Method = method;
+            _FunctionName = functionName;
 
-            object webCallingConventionObject = javascriptMethod.get("webCallable", scope);
-
-            _WebCallingConvention = Enum<WebCallingConvention>.TryParse(webCallingConventionObject.ToString());
+            _WebCallingConvention = Enum<WebCallingConvention>.TryParse(functionData["webCallable"].ToString());
 
             // Now get the minimum permissions
 
             FilePermissionEnum? minimumWebPermissionNullable = null;
-
-            if (javascriptMethod.has("minimumWebPermission", scope))
-            {
-                object minimumWebPermissionObject = javascriptMethod.get("minimumWebPermission", scope);
-
-                if (null != minimumWebPermissionObject)
-                    minimumWebPermissionNullable = Enum<FilePermissionEnum>.TryParse(minimumWebPermissionObject.ToString());
-            }
+            object minimumWebPermissionObject;
+            if (functionData.TryGetValue("minimumWebPermission", out minimumWebPermissionObject))
+                minimumWebPermissionNullable = Enum<FilePermissionEnum>.TryParse(minimumWebPermissionObject.ToString());
 
             if (null != minimumWebPermissionNullable)
                 _MinimumWebPermission = minimumWebPermissionNullable.Value;
@@ -61,37 +52,31 @@ namespace ObjectCloud.Javascript.SubProcess
                 _MinimumWebPermission = FilePermissionEnum.Administer;
 
             FilePermissionEnum? minimumLocalPermissionNullable = null;
-
-            if (javascriptMethod.has("minimumLocalPermission", scope))
-            {
-                object minimumLocalPermissionObject = javascriptMethod.get("minimumLocalPermission", scope);
-
-                if (null != minimumLocalPermissionObject)
-                    minimumLocalPermissionNullable = Enum<FilePermissionEnum>.TryParse(minimumLocalPermissionObject.ToString());
-            }
+            object minimumLocalPermissionObject;
+            if (functionData.TryGetValue("minimumLocalPermission", out minimumLocalPermissionObject))
+                minimumLocalPermissionNullable = Enum<FilePermissionEnum>.TryParse(minimumLocalPermissionObject.ToString());
 
             if (null != minimumLocalPermissionNullable)
                 _MinimumLocalPermission = _MinimumWebPermission;
             else
                 _MinimumLocalPermission = FilePermissionEnum.Administer;
 
-            if (javascriptMethod.has("namedPermissions", scope))
-            {
-                object namedPermissionsObject = javascriptMethod.get("namedPermissions", scope);
-
+            object namedPermissionsObject;
+            if (functionData.TryGetValue("namedPermissions", out namedPermissionsObject))
                 if (null != namedPermissionsObject)
                     _NamedPermissions = StringParser.ParseCommaSeperated(namedPermissionsObject.ToString());
-            }
+                else
+                    _NamedPermissions = new string[0];
             else
                 _NamedPermissions = new string[0];
 
-            Context context = Context.enter();
+            /*Context context = Context.enter();
 
             string uncompiledMethod;
 
             try
             {
-                uncompiledMethod = context.evaluateString(scope, method + ".toSource();", "<cmd>", 1, null).ToString();
+                uncompiledMethod = context.evaluateString(scope, functionName + ".toSource();", "<cmd>", 1, null).ToString();
             }
             finally
             {
@@ -146,21 +131,19 @@ namespace ObjectCloud.Javascript.SubProcess
             catch (Exception e)
             {
                 throw new JavascriptException("Could not parse the arguments from the function", e);
-            }
+            }*/
 
             // Find out if there is a declared WebReturnConvetion
             WebReturnConvention? webReturnConvention = null;
-            if (JavascriptMethod.has("webReturnConvention", Scope))
-            {
-                string webReturnConventionString = this.JavascriptMethod.get("webReturnConvention", Scope).ToString();
-                webReturnConvention = Enum<WebReturnConvention>.TryParse(webReturnConventionString);
-            }
+            object webReturnConventionObject;
+            if (functionData.TryGetValue("webReturnConvention", out webReturnConventionObject))
+                webReturnConvention = Enum<WebReturnConvention>.TryParse(webReturnConventionObject.ToString());
 
             // If there is a declared return convention, use the explicit parser
             if (null != webReturnConvention)
                 _WebReturnConvention = webReturnConvention.Value;
             else
-                _WebReturnConvention = WebReturnConvention.Primitive;*/
+                _WebReturnConvention = WebReturnConvention.Primitive;
         }
 
         /// <summary>
@@ -284,11 +267,11 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <summary>
         /// The method name
         /// </summary>
-        public string Method
+        public string FunctionName
         {
-            get { return _Method; }
+            get { return _FunctionName; }
         }
-        private readonly string _Method;
+        private readonly string _FunctionName;
 
         /// <summary>
         /// Delegate for when an argument needs no parsing
@@ -675,11 +658,11 @@ namespace ObjectCloud.Javascript.SubProcess
                         WrapperCache = new string[]
                         {
                             JavascriptWrapperGenerator.GenerateGET(
-    			                Method,
+    			                FunctionName,
 	    		                WebReturnConvention),
 
                             JavascriptWrapperGenerator.GenerateGET_Sync(
-    			                Method,
+    			                FunctionName,
 	    		                WebReturnConvention),
                         };
                         break;
@@ -688,11 +671,11 @@ namespace ObjectCloud.Javascript.SubProcess
                         WrapperCache = new string[]
                         {
                             JavascriptWrapperGenerator.GenerateGET_urlencoded(
-			                    Method,
+			                    FunctionName,
 			                    WebReturnConvention),
 
                             JavascriptWrapperGenerator.GenerateGET_urlencoded_Sync(
-			                    Method,
+			                    FunctionName,
 			                    WebReturnConvention)
                         };
                         break;
@@ -701,11 +684,11 @@ namespace ObjectCloud.Javascript.SubProcess
                         WrapperCache = new string[]
                         {
                             JavascriptWrapperGenerator.GeneratePOST_urlencoded(
-			                    Method,
+			                    FunctionName,
 			                    WebReturnConvention),
 
                             JavascriptWrapperGenerator.GeneratePOST_urlencoded_Sync(
-			                    Method,
+			                    FunctionName,
 			                    WebReturnConvention)
                         };
                         break;
@@ -714,11 +697,11 @@ namespace ObjectCloud.Javascript.SubProcess
                         WrapperCache = new string[]
                         {
                             JavascriptWrapperGenerator.GeneratePOST(
-			                    Method,
+			                    FunctionName,
 			                    WebReturnConvention),
 
                             JavascriptWrapperGenerator.GeneratePOST_Sync(
-			                    Method,
+			                    FunctionName,
 			                    WebReturnConvention)
                         };
                         break;
@@ -752,7 +735,11 @@ namespace ObjectCloud.Javascript.SubProcess
         /// Creates a temporary FunctionCaller and then calls del.  Allows Javascript to run outside of the context of a function call
         /// </summary>
         /// <param name="del"></param>
-        internal static void UseTemporaryCaller(ScopeWrapper scopeWrapper, IFileContainer fileContainer, IWebConnection webConnection, GenericVoid del)
+        internal static R UseTemporaryCaller<R>(
+            ScopeWrapper scopeWrapper,
+            IFileContainer fileContainer,
+            IWebConnection webConnection,
+            GenericReturn<R> del)
         {
             // This value is ThreadStatic so that if the function shells, it can still know about the connection
             FunctionCaller oldMe = _Me;
@@ -764,7 +751,7 @@ namespace ObjectCloud.Javascript.SubProcess
 
                 try
                 {
-                    del();
+                    return del();
                 }
                 finally
                 {

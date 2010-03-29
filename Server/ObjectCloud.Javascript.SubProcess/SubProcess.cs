@@ -130,7 +130,23 @@ namespace ObjectCloud.Javascript.SubProcess
         /// Place to stuff the SubProcess's response
         /// </summary>
         Dictionary<object, Dictionary<string, object>> InCommandsByThreadId = new Dictionary<object, Dictionary<string, object>>();
-		
+
+        /// <summary>
+        /// The results of calling EvalScope
+        /// </summary>
+        public struct EvalScopeResults
+        {
+            /// <summary>
+            /// The call's result
+            /// </summary>
+            public object Result;
+
+            /// <summary>
+            /// The functions that are present in the scope
+            /// </summary>
+            public Dictionary<string, Dictionary<string, object>> Functions;
+        }
+
 		/// <summary>
 		/// 
 		/// </summary>
@@ -149,7 +165,7 @@ namespace ObjectCloud.Javascript.SubProcess
 		/// <param name="threadID">
 		/// This must be unique for each stack trace.  If calls cross scopes, new threadIDs must be used <see cref="System.Object"/>
 		/// </param>
-        public Dictionary<string, object> EvalScope(int scopeId, string script, IEnumerable<string> functions, bool returnFunctions, object threadID)
+        public EvalScopeResults EvalScope(int scopeId, string script, IEnumerable<string> functions, bool returnFunctions, object threadID)
 		{
             if (Disposed)
                 throw new ObjectDisposedException("This Javascript sub process is disposed and can no longer be used");
@@ -193,7 +209,27 @@ namespace ObjectCloud.Javascript.SubProcess
             using (TimedLock.Lock(InCommandsByThreadId))
                 inCommand = InCommandsByThreadId[Thread.CurrentThread.ManagedThreadId];
 
-            return (Dictionary<string, object>)inCommand["Data"];
+            Dictionary<string, object> dataToReturn = (Dictionary<string, object>)inCommand["Data"];
+
+            object exceptionFromJavascript;
+            if (dataToReturn.TryGetValue("Exception", out exceptionFromJavascript))
+                throw new JavascriptException(JsonWriter.Serialize(exceptionFromJavascript));
+
+            EvalScopeResults toReturn = new EvalScopeResults();
+            toReturn.Result = dataToReturn["Result"];
+
+            object functionsObj;
+            if (dataToReturn.TryGetValue("Functions", out functionsObj))
+            {
+                Dictionary<string, Dictionary<string, object>> functionsToReturn = new Dictionary<string, Dictionary<string, object>>();
+
+                foreach (KeyValuePair<string, object> functionKVP in (IEnumerable<KeyValuePair<string, object>>)functionsObj)
+                    functionsToReturn[functionKVP.Key] = (Dictionary<string, object>)functionKVP.Value;
+
+                toReturn.Functions = functionsToReturn;
+            }
+
+            return toReturn;
 		}
 
         private bool Disposed = false;
