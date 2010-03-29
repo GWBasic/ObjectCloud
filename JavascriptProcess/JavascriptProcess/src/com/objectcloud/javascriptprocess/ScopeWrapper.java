@@ -14,6 +14,7 @@ import org.json.JSONObject;
 import org.json.JSONString;
 import org.mozilla.javascript.ClassShutter;
 import org.mozilla.javascript.Context;
+import org.mozilla.javascript.EcmaError;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.FunctionObject;
 import org.mozilla.javascript.Scriptable;
@@ -242,7 +243,7 @@ public class ScopeWrapper {
                 }
 			}
 		
-		returnResult("RespondEvalScope", context, threadID, callResults, outData);
+		returnResult("RespondEvalScope", context, threadID, callResults, outData, "Result");
 	}
 	
 	private void callFunctionInScope(Context context, Object threadID, JSONObject data) throws Exception {
@@ -254,8 +255,7 @@ public class ScopeWrapper {
 		for (Object o : data.getJSONArray("Arguments"))
 			arguments.add(o);
 		
-		final Object callResults = function.call(context, scope, scope, arguments.toArray());
-		returnResult("RespondCallFunctionInScope", context, threadID, callResults);
+		callFunction("RespondCallFunctionInScope", context, threadID, function, arguments);
 	}
 	
 	private void callCallback(Context context, Object threadID, JSONObject data) throws Exception {
@@ -267,18 +267,30 @@ public class ScopeWrapper {
 		for (Object o : data.getJSONArray("Arguments"))
 			arguments.add(o);
 		
-		final Object callResults = function.call(context, scope, scope, arguments.toArray());
-		returnResult("RespondCallCallback", context, threadID, callResults);
+		callFunction("RespondCallCallback", context, threadID, function, arguments);
+	}
+
+	private void callFunction(String command, Context context, Object threadID,
+			Function function, ArrayList<Object> arguments)
+				throws JSONException, IOException {
+	
+		try {
+			Object callResults = function.call(context, scope, scope, arguments.toArray());
+			returnResult(command, context, threadID, callResults, "Result");
+		}
+		catch (EcmaError ee) {
+			returnResult(command, context, threadID, ee.getMessage(), "Exception");
+        }
 	}
 	
-	private void returnResult(String command, Context context, Object threadID, Object callResults) throws JSONException, IOException {
-		returnResult(command, context, threadID, callResults, new JSONObject());
+	private void returnResult(String command, Context context, Object threadID, Object callResults, String resultsName) throws JSONException, IOException {
+		returnResult(command, context, threadID, callResults, new JSONObject(), resultsName);
 	}
 	
-	private void returnResult(String command, final Context context, Object threadID, final Object callResults, JSONObject outData) throws JSONException, IOException {
+	private void returnResult(String command, final Context context, Object threadID, final Object callResults, JSONObject outData, String resultsName) throws JSONException, IOException {
 		
 		if (!Undefined.class.isInstance(callResults))
-			outData.put("Result", new JSONString() {
+			outData.put(resultsName, new JSONString() {
 	
 				@Override
 				public String toJSONString() {
@@ -336,7 +348,11 @@ public class ScopeWrapper {
 				Object argument = arguments.get(argumentIndex, scope);
 				
 				if (Function.class.isInstance(argument)) {
-					Object callbackID = random.nextInt();
+					
+					Object callbackID;
+					do {
+						callbackID = random.nextInt();
+					} while (callbacks.containsKey(callbackID));
 					
 					callbacks.put(callbackID, (Function)argument);
 					callbackIDs.add(callbackID);
@@ -389,14 +405,19 @@ public class ScopeWrapper {
 				// If the command is a response to the function call, return the data, else, handle the command
 				if (inCommand.getString("Command").equals("RespondCallParentFunction")) {
 					
-					Object toReturn = inCommand.getJSONObject("Data").get("Result");
-	
-					// If the object is a JSONArray or JSONObject, then it can't be directly consumed in Rhino and must be
-					// re-de-serialized in Rhino
-					if (JSONArray.class.isInstance(toReturn) || JSONObject.class.isInstance(toReturn))				
-						return context.evaluateString(scope, "(" + toReturn.toString() + ")", "<cmd>", 1, null);
+					JSONObject dataFromParent = inCommand.getJSONObject("Data");
 					
-					return toReturn;
+					if (dataFromParent.has("Result")) {
+						Object toReturn = dataFromParent.get("Result");
+		
+						// If the object is a JSONArray or JSONObject, then it can't be directly consumed in Rhino and must be
+						// re-de-serialized in Rhino
+						if (JSONArray.class.isInstance(toReturn) || JSONObject.class.isInstance(toReturn))				
+							return context.evaluateString(scope, "(" + toReturn.toString() + ")", "<cmd>", 1, null);
+						
+						return toReturn;
+					} else
+						return Undefined.instance;
 				}
 				
 				handle(inCommand);

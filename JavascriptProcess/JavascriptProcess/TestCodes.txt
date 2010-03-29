@@ -5,7 +5,7 @@
    "Data":
    {
       "ReturnFunctions":true,
-      "Script": "foo.a = 123; function foo(a){return a + \"!!!\";} function bar() {} //aaa(1,2,'3', function(){});",
+      "Script": "foo.a = 123; function foo(a){return a + \"!!!\";} function bar() {} aaa(1,2,'3', function(){});",
       "Functions":["aaa","bbb","ccc"]
    }
 }
@@ -16,7 +16,7 @@
    "ThreadID":456,
    "Data":
    {
-      "CallbackId": 187993981,
+      "CallbackId": -1874701255,
       "Arguments":[]
    }
 }
