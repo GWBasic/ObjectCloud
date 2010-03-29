@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -101,7 +102,8 @@ namespace ObjectCloud.Javascript.SubProcess
                 object monitorObject;
 
                 if (MonitorObjectsByThreadId.TryGetValue(threadID, out monitorObject))
-                    Monitor.Pulse(monitorObject);
+                    using (TimedLock.Lock(monitorObject))
+                        Monitor.Pulse(monitorObject);
                 else
                     ThreadPool.QueueUserWorkItem(
                         delegate(object state)
@@ -144,7 +146,23 @@ namespace ObjectCloud.Javascript.SubProcess
             /// <summary>
             /// The functions that are present in the scope
             /// </summary>
-            public Dictionary<string, Dictionary<string, object>> Functions;
+            public Dictionary<string, EvalScopeFunctionInfo> Functions;
+        }
+
+        /// <summary>
+        /// Information about a function
+        /// </summary>
+        public struct EvalScopeFunctionInfo
+        {
+            /// <summary>
+            /// The function's properties
+            /// </summary>
+            public Dictionary<string, object> Properties;
+
+            /// <summary>
+            /// The function's arguments
+            /// </summary>
+            public IEnumerable<string> Arguments;
         }
 
 		/// <summary>
@@ -165,18 +183,16 @@ namespace ObjectCloud.Javascript.SubProcess
 		/// <param name="threadID">
 		/// This must be unique for each stack trace.  If calls cross scopes, new threadIDs must be used <see cref="System.Object"/>
 		/// </param>
-        public EvalScopeResults EvalScope(int scopeId, string script, IEnumerable<string> functions, bool returnFunctions, object threadID)
+        public EvalScopeResults EvalScope(int scopeId, object threadID, string script, IEnumerable<string> functions, bool returnFunctions)
 		{
             if (Disposed)
                 throw new ObjectDisposedException("This Javascript sub process is disposed and can no longer be used");
 
-			Dictionary<string, object> args = new Dictionary<string, object>();
-			args["ScopeID"] = scopeId;
-			args["ThreadID"] = threadID;
-			args["Command"] = "EvalScope";
-			
-			Dictionary<string, object> data = new Dictionary<string, object>();
-			data["Script"] = script;
+            Dictionary<string, object> command;
+            Dictionary<string, object> data;
+            CreateCommand(scopeId, threadID,  "EvalScope", out command, out data);
+            
+            data["Script"] = script;
 			
 			if (null != functions)
 				data["Functions"] = functions;
@@ -184,13 +200,87 @@ namespace ObjectCloud.Javascript.SubProcess
 			if (returnFunctions)
 				data["ReturnFunctions"] = returnFunctions;
 			
-			args["Data"] = data;
-
-            object monitorObject = new object();
-			
 			using (TimedLock.Lock(SendKey))
-				JSONSender.Write(args);
+				JSONSender.Write(command);
 
+            Dictionary<string, object> dataToReturn = WaitForResponse();
+
+            EvalScopeResults toReturn = new EvalScopeResults();
+            toReturn.Result = dataToReturn["Result"];
+
+            object functionsObj;
+            if (dataToReturn.TryGetValue("Functions", out functionsObj))
+            {
+                Dictionary<string, EvalScopeFunctionInfo> functionsToReturn = new Dictionary<string, EvalScopeFunctionInfo>();
+
+                foreach (KeyValuePair<string, object> functionKVP in (IEnumerable<KeyValuePair<string, object>>)functionsObj)
+                {
+                    EvalScopeFunctionInfo functionInfo = new EvalScopeFunctionInfo();
+                    Dictionary<string, object> value = (Dictionary<string, object>)functionKVP.Value;
+
+                    functionInfo.Properties = (Dictionary<string, object>)value["Properties"];
+
+                    object arguments;
+                    if (value.TryGetValue("Arguments", out arguments))
+                        functionInfo.Arguments = Enumerable<string>.Cast((IEnumerable)arguments);
+
+                    functionsToReturn[functionKVP.Key] = functionInfo;
+                }
+
+                toReturn.Functions = functionsToReturn;
+            }
+
+            return toReturn;
+		}
+
+        /// <summary>
+        /// Calls a function in the sub-process
+        /// </summary>
+        /// <param name="scopeID"></param>
+        /// <param name="arguments"></param>
+        /// <returns></returns>
+        public object CallFunctionInScope(int scopeId, object threadID, string functionName, IEnumerable arguments)
+        {
+            Dictionary<string, object> command;
+            Dictionary<string, object> data;
+            CreateCommand(scopeId, threadID, "CallFunctionInScope", out command, out data);
+
+            data["FunctionName"] = functionName;
+            data["Arguments"] = arguments;
+
+            using (TimedLock.Lock(SendKey))
+                JSONSender.Write(command);
+
+            Dictionary<string, object> dataToReturn = WaitForResponse();
+            return dataToReturn["Result"];
+        }
+
+        /// <summary>
+        /// Helper to create a command
+        /// </summary>
+        /// <param name="scopeId"></param>
+        /// <param name="threadID"></param>
+        /// <param name="command"></param>
+        /// <param name="data"></param>
+        private static void CreateCommand(
+            int scopeId, object threadID, string commandName, out Dictionary<string, object> command, out Dictionary<string, object> data)
+        {
+            command = new Dictionary<string, object>();
+            command["ScopeID"] = scopeId;
+            command["ThreadID"] = threadID;
+            command["Command"] = commandName;
+
+            data = new Dictionary<string, object>();
+            command["Data"] = data;
+        }
+
+        /// <summary>
+        /// Helper to block a thread until the response comes back
+        /// </summary>
+        /// <returns></returns>
+        private Dictionary<string, object> WaitForResponse()
+        {
+            object monitorObject = new object();
             using (TimedLock.Lock(MonitorObjectsByThreadId))
                 MonitorObjectsByThreadId[Thread.CurrentThread.ManagedThreadId] = monitorObject;
 
@@ -215,26 +305,12 @@ namespace ObjectCloud.Javascript.SubProcess
             if (dataToReturn.TryGetValue("Exception", out exceptionFromJavascript))
                 throw new JavascriptException(JsonWriter.Serialize(exceptionFromJavascript));
 
-            EvalScopeResults toReturn = new EvalScopeResults();
-            toReturn.Result = dataToReturn["Result"];
-
-            object functionsObj;
-            if (dataToReturn.TryGetValue("Functions", out functionsObj))
-            {
-                Dictionary<string, Dictionary<string, object>> functionsToReturn = new Dictionary<string, Dictionary<string, object>>();
-
-                foreach (KeyValuePair<string, object> functionKVP in (IEnumerable<KeyValuePair<string, object>>)functionsObj)
-                    functionsToReturn[functionKVP.Key] = (Dictionary<string, object>)functionKVP.Value;
-
-                toReturn.Functions = functionsToReturn;
-            }
-
-            return toReturn;
-		}
+            return dataToReturn;
+        }
 
         private bool Disposed = false;
 		
-		public void Dispose ()
+		public void Dispose()
 		{
             foreach (object monitorObject in MonitorObjectsByThreadId.Values)
                 lock (monitorObject)

@@ -28,19 +28,27 @@ namespace ObjectCloud.Javascript.SubProcess
     {
         private static ILog log = LogManager.GetLogger<ScopeWrapper>();
 		
-		private static Wrapped<int> IdCtr = 0;
+		private static Wrapped<int> IdCtr = int.MinValue;
 
-		private int ScopeId;
+        public int ScopeId
+        {
+            get { return _ScopeId; }
+        }
+        private readonly int _ScopeId;
 
-        SubProcess SubProcess = new SubProcess();
+        internal SubProcess SubProcess = new SubProcess();
         Dictionary<string, MethodInfo> FunctionsInScope = new Dictionary<string, MethodInfo>();
 
         public ScopeWrapper(FileHandlerFactoryLocator fileHandlerFactoryLocator, IWebConnection webConnection, string javascript, IFileContainer fileContainer)
         {
             using (TimedLock.Lock(IdCtr))
             {
-                ScopeId = IdCtr.Value;
-                IdCtr.Value++;
+                _ScopeId = IdCtr.Value;
+
+                if (int.MaxValue == IdCtr.Value)
+                    IdCtr.Value = int.MinValue;
+                else
+                    IdCtr.Value++;
             }
 
             _FileHandlerFactoryLocator = fileHandlerFactoryLocator;
@@ -100,23 +108,23 @@ namespace ObjectCloud.Javascript.SubProcess
                 {
                     return SubProcess.EvalScope(
                         ScopeId,
+                        Thread.CurrentThread.ManagedThreadId,
                         scriptBuilder.ToString(),
                         FunctionsInScope.Keys,
-                        true,
-                        Thread.CurrentThread.ManagedThreadId);
+                        true);
                 });
 
             // Initialize each function caller
-            foreach (KeyValuePair<string, Dictionary<string, object>> functionKVP in data.Functions)
+            foreach (KeyValuePair<string, SubProcess.EvalScopeFunctionInfo> functionKVP in data.Functions)
             {
                 string functionName = functionKVP.Key;
-                Dictionary<string, object> functionData = functionKVP.Value;
+                SubProcess.EvalScopeFunctionInfo functionInfo = functionKVP.Value;
+                Dictionary<string, object> properties = functionInfo.Properties;
 
                 // ... and it's marked as webCallable, create a FunctionCaller
-                object webCallable;
-                if (functionData.ContainsKey("webCallable"))
+                if (functionInfo.Properties.ContainsKey("webCallable"))
                 {
-                    FunctionCaller functionCaller = new FunctionCaller(this, FileContainer, functionName, functionData);
+                    FunctionCaller functionCaller = new FunctionCaller(this, FileContainer, functionName, functionInfo);
 
                     // ... and if the function caller supports the calling convention, then cache it!
 

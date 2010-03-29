@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 
 using Common.Logging;
 
@@ -31,19 +32,25 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <param name="functionName"></param>
         /// <param name="javascriptMethod"></param>
         /// <param name="scope"></param>
-        public FunctionCaller(ScopeWrapper scopeWrapper, IFileContainer fileContainer, string functionName, Dictionary<string, object> functionData)
+        public FunctionCaller(
+            ScopeWrapper scopeWrapper,
+            IFileContainer fileContainer,
+            string functionName,
+            SubProcess.EvalScopeFunctionInfo functionInfo)
         {
+            Dictionary<string, object> properties = functionInfo.Properties;
+
             _ScopeWrapper = scopeWrapper;
             _FileContainer = fileContainer;
             _FunctionName = functionName;
 
-            _WebCallingConvention = Enum<WebCallingConvention>.TryParse(functionData["webCallable"].ToString());
+            _WebCallingConvention = Enum<WebCallingConvention>.TryParse(properties["webCallable"].ToString());
 
             // Now get the minimum permissions
 
             FilePermissionEnum? minimumWebPermissionNullable = null;
             object minimumWebPermissionObject;
-            if (functionData.TryGetValue("minimumWebPermission", out minimumWebPermissionObject))
+            if (properties.TryGetValue("minimumWebPermission", out minimumWebPermissionObject))
                 minimumWebPermissionNullable = Enum<FilePermissionEnum>.TryParse(minimumWebPermissionObject.ToString());
 
             if (null != minimumWebPermissionNullable)
@@ -53,7 +60,7 @@ namespace ObjectCloud.Javascript.SubProcess
 
             FilePermissionEnum? minimumLocalPermissionNullable = null;
             object minimumLocalPermissionObject;
-            if (functionData.TryGetValue("minimumLocalPermission", out minimumLocalPermissionObject))
+            if (properties.TryGetValue("minimumLocalPermission", out minimumLocalPermissionObject))
                 minimumLocalPermissionNullable = Enum<FilePermissionEnum>.TryParse(minimumLocalPermissionObject.ToString());
 
             if (null != minimumLocalPermissionNullable)
@@ -62,7 +69,7 @@ namespace ObjectCloud.Javascript.SubProcess
                 _MinimumLocalPermission = FilePermissionEnum.Administer;
 
             object namedPermissionsObject;
-            if (functionData.TryGetValue("namedPermissions", out namedPermissionsObject))
+            if (properties.TryGetValue("namedPermissions", out namedPermissionsObject))
                 if (null != namedPermissionsObject)
                     _NamedPermissions = StringParser.ParseCommaSeperated(namedPermissionsObject.ToString());
                 else
@@ -70,73 +77,42 @@ namespace ObjectCloud.Javascript.SubProcess
             else
                 _NamedPermissions = new string[0];
 
-            /*Context context = Context.enter();
-
-            string uncompiledMethod;
-
-            try
+            uint numArgs = 0;
+            foreach (string argname in functionInfo.Arguments)
             {
-                uncompiledMethod = context.evaluateString(scope, functionName + ".toSource();", "<cmd>", 1, null).ToString();
-            }
-            finally
-            {
-                Context.exit();
-            }
+                ArgnameToIndex[argname] = numArgs;
+                numArgs++;
 
-            // Determine the ordinal order of each named argument, and any potential processing that needs to happen to each argument
-            try
-            {
-                string[] prefixAndArgs = uncompiledMethod.Split(new char[] { '(' }, 2);
-                string[] argsAndPostfix = prefixAndArgs[1].Split(')');
-
-                string unbrokenArgs = argsAndPostfix[0].Trim();
-
-                if (unbrokenArgs.Length > 0)
+                object parser;
+                if (properties.TryGetValue("parser_" + argname, out parser))
                 {
-                    string[] args = unbrokenArgs.Split(',');
-
-                    for (uint ctr = 0; ctr < args.Length; ctr++)
+                    switch (parser.ToString())
                     {
-                        string argname = args[ctr].Trim();
-                        ArgnameToIndex[argname] = ctr;
+                        case ("number"):
+                            ArgnameToConversionDelegate[argname] = ParseNumber;
+                            break;
 
-                        if (javascriptMethod.has("parser_" + argname, scope))
-                        {
-                            string parser = javascriptMethod.get("parser_" + argname, scope).ToString();
+                        case ("bool"):
+                            ArgnameToConversionDelegate[argname] = ParseBool;
+                            break;
 
-                            switch (parser)
-                            {
-                                case ("number"):
-                                    ArgnameToConversionDelegate[argname] = ParseNumber;
-                                    break;
+                        case ("JSON"):
+                            ArgnameToConversionDelegate[argname] = JsonFx.Json.JsonReader.Deserialize;// ParseJSON;
+                            break;
 
-                                case ("bool"):
-                                    ArgnameToConversionDelegate[argname] = ParseBool;
-                                    break;
-
-                                case ("JSON"):
-                                    ArgnameToConversionDelegate[argname] = JsonFx.Json.JsonReader.Deserialize;// ParseJSON;
-                                    break;
-
-                                default:
-                                    ArgnameToConversionDelegate[argname] = NoParsing;
-                                    break;
-                            }
-                        }
-                        else
+                        default:
                             ArgnameToConversionDelegate[argname] = NoParsing;
+                            break;
                     }
                 }
+                else
+                    ArgnameToConversionDelegate[argname] = NoParsing;
             }
-            catch (Exception e)
-            {
-                throw new JavascriptException("Could not parse the arguments from the function", e);
-            }*/
 
             // Find out if there is a declared WebReturnConvetion
             WebReturnConvention? webReturnConvention = null;
             object webReturnConventionObject;
-            if (functionData.TryGetValue("webReturnConvention", out webReturnConventionObject))
+            if (properties.TryGetValue("webReturnConvention", out webReturnConventionObject))
                 webReturnConvention = Enum<WebReturnConvention>.TryParse(webReturnConventionObject.ToString());
 
             // If there is a declared return convention, use the explicit parser
@@ -173,20 +149,6 @@ namespace ObjectCloud.Javascript.SubProcess
         }
         private readonly IFileContainer _FileContainer;
 
-        /*// <summary>
-        /// The method being called
-        /// </summary>
-        private readonly Function JavascriptMethod;
-
-        /// <summary>
-        /// The scope that it's in
-        /// </summary>
-        public Scriptable Scope
-        {
-            get { return _Scope; }
-        }
-        private readonly Scriptable _Scope;
-        */
         /// <summary>
         /// The WebReturnConvention.  Defauls to Primitive if the javascript function does not declare it
         /// </summary>
@@ -321,16 +283,6 @@ namespace ObjectCloud.Javascript.SubProcess
                 return argumentValue;
         }
 
-        /*// <summary>
-        /// Delegate for when an argument needs to be an object passed as a JSON-encoded string
-        /// </summary>
-        /// <param name="argumentValue"></param>
-        /// <returns></returns>
-        private object ParseJSON(string argumentValue)
-        {
-            return JsonFx.Json.JsonReader.Deserialize(argumentValue);
-        }*/
-
         /// <summary>
         /// Calls the function when there is only a single argument, such as with JSON or POST
         /// </summary>
@@ -352,48 +304,18 @@ namespace ObjectCloud.Javascript.SubProcess
         }
 
         /// <summary>
-        /// ThreadStatic pointer back to this object.  This is used because functions exposed to Javascript need to be static.
-        /// </summary>
-        [ThreadStatic]
-        private static FunctionCaller _Me;
-
-        /// <summary>
         /// The most recent FunctionCaller to enter the scope on a given thread
         /// </summary>
         internal static FunctionCaller Current
         {
-            get { return FunctionCaller._Me; }
+            get { return FunctionCaller._Current; }
         }
 
-        /*// <summary>
-        /// Provides access to the current context
-        /// </summary>
-        public static Stack<Context> ContextStack
-        {
-            get 
-            {
-                if (null == _ContextStack)
-                    _ContextStack = new Stack<Context>();
-
-                return FunctionCaller._ContextStack; 
-            }
-        }
-        [ThreadStatic]
-        private static Stack<Context> _ContextStack;
-
         /// <summary>
-        /// The most recently-entered Javascript context.  This is ThreadStatic
-        /// </summary>
-        public static Context Context
-        {
-            get { return ContextStack.Peek(); }
-        }*/
-
-        /// <summary>
-        /// The number of times that a context has been entered on this thread
+        /// ThreadStatic pointer back to this object.  This is used because functions exposed to Javascript need to be static.
         /// </summary>
         [ThreadStatic]
-        private static uint ThreadContextCount = 0;
+        private static FunctionCaller _Current;
 
         /// <summary>
         /// Calls the function.  All arguments must be passed as a dictionary of name/value pairs
@@ -403,8 +325,8 @@ namespace ObjectCloud.Javascript.SubProcess
         protected IWebResults CallFunction(IWebConnection webConnection, CallingFrom callingFrom, IDictionary<string, string> arguments)
         {
             // This value is ThreadStatic so that if the function shells, it can still know about the connection
-            FunctionCaller oldMe = _Me;
-            _Me = this;
+            FunctionCaller oldMe = _Current;
+            _Current = this;
             CallingFrom priorCallingFrom = CallingFrom;
             CallingFrom = CallingFrom.Web;
 
@@ -433,111 +355,82 @@ namespace ObjectCloud.Javascript.SubProcess
                     if (ArgnameToIndex.ContainsKey(argnameAndValue.Key))
                         parsedArguments[ArgnameToIndex[argnameAndValue.Key]] = ArgnameToConversionDelegate[argnameAndValue.Key](argnameAndValue.Value);
 
-                throw new NotImplementedException();
-                /*Context context = Context.enter();
+                DateTime start = DateTime.UtcNow;
 
-                ContextStack.Push(context);
+                object callResults = ScopeWrapper.SubProcess.CallFunctionInScope(
+                    ScopeWrapper.ScopeId,
+                    Thread.CurrentThread.ManagedThreadId,
+                    FunctionName,
+                    parsedArguments);
+                    
+                    
+                    // JavascriptMethod.call(context, Scope, Scope, parsedArguments);
 
-                object callResults;
-                try
+                TimeSpan callTime = DateTime.UtcNow - start;
+                string logMessage = FileContainer.FullPath + "?Method=" + FunctionName + " called in " + callTime.ToString();
+
+                if (callTime.TotalSeconds > 10)
+                    log.Warn(logMessage);
+                else if (callTime.TotalSeconds > 1)
+                    log.Info(logMessage);
+                else
+                    log.Trace(logMessage);
+
+                IWebResults toReturn;
+
+                // If the script is able to construct an IWebResults object, return it
+                if (callResults == null)
                 {
-                    // If Context.enter() was called prior on this thread, then there will be an exception
-                    if (0 == ThreadContextCount)
-                        context.setClassShutter(RestriciveClassShutter.Instance);
-
-                    ThreadContextCount++;
-
-                    DateTime start = DateTime.UtcNow;
-
-                    callResults = JavascriptMethod.call(context, Scope, Scope, parsedArguments);
-
-                    TimeSpan callTime = DateTime.UtcNow - start;
-                    string logMessage = ScopeWrapper.TheObject.FullPath + "?Method=" + Method + " called in " + callTime.ToString();
-
-                    if (callTime.TotalSeconds > 10)
-                        log.Warn(logMessage);
-                    else if (callTime.TotalSeconds > 1)
-                        log.Info(logMessage);
+                    if (WebReturnConvention == WebReturnConvention.JavaScriptObject || WebReturnConvention == WebReturnConvention.JSON)
+                        return WebResults.ToJson(null);
                     else
-                        log.Trace(logMessage);
+                        return WebResults.FromStatus(Status._200_OK);
+                }
 
-                    IWebResults toReturn;
+                else if (callResults is IWebResults)
+                    return (IWebResults)callResults;
 
-                    // If the script is able to construct an IWebResults object, return it
-                    if (callResults == null || callResults is Undefined)
-                    {
-                        if (WebReturnConvention == WebReturnConvention.JavaScriptObject || WebReturnConvention == WebReturnConvention.JSON)
-                            return WebResults.ToJson(null);
-                        else
-                            return WebResults.FromStatus(Status._200_OK);
-                    }
+                else if (callResults is double)
+                {
+                    double callResultAsDouble = ((double)callResults);
 
-                    else if (callResults is IWebResults)
-                        return (IWebResults)callResults;
-
-                    else if (callResults is java.lang.Double)
-                    {
-                        double callResultAsDouble = ((java.lang.Double)callResults).doubleValue();
-
-                        toReturn = WebResults.FromString(Status._200_OK, callResultAsDouble.ToString("R"));
-                        toReturn.ContentType = "text/plain";
-                        return toReturn;
-                    }
-
-                    else if (callResults is java.lang.Boolean)
-                    {
-                        bool callResultAsBool = ((java.lang.Boolean)callResults).booleanValue();
-
-                        toReturn = WebResults.FromString(Status._200_OK, callResultAsBool ? "true" : " false");
-                        toReturn.ContentType = "text/plain";
-                        return toReturn;
-                    }
-
-                    else if (callResults is string)
-                    {
-                        toReturn = WebResults.FromString(Status._200_OK, callResults.ToString());
-                        toReturn.ContentType = "text/plain";
-                        return toReturn;
-                    }
-
-                    // The function result isn't a known Javscript primitive.  Stringify it and return it as JSON
-                    object callResultsAsJSON = ScopeWrapper.JsonStringifyFunction.call(context, Scope, Scope, new object[] { callResults });
-
-                    toReturn = WebResults.FromString(Status._200_OK, callResultsAsJSON.ToString());
-                    toReturn.ContentType = "application/JSON";
-
+                    toReturn = WebResults.FromString(Status._200_OK, callResultAsDouble.ToString("R"));
+                    toReturn.ContentType = "text/plain";
                     return toReturn;
                 }
-                catch (WrappedException we)
-                {
-                    log.Error("Exception occured in server-side Javascript", we);
 
-                    Exception cause = we.getCause();
-                    throw cause;
+                else if (callResults is int)
+                {
+                    int callResultAsInt = ((int)callResults);
+
+                    toReturn = WebResults.FromString(Status._200_OK, callResultAsInt.ToString("R"));
+                    toReturn.ContentType = "text/plain";
+                    return toReturn;
                 }
-                catch (EcmaError ee)
+
+                else if (callResults is bool)
                 {
-                    string exceptionString = "Exception occured in server-side Javascript: " + ee.getMessage() + ", " + ee.details();
-                    log.Error(exceptionString);
+                    bool callResultAsBool = (bool)callResults;
 
-                    // If the user is an administrator, then the error will be returned
-                    if (FilePermissionEnum.Administer == usersPermission)
-                        throw new WebResultsOverrideException(
-                            WebResults.FromString(Status._500_Internal_Server_Error, exceptionString));
-
-                    throw ee;
+                    toReturn = WebResults.FromString(Status._200_OK, callResultAsBool ? "true" : " false");
+                    toReturn.ContentType = "text/plain";
+                    return toReturn;
                 }
-                finally
+
+                else if (callResults is string)
                 {
-                    Context.exit();
-                    ContextStack.Pop();
-                    ThreadContextCount--;
-                }*/
+                    toReturn = WebResults.FromString(Status._200_OK, callResults.ToString());
+                    toReturn.ContentType = "text/plain";
+                    return toReturn;
+                }
+
+                // The function result isn't a known primitive.  Return it as JSON
+                return WebResults.ToJson(callResults);
             }
             finally
             {
                 // Ensures that this object can be garbage collected
-                _Me = oldMe;
+                _Current = oldMe;
                 WebConnectionStack.Pop();
                 CallingFrom = priorCallingFrom;
             }
@@ -742,8 +635,8 @@ namespace ObjectCloud.Javascript.SubProcess
             GenericReturn<R> del)
         {
             // This value is ThreadStatic so that if the function shells, it can still know about the connection
-            FunctionCaller oldMe = _Me;
-            _Me = new FunctionCaller(scopeWrapper, fileContainer);
+            FunctionCaller oldMe = _Current;
+            _Current = new FunctionCaller(scopeWrapper, fileContainer);
 
             try
             {
@@ -761,7 +654,7 @@ namespace ObjectCloud.Javascript.SubProcess
             }
             finally
             {
-                _Me = oldMe;
+                _Current = oldMe;
             }
         }
     }
