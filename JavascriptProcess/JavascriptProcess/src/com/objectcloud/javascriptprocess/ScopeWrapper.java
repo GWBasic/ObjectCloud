@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.Stack;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -73,6 +74,7 @@ public class ScopeWrapper {
 	Map<Object, Object> monitorObjectsByThreadID = new HashMap<Object, Object>();
 	Map<Object, JSONObject> inCommandByThreadID = new HashMap<Object, JSONObject>();
 	Map<Object, Function> callbacks = new HashMap<Object, Function>();
+	Map<Object, Object> cachedObjects = new HashMap<Object, Object>();
 	
 	static Random random = new Random();
 	
@@ -88,9 +90,13 @@ public class ScopeWrapper {
 		public ScopeWrapper scopeWrapper;
 	}
 	
-	// All of the scopes and thread IDs mapped by their context
-	static final Map<Context, ScopeWrapperAndThreadID> scopeWrapperAndThreadIDsByContext =
-		new HashMap<Context, ScopeWrapperAndThreadID>();
+	// All the current scope and thread ID mapped by their context
+	static final ThreadLocal<Stack<ScopeWrapperAndThreadID>> scopeWrapperAndThreadIDStack = new ThreadLocal<Stack<ScopeWrapperAndThreadID>>() {
+		@Override
+		protected Stack<ScopeWrapperAndThreadID> initialValue() {
+			return new Stack<ScopeWrapperAndThreadID>();
+		}
+	};
 	
 	public void handle(JSONObject inCommand) {
 		
@@ -139,9 +145,7 @@ public class ScopeWrapper {
 		        // For now these are being swallowed because they seem to occur if setting this twice
 		        } catch (SecurityException se) {}
 				
-				scopeWrapperAndThreadIDsByContext.put(
-					context,
-					new ScopeWrapperAndThreadID(threadID, this));
+				scopeWrapperAndThreadIDStack.get().push(new ScopeWrapperAndThreadID(threadID, this));
 
 				if (command.equals("CallFunctionInScope"))
 					callFunctionInScope(context, threadID, data);
@@ -167,7 +171,7 @@ public class ScopeWrapper {
 					System.err.println(command + " is unsupported");
 		
 			} finally {
-				scopeWrapperAndThreadIDsByContext.remove(context);
+				scopeWrapperAndThreadIDStack.get().pop();
 	            Context.exit();
 	        }
 		
@@ -197,6 +201,9 @@ public class ScopeWrapper {
 		}
 
 		Object callResults = context.evaluateString(scope, data.getString("Script"), "<cmd>", 1, null);
+		
+		if (data.has("CacheID"))
+			cachedObjects.put(data.get("CacheID"), callResults);
 		
 		JSONObject outData = new JSONObject();
 		
@@ -324,14 +331,33 @@ public class ScopeWrapper {
 	}
 	
 	// Calls a function in the parent process
-	public static Object callFunctionInParentProcess(final Context context, Object[] args, Function ctorObj, boolean inNewExpr) throws Exception {
+	public static Object callFunctionInParentProcess(Context context, Object[] args, Function ctorObj, boolean inNewExpr) throws Exception {
 		
-		ScopeWrapperAndThreadID scopeWrapperAndThreadID = scopeWrapperAndThreadIDsByContext.get(context);
+		//try {
+		ScopeWrapperAndThreadID scopeWrapperAndThreadID = scopeWrapperAndThreadIDStack.get().peek();
+			
+			/*if (null == scopeWrapperAndThreadID)
+				return "swat is null";
+			
+			if (null == scopeWrapperAndThreadID.scopeWrapper)
+				return "sw is null";*/
+			
 		return scopeWrapperAndThreadID.scopeWrapper.callFunctionInParentProcessInstance(context, args, scopeWrapperAndThreadID.threadID);
+		/*} catch (Exception e) {
+			
+			StringBuilder toReturn = new StringBuilder();
+			toReturn.append(e.getMessage() + "<br />");
+			
+			for (StackTraceElement ste : e.getStackTrace())
+				toReturn.append(ste.toString() + "<br />");
+			
+			return toReturn.toString();
+		}*/
 	}
 	
 	// Calls a function in the parent process
 	public Object callFunctionInParentProcessInstance(final Context context, Object[] args, Object threadID) throws Exception {
+
 		ScriptableObject arguments = (ScriptableObject)args[1];
 		JSONArray argumentsForJSON = new JSONArray();
 		
@@ -413,10 +439,24 @@ public class ScopeWrapper {
 						// If the object is a JSONArray or JSONObject, then it can't be directly consumed in Rhino and must be
 						// re-de-serialized in Rhino
 						if (JSONArray.class.isInstance(toReturn) || JSONObject.class.isInstance(toReturn))				
-							return context.evaluateString(scope, "(" + toReturn.toString() + ")", "<cmd>", 1, null);
+							toReturn = context.evaluateString(scope, "(" + toReturn.toString() + ")", "<cmd>", 1, null);
+
+						if (dataFromParent.has("CacheID"))
+							cachedObjects.put(dataFromParent.get("CacheID"), toReturn);
 						
 						return toReturn;
-					} else
+
+					} else if (dataFromParent.has("Eval")) {
+						Object toReturn = context.evaluateString(scope, dataFromParent.getString("Eval"), "<cmd>", 1, null);
+
+						if (dataFromParent.has("CacheID"))
+							cachedObjects.put(dataFromParent.get("CacheID"), toReturn);
+						
+						return toReturn;
+						
+					} else if (dataFromParent.has("CacheID"))
+						return cachedObjects.get(dataFromParent.get("CacheID"));
+					else
 						return Undefined.instance;
 				}
 				
