@@ -153,6 +153,10 @@ namespace ObjectCloud.Javascript.SubProcess
         ScopeWrapper GetOrCreateScope(IWebConnection webConnection)
         {
             ScopeWrapper toReturn = ScopeCache.Get(webConnection.Session.User.Id, webConnection);
+
+            if (null == toReturn)
+                ScopeCache.Remove(webConnection.Session.User.Id);
+
             return toReturn;
         }
 

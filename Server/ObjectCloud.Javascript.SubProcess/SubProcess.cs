@@ -57,7 +57,8 @@ namespace ObjectCloud.Javascript.SubProcess
             {
                 while (!Process.StandardOutput.EndOfStream)
                 {
-                    Dictionary<string, object> inCommand = JsonReader.Deserialize<Dictionary<string, object>>(Process.StandardOutput.ReadLine());
+                    string inCommandString = Process.StandardOutput.ReadLine();
+                    Dictionary<string, object> inCommand = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
 
                     object threadID = inCommand["ThreadID"];
 

@@ -123,21 +123,38 @@ namespace ObjectCloud.Javascript.SubProcess
                 foreach (MethodInfo method in javascriptFunctionsType.GetMethods(BindingFlags.Static | BindingFlags.Public))
                     FunctionsInScope[method.Name] = method;
 
-            StringBuilder scriptBuilder = new StringBuilder();
-
             // Load all dependant scripts
             foreach (ScriptAndMD5 dependantScript in dependantScriptsAndMD5s)
-                scriptBuilder.Append(webConnection.ShellTo(dependantScript.ScriptName).ResultsAsString);
+            {
+                string toEval = webConnection.ShellTo(dependantScript.ScriptName).ResultsAsString;
+                FunctionCaller.UseTemporaryCaller<SubProcess.EvalScopeResults>(
+                    this, FileContainer, webConnection, delegate()
+                    {
+                        return SubProcess.EvalScope(
+                            ScopeId,
+                            Thread.CurrentThread.ManagedThreadId,
+                            toEval,
+                            FunctionsInScope.Keys,
+                            false);
+                    });
+            }
 
-            AddMetadata(webConnection, scriptBuilder);
+            StringBuilder metadataBuilder = new StringBuilder();
+            AddMetadata(webConnection, metadataBuilder);
 
             // Construct Javascript to shell to the "base" webHandler
             string baseWrapper = fileContainer.WebHandler.GetJavascriptWrapperForBase(webConnection, "base");
-            scriptBuilder.Append(baseWrapper);
-
-            scriptBuilder.Append(javascript);
-
-            scriptBuilder.Append("\nif (options) options; else null;");
+            metadataBuilder.Append(baseWrapper);
+            FunctionCaller.UseTemporaryCaller<SubProcess.EvalScopeResults>(
+                this, FileContainer, webConnection, delegate()
+                {
+                    return SubProcess.EvalScope(
+                        ScopeId,
+                        Thread.CurrentThread.ManagedThreadId,
+                        metadataBuilder.ToString(),
+                        FunctionsInScope.Keys,
+                        false);
+                });
 
             SubProcess.EvalScopeResults data = FunctionCaller.UseTemporaryCaller<SubProcess.EvalScopeResults>(
                 this, FileContainer, webConnection, delegate()
@@ -145,7 +162,7 @@ namespace ObjectCloud.Javascript.SubProcess
                     return SubProcess.EvalScope(
                         ScopeId,
                         Thread.CurrentThread.ManagedThreadId,
-                        scriptBuilder.ToString(),
+                        javascript + "\nif (this.options) options; else null;",
                         FunctionsInScope.Keys,
                         true);
                 });
