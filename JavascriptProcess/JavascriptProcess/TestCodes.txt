@@ -16,7 +16,7 @@
    "ThreadID":456,
    "Data":
    {
-      "CallbackId": -1874701255,
+      "CallbackId": 323858193,
       "Arguments":[]
    }
 }
@@ -39,5 +39,15 @@
    {
       "FunctionName":"foo",
       "Arguments":["gadsgdsa"]
+   }
+}
+
+{
+   "ScopeID":123,
+   "Command":"EvalScope",
+   "ThreadID":456,
+   "Data":
+   {
+      "Script": "if (typeof CreateHttpRequest != 'function')   CreateHttpRequest = function()   {      var toReturn =      {         headers: {},         open: function(webMethod, url, asyncronous)         {            this.webMethod = webMethod;            this.url = url;            this.asyncronous = asyncronous;         },         setRequestHeader: function(name, value)         {                        this.headers[name] = value;         },         send: function(payload)         {            results = Shell(               this.webMethod,               this.url,               this.headers['Content-type'],               payload);            this.readyState = 4;            this.status = results.Status;            this.responseText = results.Content;            if (this.asyncronous)               this.onreadystatechange();         }      };      return toReturn;   };"
    }
 }

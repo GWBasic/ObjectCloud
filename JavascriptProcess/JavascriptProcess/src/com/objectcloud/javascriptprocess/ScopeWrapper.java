@@ -308,7 +308,9 @@ public class ScopeWrapper {
 	
 	private void returnResult(String command, final Context context, Object threadID, final Object callResults, JSONObject outData, String resultsName) throws JSONException, IOException {
 		
-		if (!Undefined.class.isInstance(callResults))
+		/*//if (!Undefined.class.isInstance(callResults))
+		if (!(callResults instanceof Undefined))
+		//if (!(Undefined.instance.equals(callResults)))
 			outData.put(resultsName, new JSONString() {
 	
 				@Override
@@ -317,6 +319,21 @@ public class ScopeWrapper {
 				}
 				
 			});
+		*/
+		
+		if (!(callResults instanceof Undefined)) {
+			final Object serializedCallResults = jsonStringifyFunction.call(context, scope, scope, new Object[] { callResults });
+			
+			if (serializedCallResults instanceof String)
+				outData.put(resultsName, new JSONString() {
+					
+					@Override
+					public String toJSONString() {
+						return (String)serializedCallResults;
+					}
+					
+				});		
+			}
 		
 		sendCommand(command, threadID, outData);
 	}
