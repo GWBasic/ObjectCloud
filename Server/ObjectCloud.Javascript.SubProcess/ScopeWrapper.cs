@@ -51,6 +51,8 @@ namespace ObjectCloud.Javascript.SubProcess
                     IdCtr.Value++;
             }
 
+            SubProcess.RegisterParentFunctionDelegate(ScopeId, CallParentFunction);
+
             _FileHandlerFactoryLocator = fileHandlerFactoryLocator;
             _User = webConnection.Session.User;
 
@@ -82,7 +84,6 @@ namespace ObjectCloud.Javascript.SubProcess
             _FileContainer = fileContainer;
 
             // Load static methods that are passed into the Javascript environment as-is
-
             foreach (Type javascriptFunctionsType in GetTypesThatHaveJavascriptFunctions(fileContainer))
                 foreach (MethodInfo method in javascriptFunctionsType.GetMethods(BindingFlags.Static | BindingFlags.Public))
                     FunctionsInScope[method.Name] = method;
@@ -135,7 +136,12 @@ namespace ObjectCloud.Javascript.SubProcess
 
             // Get options
             if (data.Result is Dictionary<string, object>)
-                GetOptions((Dictionary<string, object>)data.Result);
+                ParseOptions((Dictionary<string, object>)data.Result);
+        }
+
+        ~ScopeWrapper()
+        {
+            SubProcess.DisposeScope(ScopeId, Thread.CurrentThread.ManagedThreadId);
         }
 
         /// <summary>
@@ -235,24 +241,6 @@ namespace ObjectCloud.Javascript.SubProcess
         }
         private readonly IFileContainer _FileContainer;
 
-        /*// <summary>
-        /// The function to parse JSON data
-        /// </summary>
-        public Function JsonParseFunction
-        {
-            get { return _JsonParseFunction; }
-        }
-        private readonly Function _JsonParseFunction;
-
-        /// <summary>
-        /// The function to stringify JSON data
-        /// </summary>
-        public Function JsonStringifyFunction
-        {
-            get { return _JsonStringifyFunction; }
-        }
-        private readonly Function _JsonStringifyFunction;
-		*/
         /// <summary>
         /// Returns the appropriate delegate for the named method, or null if it doesn't exist
         /// </summary>
@@ -272,21 +260,38 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <returns></returns>
         public IEnumerable<string> GenerateJavascriptWrapper()
         {
-			throw new NotImplementedException();
-            /*foreach (string method in FunctionCallers.Keys)
-                foreach (string wrapperMethod in FunctionCallers[method].GenerateWrapper())
-                    yield return wrapperMethod;*/
+            foreach (string function in FunctionCallers.Keys)
+                foreach (string wrapperFunction in FunctionCallers[function].GenerateWrapper())
+                    yield return wrapperFunction;
         }
 
         /// <summary>
+        /// Callback for when Javascript calls back into C#
+        /// </summary>
+        /// <param name="functionName"></param>
+        /// <param name="threadId"></param>
+        /// <param name="arguments"></param>
+        /// <returns></returns>
+        private object CallParentFunction(string functionName, object threadId, object[] arguments)
+        {
+            try
+            {
+                return FunctionsInScope[functionName].Invoke(null, arguments);
+            }
+            catch (TargetInvocationException tie)
+            {
+                throw tie.InnerException;
+            }
+        }
+
+        /*// <summary>
         /// Converts an object from Javascript to a string.  Doubles, bools, and strings are returned via ToString, everything else is JSON-stringified
         /// </summary>
         /// <param name="fromJavascript"></param>
         /// <returns></returns>
         public string ConvertObjectFromJavascriptToString(object fromJavascript)
         {
-			throw new NotImplementedException();
-            /*if (null == fromJavascript)
+            if (null == fromJavascript)
                 return null;
 
             else if (fromJavascript is Undefined)
@@ -311,8 +316,8 @@ namespace ObjectCloud.Javascript.SubProcess
             finally
             {
                 Context.exit();
-            }*/
-        }
+            }
+        }*/
 
         /// <summary>
         /// Adds an object to be accessible from within the scope
@@ -328,7 +333,7 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <summary>
         /// Loads options from the javascript
         /// </summary>
-        private void GetOptions(Dictionary<string, object> options)
+        private void ParseOptions(Dictionary<string, object> options)
         {
             object blockWebMethods = null;
             if (options.TryGetValue("BlockWebMethods", out blockWebMethods))

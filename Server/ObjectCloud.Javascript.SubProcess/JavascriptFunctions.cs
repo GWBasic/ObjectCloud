@@ -94,7 +94,7 @@ namespace ObjectCloud.Javascript.SubProcess
             return new Dictionary<string, string>(functionCallContext.WebConnection.GetParameters);
         }
 
-        /*// <summary>
+        /// <summary>
         /// Returns all of the POST parameters
         /// </summary>
         /// <returns></returns>
@@ -102,24 +102,10 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
 
-            try
-            {
-                string parametersAsJSON = JsonWriter.Serialize(new Dictionary<string, string>(functionCallContext.WebConnection.PostParameters));
-
-                // eval() is used because it's safe and faster
-                object toReturn = functionCallContext.Context.evaluateString(
-                    functionCallContext.Scope,
-                    "(" + parametersAsJSON + ")",
-                    "<cmd>",
-                    1,
-                    null);
-
-                return (Scriptable)toReturn;
-            }
-            catch
-            {
+            if (null != functionCallContext.WebConnection.PostParameters)
+                return new Dictionary<string, string>(functionCallContext.WebConnection.PostParameters);
+            else
                 return null;
-            }
         }
 
         /// <summary>
@@ -129,17 +115,7 @@ namespace ObjectCloud.Javascript.SubProcess
         public static object getCookies()
         {
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
-            string parametersAsJSON = JsonWriter.Serialize(new Dictionary<string, string>(functionCallContext.WebConnection.CookiesFromBrowser));
-
-            // eval() is used because it's safe and faster
-            object toReturn = functionCallContext.Context.evaluateString(
-                functionCallContext.Scope,
-                "(" + parametersAsJSON + ")",
-                "<cmd>",
-                1,
-                null);
-
-            return (Scriptable)toReturn;
+            return new Dictionary<string, string>(functionCallContext.WebConnection.CookiesFromBrowser);
         }
 
         public static object setCookie(string name, string value)
@@ -156,17 +132,7 @@ namespace ObjectCloud.Javascript.SubProcess
         public static object getHeaders()
         {
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
-            string parametersAsJSON = JsonWriter.Serialize(new Dictionary<string, string>(functionCallContext.WebConnection.Headers));
-
-            // eval() is used because it's safe and faster
-            object toReturn = functionCallContext.Context.evaluateString(
-                functionCallContext.Scope,
-                "(" + parametersAsJSON + ")",
-                "<cmd>",
-                1,
-                null);
-
-            return (Scriptable)toReturn;
+            return new Dictionary<string, string>(functionCallContext.WebConnection.Headers);
         }
 
         /// <summary>
@@ -185,7 +151,7 @@ namespace ObjectCloud.Javascript.SubProcess
             {
                 return null;
             }
-        }*/
+        }
 
         /// <summary>
         /// Assists in letting server-side javascript call into the server
@@ -375,16 +341,16 @@ namespace ObjectCloud.Javascript.SubProcess
 
             Scriptable toReturn = ConvertWebResultToJavascript(functionCallContext, shellResult);
             return toReturn;
-        }
+        }*/
 
         /// <summary>
         /// Calls the given function in an elevated cecurity context
         /// </summary>
         /// <param name="function"></param>
         /// <returns></returns>
-        public static object elevate(Function function)
+        public static object elevate(SubProcess.Callback callback)
         {
-            return SetTempCallingFrom(function, CallingFrom.Local);
+            return SetTempCallingFrom(callback, CallingFrom.Local);
         }
 
         /// <summary>
@@ -392,9 +358,9 @@ namespace ObjectCloud.Javascript.SubProcess
         /// </summary>
         /// <param name="function"></param>
         /// <returns></returns>
-        public static object deElevate(Function function)
+        public static object deElevate(SubProcess.Callback callback)
         {
-            return SetTempCallingFrom(function, CallingFrom.Web);
+            return SetTempCallingFrom(callback, CallingFrom.Web);
         }
 
         /// <summary>
@@ -403,7 +369,7 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <param name="function"></param>
         /// <param name="callingFrom"></param>
         /// <returns></returns>
-        private static object SetTempCallingFrom(Function function, CallingFrom callingFrom)
+        private static object SetTempCallingFrom(SubProcess.Callback callback, CallingFrom callingFrom)
         {
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
 
@@ -412,8 +378,7 @@ namespace ObjectCloud.Javascript.SubProcess
 
             try
             {
-                object toReturn = function.call(functionCallContext.Context, functionCallContext.Scope, functionCallContext.Scope, new object[0]);
-                return toReturn;
+                return callback.Call(new object[0]);
             }
             finally
             {
@@ -427,7 +392,7 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <param name="function"></param>
         /// <param name="callingFrom"></param>
         /// <returns></returns>
-        public static object bypassJavascript(Function function)
+        public static object bypassJavascript(SubProcess.Callback callback)
         {
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
 
@@ -436,8 +401,7 @@ namespace ObjectCloud.Javascript.SubProcess
 
             try
             {
-                object toReturn = function.call(functionCallContext.Context, functionCallContext.Scope, functionCallContext.Scope, new object[0]);
-                return toReturn;
+                return callback.Call(new object[0]);
             }
             finally
             {
@@ -450,14 +414,13 @@ namespace ObjectCloud.Javascript.SubProcess
         /// </summary>
         /// <param name="function"></param>
         /// <returns></returns>
-        public static object lockMe(Function function)
+        public static object lockMe(SubProcess.Callback callback)
         {
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
 
-            using (TimedLock.Lock(functionCallContext.ScopeWrapper.TheObject.FileHandler))
+            using (TimedLock.Lock(functionCallContext.ScopeWrapper.FileContainer.FileHandler))
             {
-                object toReturn = function.call(functionCallContext.Context, functionCallContext.Scope, functionCallContext.Scope, new object[0]);
-                return toReturn;
+                return callback.Call(new object[0]);
             }
         }
 
@@ -466,13 +429,13 @@ namespace ObjectCloud.Javascript.SubProcess
         /// </summary>
         /// <param name="function"></param>
         /// <returns></returns>
-        public static object callAsOwner(Function function)
+        public static object callAsOwner(SubProcess.Callback callback)
         {
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
 
             ISession tempSession = functionCallContext.ScopeWrapper.FileHandlerFactoryLocator.SessionManagerHandler.CreateSession();
 
-            ID<IUserOrGroup, Guid>? ownerId = functionCallContext.ScopeWrapper.TheObject.OwnerId;
+            ID<IUserOrGroup, Guid>? ownerId = functionCallContext.ScopeWrapper.FileContainer.OwnerId;
 
             if (null != ownerId)
             {
@@ -486,7 +449,7 @@ namespace ObjectCloud.Javascript.SubProcess
 
                 functionCallContext.WebConnection.TemporaryChangeSession(tempSession, delegate()
                 {
-                    toReturn = function.call(functionCallContext.Context, functionCallContext.Scope, functionCallContext.Scope, new object[0]);
+                    toReturn = callback.Call(new object[0]);
                 });
 
                 return toReturn;
@@ -507,7 +470,7 @@ namespace ObjectCloud.Javascript.SubProcess
             return HTTPStringFunctions.Sanitize(toSanitize);
         }
 
-        /// <summary>
+        /*// <summary>
         /// Gets the parent directory wrapper
         /// </summary>
         /// <returns></returns>
@@ -515,7 +478,7 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
 
-            IDirectoryHandler parentDirectoryHandler = functionCallContext.ScopeWrapper.TheObject.ParentDirectoryHandler;
+            IDirectoryHandler parentDirectoryHandler = functionCallContext.ScopeWrapper.FileContainer.ParentDirectoryHandler;
 
             if (null == parentDirectoryHandler)
                 throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, "The root directory has no parent directory"));

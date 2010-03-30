@@ -134,6 +134,21 @@ namespace ObjectCloud.Javascript.SubProcess
         Dictionary<object, Dictionary<string, object>> InCommandsByThreadId = new Dictionary<object, Dictionary<string, object>>();
 
         /// <summary>
+        /// Callback for when a parent function is called
+        /// </summary>
+        Dictionary<int, CallParentFunctionDelegate> ParentFunctionDelegatesByScopeId = new Dictionary<int, CallParentFunctionDelegate>();
+
+        /// <summary>
+        /// Registers a callback for when the javascript in the scope calls a parent function
+        /// </summary>
+        /// <param name="scopeId"></param>
+        /// <param name="callParentFunctionDelegate"></param>
+        public void RegisterParentFunctionDelegate(int scopeId, CallParentFunctionDelegate parentFunctionDelegate)
+        {
+            ParentFunctionDelegatesByScopeId[scopeId] = parentFunctionDelegate;
+        }
+
+        /// <summary>
         /// The results of calling EvalScope
         /// </summary>
         public struct EvalScopeResults
@@ -203,7 +218,7 @@ namespace ObjectCloud.Javascript.SubProcess
 			using (TimedLock.Lock(SendKey))
 				JSONSender.Write(command);
 
-            Dictionary<string, object> dataToReturn = WaitForResponse();
+            Dictionary<string, object> dataToReturn = WaitForResponse(scopeId);
 
             EvalScopeResults toReturn = new EvalScopeResults();
             toReturn.Result = dataToReturn["Result"];
@@ -234,6 +249,23 @@ namespace ObjectCloud.Javascript.SubProcess
 		}
 
         /// <summary>
+        /// Disposes a scope, removing all references to the call parent function callback
+        /// </summary>
+        /// <param name="scopeId"></param>
+        /// <param name="callParentFunctionDelegate"></param>
+        public void DisposeScope(int scopeId, object threadID)
+        {
+            ParentFunctionDelegatesByScopeId.Remove(scopeId);
+
+            Dictionary<string, object> command;
+            Dictionary<string, object> data;
+            CreateCommand(scopeId, threadID, "DisposeScope", out command, out data);
+
+            using (TimedLock.Lock(SendKey))
+                JSONSender.Write(command);
+        }
+
+        /// <summary>
         /// Calls a function in the sub-process
         /// </summary>
         /// <param name="scopeID"></param>
@@ -251,8 +283,73 @@ namespace ObjectCloud.Javascript.SubProcess
             using (TimedLock.Lock(SendKey))
                 JSONSender.Write(command);
 
-            Dictionary<string, object> dataToReturn = WaitForResponse();
+            Dictionary<string, object> dataToReturn = WaitForResponse(scopeId);
             return dataToReturn["Result"];
+        }
+
+        /// <summary>
+        /// Calls a function in the sub-process
+        /// </summary>
+        /// <param name="scopeID"></param>
+        /// <param name="arguments"></param>
+        /// <returns></returns>
+        public object CallCallback(int scopeId, object threadID, object callbackId, IEnumerable arguments)
+        {
+            Dictionary<string, object> command;
+            Dictionary<string, object> data;
+            CreateCommand(scopeId, threadID, "CallCallback", out command, out data);
+
+            data["CallbackId"] = callbackId;
+            data["Arguments"] = arguments;
+
+            using (TimedLock.Lock(SendKey))
+                JSONSender.Write(command);
+
+            Dictionary<string, object> dataToReturn = WaitForResponse(scopeId);
+            return dataToReturn["Result"];
+        }
+
+        /// <summary>
+        /// Encapsulates callbacks that come from the sub process
+        /// </summary>
+        public class Callback
+        {
+            public Callback(SubProcess subProcess, int scopeId, object threadId, object callbackId)
+            {
+                _SubProcess = subProcess;
+                _ScopeId = scopeId;
+                _ThreadId = threadId;
+                _CallbackId = callbackId;
+            }
+
+            public SubProcess SubProcess
+            {
+                get { return _SubProcess; }
+            }
+            private readonly SubProcess _SubProcess;
+
+            public int ScopeId
+            {
+                get { return _ScopeId; }
+            }
+            private readonly int _ScopeId;
+
+            public object ThreadId
+            {
+                get { return _ThreadId; }
+            }
+            private readonly object _ThreadId;
+
+            public object CallbackId
+            {
+                get { return _CallbackId; }
+            }
+            private readonly object _CallbackId;
+
+            public object Call(IEnumerable<object> arguments)
+            {
+                return SubProcess.CallCallback(ScopeId, ThreadId, CallbackId, arguments);
+            }
         }
 
         /// <summary>
@@ -278,34 +375,114 @@ namespace ObjectCloud.Javascript.SubProcess
         /// Helper to block a thread until the response comes back
         /// </summary>
         /// <returns></returns>
-        private Dictionary<string, object> WaitForResponse()
+        private Dictionary<string, object> WaitForResponse(int scopeId)
         {
             object monitorObject = new object();
-            using (TimedLock.Lock(MonitorObjectsByThreadId))
-                MonitorObjectsByThreadId[Thread.CurrentThread.ManagedThreadId] = monitorObject;
-
-            try
-            {
-                lock (monitorObject)
-                    Monitor.Wait(monitorObject);
-            }
-            finally
-            {
-                using (TimedLock.Lock(MonitorObjectsByThreadId))
-                    MonitorObjectsByThreadId.Remove(Thread.CurrentThread.ManagedThreadId);
-            }
-
             Dictionary<string, object> inCommand;
-            using (TimedLock.Lock(InCommandsByThreadId))
-                inCommand = InCommandsByThreadId[Thread.CurrentThread.ManagedThreadId];
 
-            Dictionary<string, object> dataToReturn = (Dictionary<string, object>)inCommand["Data"];
+            do
+            {
+                bool needWait;
+                using (TimedLock.Lock(InCommandsByThreadId))
+                    needWait = !InCommandsByThreadId.TryGetValue(Thread.CurrentThread.ManagedThreadId, out inCommand);
 
-            object exceptionFromJavascript;
-            if (dataToReturn.TryGetValue("Exception", out exceptionFromJavascript))
-                throw new JavascriptException(JsonWriter.Serialize(exceptionFromJavascript));
+                if (needWait)
+                {
+                    using (TimedLock.Lock(MonitorObjectsByThreadId))
+                        MonitorObjectsByThreadId[Thread.CurrentThread.ManagedThreadId] = monitorObject;
 
-            return dataToReturn;
+                    try
+                    {
+                        lock (monitorObject)
+                            Monitor.Wait(monitorObject);
+                    }
+                    finally
+                    {
+                        using (TimedLock.Lock(MonitorObjectsByThreadId))
+                            MonitorObjectsByThreadId.Remove(Thread.CurrentThread.ManagedThreadId);
+                    }
+
+                    using (TimedLock.Lock(InCommandsByThreadId))
+                    {
+                        inCommand = InCommandsByThreadId[Thread.CurrentThread.ManagedThreadId];
+                        InCommandsByThreadId.Remove(Thread.CurrentThread.ManagedThreadId);
+                    }
+                }
+
+                Dictionary<string, object> dataToReturn = (Dictionary<string, object>)inCommand["Data"];
+
+                // If the response is for calling a parent function in this process, then call it, else just return the results
+                if ("CallParentFunction".Equals(inCommand["Command"]))
+                {
+                    string functionName = dataToReturn["FunctionName"].ToString();
+                    object[] arguments = new List<object>((IEnumerable<object>)dataToReturn["Arguments"]).ToArray();
+                    object threadId = inCommand["ThreadID"];
+
+                    // Convert callbacks to usable objects
+                    for (int argCtr = 0; argCtr < arguments.Length; argCtr++)
+                        if (arguments[argCtr] is Dictionary<string, object>)
+                        {
+                            Dictionary<string, object> argument = (Dictionary<string, object>)arguments[argCtr];
+                            object isCallback;
+                            if (argument.TryGetValue("Callback", out isCallback))
+                                if (isCallback is bool)
+                                    if (true == (bool)isCallback)
+                                    {
+                                        object callbackId;
+                                        if (argument.TryGetValue("CallbackID", out callbackId))
+                                            arguments[argCtr] = new Callback(this, scopeId, threadId, callbackId);
+                                    }
+                        }
+
+                    Dictionary<string, object> outCommand;
+                    Dictionary<string, object> outData;
+                    CreateCommand(scopeId, threadId, "RespondCallParentFunction", out outCommand, out outData);
+
+                    try
+                    {
+                        object parentFunctionDataToReturn = this.ParentFunctionDelegatesByScopeId[scopeId](
+                            functionName,
+                            threadId,
+                            arguments);
+
+                        if (parentFunctionDataToReturn != Undefined.Value)
+                            outData["Result"] = parentFunctionDataToReturn;
+                    }
+                    catch (Exception e)
+                    {
+                        outData["Exception"] = JsonWriter.Serialize(e);
+                    }
+
+                    using (TimedLock.Lock(SendKey))
+                        JSONSender.Write(outCommand);
+                }
+                else
+                {
+                    object exceptionFromJavascript;
+                    if (dataToReturn.TryGetValue("Exception", out exceptionFromJavascript))
+                        throw new JavascriptException(JsonWriter.Serialize(exceptionFromJavascript));
+
+                    if (!dataToReturn.ContainsKey("Result"))
+                        dataToReturn["Result"] = Undefined.Value;
+
+                    return dataToReturn;
+                }
+            }
+            while (true);
+        }
+
+        /// <summary>
+        /// Represents an undefined value
+        /// </summary>
+        public class Undefined
+        {
+            private Undefined() { }
+
+            public static Undefined Value
+            {
+                get { return _Instance; }
+            }
+            private static readonly Undefined _Instance = new Undefined();
         }
 
         private bool Disposed = false;
@@ -352,4 +529,12 @@ namespace ObjectCloud.Javascript.SubProcess
 			Dispose();
 		}
 	}
+
+    /// <summary>
+    /// Delegate for calling parent functions
+    /// </summary>
+    /// <param name="functionName"></param>
+    /// <param name="arguments"></param>
+    /// <returns></returns>
+    public delegate object CallParentFunctionDelegate(string functionName, object threadId, object[] arguments);
 }
