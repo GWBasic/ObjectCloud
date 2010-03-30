@@ -176,7 +176,13 @@ public class ScopeWrapper {
 	        }
 		
 		} catch (Exception e) {
-			System.err.println(e.getLocalizedMessage());
+			StringBuilder toReturn = new StringBuilder();
+			toReturn.append(e.getMessage() + "<br />");
+			
+			for (StackTraceElement ste : e.getStackTrace())
+				toReturn.append(ste.toString() + "<br />");
+			
+			System.err.println(toReturn.toString());
 		}
 	}
 
@@ -200,12 +206,18 @@ public class ScopeWrapper {
 			context.evaluateString(scope, functionsBuilder.toString(), "<cmd>", 1, null);
 		}
 
-		Object callResults = context.evaluateString(scope, data.getString("Script"), "<cmd>", 1, null);
+		Object callResults;
+		JSONObject outData = new JSONObject();
+		
+		try {
+			callResults = context.evaluateString(scope, data.getString("Script"), "<cmd>", 1, null);
+		} catch (Exception e) {
+			returnResult("RespondEvalScope", context, threadID, e.getMessage(), outData, "Exception");
+			return;
+		}
 		
 		if (data.has("CacheID"))
 			cachedObjects.put(data.get("CacheID"), callResults);
-		
-		JSONObject outData = new JSONObject();
 		
 		if (data.has("ReturnFunctions"))
 			if (data.getBoolean("ReturnFunctions")) {
