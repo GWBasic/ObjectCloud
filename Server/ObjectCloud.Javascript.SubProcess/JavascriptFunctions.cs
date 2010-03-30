@@ -85,13 +85,27 @@ namespace ObjectCloud.Javascript.SubProcess
         }
 
         /// <summary>
+        /// Assists in converting a dictionary of strings to an object that Json can serialize
+        /// </summary>
+        /// <param name="toConvert"></param>
+        /// <returns></returns>
+        private static Dictionary<string, object> ToJsonable(IEnumerable<KeyValuePair<string, string>> toConvert)
+        {
+            Dictionary<string, object> toReturn = new Dictionary<string, object>();
+            foreach (KeyValuePair<string, string> kvp in toConvert)
+                toReturn.Add(kvp.Key, kvp.Value);
+
+            return toReturn;
+        }
+
+        /// <summary>
         /// Returns all of the GET parameters
         /// </summary>
         /// <returns></returns>
-        public static Dictionary<string, string> getGet()
+        public static Dictionary<string, object> getGet()
         {
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
-            return new Dictionary<string, string>(functionCallContext.WebConnection.GetParameters);
+            return ToJsonable(functionCallContext.WebConnection.GetParameters);
         }
 
         /// <summary>
@@ -103,7 +117,7 @@ namespace ObjectCloud.Javascript.SubProcess
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
 
             if (null != functionCallContext.WebConnection.PostParameters)
-                return new Dictionary<string, string>(functionCallContext.WebConnection.PostParameters);
+                return ToJsonable(functionCallContext.WebConnection.PostParameters);
             else
                 return null;
         }
@@ -115,7 +129,7 @@ namespace ObjectCloud.Javascript.SubProcess
         public static object getCookies()
         {
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
-            return new Dictionary<string, string>(functionCallContext.WebConnection.CookiesFromBrowser);
+            return ToJsonable(functionCallContext.WebConnection.CookiesFromBrowser);
         }
 
         public static object setCookie(string name, string value)
@@ -132,7 +146,7 @@ namespace ObjectCloud.Javascript.SubProcess
         public static object getHeaders()
         {
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
-            return new Dictionary<string, string>(functionCallContext.WebConnection.Headers);
+            return ToJsonable(functionCallContext.WebConnection.Headers);
         }
 
         /// <summary>
@@ -215,7 +229,7 @@ namespace ObjectCloud.Javascript.SubProcess
             return ConvertWebResultToJavascript(shellResult);
         }
 
-        /*// <summary>
+        /// <summary>
         /// Sends a GET request to the specified object with the given arguments
         /// </summary>
         /// <param name="file"></param>
@@ -231,13 +245,7 @@ namespace ObjectCloud.Javascript.SubProcess
 
             if (null != getArguments)
                 foreach (KeyValuePair<string, object> idAndVal in getArguments)
-                    if (null != idAndVal.Value)
-                    {
-                        string vasAsString = functionCallContext.ScopeWrapper.ConvertObjectFromJavascriptToString(idAndVal.Value);
-
-                        if (null != vasAsString)
-                            url = HTTPStringFunctions.AppendGetParameter(url, idAndVal.Key.ToString(), vasAsString);
-                    }
+                    url = HTTPStringFunctions.AppendGetParameter(url, idAndVal.Key, idAndVal.Value.ToString());
 
             if (null != method)
                 url = HTTPStringFunctions.AppendGetParameter(url, "Method", method.ToString());
@@ -247,7 +255,7 @@ namespace ObjectCloud.Javascript.SubProcess
             return ConvertWebResultToJavascript(shellResult);
         }
 
-        /// <summary>
+        /*// <summary>
         /// Sends a POST request to the specified object with the given arguments.  PostArguments must be a Javascript array that will be converted to urlencoded (p1=v1&p2=v2) format
         /// </summary>
         /// <param name="file"></param>
@@ -470,30 +478,14 @@ namespace ObjectCloud.Javascript.SubProcess
             return HTTPStringFunctions.Sanitize(toSanitize);
         }
 
-        /*// <summary>
+        /// <summary>
         /// Gets the parent directory wrapper
         /// </summary>
         /// <returns></returns>
         public static object getParentDirectoryWrapper()
         {
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
-
-            IDirectoryHandler parentDirectoryHandler = functionCallContext.ScopeWrapper.FileContainer.ParentDirectoryHandler;
-
-            if (null == parentDirectoryHandler)
-                throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, "The root directory has no parent directory"));
-
-            IWebResults webResults = parentDirectoryHandler.FileContainer.WebHandler.GetJSW(functionCallContext.WebConnection, null, null, false);
-            string webResultsAsString = webResults.ResultsAsString;
-
-            object toReturn = functionCallContext.Context.evaluateString(
-                functionCallContext.Scope,
-                "(" + webResultsAsString + ")",
-                "<cmd>",
-                1,
-                null);
-
-            return toReturn;
+            return functionCallContext.ScopeWrapper.GetParentDirectoryWrapper(functionCallContext.WebConnection);
         }
 
         /// <summary>
@@ -514,7 +506,7 @@ namespace ObjectCloud.Javascript.SubProcess
         public static object use(string toLoad)
         {
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
-            return FunctionCallContext.GetCurrentContext().ScopeWrapper.Use(functionCallContext, toLoad);
+            return functionCallContext.ScopeWrapper.Use(functionCallContext.WebConnection, toLoad);
         }
 
         /// <summary>
@@ -525,16 +517,7 @@ namespace ObjectCloud.Javascript.SubProcess
         public static object open(string toOpen)
         {
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
-            IFileContainer fileContainer = functionCallContext.ScopeWrapper.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(toOpen);
-
-            string wrapper = fileContainer.WebHandler.GetJSW(functionCallContext.WebConnection, null, null, false).ResultsAsString;
-
-            return functionCallContext.Context.evaluateString(
-                functionCallContext.Scope,
-                "(" + wrapper + ")",
-                "<cmd>",
-                1,
-                null);
-        }*/
+            return functionCallContext.ScopeWrapper.Open(functionCallContext.WebConnection, toOpen);
+        }
     }
 }

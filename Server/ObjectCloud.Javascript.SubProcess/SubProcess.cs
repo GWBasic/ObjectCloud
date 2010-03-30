@@ -445,7 +445,19 @@ namespace ObjectCloud.Javascript.SubProcess
                             threadId,
                             arguments);
 
-                        if (parentFunctionDataToReturn != Undefined.Value)
+                        if (parentFunctionDataToReturn is StringToEval)
+                        {
+                            StringToEval stringToEval = (StringToEval)parentFunctionDataToReturn;
+                            outData["Eval"] = stringToEval.ToEval;
+
+                            if (null != stringToEval.CacheId)
+                                outData["CacheID"] = stringToEval.CacheId;
+                        }
+
+                        else if (parentFunctionDataToReturn is CachedObjectId)
+                            outData["CacheID"] = ((CachedObjectId)parentFunctionDataToReturn).CacheId;
+                        
+                        else if (parentFunctionDataToReturn != Undefined.Value)
                             outData["Result"] = parentFunctionDataToReturn;
                     }
                     catch (Exception e)
@@ -483,6 +495,53 @@ namespace ObjectCloud.Javascript.SubProcess
                 get { return _Instance; }
             }
             private static readonly Undefined _Instance = new Undefined();
+        }
+
+        /// <summary>
+        /// Indicates to the caller that the returned value is Javascript that must be evaled
+        /// </summary>
+        public struct StringToEval
+        {
+            public StringToEval(string toEval)
+            {
+                _ToEval = toEval;
+                _CacheId = null;
+            }
+
+            public StringToEval(string toEval, object cacheId)
+            {
+                _ToEval = toEval;
+                _CacheId = cacheId;
+            }
+
+            public string ToEval
+            {
+                get { return _ToEval; }
+            }
+            private readonly string _ToEval;
+
+            public object CacheId
+            {
+                get { return _CacheId; }
+            }
+            private readonly object _CacheId;
+        }
+
+        /// <summary>
+        /// Indicates to the caller that the returned value is already cached and should be referenced by ID
+        /// </summary>
+        public struct CachedObjectId
+        {
+            public CachedObjectId(object cacheId)
+            {
+                _CacheId = cacheId;
+            }
+
+            public object CacheId
+            {
+                get { return _CacheId; }
+            }
+            private readonly object _CacheId;
         }
 
         private bool Disposed = false;

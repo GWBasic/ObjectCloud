@@ -36,8 +36,43 @@ namespace ObjectCloud.Javascript.SubProcess
         }
         private readonly int _ScopeId;
 
-        internal SubProcess SubProcess = new SubProcess();
+        internal static SubProcess SubProcess = new SubProcess();
         Dictionary<string, MethodInfo> FunctionsInScope = new Dictionary<string, MethodInfo>();
+
+        /// <summary>
+        /// Pointers to cache IDs
+        /// </summary>
+        private Dictionary<object, object> CacheIDsByKey = new Dictionary<object, object>();
+
+        /// <summary>
+        /// Returns a new CacheID
+        /// </summary>
+        /// <returns></returns>
+        public object GenerateCacheID(object key)
+        {
+            using (TimedLock.Lock(CacheIDsByKey))
+            {
+                object toReturn;
+
+                do
+                    toReturn = SRandom.Next();
+                while (CacheIDsByKey.ContainsKey(toReturn));
+
+                CacheIDsByKey[key] = toReturn;
+
+                return toReturn;
+            }
+        }
+
+        /// <summary>
+        /// Gets the cache id for the object, or returns false if it's missing
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public bool GetCacheID(object key, out object cacheId)
+        {
+            return CacheIDsByKey.TryGetValue(key, out cacheId);
+        }
 
         public ScopeWrapper(FileHandlerFactoryLocator fileHandlerFactoryLocator, IWebConnection webConnection, string javascript, IFileContainer fileContainer)
         {
@@ -276,48 +311,38 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             try
             {
-                return FunctionsInScope[functionName].Invoke(null, arguments);
+                MethodInfo toInvoke = FunctionsInScope[functionName];
+                ParameterInfo[] parameters = toInvoke.GetParameters();
+
+                object[] allArguments = new object[parameters.Length];
+
+                for (int argCtr = 0; argCtr < allArguments.Length; argCtr++)
+                {
+                    ParameterInfo parameter = parameters[argCtr];
+                    Type parameterType = parameter.ParameterType;
+
+                    // If this is a parameter that's passed in from javascript
+                    if (argCtr < arguments.Length)
+                    {
+                        object argument = arguments[argCtr];
+
+                        // First see if either the JsInstance or it's value can be directly accepted without converstion
+                        if (parameterType.IsInstanceOfType(argument))
+                            allArguments[argCtr] = argument;
+                        else
+                            allArguments[argCtr] = Convert.ChangeType(argument, parameterType);
+                    }
+                    else
+                        allArguments[argCtr] = parameterType.IsValueType ? Activator.CreateInstance(parameterType) : null;
+                }
+
+                return FunctionsInScope[functionName].Invoke(null, allArguments);
             }
             catch (TargetInvocationException tie)
             {
                 throw tie.InnerException;
             }
         }
-
-        /*// <summary>
-        /// Converts an object from Javascript to a string.  Doubles, bools, and strings are returned via ToString, everything else is JSON-stringified
-        /// </summary>
-        /// <param name="fromJavascript"></param>
-        /// <returns></returns>
-        public string ConvertObjectFromJavascriptToString(object fromJavascript)
-        {
-            if (null == fromJavascript)
-                return null;
-
-            else if (fromJavascript is Undefined)
-                return null;
-
-            else if (fromJavascript is java.lang.Double)
-                return ((java.lang.Double)fromJavascript).doubleValue().ToString("R");
-
-            else if (fromJavascript is java.lang.Boolean)
-                return ((java.lang.Boolean)fromJavascript).booleanValue() ? "true" : "false";
-
-            else if (fromJavascript is string)
-                return fromJavascript.ToString();
-
-            // The object isn't a known Javscript primitive.  Stringify it and return it as JSON
-            Context context = Context.enter();
-            try
-            {
-                object stringified = JsonStringifyFunction.call(context, Scope, Scope, new object[] { fromJavascript });
-                return stringified.ToString();
-            }
-            finally
-            {
-                Context.exit();
-            }
-        }*/
 
         /// <summary>
         /// Adds an object to be accessible from within the scope
@@ -366,53 +391,115 @@ namespace ObjectCloud.Javascript.SubProcess
         /// </summary>
         Dictionary<string, DateTime> LoadedLibrariesLastModified = new Dictionary<string, DateTime>();
 
-        /*// <summary>
+        /// <summary>
+        /// Used to create an ID to uniquely identify the parent directory wrapper once its created
+        /// </summary>
+        private static readonly object parentDirectoryWrapperKey = new object();
+
+        /// <summary>
+        /// Gets the parent directory wrapper
+        /// </summary>
+        /// <returns></returns>
+        public object GetParentDirectoryWrapper(IWebConnection webConnection)
+        {
+            object cacheID;
+
+            if (GetCacheID(parentDirectoryWrapperKey, out cacheID))
+                return new SubProcess.CachedObjectId(cacheID);
+
+            IDirectoryHandler parentDirectoryHandler = FileContainer.ParentDirectoryHandler;
+
+            if (null == parentDirectoryHandler)
+                throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, "The root directory has no parent directory"));
+
+            IWebResults webResults = parentDirectoryHandler.FileContainer.WebHandler.GetJSW(webConnection, null, null, false);
+            string webResultsAsString = webResults.ResultsAsString;
+
+            return new SubProcess.StringToEval(
+                "(" + webResultsAsString + ")",
+                GenerateCacheID(parentDirectoryWrapperKey));
+        }
+
+        /// <summary>
+        /// The times that objects were last modified
+        /// </summary>
+        Dictionary<string, DateTime> UseLastModified = new Dictionary<string, DateTime>();
+
+        /// <summary>
         /// Loads the given Javascript library into the scope, if it is not yet loaded
         /// </summary>
         /// <param name="toLoad"></param>
-        public object Use(FunctionCallContext functionCallContext, string toLoad)
+        public object Use(IWebConnection webConnection, string toLoad)
         {
-            // If the library is already loaded, then the return value is cached.
             // If the library isn't loaded, then the script needs to be loaded and executed
-            object toReturn;
-            if (!LoadedLibraries.TryGetValue(toLoad, out toReturn))
+            IFileContainer fileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(toLoad);
+
+            // Just return if the user doesn't have permission to the file
+            if (null == fileContainer.LoadPermission(webConnection.Session.User.Id))
+                return false;
+
+            ITextHandler textHandler;
+            try
             {
-                IFileContainer fileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(toLoad);
-
-                // Just return if the user doesn't have permission to the file
-                if (null == fileContainer.LoadPermission(functionCallContext.WebConnection.Session.User.Id))
-                    return false;
-
-                ITextHandler textHandler;
-                try
-                {
-                    textHandler = fileContainer.CastFileHandler<ITextHandler>();
-                    LoadedLibrariesLastModified[toLoad] = fileContainer.LastModified;
-                }
-                catch (Exception e)
-                {
-                    log.Warn("An attempt was made to load a Javascript library that is not a text file.", e);
-                    return false;
-                }
-
-                toReturn = functionCallContext.Context.evaluateString(
-                    Scope,
-                    textHandler.ReadAll(),
-                    "<cmd>",
-                    1,
-                    null);
-
-                LoadedLibraries[toLoad] = toReturn;
+                textHandler = fileContainer.CastFileHandler<ITextHandler>();
+                LoadedLibrariesLastModified[toLoad] = fileContainer.LastModified;
+            }
+            catch (Exception e)
+            {
+                log.Warn("An attempt was made to load a Javascript library that is not a text file.", e);
+                return false;
             }
 
-            // If the dependant library has been modified, reload it
-            if (LoadedLibrariesLastModified[toLoad] != FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(toLoad).FileHandler.FileContainer.LastModified)
-            {
-                LoadedLibraries.Remove(toLoad);
-                return Use(functionCallContext, toLoad);
-            }
+            object cacheId;
+            string cacheIdKey = "Use:::::::" + toLoad;
 
-            return toReturn;
-        }*/
+            // If the library is already loaded, then the return value is cached.
+            if (GetCacheID(cacheIdKey, out cacheId))
+            {
+                if (fileContainer.LastModified == UseLastModified[toLoad])
+                    return new SubProcess.CachedObjectId(cacheId);
+            }
+            else
+                cacheId = GenerateCacheID(cacheIdKey);
+
+            UseLastModified[toLoad] = fileContainer.LastModified;
+            return new SubProcess.StringToEval(
+                textHandler.ReadAll(),
+                cacheId);
+        }
+
+        /// <summary>
+        /// The times that objects were last modified
+        /// </summary>
+        Dictionary<string, DateTime> OpenLastModified = new Dictionary<string, DateTime>();
+
+        /// <summary>
+        /// Returns a wrapper to use the specified object
+        /// </summary>
+        /// <param name="toOpen"></param>
+        /// <returns></returns>
+        public object Open(IWebConnection webConnection, string toOpen)
+        {
+            object cacheId;
+            string cacheIdKey = "Open-+-+-+-+" + toOpen;
+
+            IFileContainer fileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(toOpen);
+
+            // If the library is already loaded, then the return value is cached.
+            if (GetCacheID(cacheIdKey, out cacheId))
+            {
+                if (fileContainer.LastModified == OpenLastModified[toOpen])
+                    return new SubProcess.CachedObjectId(cacheId);
+            }
+            else
+                cacheId = GenerateCacheID(cacheIdKey);
+
+            string wrapper = fileContainer.WebHandler.GetJSW(webConnection, null, null, false).ResultsAsString;
+
+            OpenLastModified[toOpen] = fileContainer.LastModified;
+            return new SubProcess.StringToEval(
+                "(" + wrapper + ")",
+                cacheId);
+        }
     }
 }
