@@ -19,26 +19,33 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <summary>
         /// Whenever a sub process is started, its ID must be sent to this sub stream
         /// </summary>
-        static StreamWriter SubProcessIdWriteStream;
+        static StreamWriter SubProcessIdWriteStream = null;
 
         static SubProcess()
         {
-            Process pkp = new Process();
-            pkp.StartInfo = new ProcessStartInfo("ProcessKiller.exe", Process.GetCurrentProcess().Id.ToString());
-            pkp.StartInfo.RedirectStandardInput = true;
-            pkp.StartInfo.UseShellExecute = false;
-
-            if (!pkp.Start())
-            {
-                Exception e = new JavascriptException("Could not start sub process");
-                log.Error("Error starting Process Killer sub process", e);
-
-                throw e;
-            }
-
-            log.Info("Process Killer started: " + pkp.ToString());
-
-            SubProcessIdWriteStream = pkp.StandardInput;
+			try
+			{
+	            Process pkp = new Process();
+	            pkp.StartInfo = new ProcessStartInfo("ProcessKiller.exe", Process.GetCurrentProcess().Id.ToString());
+	            pkp.StartInfo.RedirectStandardInput = true;
+	            pkp.StartInfo.UseShellExecute = false;
+	
+	            if (!pkp.Start())
+	            {
+	                Exception e = new JavascriptException("Could not start sub process");
+	                log.Error("Error starting Process Killer sub process", e);
+	
+	                throw e;
+	            }
+	
+	            log.Info("Process Killer started, parent process id (" + Process.GetCurrentProcess().Id.ToString() + "): " + pkp.ToString());
+	
+	            SubProcessIdWriteStream = pkp.StandardInput;
+			}
+			catch (Exception e)
+			{
+				log.Error("Error starting process killer", e);
+			}
         }
 
         public SubProcess()
@@ -61,8 +68,9 @@ namespace ObjectCloud.Javascript.SubProcess
 
             log.Info("Javascript sub process started: " + Process.ToString());
 
-            using (TimedLock.Lock(SubProcessIdWriteStream))
-                SubProcessIdWriteStream.WriteLine(Process.Id.ToString());
+			if (null == SubProcessIdWriteStream)
+            		using (TimedLock.Lock(SubProcessIdWriteStream))
+                		SubProcessIdWriteStream.WriteLine(Process.Id.ToString());
 
             JSONSender = new JsonWriter(Process.StandardInput);
 

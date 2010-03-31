@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using System.Threading;
 
 namespace ProcessKiller
 {
@@ -18,13 +19,35 @@ namespace ProcessKiller
             try
             {
                 Process parent = Process.GetProcessById(Convert.ToInt32(args[0]));
+				
+				Console.WriteLine("Got parent process");
+				Console.WriteLine(parent.ToString());
+				
                 parent.Exited += new EventHandler(parent_Exited);
+				
+				Console.WriteLine("Registered exit handler");
 
                 while (true)
                 {
-                    Process newProcess = Process.GetProcessById(Convert.ToInt32(Console.In.ReadLine().Trim()));
-                    newProcess.Exited += new EventHandler(newProcess_Exited);
-                    SubProcesses.Add(newProcess);
+					string processId = Console.ReadLine();
+					
+					if (null != processId)
+					{
+						if (processId.Length > 0)
+						{
+							Console.WriteLine(processId);
+							
+		                    Process newProcess = Process.GetProcessById(Convert.ToInt32(processId.Trim()));
+						
+							Console.WriteLine("Got sub process");
+							Console.WriteLine(newProcess.ToString());
+						
+		                    newProcess.Exited += new EventHandler(newProcess_Exited);
+		                    SubProcesses.Add(newProcess);
+						}
+					}
+					else
+						Thread.Sleep(3000);
                 }
 
             }
