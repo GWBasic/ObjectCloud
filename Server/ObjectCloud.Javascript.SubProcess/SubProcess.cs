@@ -16,11 +16,36 @@ namespace ObjectCloud.Javascript.SubProcess
 	{
         static ILog log = LogManager.GetLogger<SubProcess>();
 
-		public SubProcess ()
-		{
-			Process = new Process();
+        /// <summary>
+        /// Whenever a sub process is started, its ID must be sent to this sub stream
+        /// </summary>
+        static StreamWriter SubProcessIdWriteStream;
+
+        static SubProcess()
+        {
+            Process pkp = new Process();
+            pkp.StartInfo = new ProcessStartInfo("ProcessKiller.exe", Process.GetCurrentProcess().Id.ToString());
+            pkp.StartInfo.RedirectStandardInput = true;
+            pkp.StartInfo.UseShellExecute = false;
+
+            if (!pkp.Start())
+            {
+                Exception e = new JavascriptException("Could not start sub process");
+                log.Error("Error starting Process Killer sub process", e);
+
+                throw e;
+            }
+
+            log.Info("Process Killer started: " + pkp.ToString());
+
+            SubProcessIdWriteStream = pkp.StandardInput;
+        }
+
+        public SubProcess()
+        {
+            Process = new Process();
             Process.StartInfo = new ProcessStartInfo("java", "-cp ." + Path.DirectorySeparatorChar + "js.jar -jar JavascriptProcess.jar " + Process.GetCurrentProcess().Id.ToString());
-			Process.StartInfo.RedirectStandardInput = true;
+            Process.StartInfo.RedirectStandardInput = true;
             Process.StartInfo.RedirectStandardOutput = true;
             Process.StartInfo.RedirectStandardError = true;
             Process.StartInfo.UseShellExecute = false;
@@ -36,7 +61,10 @@ namespace ObjectCloud.Javascript.SubProcess
 
             log.Info("Javascript sub process started: " + Process.ToString());
 
-			JSONSender = new JsonWriter(Process.StandardInput);
+            using (TimedLock.Lock(SubProcessIdWriteStream))
+                SubProcessIdWriteStream.WriteLine(Process.Id.ToString());
+
+            JSONSender = new JsonWriter(Process.StandardInput);
 
             new Thread(new ThreadStart(MonitorForResponses)).Start();
             new Thread(new ThreadStart(MonitorForErrors)).Start();
