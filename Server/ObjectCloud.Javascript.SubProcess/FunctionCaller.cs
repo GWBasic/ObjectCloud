@@ -362,9 +362,6 @@ namespace ObjectCloud.Javascript.SubProcess
                     Thread.CurrentThread.ManagedThreadId,
                     FunctionName,
                     parsedArguments);
-                    
-                    
-                    // JavascriptMethod.call(context, Scope, Scope, parsedArguments);
 
                 TimeSpan callTime = DateTime.UtcNow - start;
                 string logMessage = FileContainer.FullPath + "?Method=" + FunctionName + " called in " + callTime.ToString();
