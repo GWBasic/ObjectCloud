@@ -324,6 +324,9 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <returns></returns>
         protected IWebResults CallFunction(IWebConnection webConnection, CallingFrom callingFrom, IDictionary<string, string> arguments)
         {
+            if (ScopeWrapper.Disposed)
+                throw new ObjectDisposedException(FileContainer.FullPath + "'s javascript scope is disposed");
+
             // This value is ThreadStatic so that if the function shells, it can still know about the connection
             FunctionCaller oldMe = _Current;
             _Current = this;
@@ -357,9 +360,8 @@ namespace ObjectCloud.Javascript.SubProcess
 
                 DateTime start = DateTime.UtcNow;
 
-                object callResults = ScopeWrapper.SubProcess.CallFunctionInScope(
-                    ScopeWrapper.ScopeId,
-                    Thread.CurrentThread.ManagedThreadId,
+                object callResults = ScopeWrapper.CallFunction(
+                    webConnection,
                     FunctionName,
                     parsedArguments);
 

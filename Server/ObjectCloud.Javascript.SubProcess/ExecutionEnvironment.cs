@@ -124,21 +124,6 @@ namespace ObjectCloud.Javascript.SubProcess
         }
         private readonly Dictionary<string, string> _ScriptAnnotations = new Dictionary<string, string>();
 
-        /*// <summary>
-        /// Returns true if the script is configured to be fast and insecure
-        /// </summary>
-        public bool IsFastAndInsecure
-        {
-            get
-            {
-                if (ScriptAnnotations.ContainsKey("state"))
-                    if (ScriptAnnotations["state"] == "shared")
-                        return true;
-
-                return false;
-            }
-        }*/
-
         /// <summary>
         /// Cache of scopes for each user
         /// </summary>
@@ -169,7 +154,7 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             try
             {
-                return new ScopeWrapper(FileHandlerFactoryLocator, webConnection, Javascript, FileContainer);
+                return new ScopeWrapper(FileHandlerFactoryLocator, webConnection, Javascript, FileContainer, GetSubProcess);
             }
             catch (Exception e)
             {
@@ -178,103 +163,22 @@ namespace ObjectCloud.Javascript.SubProcess
             }
         }
 
-        /*// <summary>
-        /// Cache of scopes for each user
-        /// </summary>
-        // TODO:  This could SUCK UP memory if not careful, the ScopeCaches will only be collected if the underlying WebHandler
-        // is collected.  If the underlying WebHandler has a life that's much longer then each user, a user could have a Scope
-        // that's very old!!!
-        Dictionary<ID<IUserOrGroup, Guid>, ScopeWrapper> ScopeCache = new Dictionary<ID<IUserOrGroup,Guid>,ScopeWrapper>();
-
         /// <summary>
-        /// When scopes were last accessed
+        /// The sub process
         /// </summary>
-        Dictionary<ScopeWrapper, DateTime> ScopeLastAccessed = new Dictionary<ScopeWrapper, DateTime>();
+        private static SubProcess SubProcess = new SubProcess();
 
-        /// <summary>
-        /// Used to prevent multiple threads from constructing a ScopeWrapper simutainiously
-        /// </summary>
-        Dictionary<ID<IUserOrGroup, Guid>, object> ConstructionLocks = new Dictionary<ID<IUserOrGroup, Guid>, object>();
+        private static object SubProcessKey = new object();
 
-        /// <summary>
-        /// Gets or creates the scope for the user
-        /// </summary>
-        /// <param name="context"></param>
-        /// <param name="webConnection"></param>
-        /// <returns></returns>
-        ScopeWrapper GetOrCreateScope(IWebConnection webConnection)
+        private static SubProcess GetSubProcess()
         {
-            ID<IUserOrGroup, Guid> userId = webConnection.Session.User.Id;
+            if (!SubProcess.Alive)
+                using (TimedLock.Lock(SubProcessKey))
+                    if (!SubProcess.Alive)
+                        SubProcess = new SubProcess();
 
-            bool construct = false;
-
-            ScopeWrapper toReturn = null;
-            using (TimedLock.Lock(ScopeCache))
-                construct = !ScopeCache.TryGetValue(userId, out toReturn);
-
-            if (construct)
-            {
-                object toLock = null;
-
-                using (TimedLock.Lock(ConstructionLocks))
-                {
-                    if (!ConstructionLocks.TryGetValue(userId, out toLock))
-                    {
-                        toLock = new object();
-                        ConstructionLocks[userId] = toLock;
-                    }
-                }
-
-                using (TimedLock.Lock(toLock))
-                {
-                    using (TimedLock.Lock(ScopeCache))
-                        if (!ScopeCache.TryGetValue(userId, out toReturn))
-                        {
-                            DateTime start = DateTime.UtcNow;
-
-                            toReturn = new ScopeWrapper(FileHandlerFactoryLocator, webConnection, Javascript, TheObject);
-
-                            TimeSpan contructionTime = DateTime.UtcNow - start;
-
-                            if (contructionTime.TotalSeconds > 3)
-                                log.Warn("Constructing a ScopeWrapper for " + TheObject.FullPath + " for " + webConnection.Session.User + " took " + contructionTime.ToString());
-
-                            ScopeCache[userId] = toReturn;
-                        }
-                }
-            }
-
-            using (TimedLock.Lock(ScopeLastAccessed))
-                ScopeLastAccessed[toReturn] = DateTime.Now;
-
-            // 1 in 100 chance of cleaning old memory
-            if (0 == SRandom.Next(0, 99))
-                ThreadPool.QueueUserWorkItem(CleanOldScopes);
-
-            return toReturn;
+            return SubProcess;
         }
-
-        /// <summary>
-        /// Assists in cleaning old scopes
-        /// </summary>
-        /// <param name="state"></param>
-        private void CleanOldScopes(object state)
-        {
-            IEnumerable<KeyValuePair<ScopeWrapper, DateTime>> toIterate;
-
-            using (TimedLock.Lock(ScopeLastAccessed))
-                toIterate = new List<KeyValuePair<ScopeWrapper, DateTime>>(ScopeLastAccessed);
-
-            foreach (KeyValuePair<ScopeWrapper, DateTime> scopeLastAccessed in toIterate)
-                if (scopeLastAccessed.Value.AddMinutes(10) < DateTime.UtcNow)
-                {
-                    using (TimedLock.Lock(ScopeCache))
-                        ScopeCache.Remove(scopeLastAccessed.Key.User.Id);
-
-                    using (TimedLock.Lock(ScopeLastAccessed))
-                        ScopeLastAccessed.Remove(scopeLastAccessed.Key);
-                }
-        }*/
 
         /// <summary>
         /// Returns a delegate to handle the incoming request

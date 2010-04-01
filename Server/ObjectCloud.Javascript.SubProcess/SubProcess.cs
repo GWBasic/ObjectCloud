@@ -113,6 +113,27 @@ namespace ObjectCloud.Javascript.SubProcess
                 SubProcesses.Add(Process);
         }
 
+        /// <summary>
+        /// Set to true if the sub process terminates abnormally; indicating to owners that they need to take actions to recreate their scopes
+        /// </summary>
+        bool Aborted = false;
+
+        /// <summary>
+        /// True if the sub process is still alive, false otherwise
+        /// </summary>
+        public bool Alive
+        {
+            get { return (!Aborted) & (!Disposed); }
+        }
+
+        /// <summary>
+        /// Thrown when an attempt is made to use an aborted Javascript sub-process; usage of long-lived scopes should handle this exception
+        /// </summary>
+        public class AbortedException : ApplicationException
+        {
+            internal AbortedException() : base("The javascript sub-process was aborted, thus the scope is no longer available") { }
+        }
+
         void Process_Exited(object sender, EventArgs e)
         {
             ((Process)sender).Exited -= new EventHandler(Process_Exited);
@@ -120,7 +141,10 @@ namespace ObjectCloud.Javascript.SubProcess
                 SubProcesses.Remove(((Process)sender));
 
             if (!Disposed)
+            {
                 Dispose();
+                Aborted = true;
+            }
         }
 
         /// <summary>
@@ -274,10 +298,11 @@ namespace ObjectCloud.Javascript.SubProcess
 		/// <param name="threadID">
 		/// This must be unique for each stack trace.  If calls cross scopes, new threadIDs must be used <see cref="System.Object"/>
 		/// </param>
+        /// <exception cref="ObjectDisposedException">Thrown if the sub process was disposed through normal execution.</exception>
+        /// <exception cref="AbortedException">Thrown if the sub process aborted anormally.  Callers should recover from this error condition</exception>
         public EvalScopeResults EvalScope(int scopeId, object threadID, string script, IEnumerable<string> functions, bool returnFunctions)
 		{
-            if (Disposed)
-                throw new ObjectDisposedException("This Javascript sub process is disposed and can no longer be used");
+            CheckIfAbortedOrDisposed();
 
             Dictionary<string, object> command;
             Dictionary<string, object> data;
@@ -325,12 +350,29 @@ namespace ObjectCloud.Javascript.SubProcess
 		}
 
         /// <summary>
+        /// Throws an exception if the sub process is aborted or disposed
+        /// </summary>
+        private void CheckIfAbortedOrDisposed()
+        {
+            if (Aborted)
+                throw new AbortedException();
+
+            if (Disposed)
+                throw new ObjectDisposedException("This Javascript sub process is disposed and can no longer be used");
+
+        }
+
+        /// <summary>
         /// Disposes a scope, removing all references to the call parent function callback
         /// </summary>
         /// <param name="scopeId"></param>
         /// <param name="callParentFunctionDelegate"></param>
         public void DisposeScope(int scopeId, object threadID)
         {
+            // If the sub process was aborted or disposed, then just ignore further cleanup requests
+            if (Aborted || Disposed)
+                return;
+
             ParentFunctionDelegatesByScopeId.Remove(scopeId);
 
             Dictionary<string, object> command;
@@ -347,8 +389,12 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <param name="scopeID"></param>
         /// <param name="arguments"></param>
         /// <returns></returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the sub process was disposed through normal execution.</exception>
+        /// <exception cref="AbortedException">Thrown if the sub process aborted anormally.  Callers should recover from this error condition</exception>
         public object CallFunctionInScope(int scopeId, object threadID, string functionName, IEnumerable arguments)
         {
+            CheckIfAbortedOrDisposed();
+
             Dictionary<string, object> command;
             Dictionary<string, object> data;
             CreateCommand(scopeId, threadID, "CallFunctionInScope", out command, out data);
@@ -369,8 +415,12 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <param name="scopeID"></param>
         /// <param name="arguments"></param>
         /// <returns></returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the sub process was disposed through normal execution.</exception>
+        /// <exception cref="AbortedException">Thrown if the sub process aborted anormally.  Callers should recover from this error condition</exception>
         public object CallCallback(int scopeId, object threadID, object callbackId, IEnumerable arguments)
         {
+            CheckIfAbortedOrDisposed();
+
             Dictionary<string, object> command;
             Dictionary<string, object> data;
             CreateCommand(scopeId, threadID, "CallCallback", out command, out data);
@@ -694,9 +744,15 @@ namespace ObjectCloud.Javascript.SubProcess
         }
 
         private bool Disposed = false;
-		
+
 		public void Dispose()
 		{
+            if (Disposed)
+                return;
+
+            if (Aborted)
+                return;
+
             foreach (object monitorObject in MonitorObjectsByThreadId.Values)
                 lock (monitorObject)
                     Monitor.Pulse(monitorObject);
