@@ -23,6 +23,7 @@ namespace ProcessKiller
 				Console.WriteLine("Got parent process");
 				Console.WriteLine(parent.ToString());
 				
+				parent.EnableRaisingEvents = true;
                 parent.Exited += new EventHandler(parent_Exited);
 				
 				Console.WriteLine("Registered exit handler");
