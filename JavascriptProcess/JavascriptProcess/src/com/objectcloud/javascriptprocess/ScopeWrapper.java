@@ -303,6 +303,10 @@ public class ScopeWrapper {
 					//Context.javaToJS(argument, scope));
 					//((Scriptable)context.evaluateString(scope, "(" + argument.toString() + ")", "<cmd>", 1, null)).get(0, scope));
 					Context.javaToJS(context.evaluateString(scope, "(" + argument.toString() + ")", "<cmd>", 1, null), scope));
+			else if (JSONObject.NULL == argument)
+				arguments.set(
+						ctr,
+						null);
 		}
 		
 		try {
@@ -315,7 +319,12 @@ public class ScopeWrapper {
 		} catch (EcmaError ee) {
 			returnResult(command, context, threadID, ee.getMessage(), "Exception");
 		} catch (Exception e) {
-			returnResult("RespondEvalScope", context, threadID, e.getMessage(), "Exception");
+			
+			StringBuilder exceptionMessage = new StringBuilder(e.getMessage());
+			for (StackTraceElement ste : e.getStackTrace())
+				exceptionMessage.append("\n" + ste.toString());
+			
+			returnResult("RespondEvalScope", context, threadID, exceptionMessage.toString(), "Exception");
 			return;
         }
 	}

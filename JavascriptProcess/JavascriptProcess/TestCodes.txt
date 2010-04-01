@@ -140,3 +140,21 @@
    }
 }
 
+{
+   "ScopeID":123,
+   "Command":"EvalScope",
+   "ThreadID":456,
+   "Data":
+   {
+      "ReturnFunctions":true,
+      "Script": "xxx();",
+      "Functions":["xxx"]
+   }
+}
+
+{
+   "ScopeID":123,
+   "Command":"RespondCallParentFunction",
+   "ThreadID":456,
+   "Data":{}
+}
