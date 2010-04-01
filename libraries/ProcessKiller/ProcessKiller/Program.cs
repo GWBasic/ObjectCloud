@@ -43,6 +43,7 @@ namespace ProcessKiller
 							Console.WriteLine("Got sub process");
 							Console.WriteLine(newProcess.ToString());
 						
+							newProcess.EnableRaisingEvents = true;
 		                    newProcess.Exited += new EventHandler(newProcess_Exited);
 		                    SubProcesses.Add(newProcess);
 						}
