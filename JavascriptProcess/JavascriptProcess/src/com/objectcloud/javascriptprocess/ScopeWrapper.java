@@ -18,6 +18,7 @@ import org.mozilla.javascript.Context;
 import org.mozilla.javascript.EcmaError;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.FunctionObject;
+import org.mozilla.javascript.JavaScriptException;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.Undefined;
@@ -211,6 +212,9 @@ public class ScopeWrapper {
 		
 		try {
 			callResults = context.evaluateString(scope, data.getString("Script"), "<cmd>", 1, null);
+		} catch (JavaScriptException je) {
+			returnResult("RespondEvalScope", context, threadID, je.getValue(), outData, "Exception");
+			return;
 		} catch (Exception e) {
 			returnResult("RespondEvalScope", context, threadID, e.getMessage(), outData, "Exception");
 			return;
@@ -296,9 +300,14 @@ public class ScopeWrapper {
 		try {
 			Object callResults = function.call(context, scope, scope, arguments.toArray());
 			returnResult(command, context, threadID, callResults, "Result");
-		}
-		catch (EcmaError ee) {
+		} catch (JavaScriptException je) {
+			returnResult("RespondEvalScope", context, threadID, je.getValue(), "Exception");
+			return;
+		} catch (EcmaError ee) {
 			returnResult(command, context, threadID, ee.getMessage(), "Exception");
+		} catch (Exception e) {
+			returnResult("RespondEvalScope", context, threadID, e.getMessage(), "Exception");
+			return;
         }
 	}
 	
@@ -462,7 +471,15 @@ public class ScopeWrapper {
 					
 					JSONObject dataFromParent = inCommand.getJSONObject("Data");
 					
-					if (dataFromParent.has("Result")) {
+					if (dataFromParent.has("Exception")) {
+						
+						// First, try throwing the exception in Javascript
+						context.evaluateString(scope, "throw " + dataFromParent.get("Exception").toString() + ";", "<cmd>", 1, null);
+						
+						// if that didn't throw, then throw a meaner exception
+						throw new Exception(dataFromParent.get("Exception").toString());
+					}
+					else if (dataFromParent.has("Result")) {
 						Object toReturn = dataFromParent.get("Result");
 		
 						// If the object is a JSONArray or JSONObject, then it can't be directly consumed in Rhino and must be
