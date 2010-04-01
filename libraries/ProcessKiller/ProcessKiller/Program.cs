@@ -75,13 +75,17 @@ namespace ProcessKiller
 
         static void parent_Exited(object sender, EventArgs e)
         {
+			Console.WriteLine("Parent process exited");
+			
             foreach (Process p in SubProcesses)
                 try
                 {
+					Console.WriteLine("Killing: " + p.ToString());
                     p.Kill();
                 }
                 catch { }
 
+			Console.WriteLine("Killing Process Killer");
             Environment.Exit(0);
         }
 
