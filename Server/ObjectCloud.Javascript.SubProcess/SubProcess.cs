@@ -21,31 +21,62 @@ namespace ObjectCloud.Javascript.SubProcess
         /// </summary>
         static StreamWriter SubProcessIdWriteStream = null;
 
+        /// <summary>
+        /// The sub processes
+        /// </summary>
+        static Set<Process> SubProcesses = new Set<Process>();
+
         static SubProcess()
         {
-			try
-			{
-	            Process pkp = new Process();
-	            pkp.StartInfo = new ProcessStartInfo("ProcessKiller.exe", Process.GetCurrentProcess().Id.ToString());
-	            pkp.StartInfo.RedirectStandardInput = true;
-	            pkp.StartInfo.UseShellExecute = false;
-	
-	            if (!pkp.Start())
-	            {
-	                Exception e = new JavascriptException("Could not start sub process");
-	                log.Error("Error starting Process Killer sub process", e);
-	
-	                throw e;
-	            }
-	
-	            log.Info("Process Killer started, parent process id (" + Process.GetCurrentProcess().Id.ToString() + "): " + pkp.ToString());
-	
-	            SubProcessIdWriteStream = pkp.StandardInput;
-			}
-			catch (Exception e)
-			{
-				log.Error("Error starting process killer", e);
-			}
+            StartProcessKiller();
+        }
+
+        /// <summary>
+        /// Helper to start the process killer
+        /// </summary>
+        private static void StartProcessKiller()
+        {
+            try
+            {
+                Process pkp = new Process();
+                pkp.StartInfo = new ProcessStartInfo("ProcessKiller.exe", Process.GetCurrentProcess().Id.ToString());
+                pkp.StartInfo.RedirectStandardInput = true;
+                pkp.StartInfo.UseShellExecute = false;
+
+                pkp.EnableRaisingEvents = true;
+                pkp.Exited += new EventHandler(pkp_Exited);
+
+                if (!pkp.Start())
+                {
+                    Exception e = new JavascriptException("Could not start sub process");
+                    log.Error("Error starting Process Killer sub process", e);
+
+                    throw e;
+                }
+
+                log.Info("Process Killer started, parent process id (" + Process.GetCurrentProcess().Id.ToString() + "): " + pkp.ToString());
+
+                SubProcessIdWriteStream = pkp.StandardInput;
+
+                Set<Process> subProcesses;
+                using (TimedLock.Lock(SubProcesses))
+                    subProcesses = new Set<Process>(SubProcesses);
+
+                using (TimedLock.Lock(SubProcessIdWriteStream))
+                    foreach (Process subProcess in subProcesses)
+                        SubProcessIdWriteStream.WriteLine(subProcess.Id.ToString());
+
+            }
+            catch (Exception e)
+            {
+                log.Error("Error starting process killer", e);
+            }
+        }
+
+        static void pkp_Exited(object sender, EventArgs e)
+        {
+            ((Process)sender).Exited -= new EventHandler(pkp_Exited);
+            StartProcessKiller();
         }
 
         public SubProcess()
@@ -56,6 +87,7 @@ namespace ObjectCloud.Javascript.SubProcess
             Process.StartInfo.RedirectStandardOutput = true;
             Process.StartInfo.RedirectStandardError = true;
             Process.StartInfo.UseShellExecute = false;
+            Process.EnableRaisingEvents = true;
             Process.Exited += new EventHandler(Process_Exited);
 
             if (!Process.Start())
@@ -68,7 +100,7 @@ namespace ObjectCloud.Javascript.SubProcess
 
             log.Info("Javascript sub process started: " + Process.ToString());
 
-			if (null == SubProcessIdWriteStream)
+			if (null != SubProcessIdWriteStream)
             		using (TimedLock.Lock(SubProcessIdWriteStream))
                 		SubProcessIdWriteStream.WriteLine(Process.Id.ToString());
 
@@ -76,10 +108,17 @@ namespace ObjectCloud.Javascript.SubProcess
 
             new Thread(new ThreadStart(MonitorForResponses)).Start();
             new Thread(new ThreadStart(MonitorForErrors)).Start();
+
+            using (TimedLock.Lock(SubProcesses))
+                SubProcesses.Add(Process);
         }
 
         void Process_Exited(object sender, EventArgs e)
         {
+            ((Process)sender).Exited -= new EventHandler(Process_Exited);
+            using (TimedLock.Lock(SubProcesses))
+                SubProcesses.Remove(((Process)sender));
+
             if (!Disposed)
                 Dispose();
         }
