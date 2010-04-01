@@ -51,3 +51,92 @@
       "Script": "if (typeof CreateHttpRequest != 'function')   CreateHttpRequest = function()   {      var toReturn =      {         headers: {},         open: function(webMethod, url, asyncronous)         {            this.webMethod = webMethod;            this.url = url;            this.asyncronous = asyncronous;         },         setRequestHeader: function(name, value)         {                        this.headers[name] = value;         },         send: function(payload)         {            results = Shell(               this.webMethod,               this.url,               this.headers['Content-type'],               payload);            this.readyState = 4;            this.status = results.Status;            this.responseText = results.Content;            if (this.asyncronous)               this.onreadystatechange();         }      };      return toReturn;   };"
    }
 }
+
+{
+   "ScopeID":123,
+   "Command":"EvalScope",
+   "ThreadID":456,
+   "Data":
+   {
+      "ReturnFunctions":true,
+      "Script": "function a() {aaa();}",
+      "Functions":["aaa"]
+   }
+}
+
+{
+   "ScopeID":123,
+   "Command":"CallFunctionInScope",
+   "ThreadID":456,
+   "Data":
+   {
+      "FunctionName":"a",
+      "Arguments":[]
+   }
+}
+
+{
+   "ScopeID":123,
+   "Command":"RespondCallParentFunction",
+   "ThreadID":456,
+   "Data":
+   {
+      "Exception":{"Message":"afvafafaerf","ParentObjectId":123456}
+   }
+}
+
+
+{
+   "ScopeID":123,
+   "Command":"EvalScope",
+   "ThreadID":456,
+   "Data":
+   {
+      "Script": "function b(a,b,c) {return a + ' ' + b + ' ' + c;}",
+   }
+}
+
+{
+   "ScopeID":123,
+   "Command":"CallFunctionInScope",
+   "ThreadID":456,
+   "Data":
+   {
+      "FunctionName":"b",
+      "Arguments":[1,"fdsdfsa", {"apple":"fruit"}]
+   }
+}
+
+
+{
+   "ScopeID":123,
+   "Command":"EvalScope",
+   "ThreadID":456,
+   "Data":
+   {
+      "Script": "function c(a) {return a;}",
+   }
+}
+
+{
+   "ScopeID":123,
+   "Command":"CallFunctionInScope",
+   "ThreadID":456,
+   "Data":
+   {
+      "FunctionName":"c",
+      "Arguments":[{"apple":"fruit"}]
+   }
+}
+
+{
+   "ScopeID":123,
+   "Command":"CallFunctionInScope",
+   "ThreadID":456,
+   "Data":
+   {
+      "FunctionName":"c",
+      "Arguments":[["apple","fruit",456,789]]
+   }
+}
+

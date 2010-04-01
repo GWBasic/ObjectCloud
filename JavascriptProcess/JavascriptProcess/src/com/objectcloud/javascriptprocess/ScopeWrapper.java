@@ -274,11 +274,7 @@ public class ScopeWrapper {
 		String functionName = data.getString("FunctionName");
 		Function function = (Function)scope.get(functionName, scope);
 		
-		ArrayList<Object> arguments = new ArrayList<Object>();
-		for (Object o : data.getJSONArray("Arguments"))
-			arguments.add(o);
-		
-		callFunction("RespondCallFunctionInScope", context, threadID, function, arguments);
+		callFunction("RespondCallFunctionInScope", context, threadID, function, data.getJSONArray("Arguments"));
 	}
 	
 	private void callCallback(Context context, Object threadID, JSONObject data) throws Exception {
@@ -286,19 +282,32 @@ public class ScopeWrapper {
 		Object callbackID = data.get("CallbackId");
 		Function function = callbacks.get(callbackID);
 		
-		ArrayList<Object> arguments = new ArrayList<Object>();
-		for (Object o : data.getJSONArray("Arguments"))
-			arguments.add(o);
-		
-		callFunction("RespondCallCallback", context, threadID, function, arguments);
+		callFunction("RespondCallCallback", context, threadID, function, data.getJSONArray("Arguments"));
 	}
 
 	private void callFunction(String command, Context context, Object threadID,
-			Function function, ArrayList<Object> arguments)
+			Function function, JSONArray argumentsJSON)
 				throws JSONException, IOException {
-	
+
+		ArrayList<Object> arguments = new ArrayList<Object>();
+		for (Object o : argumentsJSON)
+			arguments.add(o);
+		
+		for (int ctr = 0; ctr < arguments.size(); ctr++)
+		{
+			Object argument = arguments.get(ctr);
+			
+			if ((argument instanceof JSONArray) || (argument instanceof JSONObject))
+				arguments.set(
+					ctr,
+					//Context.javaToJS(argument, scope));
+					//((Scriptable)context.evaluateString(scope, "(" + argument.toString() + ")", "<cmd>", 1, null)).get(0, scope));
+					Context.javaToJS(context.evaluateString(scope, "(" + argument.toString() + ")", "<cmd>", 1, null), scope));
+		}
+		
 		try {
 			Object callResults = function.call(context, scope, scope, arguments.toArray());
+			
 			returnResult(command, context, threadID, callResults, "Result");
 		} catch (JavaScriptException je) {
 			returnResult("RespondEvalScope", context, threadID, je.getValue(), "Exception");
