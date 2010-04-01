@@ -193,7 +193,18 @@ namespace ObjectCloud.Javascript.SubProcess
 
         ~ScopeWrapper()
         {
-            SubProcess.DisposeScope(ScopeId, Thread.CurrentThread.ManagedThreadId);
+            try
+            {
+                SubProcess.DisposeScope(ScopeId, Thread.CurrentThread.ManagedThreadId);
+            }
+            catch (Exception e)
+            {
+                try
+                {
+                    log.Error("Error finalizing: ", e);
+                }
+                catch { }
+            }
         }
 
         /// <summary>
@@ -518,5 +529,40 @@ namespace ObjectCloud.Javascript.SubProcess
                 "(" + wrapper + ")",
                 cacheId);
         }
+
+        /*// <summary>
+        /// Converts an object from Javascript to a string.  Doubles, bools, and strings are returned via ToString, everything else is JSON-stringified
+        /// </summary>
+        /// <param name="fromJavascript"></param>
+        /// <returns></returns>
+        public string ConvertObjectFromJavascriptToString(object fromJavascript)
+        {
+            if (null == fromJavascript)
+                return null;
+
+            else if (fromJavascript is SubProcess.Undefined)
+                return null;
+
+            else if (fromJavascript is double)
+                return ((double)fromJavascript).ToString("R");
+
+            else if (fromJavascript is bool)
+                return ((bool)fromJavascript) ? "true" : "false";
+
+            else if (fromJavascript is string)
+                return fromJavascript.ToString();
+
+            // The object isn't a known Javscript primitive.  Stringify it and return it as JSON
+            Context context = Context.enter();
+            try
+            {
+                object stringified = JsonStringifyFunction.call(context, Scope, Scope, new object[] { fromJavascript });
+                return stringified.ToString();
+            }
+            finally
+            {
+                Context.exit();
+            }
+        }*/
     }
 }

@@ -72,10 +72,6 @@ namespace ObjectCloud.Javascript.SubProcess
             if ((webResults.Status < Status._200_OK) || (webResults.Status > Status._207_Multi_Status))
                 throw new WebResultsOverrideException(webResults);
 
-            // For some reason, I can't figure out how to construct an object in C# using the rhino APIs...
-            // Therefore, I'm serializing to JSON and then un-serializing in Javascript
-            // TODO:  Optimize this
-
             Dictionary<string, object> toReturn = new Dictionary<string, object>();
             toReturn["Status"] = (int)webResults.Status;
             toReturn["Content"] = webResults.ResultsAsString;
@@ -199,7 +195,7 @@ namespace ObjectCloud.Javascript.SubProcess
 
                     content = requestParameters.ToBytes();
                 }
-                else if (postArguments is IEnumerable)
+                /*else if (postArguments is object[])
                 {
                     RequestParameters requestParameters = new RequestParameters();
 
@@ -211,7 +207,7 @@ namespace ObjectCloud.Javascript.SubProcess
                     }
 
                     content = requestParameters.ToBytes();
-                }
+                }*/
                 else
                     content = Encoding.UTF8.GetBytes(postArguments.ToString());
             }
@@ -255,14 +251,14 @@ namespace ObjectCloud.Javascript.SubProcess
             return ConvertWebResultToJavascript(shellResult);
         }
 
-        /*// <summary>
+        /// <summary>
         /// Sends a POST request to the specified object with the given arguments.  PostArguments must be a Javascript array that will be converted to urlencoded (p1=v1&p2=v2) format
         /// </summary>
         /// <param name="file"></param>
         /// <param name="method"></param>
         /// <param name="getArguments"></param>
         /// <returns></returns>
-        public static object Shell_POST_urlencoded(string file, string method, object postArguments, bool? bypassJavascriptNullable)
+        public static object Shell_POST_urlencoded(string file, object method, Dictionary<string, object> postArguments, bool? bypassJavascriptNullable)
         {
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
             bool bypassJavascript = bypassJavascriptNullable != null ? bypassJavascriptNullable.Value : false;
@@ -273,32 +269,12 @@ namespace ObjectCloud.Javascript.SubProcess
 
             if (null != postArguments)
             {
-                if (!(postArguments is Scriptable))
-                    throw new JavascriptException("Shell called with postArguments that isn't a Javascript array");
-
-                Scriptable postArgumentsS = (Scriptable)postArguments;
-
-                foreach (object id in postArgumentsS.getIds())
-                {
-                    object val;
-
-                    if (id is int)
-                        val = postArgumentsS.get((int)id, functionCallContext.Scope);
-                    else
-                        val = postArgumentsS.get(id.ToString(), functionCallContext.Scope);
-
-                    if (null != val)
-                    {
-                        string vasAsString = functionCallContext.ScopeWrapper.ConvertObjectFromJavascriptToString(val);
-
-                        if (null != vasAsString)
-                            requestParameters[id.ToString()] = vasAsString;
-                    }
-                }
+                foreach (KeyValuePair<string, object> idAndVal in postArguments)
+                    requestParameters[idAndVal.Key] = idAndVal.Value.ToString();
             }
 
             if (null != method)
-                url = HTTPStringFunctions.AppendGetParameter(url, "Method", method);
+                url = HTTPStringFunctions.AppendGetParameter(url, "Method", method.ToString());
 
             IWebResults shellResult = functionCallContext.WebConnection.ShellTo(
                 WebMethod.POST,
@@ -308,8 +284,7 @@ namespace ObjectCloud.Javascript.SubProcess
                 functionCallContext.CallingFrom,
                 bypassJavascript);
 
-            Scriptable toReturn = ConvertWebResultToJavascript(functionCallContext, shellResult);
-            return toReturn;
+            return ConvertWebResultToJavascript(shellResult);
         }
 
         /// <summary>
@@ -319,10 +294,10 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <param name="method"></param>
         /// <param name="toPost">Sent as-if if string, converted to string if number or bool, serialized to JSON otherwise</param>
         /// <returns></returns>
-        public static object Shell_POST(string file, string method, object toPost, java.lang.Boolean bypassJavascript)
+        public static object Shell_POST(string file, object method, object toPost, bool? bypassJavascriptNullable)
         {
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
-            bool bypassJavascriptB = bypassJavascript != null ? bypassJavascript.booleanValue() : false;
+            bool bypassJavascript = bypassJavascriptNullable != null ? bypassJavascriptNullable.Value : false;
 
             string url = file;
 
@@ -330,14 +305,18 @@ namespace ObjectCloud.Javascript.SubProcess
 
             if (null != toPost)
             {
-                string contentString = functionCallContext.ScopeWrapper.ConvertObjectFromJavascriptToString(toPost);
+                string contentString;
+                if (toPost is string)
+                    contentString = toPost.ToString();
+                else
+                    contentString = JsonWriter.Serialize(toPost);
 
                 if (null != contentString)
                     content = Encoding.UTF8.GetBytes(contentString);
             }
 
             if (null != method)
-                url = HTTPStringFunctions.AppendGetParameter(url, "Method", method);
+                url = HTTPStringFunctions.AppendGetParameter(url, "Method", method.ToString());
 
             IWebResults shellResult = functionCallContext.WebConnection.ShellTo(
                 WebMethod.POST,
@@ -345,11 +324,10 @@ namespace ObjectCloud.Javascript.SubProcess
                 content,
                 "",
                 functionCallContext.CallingFrom,
-                bypassJavascriptB);
+                bypassJavascript);
 
-            Scriptable toReturn = ConvertWebResultToJavascript(functionCallContext, shellResult);
-            return toReturn;
-        }*/
+            return ConvertWebResultToJavascript(shellResult);
+        }
 
         /// <summary>
         /// Calls the given function in an elevated cecurity context

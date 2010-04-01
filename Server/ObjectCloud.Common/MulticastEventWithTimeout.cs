@@ -99,20 +99,31 @@ namespace ObjectCloud.Common
         /// <param name="state"></param>
         private void DoCleanup(object state)
         {
-            if (null == Listeners)
-                return;
-
-            using (TimedLock.Lock(Listeners))
+            try
             {
                 if (null == Listeners)
                     return;
 
-                foreach (Listener listener in new List<Listener>(Listeners))
-                    if (listener.ExpireDateTime <= DateTime.UtcNow)
-                    {
-                        listener.TimeoutHandler(Sender);
-                        Listeners.Remove(listener);
-                    }
+                using (TimedLock.Lock(Listeners))
+                {
+                    if (null == Listeners)
+                        return;
+
+                    foreach (Listener listener in new List<Listener>(Listeners))
+                        if (listener.ExpireDateTime <= DateTime.UtcNow)
+                        {
+                            listener.TimeoutHandler(Sender);
+                            Listeners.Remove(listener);
+                        }
+                }
+            }
+            catch (Exception e)
+            {
+                try
+                {
+                    log.Error("Exception when propageting event", e);
+                }
+                catch { }
             }
         }
 

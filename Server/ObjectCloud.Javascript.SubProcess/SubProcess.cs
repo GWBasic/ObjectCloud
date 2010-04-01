@@ -409,6 +409,18 @@ namespace ObjectCloud.Javascript.SubProcess
         }
 
         /// <summary>
+        /// Tracks specific objects while the call static is in Javascript.  Once the callstack leaves Javascript, these objects are forgotten
+        /// </summary>
+        [ThreadStatic]
+        static Dictionary<int, object> TrackedObjects = null;
+
+        /// <summary>
+        /// The number of calls that are in Javascript
+        /// </summary>
+        [ThreadStatic]
+        uint NumInJavascriptCalls = 0;
+
+        /// <summary>
         /// Helper to block a thread until the response comes back
         /// </summary>
         /// <returns></returns>
@@ -417,107 +429,168 @@ namespace ObjectCloud.Javascript.SubProcess
             object monitorObject = new object();
             Dictionary<string, object> inCommand;
 
-            do
+            if (null == TrackedObjects)
+                TrackedObjects = new Dictionary<int, object>();
+
+            NumInJavascriptCalls++;
+
+            try
             {
-                bool needWait;
-                using (TimedLock.Lock(InCommandsByThreadId))
-                    needWait = !InCommandsByThreadId.TryGetValue(Thread.CurrentThread.ManagedThreadId, out inCommand);
-
-                if (needWait)
+                do
                 {
-                    using (TimedLock.Lock(MonitorObjectsByThreadId))
-                        MonitorObjectsByThreadId[Thread.CurrentThread.ManagedThreadId] = monitorObject;
+                    bool needWait;
+                    using (TimedLock.Lock(InCommandsByThreadId))
+                        needWait = !InCommandsByThreadId.TryGetValue(Thread.CurrentThread.ManagedThreadId, out inCommand);
 
-                    try
-                    {
-                        lock (monitorObject)
-                            Monitor.Wait(monitorObject);
-                    }
-                    finally
+                    if (needWait)
                     {
                         using (TimedLock.Lock(MonitorObjectsByThreadId))
-                            MonitorObjectsByThreadId.Remove(Thread.CurrentThread.ManagedThreadId);
-                    }
+                            MonitorObjectsByThreadId[Thread.CurrentThread.ManagedThreadId] = monitorObject;
 
-                    using (TimedLock.Lock(InCommandsByThreadId))
-                    {
-                        inCommand = InCommandsByThreadId[Thread.CurrentThread.ManagedThreadId];
-                        InCommandsByThreadId.Remove(Thread.CurrentThread.ManagedThreadId);
-                    }
-                }
-
-                Dictionary<string, object> dataToReturn = (Dictionary<string, object>)inCommand["Data"];
-
-                // If the response is for calling a parent function in this process, then call it, else just return the results
-                if ("CallParentFunction".Equals(inCommand["Command"]))
-                {
-                    string functionName = dataToReturn["FunctionName"].ToString();
-                    object[] arguments = new List<object>((IEnumerable<object>)dataToReturn["Arguments"]).ToArray();
-                    object threadId = inCommand["ThreadID"];
-
-                    // Convert callbacks to usable objects
-                    for (int argCtr = 0; argCtr < arguments.Length; argCtr++)
-                        if (arguments[argCtr] is Dictionary<string, object>)
+                        try
                         {
-                            Dictionary<string, object> argument = (Dictionary<string, object>)arguments[argCtr];
-                            object isCallback;
-                            if (argument.TryGetValue("Callback", out isCallback))
-                                if (isCallback is bool)
-                                    if (true == (bool)isCallback)
-                                    {
-                                        object callbackId;
-                                        if (argument.TryGetValue("CallbackID", out callbackId))
-                                            arguments[argCtr] = new Callback(this, scopeId, threadId, callbackId);
-                                    }
+                            lock (monitorObject)
+                                Monitor.Wait(monitorObject);
+                        }
+                        finally
+                        {
+                            using (TimedLock.Lock(MonitorObjectsByThreadId))
+                                MonitorObjectsByThreadId.Remove(Thread.CurrentThread.ManagedThreadId);
                         }
 
-                    Dictionary<string, object> outCommand;
-                    Dictionary<string, object> outData;
-                    CreateCommand(scopeId, threadId, "RespondCallParentFunction", out outCommand, out outData);
-
-                    try
-                    {
-                        object parentFunctionDataToReturn = this.ParentFunctionDelegatesByScopeId[scopeId](
-                            functionName,
-                            threadId,
-                            arguments);
-
-                        if (parentFunctionDataToReturn is StringToEval)
+                        using (TimedLock.Lock(InCommandsByThreadId))
                         {
-                            StringToEval stringToEval = (StringToEval)parentFunctionDataToReturn;
-                            outData["Eval"] = stringToEval.ToEval;
+                            inCommand = InCommandsByThreadId[Thread.CurrentThread.ManagedThreadId];
+                            InCommandsByThreadId.Remove(Thread.CurrentThread.ManagedThreadId);
+                        }
+                    }
 
-                            if (null != stringToEval.CacheId)
-                                outData["CacheID"] = stringToEval.CacheId;
+                    Dictionary<string, object> dataToReturn = (Dictionary<string, object>)inCommand["Data"];
+
+                    // If the response is for calling a parent function in this process, then call it, else just return the results
+                    if ("CallParentFunction".Equals(inCommand["Command"]))
+                    {
+                        string functionName = dataToReturn["FunctionName"].ToString();
+                        object[] arguments = new List<object>((IEnumerable<object>)dataToReturn["Arguments"]).ToArray();
+                        object threadId = inCommand["ThreadID"];
+
+                        // Convert callbacks to usable objects
+                        for (int argCtr = 0; argCtr < arguments.Length; argCtr++)
+                            if (arguments[argCtr] is Dictionary<string, object>)
+                            {
+                                Dictionary<string, object> argument = (Dictionary<string, object>)arguments[argCtr];
+                                object isCallback;
+                                if (argument.TryGetValue("Callback", out isCallback))
+                                    if (isCallback is bool)
+                                        if (true == (bool)isCallback)
+                                        {
+                                            object callbackId;
+                                            if (argument.TryGetValue("CallbackID", out callbackId))
+                                                arguments[argCtr] = new Callback(this, scopeId, threadId, callbackId);
+                                        }
+                            }
+
+                        Dictionary<string, object> outCommand;
+                        Dictionary<string, object> outData;
+                        CreateCommand(scopeId, threadId, "RespondCallParentFunction", out outCommand, out outData);
+
+                        try
+                        {
+                            object parentFunctionDataToReturn = this.ParentFunctionDelegatesByScopeId[scopeId](
+                                functionName,
+                                threadId,
+                                arguments);
+
+                            if (parentFunctionDataToReturn is StringToEval)
+                            {
+                                StringToEval stringToEval = (StringToEval)parentFunctionDataToReturn;
+                                outData["Eval"] = stringToEval.ToEval;
+
+                                if (null != stringToEval.CacheId)
+                                    outData["CacheID"] = stringToEval.CacheId;
+                            }
+
+                            else if (parentFunctionDataToReturn is CachedObjectId)
+                                outData["CacheID"] = ((CachedObjectId)parentFunctionDataToReturn).CacheId;
+
+                            else if (parentFunctionDataToReturn != Undefined.Value)
+                            {
+                                string nameSpace = parentFunctionDataToReturn.GetType().Namespace;
+
+                                if (!(nameSpace.StartsWith("System.") || nameSpace.Equals("System")))//    parentFunctionDataToReturn.GetType().Namespace.StartsWith("System"))
+                                {
+                                    Dictionary<string, object> jsoned = JsonReader.Deserialize<Dictionary<string, object>>(
+                                        JsonWriter.Serialize(parentFunctionDataToReturn));
+
+                                    int parentObjectId = SRandom.Next();
+                                    jsoned["ParentObjectId"] = parentObjectId;
+
+                                    TrackedObjects[parentObjectId] = parentFunctionDataToReturn;
+                                    parentFunctionDataToReturn = jsoned;
+                                }
+
+                                outData["Result"] = parentFunctionDataToReturn;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Dictionary<string, object> jsoned = JsonReader.Deserialize<Dictionary<string, object>>(
+                                JsonWriter.Serialize(e));
+
+                            int parentObjectId = SRandom.Next();
+                            jsoned["ParentObjectId"] = parentObjectId;
+
+                            TrackedObjects[parentObjectId] = e;
+
+                            outData["Exception"] = jsoned;
                         }
 
-                        else if (parentFunctionDataToReturn is CachedObjectId)
-                            outData["CacheID"] = ((CachedObjectId)parentFunctionDataToReturn).CacheId;
-                        
-                        else if (parentFunctionDataToReturn != Undefined.Value)
-                            outData["Result"] = parentFunctionDataToReturn;
+                        using (TimedLock.Lock(SendKey))
+                            JSONSender.Write(outCommand);
                     }
-                    catch (Exception e)
+                    else
                     {
-                        outData["Exception"] = JsonWriter.Serialize(e);
+                        object exceptionFromJavascript;
+                        if (dataToReturn.TryGetValue("Exception", out exceptionFromJavascript))
+                        {
+                            if (exceptionFromJavascript is Dictionary<string, object>)
+                            {
+                                object parentObjectId;
+                                if (((Dictionary<string, object>)exceptionFromJavascript).TryGetValue("ParentObjectId", out parentObjectId))
+                                    if (TrackedObjects.TryGetValue(Convert.ToInt32(parentObjectId), out exceptionFromJavascript))
+                                        if (exceptionFromJavascript is Exception)
+                                            throw (Exception)exceptionFromJavascript;
+                            }
+
+                            throw new JavascriptException(JsonWriter.Serialize(exceptionFromJavascript));
+                        }
+
+                        object result;
+                        if (dataToReturn.TryGetValue("Result", out result))
+                        {
+                            if (result is Dictionary<string, object>)
+                            {
+                                object parentObjectId;
+                                if (((Dictionary<string, object>)result).TryGetValue("ParentObjectId", out parentObjectId))
+                                    if (TrackedObjects.TryGetValue(Convert.ToInt32(parentObjectId), out result))
+                                        dataToReturn["Result"] = result;
+                            }
+                        }
+                        else
+                            dataToReturn["Result"] = Undefined.Value;
+
+                        return dataToReturn;
                     }
-
-                    using (TimedLock.Lock(SendKey))
-                        JSONSender.Write(outCommand);
                 }
-                else
-                {
-                    object exceptionFromJavascript;
-                    if (dataToReturn.TryGetValue("Exception", out exceptionFromJavascript))
-                        throw new JavascriptException(JsonWriter.Serialize(exceptionFromJavascript));
-
-                    if (!dataToReturn.ContainsKey("Result"))
-                        dataToReturn["Result"] = Undefined.Value;
-
-                    return dataToReturn;
-                }
+                while (true);
             }
-            while (true);
+            finally
+            {
+                NumInJavascriptCalls--;
+
+                if (0 == NumInJavascriptCalls)
+                    TrackedObjects.Clear();
+            }
         }
 
         /// <summary>
