@@ -870,6 +870,8 @@ namespace ObjectCloud.Disk.FileHandlers
             });
 
             FileIDCacheByName.Remove(oldFilename);
+			FileHandlerCache.Remove(oldFilename);
+			FileHandlerCache[newFilename].WebHandler.ResetExecutionEnvironment();
 
             // TODO:  changeData would be cool
             SendNotification(changer, oldFilename + " renamed to " + newFilename, null);
