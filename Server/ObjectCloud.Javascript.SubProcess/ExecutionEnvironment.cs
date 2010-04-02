@@ -20,7 +20,7 @@ using ObjectCloud.Interfaces.WebServer;
 namespace ObjectCloud.Javascript.SubProcess
 {
     /// <summary>
-    /// Provides a Javascript execution environment for an object
+    /// Provides a Javascript execution environment for an object and insulation from syntax errors
     /// </summary>
     public class ExecutionEnvironment : IExecutionEnvironment
     {
@@ -38,9 +38,7 @@ namespace ObjectCloud.Javascript.SubProcess
             GenericReturn<SubProcess> getSubProcessDelegate)
         {
             _FileHandlerFactoryLocator = fileHandlerFactoryLocator;
-            _FileContainer = fileContainer;
             _JavascriptContainer = javascriptContainer;
-            GetSubProcessDelegate = getSubProcessDelegate;
 
             // load both the javascript and its date in a lock
             ITextHandler javascriptTextHandler = javascriptContainer.CastFileHandler<ITextHandler>();
@@ -76,15 +74,26 @@ namespace ObjectCloud.Javascript.SubProcess
                 else
                     javascriptBuilder.AppendLine(line);
 
-            _Javascript = javascriptBuilder.ToString();
+            try
+            {
+                ScopeWrapper = new ObjectCloud.Javascript.SubProcess.ScopeWrapper(
+                    fileHandlerFactoryLocator,
+                    javascriptBuilder.ToString(),
+                    fileContainer,
+                    getSubProcessDelegate);
+            }
+            catch (Exception e)
+            {
+                // If the Javascript has an error in it, it must be ignored.  If an error were returned, then malformed Javascript could hose the system!
 
-            ScopeCache = new Cache<ID<IUserOrGroup, Guid>, ScopeWrapper, IWebConnection>(CreateScope);
+                log.Error("Error creating scope", e);
+            }
         }
 
         /// <summary>
-        /// Delegate that creates sub processes
+        /// The scope wrapper
         /// </summary>
-        GenericReturn<SubProcess> GetSubProcessDelegate;
+        ScopeWrapper ScopeWrapper = null;
         
         /// <summary>
         /// The FileHandlerFactoryLocator
@@ -94,15 +103,6 @@ namespace ObjectCloud.Javascript.SubProcess
             get { return _FileHandlerFactoryLocator; }
         }
         private readonly FileHandlerFactoryLocator _FileHandlerFactoryLocator;
-
-        /// <summary>
-        /// The object being wrapped
-        /// </summary>
-        public IFileContainer FileContainer
-        {
-            get { return _FileContainer; }
-        }
-        private readonly IFileContainer _FileContainer;
 
         /// <summary>
         /// The file that contains the JavaScript
@@ -119,12 +119,6 @@ namespace ObjectCloud.Javascript.SubProcess
         }
         private readonly DateTime _JavascriptLastModified;
 
-        public string Javascript
-        {
-            get { return _Javascript; }
-        }
-        private readonly string _Javascript;
-
         /// <summary>
         /// The script's attributes.  These are declared at the beginning of the script with lines that start with // @
         /// </summary>
@@ -133,45 +127,6 @@ namespace ObjectCloud.Javascript.SubProcess
             get { return _ScriptAnnotations; }
         }
         private readonly Dictionary<string, string> _ScriptAnnotations = new Dictionary<string, string>();
-
-        /// <summary>
-        /// Cache of scopes for each user
-        /// </summary>
-        Cache<ID<IUserOrGroup, Guid>, ScopeWrapper, IWebConnection> ScopeCache;
-
-        /// <summary>
-        /// Gets or creates the scope for the user
-        /// </summary>
-        /// <param name="context"></param>
-        /// <param name="webConnection"></param>
-        /// <returns></returns>
-        ScopeWrapper GetOrCreateScope(IWebConnection webConnection)
-        {
-            ScopeWrapper toReturn = ScopeCache.Get(webConnection.Session.User.Id, webConnection);
-
-            if (null == toReturn)
-                ScopeCache.Remove(webConnection.Session.User.Id);
-
-            return toReturn;
-        }
-
-        /// <summary>
-        /// Creates a scope and function callers for the cache
-        /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        ScopeWrapper CreateScope(ID<IUserOrGroup, Guid> userId, IWebConnection webConnection)
-        {
-            try
-            {
-                return new ScopeWrapper(FileHandlerFactoryLocator, webConnection, Javascript, FileContainer, GetSubProcessDelegate);
-            }
-            catch (Exception e)
-            {
-                _ExecutionEnvironmentErrors = e.Message;
-                return null;
-            }
-        }
 
         /// <summary>
         /// Returns a delegate to handle the incoming request
@@ -185,21 +140,8 @@ namespace ObjectCloud.Javascript.SubProcess
             {
                 string method = webConnection.GetParameters["Method"];
 
-                ScopeWrapper scopeWrapper;
-                try
-                {
-                    scopeWrapper = GetOrCreateScope(webConnection);
-                }
-                catch (Exception e)
-                {
-                    // If the Javascript has an error in it, it must be ignored.  If an error were returned, then malformed Javascript could hose the system!
-
-                    log.Error("Error creating scope", e);
-                    return null;
-                }
-
-                if (null != scopeWrapper)
-                    return scopeWrapper.GetMethod(method);
+                if (null != ScopeWrapper)
+                    return ScopeWrapper.GetMethod(method);
             }
 
             // If all else fails, just return null to indicate that the Javascript environment can't handle this request
@@ -212,7 +154,10 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <returns></returns>
         public IEnumerable<string> GenerateJavascriptWrapper(IWebConnection webConnection)
         {
-            return GetOrCreateScope(webConnection).GenerateJavascriptWrapper();
+            if (null != ScopeWrapper)
+                return ScopeWrapper.GenerateJavascriptWrapper();
+            else
+                return new string[0];
         }
 
         /// <summary>
@@ -226,10 +171,8 @@ namespace ObjectCloud.Javascript.SubProcess
 
         public bool IsBlockWebMethodsEnabled(IWebConnection webConnection)
         {
-            ScopeWrapper scopeWrapper = GetOrCreateScope(webConnection);
-
-            if (null != scopeWrapper)
-                return scopeWrapper.BlockWebMethods;
+            if (null != ScopeWrapper)
+                return ScopeWrapper.BlockWebMethods;
             else
                 return false;
         }

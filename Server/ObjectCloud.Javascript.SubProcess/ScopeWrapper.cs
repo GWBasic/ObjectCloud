@@ -83,7 +83,6 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <param name="fileContainer"></param>
         public ScopeWrapper(
             FileHandlerFactoryLocator fileHandlerFactoryLocator,
-            IWebConnection webConnection,
             string javascript,
             IFileContainer fileContainer,
             GenericReturn<SubProcess> getSubProcessDelegate)
@@ -102,7 +101,6 @@ namespace ObjectCloud.Javascript.SubProcess
             }
 
             _FileHandlerFactoryLocator = fileHandlerFactoryLocator;
-            _User = webConnection.Session.User;
             Javascript = javascript;
 
             int tryCtr = 0;
@@ -110,7 +108,7 @@ namespace ObjectCloud.Javascript.SubProcess
             while (null == SubProcess)
                 try
                 {
-                    ConstructScope(webConnection);
+                    ConstructScope();
                 }
                 catch (SubProcess.AbortedException)
                 {
@@ -119,9 +117,7 @@ namespace ObjectCloud.Javascript.SubProcess
                         throw;
 
                     tryCtr++;
-
-                    using (TimedLock.Lock(GetSubProcessDelegate))
-                        ConstructScope(webConnection);
+                    ConstructScope();
                 }
         }
 
@@ -129,7 +125,7 @@ namespace ObjectCloud.Javascript.SubProcess
         /// Constructs the sub process
         /// </summary>
         /// <param name="webConnection"></param>
-        public void ConstructScope(IWebConnection webConnection)
+        public void ConstructScope()
         {
             log.Info("Constructing Javascript scope for " + FileContainer.FullPath);
 
@@ -150,69 +146,82 @@ namespace ObjectCloud.Javascript.SubProcess
                     requestedScripts.Add(script.Trim());
             }
 
-            IEnumerable<ScriptAndMD5> dependantScriptsAndMD5s = webConnection.WebServer.WebComponentResolver.DetermineDependantScripts(
-                requestedScripts,
-                new BlockingShellWebConnection(
-                    webConnection.WebServer,
-                    webConnection.Session,
+            ISession ownerSession = FileHandlerFactoryLocator.SessionManagerHandler.CreateSession();
+            SubProcess.EvalScopeResults data;
+
+            try
+            {
+                ownerSession.User = FileContainer.Owner;
+
+                IWebConnection ownerWebConnection = new BlockingShellWebConnection(
+                    FileHandlerFactoryLocator.WebServer,
+                    ownerSession,
                     FileContainer.FullPath,
                     null,
                     null,
-                    webConnection.CookiesFromBrowser,
+                    new CookiesFromBrowser(),
                     CallingFrom.Web,
-                    WebMethod.GET));
+                    WebMethod.GET);
 
+                IEnumerable<ScriptAndMD5> dependantScriptsAndMD5s = FileHandlerFactoryLocator.WebServer.WebComponentResolver.DetermineDependantScripts(
+                    requestedScripts,
+                    ownerWebConnection);
 
-            FunctionsInScope = new Dictionary<string, MethodInfo>();
+                FunctionsInScope = new Dictionary<string, MethodInfo>();
 
-            // Load static methods that are passed into the Javascript environment as-is
-            foreach (Type javascriptFunctionsType in GetTypesThatHaveJavascriptFunctions(_FileContainer))
-                foreach (MethodInfo method in javascriptFunctionsType.GetMethods(BindingFlags.Static | BindingFlags.Public))
-                    FunctionsInScope[method.Name] = method;
+                // Load static methods that are passed into the Javascript environment as-is
+                foreach (Type javascriptFunctionsType in GetTypesThatHaveJavascriptFunctions(_FileContainer))
+                    foreach (MethodInfo method in javascriptFunctionsType.GetMethods(BindingFlags.Static | BindingFlags.Public))
+                        FunctionsInScope[method.Name] = method;
 
-            // Load all dependant scripts
-            foreach (ScriptAndMD5 dependantScript in dependantScriptsAndMD5s)
-            {
-                string toEval = webConnection.ShellTo(dependantScript.ScriptName).ResultsAsString;
+                // Load all dependant scripts
+                foreach (ScriptAndMD5 dependantScript in dependantScriptsAndMD5s)
+                {
+                    string toEval = ownerWebConnection.ShellTo(dependantScript.ScriptName).ResultsAsString;
+                    FunctionCaller.UseTemporaryCaller<SubProcess.EvalScopeResults>(
+                        this, FileContainer, ownerWebConnection, delegate()
+                        {
+                            return subProcess.EvalScope(
+                                ScopeId,
+                                Thread.CurrentThread.ManagedThreadId,
+                                toEval,
+                                FunctionsInScope.Keys,
+                                false);
+                        });
+                }
+
+                StringBuilder metadataBuilder = new StringBuilder();
+                AddMetadata(metadataBuilder);
+
+                // Construct Javascript to shell to the "base" webHandler
+                string baseWrapper = FileContainer.WebHandler.GetJavascriptWrapperForBase(ownerWebConnection, "base");
+                metadataBuilder.Append(baseWrapper);
                 FunctionCaller.UseTemporaryCaller<SubProcess.EvalScopeResults>(
-                    this, FileContainer, webConnection, delegate()
+                    this, FileContainer, ownerWebConnection, delegate()
                     {
                         return subProcess.EvalScope(
                             ScopeId,
                             Thread.CurrentThread.ManagedThreadId,
-                            toEval,
+                            metadataBuilder.ToString(),
                             FunctionsInScope.Keys,
                             false);
                     });
+
+                data = FunctionCaller.UseTemporaryCaller<SubProcess.EvalScopeResults>(
+                    this, FileContainer, ownerWebConnection, delegate()
+                    {
+                        return subProcess.EvalScope(
+                            ScopeId,
+                            Thread.CurrentThread.ManagedThreadId,
+                            Javascript + "\nif (this.options) options; else null;",
+                            FunctionsInScope.Keys,
+                            true);
+                    });
             }
-
-            StringBuilder metadataBuilder = new StringBuilder();
-            AddMetadata(webConnection, metadataBuilder);
-
-            // Construct Javascript to shell to the "base" webHandler
-            string baseWrapper = FileContainer.WebHandler.GetJavascriptWrapperForBase(webConnection, "base");
-            metadataBuilder.Append(baseWrapper);
-            FunctionCaller.UseTemporaryCaller<SubProcess.EvalScopeResults>(
-                this, FileContainer, webConnection, delegate()
-                {
-                    return subProcess.EvalScope(
-                        ScopeId,
-                        Thread.CurrentThread.ManagedThreadId,
-                        metadataBuilder.ToString(),
-                        FunctionsInScope.Keys,
-                        false);
-                });
-
-            SubProcess.EvalScopeResults data = FunctionCaller.UseTemporaryCaller<SubProcess.EvalScopeResults>(
-                this, FileContainer, webConnection, delegate()
-                {
-                    return subProcess.EvalScope(
-                        ScopeId,
-                        Thread.CurrentThread.ManagedThreadId,
-                        Javascript + "\nif (this.options) options; else null;",
-                        FunctionsInScope.Keys,
-                        true);
-                });
+            finally
+            {
+                FileHandlerFactoryLocator.SessionManagerHandler.EndSession(ownerSession.SessionId);
+            }
 
             // Initialize each function caller
             foreach (KeyValuePair<string, SubProcess.EvalScopeFunctionInfo> functionKVP in data.Functions)
@@ -276,7 +285,7 @@ namespace ObjectCloud.Javascript.SubProcess
         /// </summary>
         /// <param name="webConnection"></param>
         /// <param name="context"></param>
-        private void AddMetadata(IWebConnection webConnection, StringBuilder scriptBuilder)
+        private void AddMetadata(StringBuilder scriptBuilder)
         {
             //Ability to know the following from within Javascript:  File name, file path, owner name, owner ID, connected user name, connected user id
             Dictionary<string, object> fileMetadata = new Dictionary<string, object>();
@@ -299,15 +308,6 @@ namespace ObjectCloud.Javascript.SubProcess
             }
 
             AddObject(scriptBuilder, "fileMetadata", fileMetadata);
-
-            Dictionary<string, object> userMetadata = new Dictionary<string, object>();
-            IUser user = webConnection.Session.User;
-            userMetadata["id"] = user.Id.Value;
-            userMetadata["name"] = user.Name;
-            userMetadata["identity"] = user.Identity;
-			userMetadata["isLocal"] = user.Local;
-
-            AddObject(scriptBuilder, "userMetadata", userMetadata);
 
             Dictionary<string, object> hostMetadata = new Dictionary<string, object>();
             hostMetadata["host"] = FileHandlerFactoryLocator.HostnameAndPort;
@@ -335,15 +335,6 @@ namespace ObjectCloud.Javascript.SubProcess
 			if (fileHandler is IDatabaseHandler)
 				yield return typeof(JavascriptDatabaseFunctions);
 		}
-
-        /// <summary>
-        /// The user who owns this scope
-        /// </summary>
-        public IUser User
-        {
-            get { return _User; }
-        }
-        private readonly IUser _User;
 
         /// <summary>
         /// The FileHandlerFactoryLocator
@@ -391,24 +382,25 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <exception cref="AbortedException">Thrown if the sub process aborted anormally.  Callers should recover from this error condition</exception>
         public object CallFunction(IWebConnection webConnection, string functionName, IEnumerable arguments)
         {
-            int tryCtr = 0;
+            using (TimedLock.Lock(this, TimeSpan.FromSeconds(30)))
+            {
+                int tryCtr = 0;
 
-            while (true)
-                try
-                {
-                    return SubProcess.CallFunctionInScope(ScopeId, Thread.CurrentThread.ManagedThreadId, functionName, arguments);
-                }
-                catch (SubProcess.AbortedException)
-                {
-                    // Allow a max of 3 tries
-                    if (tryCtr >= 3)
-                        throw;
+                while (true)
+                    try
+                    {
+                        return SubProcess.CallFunctionInScope(ScopeId, Thread.CurrentThread.ManagedThreadId, functionName, arguments);
+                    }
+                    catch (SubProcess.AbortedException)
+                    {
+                        // Allow a max of 3 tries
+                        if (tryCtr >= 3)
+                            throw;
 
-                    tryCtr++;
-
-                    using (TimedLock.Lock(GetSubProcessDelegate))
-                        ConstructScope(webConnection);
-                }
+                        tryCtr++;
+                        ConstructScope();
+                    }
+            }
         }
 
         /// <summary>
