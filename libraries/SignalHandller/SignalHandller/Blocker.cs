@@ -47,7 +47,7 @@ namespace SignalHandller
 			{
 				Signum.SIGABRT,
 				//Signum.SIGBUS, Disabled because of mysterious MacOS behavior
-				Signum.SIGCHLD,
+				//Signum.SIGCHLD, Disabled because child processes stopping shouldn't kill the parent process
 				Signum.SIGHUP,
 				Signum.SIGILL,
 				Signum.SIGINT,
