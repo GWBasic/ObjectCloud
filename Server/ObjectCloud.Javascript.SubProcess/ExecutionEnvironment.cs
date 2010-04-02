@@ -31,11 +31,16 @@ namespace ObjectCloud.Javascript.SubProcess
         /// </summary>
         /// <param name="fileContainer">The object that will be accessed through Javascript</param>
         /// <param name="javascriptContainer">The text file that contains the javascript</param>
-        public ExecutionEnvironment(FileHandlerFactoryLocator fileHandlerFactoryLocator, IFileContainer fileContainer, IFileContainer javascriptContainer)
+        public ExecutionEnvironment(
+            FileHandlerFactoryLocator fileHandlerFactoryLocator,
+            IFileContainer fileContainer,
+            IFileContainer javascriptContainer,
+            GenericReturn<SubProcess> getSubProcessDelegate)
         {
             _FileHandlerFactoryLocator = fileHandlerFactoryLocator;
             _FileContainer = fileContainer;
             _JavascriptContainer = javascriptContainer;
+            GetSubProcessDelegate = getSubProcessDelegate;
 
             // load both the javascript and its date in a lock
             ITextHandler javascriptTextHandler = javascriptContainer.CastFileHandler<ITextHandler>();
@@ -76,6 +81,11 @@ namespace ObjectCloud.Javascript.SubProcess
             ScopeCache = new Cache<ID<IUserOrGroup, Guid>, ScopeWrapper, IWebConnection>(CreateScope);
         }
 
+        /// <summary>
+        /// Delegate that creates sub processes
+        /// </summary>
+        GenericReturn<SubProcess> GetSubProcessDelegate;
+        
         /// <summary>
         /// The FileHandlerFactoryLocator
         /// </summary>
@@ -154,30 +164,13 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             try
             {
-                return new ScopeWrapper(FileHandlerFactoryLocator, webConnection, Javascript, FileContainer, GetSubProcess);
+                return new ScopeWrapper(FileHandlerFactoryLocator, webConnection, Javascript, FileContainer, GetSubProcessDelegate);
             }
             catch (Exception e)
             {
                 _ExecutionEnvironmentErrors = e.Message;
                 return null;
             }
-        }
-
-        /// <summary>
-        /// The sub process
-        /// </summary>
-        private static SubProcess SubProcess = new SubProcess();
-
-        private static object SubProcessKey = new object();
-
-        private static SubProcess GetSubProcess()
-        {
-            if (!SubProcess.Alive)
-                using (TimedLock.Lock(SubProcessKey))
-                    if (!SubProcess.Alive)
-                        SubProcess = new SubProcess();
-
-            return SubProcess;
         }
 
         /// <summary>

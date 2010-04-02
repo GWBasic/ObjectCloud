@@ -1,3 +1,7 @@
+// Copyright 2009, 2010 Andrew Rondeau
+// This code is released under the Simple Public License (SimPL) 2.0.  Some additional privelages are granted.
+// For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -81,14 +85,14 @@ namespace ObjectCloud.Javascript.SubProcess
 
         public SubProcess()
         {
-            Process = new Process();
-            Process.StartInfo = new ProcessStartInfo("java", "-cp ." + Path.DirectorySeparatorChar + "js.jar -jar JavascriptProcess.jar " + Process.GetCurrentProcess().Id.ToString());
-            Process.StartInfo.RedirectStandardInput = true;
-            Process.StartInfo.RedirectStandardOutput = true;
-            Process.StartInfo.RedirectStandardError = true;
-            Process.StartInfo.UseShellExecute = false;
-            Process.EnableRaisingEvents = true;
-            Process.Exited += new EventHandler(Process_Exited);
+            _Process = new Process();
+            _Process.StartInfo = new ProcessStartInfo("java", "-cp ." + Path.DirectorySeparatorChar + "js.jar -jar JavascriptProcess.jar " + Process.GetCurrentProcess().Id.ToString());
+            _Process.StartInfo.RedirectStandardInput = true;
+            _Process.StartInfo.RedirectStandardOutput = true;
+            _Process.StartInfo.RedirectStandardError = true;
+            _Process.StartInfo.UseShellExecute = false;
+            _Process.EnableRaisingEvents = true;
+            _Process.Exited += new EventHandler(Process_Exited);
 
             if (!Process.Start())
             {
@@ -98,19 +102,19 @@ namespace ObjectCloud.Javascript.SubProcess
                 throw e;
             }
 
-            log.Info("Javascript sub process started: " + Process.ToString());
+            log.Info("Javascript sub process started: " + _Process.ToString());
 
 			if (null != SubProcessIdWriteStream)
             		using (TimedLock.Lock(SubProcessIdWriteStream))
-                		SubProcessIdWriteStream.WriteLine(Process.Id.ToString());
+                		SubProcessIdWriteStream.WriteLine(_Process.Id.ToString());
 
-            JSONSender = new JsonWriter(Process.StandardInput);
+            JSONSender = new JsonWriter(_Process.StandardInput);
 
             new Thread(new ThreadStart(MonitorForResponses)).Start();
             new Thread(new ThreadStart(MonitorForErrors)).Start();
 
             using (TimedLock.Lock(SubProcesses))
-                SubProcesses.Add(Process);
+                SubProcesses.Add(_Process);
         }
 
         /// <summary>
@@ -154,9 +158,9 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             try
             {
-                while (!Process.StandardOutput.EndOfStream)
+                while (!_Process.StandardOutput.EndOfStream)
                 {
-                    string inCommandString = Process.StandardOutput.ReadLine();
+                    string inCommandString = _Process.StandardOutput.ReadLine();
                     Dictionary<string, object> inCommand = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
 
                     object threadID = inCommand["ThreadID"];
@@ -181,8 +185,8 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             try
             {
-                while (!Process.StandardError.EndOfStream)
-                    log.Error("Javascript sub process error: " + Process.StandardError.ReadLine());
+                while (!_Process.StandardError.EndOfStream)
+                    log.Error("Javascript sub process error: " + _Process.StandardError.ReadLine());
             }
             catch (Exception e)
             {
@@ -214,8 +218,16 @@ namespace ObjectCloud.Javascript.SubProcess
                         new object[] { threadID, inCommand });
             }
         }
-		
-		Process Process;
+
+        /// <summary>
+        /// The actual process
+        /// </summary>
+        public Process Process
+        {
+            get { return _Process; }
+        }
+        Process _Process;
+
 		JsonWriter JSONSender;
 		
 		/// <summary>
@@ -527,6 +539,7 @@ namespace ObjectCloud.Javascript.SubProcess
             {
                 do
                 {
+                    // Check to see if the thread needs to wait
                     bool needWait;
                     using (TimedLock.Lock(InCommandsByThreadId))
                         needWait = !InCommandsByThreadId.TryGetValue(Thread.CurrentThread.ManagedThreadId, out inCommand);
@@ -538,8 +551,15 @@ namespace ObjectCloud.Javascript.SubProcess
 
                         try
                         {
-                            lock (monitorObject)
-                                Monitor.Wait(monitorObject);
+                            // If the thread waits, spin up a timer kill the process in case it runs too long
+                            using (new Timer(delegate(object state) { Process.Kill(); }, null, 30000, 0))
+                            {
+                                lock (monitorObject)
+                                    Monitor.Wait(monitorObject);
+                            }
+
+                            if (!Alive)
+                                throw new JavascriptException("Timeout");
                         }
                         finally
                         {
@@ -781,7 +801,7 @@ namespace ObjectCloud.Javascript.SubProcess
                 DateTime start = (DateTime)state;
 
                 if (DateTime.UtcNow - start > TimeSpan.FromSeconds(0.25))
-                    Process.Kill();
+                    _Process.Kill();
                 else
                     ThreadPool.QueueUserWorkItem(KillSubprocess, start);
             }
