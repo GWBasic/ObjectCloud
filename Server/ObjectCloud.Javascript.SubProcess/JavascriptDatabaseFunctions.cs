@@ -23,13 +23,13 @@ namespace ObjectCloud.Javascript.SubProcess
 	/// </summary>
 	public static class JavascriptDatabaseFunctions
 	{
-		/*// <summary>
+		/// <summary>
 		/// Holds information needed to upgrade a query
 		/// </summary>
 		struct SchemaUpgradeQuery : IComparable<SchemaUpgradeQuery>
 		{
 			public double Version;
-			public Scriptable UpgradeArrayElement;
+            public Dictionary<string, object> UpgradeArrayElement;
 	
 			public int CompareTo (SchemaUpgradeQuery other)
 			{
@@ -37,37 +37,34 @@ namespace ObjectCloud.Javascript.SubProcess
 			}
 		}
 		
-		public static object setSchema(Scriptable schema, Double version)
+		public static object setSchema(object[] schema, double version)
 		{
 			FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
 			
-			IDatabaseHandler databaseHandler = functionCallContext.ScopeWrapper.TheObject.CastFileHandler<IDatabaseHandler>();
+			IDatabaseHandler databaseHandler = functionCallContext.ScopeWrapper.FileContainer.CastFileHandler<IDatabaseHandler>();
 
 			// If the version isn't set, then set it to the lowest possible value so it can get every needed version upgrade
 			if (null == databaseHandler.Version)
 				databaseHandler.Version = double.NegativeInfinity;
 			
-			if (double.NaN != version.doubleValue())
-				if (databaseHandler.Version >= version.doubleValue())
+			if (double.NaN != version)
+				if (databaseHandler.Version >= version)
 					return null;
 			
 			List<SchemaUpgradeQuery> schemaUpgradeQueries = new List<SchemaUpgradeQuery>();
-			
-			foreach (object id in schema.getIds())
-				if (id is Number)
-				{
-					Scriptable upgradeOperation = (Scriptable)schema.get(((Number)id).intValue(), functionCallContext.Scope);
-					Double operationToVersion = (Double)upgradeOperation.get("Version", functionCallContext.Scope);
+			foreach (Dictionary<string, object> upgradeOperation in schema)
+            {
+					double operationToVersion = Convert.ToDouble(upgradeOperation["Version"]);
 				
-					if (databaseHandler.Version < operationToVersion.doubleValue())
+					if (databaseHandler.Version < operationToVersion)
 					{
 						SchemaUpgradeQuery suq = new SchemaUpgradeQuery();
-						suq.Version = operationToVersion.doubleValue();
+						suq.Version = operationToVersion;
 						suq.UpgradeArrayElement = upgradeOperation;
 
                         schemaUpgradeQueries.Add(suq);
 					}
-				}
+            }
 			
 			// If the schema is up-to-date, return
 			if (schemaUpgradeQueries.Count == 0)
@@ -85,7 +82,7 @@ namespace ObjectCloud.Javascript.SubProcess
 					foreach (SchemaUpgradeQuery suq in schemaUpgradeQueries)
 					{
 						DbCommand command = connection.CreateCommand();
-						command.CommandText = (string)suq.UpgradeArrayElement.get("Query", functionCallContext.Scope);
+                        command.CommandText = suq.UpgradeArrayElement["Query"].ToString();
 						command.ExecuteNonQuery();
 					
 						upgradedVersion = suq.Version;
@@ -101,6 +98,6 @@ namespace ObjectCloud.Javascript.SubProcess
 				}
 			
 			return null;
-		}*/
+		}
 	}
 }
