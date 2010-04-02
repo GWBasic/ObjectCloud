@@ -319,7 +319,7 @@ namespace ObjectCloud.Javascript.SubProcess
 		/// </param>
         /// <exception cref="ObjectDisposedException">Thrown if the sub process was disposed through normal execution.</exception>
         /// <exception cref="AbortedException">Thrown if the sub process aborted anormally.  Callers should recover from this error condition</exception>
-        public EvalScopeResults EvalScope(int scopeId, object threadID, string script, IEnumerable<string> functions, bool returnFunctions)
+        public EvalScopeResults EvalScope(int scopeId, object threadID, IEnumerable<string> scripts, IEnumerable<string> functions, bool returnFunctions)
 		{
             CheckIfAbortedOrDisposed();
 
@@ -327,7 +327,7 @@ namespace ObjectCloud.Javascript.SubProcess
             Dictionary<string, object> data;
             CreateCommand(scopeId, threadID,  "EvalScope", out command, out data);
             
-            data["Script"] = script;
+            data["Script"] = scripts;
 			
 			if (null != functions)
 				data["Functions"] = functions;

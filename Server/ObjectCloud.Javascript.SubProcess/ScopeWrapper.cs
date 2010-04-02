@@ -134,6 +134,8 @@ namespace ObjectCloud.Javascript.SubProcess
             subProcess.RegisterParentFunctionDelegate(ScopeId, CallParentFunction);
             FunctionCallers = new Dictionary<string, FunctionCaller>();
 
+            List<string> scriptsToEval = new List<string>();
+
             List<string> requestedScripts = new List<string>(new string[] { "/API/AJAX_serverside.js", "/API/json2.js" });
 
             // Find dependant scripts
@@ -177,7 +179,7 @@ namespace ObjectCloud.Javascript.SubProcess
                 // Load all dependant scripts
                 foreach (ScriptAndMD5 dependantScript in dependantScriptsAndMD5s)
                 {
-                    string toEval = ownerWebConnection.ShellTo(dependantScript.ScriptName).ResultsAsString;
+                    /*string toEval = ownerWebConnection.ShellTo(dependantScript.ScriptName).ResultsAsString;
                     FunctionCaller.UseTemporaryCaller<SubProcess.EvalScopeResults>(
                         this, FileContainer, ownerWebConnection, delegate()
                         {
@@ -187,7 +189,9 @@ namespace ObjectCloud.Javascript.SubProcess
                                 toEval,
                                 FunctionsInScope.Keys,
                                 false);
-                        });
+                        });*/
+
+                    scriptsToEval.Add(ownerWebConnection.ShellTo(dependantScript.ScriptName).ResultsAsString);
                 }
 
                 StringBuilder metadataBuilder = new StringBuilder();
@@ -196,7 +200,7 @@ namespace ObjectCloud.Javascript.SubProcess
                 // Construct Javascript to shell to the "base" webHandler
                 string baseWrapper = FileContainer.WebHandler.GetJavascriptWrapperForBase(ownerWebConnection, "base");
                 metadataBuilder.Append(baseWrapper);
-                FunctionCaller.UseTemporaryCaller<SubProcess.EvalScopeResults>(
+                /*FunctionCaller.UseTemporaryCaller<SubProcess.EvalScopeResults>(
                     this, FileContainer, ownerWebConnection, delegate()
                     {
                         return subProcess.EvalScope(
@@ -205,15 +209,26 @@ namespace ObjectCloud.Javascript.SubProcess
                             metadataBuilder.ToString(),
                             FunctionsInScope.Keys,
                             false);
-                    });
+
+                    });*/
+
+                scriptsToEval.Add(metadataBuilder.ToString());
+                scriptsToEval.Add(Javascript + "\nif (this.options) options; else null;");
 
                 data = FunctionCaller.UseTemporaryCaller<SubProcess.EvalScopeResults>(
                     this, FileContainer, ownerWebConnection, delegate()
                     {
-                        return subProcess.EvalScope(
+                        /*return subProcess.EvalScope(
                             ScopeId,
                             Thread.CurrentThread.ManagedThreadId,
                             Javascript + "\nif (this.options) options; else null;",
+                            FunctionsInScope.Keys,
+                            true);*/
+
+                        return subProcess.EvalScope(
+                            ScopeId,
+                            Thread.CurrentThread.ManagedThreadId,
+                            scriptsToEval,
                             FunctionsInScope.Keys,
                             true);
                     });
