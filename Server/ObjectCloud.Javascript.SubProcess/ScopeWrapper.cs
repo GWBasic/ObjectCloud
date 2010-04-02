@@ -224,7 +224,7 @@ namespace ObjectCloud.Javascript.SubProcess
                 Dictionary<string, object> properties = functionInfo.Properties;
 
                 // ... and it's marked as webCallable, create a FunctionCaller
-                if (functionInfo.Properties.ContainsKey("webCallable"))
+                if (properties.ContainsKey("webCallable"))
                 {
                     FunctionCaller functionCaller = new FunctionCaller(this, FileContainer, functionName, functionInfo);
 
@@ -504,11 +504,6 @@ namespace ObjectCloud.Javascript.SubProcess
             get { return _BlockWebMethods; }
         }
         private bool _BlockWebMethods = true;
-
-        /// <summary>
-        /// All of the loaded libraries
-        /// </summary>
-        Dictionary<string, object> LoadedLibraries = new Dictionary<string, object>();
 
         /// <summary>
         /// When the loaded libraries were last modified

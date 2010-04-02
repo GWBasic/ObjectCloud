@@ -357,8 +357,6 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <returns></returns>
         private static object SetTempCallingFrom(SubProcess.Callback callback, CallingFrom callingFrom)
         {
-            FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
-
             CallingFrom priorCallingFrom = FunctionCaller.CallingFrom;
             FunctionCaller.CallingFrom = callingFrom;
 
