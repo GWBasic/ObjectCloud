@@ -207,11 +207,22 @@ public class ScopeWrapper {
 			context.evaluateString(scope, functionsBuilder.toString(), "<cmd>", 1, null);
 		}
 
-		Object callResults;
+		Object callResults = Undefined.instance;
 		JSONObject outData = new JSONObject();
 		
 		try {
-			callResults = context.evaluateString(scope, data.getString("Script"), "<cmd>", 1, null);
+			Object script = data.get("Script");
+			
+			if (script instanceof String)
+				callResults = context.evaluateString(scope, script.toString(), "<cmd>", 1, null);
+			else
+			{
+				JSONArray scripts = (JSONArray)script;
+				
+				for (int scriptCtr = 0; scriptCtr < scripts.length(); scriptCtr++)
+					callResults = context.evaluateString(scope, scripts.getString(scriptCtr), "<cmd>", 1, null);
+			}
+
 		} catch (JavaScriptException je) {
 			returnResult("RespondEvalScope", context, threadID, je.getValue(), outData, "Exception");
 			return;
