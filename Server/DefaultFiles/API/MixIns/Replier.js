@@ -10,6 +10,8 @@ function Replier_AddReply(replyText)
          maxToReturn: 1
       });
 
+   var userMetadata = getConnectionMetadata();
+
    callAsOwner(function()
    {
       elevate(function()

@@ -110,8 +110,15 @@ namespace ObjectCloud.Javascript.SubProcess
 
             JSONSender = new JsonWriter(_Process.StandardInput);
 
-            new Thread(new ThreadStart(MonitorForResponses)).Start();
-            new Thread(new ThreadStart(MonitorForErrors)).Start();
+            Thread monitorForResponsesThread = new Thread(new ThreadStart(MonitorForResponses));
+            monitorForResponsesThread.IsBackground = true;
+            monitorForResponsesThread.Name = "SubProcessOutput#" + _Process.Id.ToString();
+            monitorForResponsesThread.Start();
+
+            Thread monitorForErrorsThread = new Thread(new ThreadStart(MonitorForErrors));
+            monitorForErrorsThread.IsBackground = true;
+            monitorForErrorsThread.Name = "SubProcessErrors#" + _Process.Id.ToString();
+            monitorForErrorsThread.Start();
 
             using (TimedLock.Lock(SubProcesses))
                 SubProcesses.Add(_Process);

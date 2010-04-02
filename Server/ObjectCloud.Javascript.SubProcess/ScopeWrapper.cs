@@ -18,8 +18,6 @@ using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
 using ObjectCloud.Interfaces.WebServer;
 
-// TODO:  Try to replace IKVM with http://www.codeproject.com/KB/dotnet/Espresso.aspx?msg=1575501
-
 namespace ObjectCloud.Javascript.SubProcess
 {
     /// <summary>

@@ -69,7 +69,8 @@ When a query returns a scalar, the scalar is used instead of the inner
 array.</p>
 <h2>Getting the Current User's Vote</h2>
 <p>A simpler query is to get the current user's vote:</p>
-<pre style="margin-left: 40px;">getVote.webCallable = "GET";<br>getVote.minimumWebPermission = "Read";  // In case someone's permission changed!  What if someone closed voting by revoking Write?<br>getVote.webReturnConvention = "JavaScriptObject";<br>function getVote()<br>{<br>   var qId = null;<br><br>   if (userMetadata.name != "anonymous")<br>      elevate(function()<br>      {<br>         var votes = <span style="background-color: rgb(255, 255, 51);">base.PostQuery_Sync(
+<pre style="margin-left: 40px;">getVote.webCallable = "GET";<br>getVote.minimumWebPermission = "Read";  // In case someone's permission changed!  What if someone closed voting by revoking Write?<br>getVote.webReturnConvention = "JavaScriptObject";<br>function getVote()<br>{<br><meta charset="utf-8"><span class="Apple-style-span" style="font-family: Times; white-space: normal; font-size: medium; "><pre style="word-wrap: break-word; white-space: pre-wrap; ">   var userMetadata = getConnectionMetadata();
+</pre></span>   var qId = null;<br><br>   if (userMetadata.name != "anonymous")<br>      elevate(function()<br>      {<br>         var votes = <span style="background-color: rgb(255, 255, 51);">base.PostQuery_Sync(
          {
             query: "select qId from AuthenticatedVotes where voterId = @voterId",
             "@voterId": userMetadata.id

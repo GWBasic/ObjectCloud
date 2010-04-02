@@ -495,5 +495,25 @@ namespace ObjectCloud.Javascript.SubProcess
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
             return functionCallContext.ScopeWrapper.Open(functionCallContext.WebConnection, toOpen);
         }
+
+        /// <summary>
+        /// Returns information about the current user
+        /// </summary>
+        /// <returns></returns>
+        public static Dictionary<string, object> getConnectionMetadata()
+        {
+            FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
+            IWebConnection webConnection = functionCallContext.WebConnection;
+
+            Dictionary<string, object> connectionMetadata = new Dictionary<string, object>();
+            IUser user = webConnection.Session.User;
+            connectionMetadata["id"] = user.Id.Value;
+            connectionMetadata["name"] = user.Name;
+            connectionMetadata["identity"] = user.Identity;
+            connectionMetadata["isLocal"] = user.Local;
+            connectionMetadata["remoteEndPoint"] = webConnection.RemoteEndPoint.ToString();
+
+            return connectionMetadata;
+        }
     }
 }

@@ -177,6 +177,8 @@ vote.minimumWebPermission = "Write";
 vote.parser_qId = "number";
 function vote(qId)
 {
+   var userMetadata = getConnectionMetadata();
+
    if (userMetadata.name != "anonymous")
       elevate(function()
       {
@@ -227,6 +229,8 @@ getVote.minimumWebPermission = "Read";  // In case someone's permission changed!
 getVote.webReturnConvention = "JavaScriptObject";
 function getVote()
 {
+   var userMetadata = getConnectionMetadata();
+
    var qId = null;
 
    if (userMetadata.name != "anonymous")
@@ -265,6 +269,8 @@ getVotes.minimumWebPermission = "Read";  // In case someone's permission changed
 getVotes.webReturnConvention = "JavaScriptObject";
 function getVotes()
 {
+   var userMetadata = getConnectionMetadata();
+
    var options = getOptions();
 
    if (!options.canSeeResultsWithoutVoting)

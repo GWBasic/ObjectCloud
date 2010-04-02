@@ -69,6 +69,8 @@ function updateNode(id, version, contents, changetag)
 
 function filterForInsert(contents)
 {
+   var userMetadata = getConnectionMetadata();
+
    if (0 == contents.indexOf("@{"))
    {
       contents = JSON.parse(contents.substring(1));
