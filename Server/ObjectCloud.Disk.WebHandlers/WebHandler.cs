@@ -1328,6 +1328,9 @@ namespace ObjectCloud.Disk.WebHandlers
 
         #region Execution Environment Handling logic... TODO: This needs to move somewhere else
 
+        /// <summary>
+        /// Rebuilds the Javascript execution environment
+        /// </summary>
         public void ResetExecutionEnvironment()
 		{
             using (TimedLock.Lock(ExecutionEnvironmentLock))

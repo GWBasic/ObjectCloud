@@ -58,9 +58,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectCloud.Logger", "Objec
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectCloud.WebAccessCodeGenerators", "ObjectCloud.WebAccessCodeGenerators\ObjectCloud.WebAccessCodeGenerators.csproj", "{B2052165-C0FE-44F7-8F23-B48FB77AE2CA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectCloud.Javascript", "ObjectCloud.Javascript\ObjectCloud.Javascript.csproj", "{1FD22801-5EE2-492E-86ED-DFAAAE904E74}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectCloud.Javascript.Jint", "ObjectCloud.Javascript.Jint\ObjectCloud.Javascript.Jint.csproj", "{8AD6ECCF-3021-4F5E-BFD1-EF25AD09AFCC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectCloud.Javascript.SubProcess", "ObjectCloud.Javascript.SubProcess\ObjectCloud.Javascript.SubProcess.csproj", "{AE17CCFE-4A78-41CF-85B3-B1131F8334B8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -291,22 +289,15 @@ Global
 		{B2052165-C0FE-44F7-8F23-B48FB77AE2CA}.Signed|Any CPU.ActiveCfg = Release|Any CPU
 		{B2052165-C0FE-44F7-8F23-B48FB77AE2CA}.Signed|Any CPU.Build.0 = Release|Any CPU
 		{B2052165-C0FE-44F7-8F23-B48FB77AE2CA}.Signed|x86.ActiveCfg = Release|Any CPU
-		{1FD22801-5EE2-492E-86ED-DFAAAE904E74}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1FD22801-5EE2-492E-86ED-DFAAAE904E74}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1FD22801-5EE2-492E-86ED-DFAAAE904E74}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{1FD22801-5EE2-492E-86ED-DFAAAE904E74}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1FD22801-5EE2-492E-86ED-DFAAAE904E74}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1FD22801-5EE2-492E-86ED-DFAAAE904E74}.Release|x86.ActiveCfg = Release|Any CPU
-		{1FD22801-5EE2-492E-86ED-DFAAAE904E74}.Signed|Any CPU.ActiveCfg = Release|Any CPU
-		{1FD22801-5EE2-492E-86ED-DFAAAE904E74}.Signed|Any CPU.Build.0 = Release|Any CPU
-		{1FD22801-5EE2-492E-86ED-DFAAAE904E74}.Signed|x86.ActiveCfg = Release|Any CPU
-		{8AD6ECCF-3021-4F5E-BFD1-EF25AD09AFCC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8AD6ECCF-3021-4F5E-BFD1-EF25AD09AFCC}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{8AD6ECCF-3021-4F5E-BFD1-EF25AD09AFCC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8AD6ECCF-3021-4F5E-BFD1-EF25AD09AFCC}.Release|x86.ActiveCfg = Release|Any CPU
-		{8AD6ECCF-3021-4F5E-BFD1-EF25AD09AFCC}.Signed|Any CPU.ActiveCfg = Release|Any CPU
-		{8AD6ECCF-3021-4F5E-BFD1-EF25AD09AFCC}.Signed|Any CPU.Build.0 = Release|Any CPU
-		{8AD6ECCF-3021-4F5E-BFD1-EF25AD09AFCC}.Signed|x86.ActiveCfg = Release|Any CPU
+		{AE17CCFE-4A78-41CF-85B3-B1131F8334B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE17CCFE-4A78-41CF-85B3-B1131F8334B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE17CCFE-4A78-41CF-85B3-B1131F8334B8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{AE17CCFE-4A78-41CF-85B3-B1131F8334B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE17CCFE-4A78-41CF-85B3-B1131F8334B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AE17CCFE-4A78-41CF-85B3-B1131F8334B8}.Release|x86.ActiveCfg = Release|Any CPU
+		{AE17CCFE-4A78-41CF-85B3-B1131F8334B8}.Signed|Any CPU.ActiveCfg = Release|Any CPU
+		{AE17CCFE-4A78-41CF-85B3-B1131F8334B8}.Signed|Any CPU.Build.0 = Release|Any CPU
+		{AE17CCFE-4A78-41CF-85B3-B1131F8334B8}.Signed|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

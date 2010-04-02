@@ -126,9 +126,9 @@
       <Project>{DBA3E72A-7B35-4107-88EF-2BD8FB782BAC}</Project>
       <Name>ObjectCloud.Interfaces</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ObjectCloud.Javascript\ObjectCloud.Javascript.csproj">
-      <Project>{1FD22801-5EE2-492E-86ED-DFAAAE904E74}</Project>
-      <Name>ObjectCloud.Javascript</Name>
+    <ProjectReference Include="..\ObjectCloud.Javascript.SubProcess\ObjectCloud.Javascript.SubProcess.csproj">
+      <Project>{AE17CCFE-4A78-41CF-85B3-B1131F8334B8}</Project>
+      <Name>ObjectCloud.Javascript.SubProcess</Name>
     </ProjectReference>
     <ProjectReference Include="..\ObjectCloud.Logger\ObjectCloud.Logger.csproj">
       <Project>{445C9C48-8721-458E-9C19-C833157301B3}</Project>
