@@ -63,7 +63,7 @@ namespace SignalHandller
 				signals.Add(new UnixSignal(quitSignal));
  
 	        // Wait for a signal to be delivered
-        	int index = UnixSignal.WaitAny(signals.ToArray(), -1);
+        		int index = UnixSignal.WaitAny(signals.ToArray(), -1);
 			
 			UnixSignal signal = signals[index];
 			

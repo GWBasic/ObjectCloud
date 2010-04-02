@@ -5,13 +5,26 @@
   </MonoDevelop.Ide.DebuggingService>
   <MonoDevelop.Ide.Workbench ActiveDocument="SignalHandller/Blocker.cs" ctype="Workbench">
     <Files>
-      <File FileName="SignalHandller/Blocker.cs" Line="49" Column="67" />
+      <File FileName="../../Server/ObjectCloud.Javascript.SubProcess/ExecutionEnvironment.cs" Line="1" Column="1" />
+      <File FileName="../../Server/ObjectCloud.Javascript.SubProcess/ExecutionEnvironmentFactory.cs" Line="1" Column="1" />
+      <File FileName="../../Server/ObjectCloud.Javascript.SubProcess/ScopeWrapper.cs" Line="1" Column="1" />
+      <File FileName="../../Server/ObjectCloud.Javascript.SubProcess/SubProcess.cs" Line="4" Column="1" />
+      <File FileName="../../Server/ObjectCloud.Javascript.SubProcess/JavascriptException.cs" Line="1" Column="1" />
+      <File FileName="SignalHandller/Blocker.cs" Line="79" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="SignalHandller" expanded="True" selected="True" />
+          <Node name="SignalHandller" expanded="True">
+            <Node name="References" selected="True" />
+          </Node>
         </State>
+      </Pad>
+      <Pad Id="ClassPad">
+        <State expanded="True" selected="True" />
+      </Pad>
+      <Pad Id="MonoDevelop.NUnit.TestPad">
+        <State selected="True" />
       </Pad>
     </Pads>
   </MonoDevelop.Ide.Workbench>
