@@ -56,7 +56,12 @@ namespace ObjectCloud.Spring.Config
 
                                 if (null != property)
                                 {
-                                    object value = Convert.ChangeType(valueString, property.PropertyType);
+									object value;
+								
+									 if (property.PropertyType.IsGenericType && typeof(Nullable<>) == property.PropertyType.GetGenericTypeDefinition())
+                                			value = Convert.ChangeType(valueString, property.PropertyType.GetGenericArguments()[0]);
+									else
+	                                    value = Convert.ChangeType(valueString, property.PropertyType);
 
                                     property.SetValue(toConfigure, value, null);
                                 }
