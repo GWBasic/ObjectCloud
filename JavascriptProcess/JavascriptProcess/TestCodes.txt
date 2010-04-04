@@ -147,7 +147,7 @@
    "Data":
    {
       "ReturnFunctions":true,
-      "Script": "xxx();",
+      "Script": "var t = xxx(); t;",
       "Functions":["xxx"]
    }
 }
@@ -156,5 +156,5 @@
    "ScopeID":123,
    "Command":"RespondCallParentFunction",
    "ThreadID":456,
-   "Data":{}
+   "Data":{"Result":null}
 }

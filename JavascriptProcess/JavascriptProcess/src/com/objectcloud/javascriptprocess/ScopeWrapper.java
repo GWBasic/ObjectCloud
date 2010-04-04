@@ -359,6 +359,7 @@ public class ScopeWrapper {
 			});
 		*/
 		
+		//if (!((callResults instanceof Undefined) || (null == callResults))) {
 		if (!(callResults instanceof Undefined)) {
 			final Object serializedCallResults = jsonStringifyFunction.call(context, scope, scope, new Object[] { callResults });
 			
@@ -515,6 +516,9 @@ public class ScopeWrapper {
 						// re-de-serialized in Rhino
 						if (JSONArray.class.isInstance(toReturn) || JSONObject.class.isInstance(toReturn))				
 							toReturn = context.evaluateString(scope, "(" + toReturn.toString() + ")", "<cmd>", 1, null);
+						
+						if (JSONObject.NULL == toReturn)
+							toReturn = null;
 
 						if (dataFromParent.has("CacheID"))
 							cachedObjects.put(dataFromParent.get("CacheID"), toReturn);
