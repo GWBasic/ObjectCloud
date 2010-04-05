@@ -631,20 +631,23 @@ namespace ObjectCloud.Javascript.SubProcess
 
                             else if (parentFunctionDataToReturn != Undefined.Value)
                             {
-                                string nameSpace = parentFunctionDataToReturn.GetType().Namespace;
-
-                                if (!(nameSpace.StartsWith("System.") || nameSpace.Equals("System")))//    parentFunctionDataToReturn.GetType().Namespace.StartsWith("System"))
-                                {
-                                    Dictionary<string, object> jsoned = JsonReader.Deserialize<Dictionary<string, object>>(
-                                        JsonWriter.Serialize(parentFunctionDataToReturn));
-
-                                    int parentObjectId = SRandom.Next();
-                                    jsoned["ParentObjectId"] = parentObjectId;
-
-                                    TrackedObjects[parentObjectId] = parentFunctionDataToReturn;
-                                    parentFunctionDataToReturn = jsoned;
-                                }
-
+								if (null != parentFunctionDataToReturn)
+								{
+	                                string nameSpace = parentFunctionDataToReturn.GetType().Namespace;
+	
+	                                if (!(nameSpace.StartsWith("System.") || nameSpace.Equals("System")))//    parentFunctionDataToReturn.GetType().Namespace.StartsWith("System"))
+	                                {
+	                                    Dictionary<string, object> jsoned = JsonReader.Deserialize<Dictionary<string, object>>(
+	                                        JsonWriter.Serialize(parentFunctionDataToReturn));
+	
+	                                    int parentObjectId = SRandom.Next();
+	                                    jsoned["ParentObjectId"] = parentObjectId;
+	
+	                                    TrackedObjects[parentObjectId] = parentFunctionDataToReturn;
+	                                    parentFunctionDataToReturn = jsoned;
+	                                }
+								}
+								
                                 outData["Result"] = parentFunctionDataToReturn;
                             }
                         }
