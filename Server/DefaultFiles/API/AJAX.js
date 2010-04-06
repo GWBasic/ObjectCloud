@@ -17,3 +17,19 @@ if (typeof CreateHttpRequest != 'function')
       else
          throw "Your browser does not support AJAX!";
    }
+
+function GET(url, onSuccess, onFailure)
+{
+   var httpRequest = CreateHttpRequest();
+   httpRequest.onreadystatechange = function()
+   {
+      if (4 == httpRequest.readyState)
+         if ((httpRequest.status >= 200) && (httpRequest.status < 300))
+            onSuccess(httpRequest.responseText, httpRequest);
+         else
+            onFailure(httpRequest);
+   }
+
+   httpRequest.open('GET', url, true);
+   httpRequest.send(null);
+}
