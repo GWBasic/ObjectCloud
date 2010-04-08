@@ -335,10 +335,7 @@ namespace ObjectCloud.Javascript.SubProcess
 			if (returnFunctions)
 				data["ReturnFunctions"] = returnFunctions;
 			
-			using (TimedLock.Lock(SendKey))
-				JSONSender.Write(command);
-
-            Dictionary<string, object> dataToReturn = WaitForResponse(scopeId);
+            Dictionary<string, object> dataToReturn = SendCommandAndWaitForResponse(command, scopeId);
 
             EvalScopeResults toReturn = new EvalScopeResults();
             toReturn.Result = dataToReturn["Result"];
@@ -400,6 +397,8 @@ namespace ObjectCloud.Javascript.SubProcess
 
             using (TimedLock.Lock(SendKey))
                 JSONSender.Write(command);
+
+            ScopeKeys.Remove(scopeId);
         }
 
         /// <summary>
@@ -421,10 +420,7 @@ namespace ObjectCloud.Javascript.SubProcess
             data["FunctionName"] = functionName;
             data["Arguments"] = arguments;
 
-            using (TimedLock.Lock(SendKey))
-                JSONSender.Write(command);
-
-            Dictionary<string, object> dataToReturn = WaitForResponse(scopeId);
+            Dictionary<string, object> dataToReturn = SendCommandAndWaitForResponse(command, scopeId);
             return dataToReturn["Result"];
         }
 
@@ -447,10 +443,7 @@ namespace ObjectCloud.Javascript.SubProcess
             data["CallbackId"] = callbackId;
             data["Arguments"] = arguments;
 
-            using (TimedLock.Lock(SendKey))
-                JSONSender.Write(command);
-
-            Dictionary<string, object> dataToReturn = WaitForResponse(scopeId);
+            Dictionary<string, object> dataToReturn = SendCommandAndWaitForResponse(command, scopeId);
             return dataToReturn["Result"];
         }
 
@@ -529,186 +522,279 @@ namespace ObjectCloud.Javascript.SubProcess
         uint NumInJavascriptCalls = 0;
 
         /// <summary>
+        /// Used to lock scopes so that only one call can be made in a scope at a time, but so that the scope is free while the call stack is back in the parent process
+        /// </summary>
+        Dictionary<int, object> ScopeKeys = new Dictionary<int, object>();
+
+        /// <summary>
         /// Helper to block a thread until the response comes back
         /// </summary>
         /// <returns></returns>
-        private Dictionary<string, object> WaitForResponse(int scopeId)
+        private Dictionary<string, object> SendCommandAndWaitForResponse(object command, int scopeId)
         {
-            object monitorObject = new object();
-            Dictionary<string, object> inCommand;
+            // We want to get the lock on both the stream to send the command to the sub process, and the scope, as quickly as possible.
+            // If we can't get the lock on the scope, then we'll release the lock on the stream and then re-lock the stream once we get
+            // the lock
 
-            if (null == TrackedObjects)
-                TrackedObjects = new Dictionary<int, object>();
+            bool sent = false;
+            object scopeKey;
 
-            NumInJavascriptCalls++;
+            using (TimedLock.Lock(SendKey))
+            {
+                if (!ScopeKeys.TryGetValue(scopeId, out scopeKey))
+                {
+                    scopeKey = new object();
+                    ScopeKeys[scopeId] = scopeKey;
+                }
+
+                if (Monitor.TryEnter(scopeKey))
+                    try
+                    {
+                        JSONSender.Write(command);
+                        sent = true;
+                    }
+                    catch
+                    {
+                        Monitor.Exit(scopeKey);
+                        throw;
+                    }
+            }
+
+            // If we couldn't get the lock on the scope, now wait to get the lock on the scope and then send the command
+            if (!sent)
+                if (Monitor.TryEnter(scopeKey, 2500))
+                    try
+                    {
+                        using (TimedLock.Lock(SendKey))
+                            JSONSender.Write(command);
+                    }
+                    catch
+                    {
+                        Monitor.Exit(scopeKey);
+                        throw;
+                    }
+                else
+                    throw new TimeoutException("Could not get a lock on the scope");
 
             try
             {
-                do
+                object monitorObject = new object();
+                Dictionary<string, object> inCommand;
+
+                if (null == TrackedObjects)
+                    TrackedObjects = new Dictionary<int, object>();
+
+                NumInJavascriptCalls++;
+
+                try
                 {
-                    // Check to see if the thread needs to wait
-                    bool needWait;
-                    using (TimedLock.Lock(InCommandsByThreadId))
-                        needWait = !InCommandsByThreadId.TryGetValue(Thread.CurrentThread.ManagedThreadId, out inCommand);
-
-                    if (needWait)
+                    do
                     {
-                        using (TimedLock.Lock(MonitorObjectsByThreadId))
-                            MonitorObjectsByThreadId[Thread.CurrentThread.ManagedThreadId] = monitorObject;
+                        // Check to see if the thread needs to wait
+                        bool needWait;
+                        using (TimedLock.Lock(InCommandsByThreadId))
+                            needWait = !InCommandsByThreadId.TryGetValue(Thread.CurrentThread.ManagedThreadId, out inCommand);
 
-                        try
-                        {
-                            // If the thread waits, spin up a timer kill the process in case it runs too long
-                            using (new Timer(delegate(object state) { Process.Kill(); }, null, 30000, 0))
-                            {
-                                lock (monitorObject)
-                                    Monitor.Wait(monitorObject);
-                            }
-
-                            if (!Alive)
-                                throw new JavascriptException("Timeout");
-                        }
-                        finally
+                        if (needWait)
                         {
                             using (TimedLock.Lock(MonitorObjectsByThreadId))
-                                MonitorObjectsByThreadId.Remove(Thread.CurrentThread.ManagedThreadId);
-                        }
+                                MonitorObjectsByThreadId[Thread.CurrentThread.ManagedThreadId] = monitorObject;
 
-                        using (TimedLock.Lock(InCommandsByThreadId))
-                        {
-                            inCommand = InCommandsByThreadId[Thread.CurrentThread.ManagedThreadId];
-                            InCommandsByThreadId.Remove(Thread.CurrentThread.ManagedThreadId);
-                        }
-                    }
-
-                    Dictionary<string, object> dataToReturn = (Dictionary<string, object>)inCommand["Data"];
-
-                    // If the response is for calling a parent function in this process, then call it, else just return the results
-                    if ("CallParentFunction".Equals(inCommand["Command"]))
-                    {
-                        string functionName = dataToReturn["FunctionName"].ToString();
-                        object[] arguments = new List<object>((IEnumerable<object>)dataToReturn["Arguments"]).ToArray();
-                        object threadId = inCommand["ThreadID"];
-
-                        // Convert callbacks to usable objects
-                        for (int argCtr = 0; argCtr < arguments.Length; argCtr++)
-                            if (arguments[argCtr] is Dictionary<string, object>)
+                            try
                             {
-                                Dictionary<string, object> argument = (Dictionary<string, object>)arguments[argCtr];
-                                object isCallback;
-                                if (argument.TryGetValue("Callback", out isCallback))
-                                    if (isCallback is bool)
-                                        if (true == (bool)isCallback)
+                                // If the thread waits, spin up a timer kill the process in case it runs too long
+                                using (new Timer(delegate(object state) { Process.Kill(); }, null, 30000, 0))
+                                {
+                                    lock (monitorObject)
+                                        Monitor.Wait(monitorObject);
+
+                                    Monitor.Exit(scopeKey);
+                                    scopeKey = null;
+                                }
+
+                                if (!Alive)
+                                    throw new JavascriptException("Timeout");
+                            }
+                            finally
+                            {
+                                using (TimedLock.Lock(MonitorObjectsByThreadId))
+                                    MonitorObjectsByThreadId.Remove(Thread.CurrentThread.ManagedThreadId);
+                            }
+
+                            using (TimedLock.Lock(InCommandsByThreadId))
+                            {
+                                inCommand = InCommandsByThreadId[Thread.CurrentThread.ManagedThreadId];
+                                InCommandsByThreadId.Remove(Thread.CurrentThread.ManagedThreadId);
+                            }
+                        }
+
+                        Dictionary<string, object> dataToReturn = (Dictionary<string, object>)inCommand["Data"];
+
+                        // If the response is for calling a parent function in this process, then call it, else just return the results
+                        if ("CallParentFunction".Equals(inCommand["Command"]))
+                        {
+                            string functionName = dataToReturn["FunctionName"].ToString();
+                            object[] arguments = new List<object>((IEnumerable<object>)dataToReturn["Arguments"]).ToArray();
+                            object threadId = inCommand["ThreadID"];
+
+                            // Convert callbacks to usable objects
+                            for (int argCtr = 0; argCtr < arguments.Length; argCtr++)
+                                if (arguments[argCtr] is Dictionary<string, object>)
+                                {
+                                    Dictionary<string, object> argument = (Dictionary<string, object>)arguments[argCtr];
+                                    object isCallback;
+                                    if (argument.TryGetValue("Callback", out isCallback))
+                                        if (isCallback is bool)
+                                            if (true == (bool)isCallback)
+                                            {
+                                                object callbackId;
+                                                if (argument.TryGetValue("CallbackID", out callbackId))
+                                                    arguments[argCtr] = new Callback(this, scopeId, threadId, callbackId);
+                                            }
+                                }
+
+                            Dictionary<string, object> outCommand;
+                            Dictionary<string, object> outData;
+                            CreateCommand(scopeId, threadId, "RespondCallParentFunction", out outCommand, out outData);
+
+                            try
+                            {
+                                object parentFunctionDataToReturn = this.ParentFunctionDelegatesByScopeId[scopeId](
+                                    functionName,
+                                    threadId,
+                                    arguments);
+
+                                if (parentFunctionDataToReturn is StringToEval)
+                                {
+                                    StringToEval stringToEval = (StringToEval)parentFunctionDataToReturn;
+                                    outData["Eval"] = stringToEval.ToEval;
+
+                                    if (null != stringToEval.CacheId)
+                                        outData["CacheID"] = stringToEval.CacheId;
+                                }
+
+                                else if (parentFunctionDataToReturn is CachedObjectId)
+                                    outData["CacheID"] = ((CachedObjectId)parentFunctionDataToReturn).CacheId;
+
+                                else if (parentFunctionDataToReturn != Undefined.Value)
+                                {
+                                    if (null != parentFunctionDataToReturn)
+                                    {
+                                        string nameSpace = parentFunctionDataToReturn.GetType().Namespace;
+
+                                        if (!(nameSpace.StartsWith("System.") || nameSpace.Equals("System")))
                                         {
-                                            object callbackId;
-                                            if (argument.TryGetValue("CallbackID", out callbackId))
-                                                arguments[argCtr] = new Callback(this, scopeId, threadId, callbackId);
+                                            Dictionary<string, object> jsoned = JsonReader.Deserialize<Dictionary<string, object>>(
+                                                JsonWriter.Serialize(parentFunctionDataToReturn));
+
+                                            int parentObjectId = SRandom.Next();
+                                            jsoned["ParentObjectId"] = parentObjectId;
+
+                                            TrackedObjects[parentObjectId] = parentFunctionDataToReturn;
+                                            parentFunctionDataToReturn = jsoned;
                                         }
+                                    }
+
+                                    outData["Result"] = parentFunctionDataToReturn;
+                                }
                             }
-
-                        Dictionary<string, object> outCommand;
-                        Dictionary<string, object> outData;
-                        CreateCommand(scopeId, threadId, "RespondCallParentFunction", out outCommand, out outData);
-
-                        try
-                        {
-                            object parentFunctionDataToReturn = this.ParentFunctionDelegatesByScopeId[scopeId](
-                                functionName,
-                                threadId,
-                                arguments);
-
-                            if (parentFunctionDataToReturn is StringToEval)
+                            catch (Exception e)
                             {
-                                StringToEval stringToEval = (StringToEval)parentFunctionDataToReturn;
-                                outData["Eval"] = stringToEval.ToEval;
+                                Dictionary<string, object> jsoned = JsonReader.Deserialize<Dictionary<string, object>>(
+                                    JsonWriter.Serialize(e));
 
-                                if (null != stringToEval.CacheId)
-                                    outData["CacheID"] = stringToEval.CacheId;
+                                int parentObjectId = SRandom.Next();
+                                jsoned["ParentObjectId"] = parentObjectId;
+
+                                TrackedObjects[parentObjectId] = e;
+
+                                outData["Exception"] = jsoned;
                             }
 
-                            else if (parentFunctionDataToReturn is CachedObjectId)
-                                outData["CacheID"] = ((CachedObjectId)parentFunctionDataToReturn).CacheId;
-
-                            else if (parentFunctionDataToReturn != Undefined.Value)
+                            sent = false;
+                            using (TimedLock.Lock(SendKey))
                             {
-								if (null != parentFunctionDataToReturn)
-								{
-	                                string nameSpace = parentFunctionDataToReturn.GetType().Namespace;
-	
-	                                if (!(nameSpace.StartsWith("System.") || nameSpace.Equals("System")))//    parentFunctionDataToReturn.GetType().Namespace.StartsWith("System"))
-	                                {
-	                                    Dictionary<string, object> jsoned = JsonReader.Deserialize<Dictionary<string, object>>(
-	                                        JsonWriter.Serialize(parentFunctionDataToReturn));
-	
-	                                    int parentObjectId = SRandom.Next();
-	                                    jsoned["ParentObjectId"] = parentObjectId;
-	
-	                                    TrackedObjects[parentObjectId] = parentFunctionDataToReturn;
-	                                    parentFunctionDataToReturn = jsoned;
-	                                }
-								}
-								
-                                outData["Result"] = parentFunctionDataToReturn;
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            Dictionary<string, object> jsoned = JsonReader.Deserialize<Dictionary<string, object>>(
-                                JsonWriter.Serialize(e));
+                                scopeKey = ScopeKeys[scopeId];
 
-                            int parentObjectId = SRandom.Next();
-                            jsoned["ParentObjectId"] = parentObjectId;
-
-                            TrackedObjects[parentObjectId] = e;
-
-                            outData["Exception"] = jsoned;
-                        }
-
-                        using (TimedLock.Lock(SendKey))
-                            JSONSender.Write(outCommand);
-                    }
-                    else
-                    {
-                        object exceptionFromJavascript;
-                        if (dataToReturn.TryGetValue("Exception", out exceptionFromJavascript))
-                        {
-                            if (exceptionFromJavascript is Dictionary<string, object>)
-                            {
-                                object parentObjectId;
-                                if (((Dictionary<string, object>)exceptionFromJavascript).TryGetValue("ParentObjectId", out parentObjectId))
-                                    if (TrackedObjects.TryGetValue(Convert.ToInt32(parentObjectId), out exceptionFromJavascript))
-                                        if (exceptionFromJavascript is Exception)
-                                            throw (Exception)exceptionFromJavascript;
+                                if (Monitor.TryEnter(scopeKey))
+                                    try
+                                    {
+                                        JSONSender.Write(outCommand);
+                                        sent = true;
+                                    }
+                                    catch
+                                    {
+                                        Monitor.Exit(scopeKey);
+                                        throw;
+                                    }
                             }
 
-                            throw new JavascriptException(JsonWriter.Serialize(exceptionFromJavascript));
-                        }
-
-                        object result;
-                        if (dataToReturn.TryGetValue("Result", out result))
-                        {
-                            if (result is Dictionary<string, object>)
-                            {
-                                object parentObjectId;
-                                if (((Dictionary<string, object>)result).TryGetValue("ParentObjectId", out parentObjectId))
-                                    if (TrackedObjects.TryGetValue(Convert.ToInt32(parentObjectId), out result))
-                                        dataToReturn["Result"] = result;
-                            }
+                            // If we couldn't get the lock on the scope, now wait to get the lock on the scope and then send the command
+                            if (!sent)
+                                if (Monitor.TryEnter(scopeKey, 2500))
+                                    try
+                                    {
+                                        using (TimedLock.Lock(SendKey))
+                                            JSONSender.Write(outCommand);
+                                    }
+                                    catch
+                                    {
+                                        Monitor.Exit(scopeKey);
+                                        throw;
+                                    }
+                                else
+                                    throw new TimeoutException("Could not get a lock on the scope");
                         }
                         else
-                            dataToReturn["Result"] = Undefined.Value;
+                        {
+                            object exceptionFromJavascript;
+                            if (dataToReturn.TryGetValue("Exception", out exceptionFromJavascript))
+                            {
+                                if (exceptionFromJavascript is Dictionary<string, object>)
+                                {
+                                    object parentObjectId;
+                                    if (((Dictionary<string, object>)exceptionFromJavascript).TryGetValue("ParentObjectId", out parentObjectId))
+                                        if (TrackedObjects.TryGetValue(Convert.ToInt32(parentObjectId), out exceptionFromJavascript))
+                                            if (exceptionFromJavascript is Exception)
+                                                throw (Exception)exceptionFromJavascript;
+                                }
 
-                        return dataToReturn;
+                                throw new JavascriptException(JsonWriter.Serialize(exceptionFromJavascript));
+                            }
+
+                            object result;
+                            if (dataToReturn.TryGetValue("Result", out result))
+                            {
+                                if (result is Dictionary<string, object>)
+                                {
+                                    object parentObjectId;
+                                    if (((Dictionary<string, object>)result).TryGetValue("ParentObjectId", out parentObjectId))
+                                        if (TrackedObjects.TryGetValue(Convert.ToInt32(parentObjectId), out result))
+                                            dataToReturn["Result"] = result;
+                                }
+                            }
+                            else
+                                dataToReturn["Result"] = Undefined.Value;
+
+                            return dataToReturn;
+                        }
                     }
+                    while (true);
                 }
-                while (true);
-            }
-            finally
-            {
-                NumInJavascriptCalls--;
+                finally
+                {
+                    NumInJavascriptCalls--;
 
-                if (0 == NumInJavascriptCalls)
-                    TrackedObjects.Clear();
+                    if (0 == NumInJavascriptCalls)
+                        TrackedObjects.Clear();
+                }
+            }
+            catch
+            {
+                if (null != scopeKey)
+                    Monitor.Exit(scopeKey);
+
+                throw;
             }
         }
 
