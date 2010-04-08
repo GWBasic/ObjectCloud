@@ -98,6 +98,15 @@ namespace ObjectCloud.Common
         /// </summary>
         private LockingThreadTimeoutDelegate myLockingThreadTimeoutDelegate;
 
+/*#if DEBUG
+
+        /// <summary>
+        /// Guid that identifies the lock; this is only present in Debug mode
+        /// </summary>
+        public Guid ID;
+
+#endif*/
+
         /// <summary>
         /// The thread that is holding the lock
         /// </summary>
@@ -120,12 +129,21 @@ namespace ObjectCloud.Common
             else
                 toReturn.Timer = null;
 
+/*#if DEBUG
+            toReturn.ID = Guid.NewGuid();
+            OnLockCreated(toReturn);
+#endif*/
+
             return toReturn;
         }
 
         /// <summary>
         /// This is the target of the lock
         /// </summary>
+        public object Target
+        {
+            get { return target; }
+        }
         private object target;
 
         public void Dispose()
@@ -141,6 +159,10 @@ namespace ObjectCloud.Common
                         Timer.Dispose();
                         Timer = null;
                     }
+
+/*#if DEBUG
+            OnLockComplete(this);
+#endif*/
         }
 
         private void Timeout(object state)
@@ -195,6 +217,30 @@ namespace ObjectCloud.Common
             if (System.Diagnostics.Debugger.IsAttached)
                 System.Diagnostics.Debugger.Break();
         }
+
+/*#if DEBUG
+        /// <summary>
+        /// Occurs whenever a lock is created.  This is only availalbe in debug builds
+        /// </summary>
+        public static event GenericArgument<TimedLock> LockCreated;
+
+        internal static void OnLockCreated(TimedLock timedLock)
+        {
+            if (null != LockCreated)
+                LockCreated(timedLock);
+        }
+
+        /// <summary>
+        /// Occurs whenever a lock is complete.  This is only availalbe in debug builds
+        /// </summary>
+        public static event GenericArgument<TimedLock> LockComplete;
+
+        internal static void OnLockComplete(TimedLock timedLock)
+        {
+            if (null != LockComplete)
+                LockComplete(timedLock);
+        }
+#endif*/
     }
 
     /// <summary>
