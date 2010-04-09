@@ -33,3 +33,23 @@ function GET(url, onSuccess, onFailure)
    httpRequest.open('GET', url, true);
    httpRequest.send(null);
 }
+
+function POST(url, contentType, data, onSuccess, onFailure)
+{
+   var httpRequest = CreateHttpRequest();
+   httpRequest.onreadystatechange = function()
+   {
+      if (4 == httpRequest.readyState)
+         if ((httpRequest.status >= 200) && (httpRequest.status < 300))
+            onSuccess(httpRequest.responseText, httpRequest);
+         else
+            onFailure(httpRequest);
+   }
+
+   if ((!contentType) || (null == contentType))
+      contentType = 'application/x-www-form-urlencoded';
+
+   httpRequest.open('POST', url, true);
+   httpRequest.setRequestHeader('Content-type', contentType);
+   httpRequest.send(data);
+}
