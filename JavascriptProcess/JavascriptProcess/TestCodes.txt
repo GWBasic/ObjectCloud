@@ -1,13 +1,13 @@
 {
+   "Scripts": ["foo.a = 123; function foo(a){return a + \"!!!\";} function bar() {} aaa(1,2,'3', function(){});"],
+   "Functions":["aaa","bbb","ccc"]
+}
+
+{
    "ScopeID":123,
-   "Command":"EvalScope",
+   "Command":"CreateScope",
    "ThreadID":456,
-   "Data":
-   {
-      "ReturnFunctions":true,
-      "Script": "foo.a = 123; function foo(a){return a + \"!!!\";} function bar() {} aaa(1,2,'3', function(){});",
-      "Functions":["aaa","bbb","ccc"]
-   }
+   "Data": {}
 }
 
 {
@@ -16,7 +16,7 @@
    "ThreadID":456,
    "Data":
    {
-      "CallbackId": 323858193,
+      "CallbackId":-89448424,
       "Arguments":[]
    }
 }
@@ -157,4 +157,69 @@
    "Command":"RespondCallParentFunction",
    "ThreadID":456,
    "Data":{"Result":null}
+}
+
+
+
+
+
+
+{
+   "Scripts": ["var a = 0; function getA(){return a;} function setA(newA){a = newA;}"],
+   "Functions":[]
+}
+
+{
+   "ScopeID":1,
+   "Command":"CreateScope",
+   "ThreadID":456,
+   "Data": {}
+}
+{
+   "ScopeID":2,
+   "Command":"CreateScope",
+   "ThreadID":456,
+   "Data": {}
+}
+
+{
+   "ScopeID":1,
+   "Command":"CallFunctionInScope",
+   "ThreadID":456,
+   "Data":
+   {
+      "FunctionName":"setA",
+      "Arguments":[1]
+   }
+}
+{
+   "ScopeID":2,
+   "Command":"CallFunctionInScope",
+   "ThreadID":456,
+   "Data":
+   {
+      "FunctionName":"setA",
+      "Arguments":[2]
+   }
+}
+
+{
+   "ScopeID":1,
+   "Command":"CallFunctionInScope",
+   "ThreadID":456,
+   "Data":
+   {
+      "FunctionName":"getA",
+      "Arguments":[]
+   }
+}
+{
+   "ScopeID":2,
+   "Command":"CallFunctionInScope",
+   "ThreadID":456,
+   "Data":
+   {
+      "FunctionName":"getA",
+      "Arguments":[]
+   }
 }

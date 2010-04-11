@@ -7,7 +7,6 @@ import java.io.OutputStreamWriter;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
@@ -27,6 +26,8 @@ public class IOPump {
 			System.err.println(e.getMessage());
 			e.printStackTrace();
 		}
+		
+		System.exit(0);
 	}
 	
 	public IOPump(InputStream inStream, OutputStream outStream) {
@@ -39,11 +40,15 @@ public class IOPump {
 	
 	Map<Integer, ScopeWrapper> scopeWrappers = new HashMap<Integer, ScopeWrapper>();
 
-	public void start() throws JSONException {
+	public void start() throws Exception {
 		JSONTokener tokener = new JSONTokener(new InputStreamReader(inStream));
 		OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outStream);
 		
+		// Create the parent scope
 		JSONObject inCommand = new JSONObject(tokener);
+		ParentScope parentScope = new ParentScope(this, inCommand, outputStreamWriter);
+		
+		inCommand = new JSONObject(tokener);
 		
 		while (inCommand.length() > 0) {
 		
@@ -55,7 +60,7 @@ public class IOPump {
 				if (scopeWrappers.containsKey(scopeID))
 					scopeWrapper = scopeWrappers.get(scopeID);
 				else {
-					scopeWrapper = new ScopeWrapper(this, outputStreamWriter, scopeID);
+					scopeWrapper = parentScope.createScopeWrapper(scopeID);
 					scopeWrappers.put(scopeID, scopeWrapper);
 				}
 			}
