@@ -288,9 +288,10 @@ public class ScopeWrapper {
 		outCommand.put("ThreadID", threadID);
 		outCommand.put("Command", command);
 
-		outputStreamWriter.write(outCommand.toString());
-		outputStreamWriter.write("\r\n");
-		outputStreamWriter.flush();
+		synchronized (outputStreamWriter) {
+			outputStreamWriter.write(outCommand.toString() + "\r\n");
+			outputStreamWriter.flush();
+		}
 	}
 	
 	public static Method getCallFunctionInParentProcessMethod() {
