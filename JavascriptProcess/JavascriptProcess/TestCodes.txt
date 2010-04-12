@@ -165,7 +165,7 @@
 
 
 {
-   "Scripts": ["var a = 0; function getA(){return a;} function setA(newA){a = newA;}"],
+   "Scripts": ["var a = 0; function getA(){return a;} function setA(newA){a = newA;} function getB(){return b;}"],
    "Functions":[]
 }
 
@@ -173,13 +173,24 @@
    "ScopeID":1,
    "Command":"CreateScope",
    "ThreadID":456,
-   "Data": {}
+   "Data": {b:[0,1,2,3,4,5]}
 }
 {
    "ScopeID":2,
    "Command":"CreateScope",
    "ThreadID":456,
    "Data": {}
+}
+
+{
+   "ScopeID":1,
+   "Command":"CallFunctionInScope",
+   "ThreadID":456,
+   "Data":
+   {
+      "FunctionName":"getB",
+      "Arguments":[]
+   }
 }
 
 {

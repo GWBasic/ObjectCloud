@@ -638,6 +638,16 @@ public class JSONObject {
     public Iterator<String> keys() {
         return this.map.keySet().iterator();
     }
+    
+    public Iterable<String> keysIterable() {
+		return new Iterable<String>() {
+
+			@Override
+			public Iterator<String> iterator() {
+				return keys();
+			}
+		};
+    }
 
 
     /**

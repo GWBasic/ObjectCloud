@@ -168,7 +168,7 @@ public class ScopeWrapper {
 		JSONObject outData = new JSONObject();
 		
 		try {
-			scriptableAndResult = parentScope.createScope(context);
+			scriptableAndResult = parentScope.createScope(context, data);
 		} catch (JavaScriptException je) {
 			returnResult("RespondCreateScope", context, threadID, je.getValue(), outData, "Exception");
 			throw je;
@@ -178,7 +178,7 @@ public class ScopeWrapper {
 		}
 		
 		this.scope = scriptableAndResult.scope;
-	    jsonStringifyFunction = (Function)context.evaluateString(scope, "JSON.stringify", "<cmd>", 1, null);
+	    jsonStringifyFunction = scriptableAndResult.jsonStringifyFunction;
 		
 	    returnResult("RespondCreateScope", context, threadID, scriptableAndResult.result, outData, "Result");
 	}
@@ -214,8 +214,6 @@ public class ScopeWrapper {
 			if ((argument instanceof JSONArray) || (argument instanceof JSONObject))
 				arguments.set(
 					ctr,
-					//Context.javaToJS(argument, scope));
-					//((Scriptable)context.evaluateString(scope, "(" + argument.toString() + ")", "<cmd>", 1, null)).get(0, scope));
 					Context.javaToJS(context.evaluateString(scope, "(" + argument.toString() + ")", "<cmd>", 1, null), scope));
 			else if (JSONObject.NULL == argument)
 				arguments.set(
@@ -249,20 +247,6 @@ public class ScopeWrapper {
 	
 	private void returnResult(String command, final Context context, Object threadID, final Object callResults, JSONObject outData, String resultsName) throws JSONException, IOException {
 		
-		/*//if (!Undefined.class.isInstance(callResults))
-		if (!(callResults instanceof Undefined))
-		//if (!(Undefined.instance.equals(callResults)))
-			outData.put(resultsName, new JSONString() {
-	
-				@Override
-				public String toJSONString() {
-					return jsonStringifyFunction.call(context, scope, scope, new Object[] { callResults }).toString();
-				}
-				
-			});
-		*/
-		
-		//if (!((callResults instanceof Undefined) || (null == callResults))) {
 		if (!(callResults instanceof Undefined)) {
 			final Object serializedCallResults = jsonStringifyFunction.call(context, scope, scope, new Object[] { callResults });
 			

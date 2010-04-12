@@ -24,6 +24,8 @@ public class ParentScope {
 	IOPump ioPump;
 	ScriptableObject scope;
 	ArrayList<Script> compiledScripts = new ArrayList<Script>();
+	Script getJsonStringifyFunction;
+	Script getJsonParseFunction;
 	Function jsonStringifyFunction;
 	private final static Method callFunctionInParentProcessMethod = ScopeWrapper.getCallFunctionInParentProcessMethod();
 	private final static String callFunctionInParentProcessName = "_____callParentFunction";
@@ -52,10 +54,10 @@ public class ParentScope {
             scope = context.initStandardObjects();
 
             // Load JSON methods
-            //compiledScripts.add(context.compileString(json2, "json2", 0, null));
-
             context.evaluateString(scope, json2, "<cmd>", 1, null);
-            jsonStringifyFunction = (Function)context.evaluateString(scope, "JSON.stringify", "<cmd>", 1, null);
+            getJsonStringifyFunction = context.compileString("JSON.stringify", "JSON.stringify", 0, null);
+            getJsonParseFunction =  context.compileString("JSON.parse", "JSON.parse", 0, null);
+            jsonStringifyFunction = (Function)getJsonStringifyFunction.exec(context, scope);
             
             // Load external function caller
             FunctionObject callFunctionInParentProcessMethodFunctionObject = new FunctionObject(
@@ -79,11 +81,9 @@ public class ParentScope {
 					functionsBuilder.append("\", args);} ");
 				}
 				
-				//compiledScripts.add(context.compileString(functionsBuilder.toString(), "functions", 0, null));
 				context.evaluateString(scope, functionsBuilder.toString(), "<cmd>", 1, null);
 			}
 	
-			//Object callResults = Undefined.instance;
 			JSONObject outData = new JSONObject();
 			
 			try {
@@ -91,7 +91,6 @@ public class ParentScope {
 								
 				for (int scriptCtr = 0; scriptCtr < scripts.length(); scriptCtr++)
 					compiledScripts.add(context.compileString(scripts.getString(scriptCtr), new Integer(scriptCtr).toString(), 0, null));
-					//callResults = context.evaluateString(scope, scripts.getString(scriptCtr), "<cmd>", 1, null);
 			} catch (JavaScriptException je) {
 				returnResult(context, je.getValue(), outData, "Exception");
 				throw je;
@@ -105,47 +104,6 @@ public class ParentScope {
 			
 			// This makes the parent scope sealed and immutable
 			scope.sealObject();
-
-			/*JSONObject functions = new JSONObject();
-			outData.put("Functions", functions);
-			
-            for (Object id : scope.getIds()) {
-
-            	String functionName = id.toString();
-
-                Object javascriptMethodObject = scope.get(functionName, scope);
-
-                // If the value is a Javascript function...
-                if (Function.class.isInstance(javascriptMethodObject)) {
-                	JSONObject function = new JSONObject();
-                	functions.put(functionName, function);
-                	
-                	JSONObject properties = new JSONObject();
-                	function.put("Properties", properties);
-                	
-                    Function javascriptMethod = (Function)javascriptMethodObject;
-
-                    for (Object fId : javascriptMethod.getIds())
-                    	properties.put(fId.toString(), javascriptMethod.get(fId.toString(), scope));
-
-                    // Try to get the arguments
-                	JSONArray arguments = new JSONArray();
-                	function.put("Arguments", arguments);
-
-                	String unbrokenArgs = context.evaluateString(scope, functionName + ".toSource();", "<cmd>", 1, null).toString();
-                	unbrokenArgs = unbrokenArgs.substring(unbrokenArgs.indexOf('(') + 1);
-                	unbrokenArgs = unbrokenArgs.substring(0, unbrokenArgs.indexOf(')'));
-
-                	if (unbrokenArgs.length() > 0) {
-                    	
-                    	String[] args = unbrokenArgs.split(",");
-                    	for (String arg : args)
-                    		arguments.put(arg.trim());
-                    }
-                }
-            }
-            
-            returnResult(context, callResults, outData, "Result");*/
 
 		} finally {
             Context.exit();
@@ -173,22 +131,6 @@ public class ParentScope {
 		outputStreamWriter.flush();
 	}
 	
-	/*public ScopeWrapper createScopeWrapper(int scopeID) {
-		final Context context = Context.enter();
-
-		try {
-			Scriptable childScope = context.newObject(scope);
-			childScope.setPrototype(scope);
-			childScope.setParentScope(null);
-			
-			return new ScopeWrapper(context, ioPump, outputStreamWriter, childScope, scopeID);	
-			
-		} finally {
-            Context.exit();
-        }
-
-	}*/
-	
 	public ScopeWrapper createScopeWrapper(int scopeID) {
 		return new ScopeWrapper(ioPump, outputStreamWriter, scopeID, this);	
 	}
@@ -196,9 +138,11 @@ public class ParentScope {
 	public class ScriptableAndResult {
 		public Scriptable scope;
 		public Object result;
+		public Function jsonStringifyFunction;
+		public Function jsonParseFunction;
 	}
 	
-	public ScriptableAndResult createScope(Context context) {
+	public ScriptableAndResult createScope(Context context, JSONObject data) throws JSONException {
 
 		Scriptable childScope = context.newObject(scope);
 		childScope.setPrototype(scope);
@@ -206,6 +150,19 @@ public class ParentScope {
 		
 		ScriptableAndResult toReturn = new ScriptableAndResult();
 		toReturn.scope = childScope;
+		toReturn.jsonStringifyFunction = (Function)getJsonStringifyFunction.exec(context, childScope);
+		toReturn.jsonParseFunction = (Function)getJsonParseFunction.exec(context, childScope);
+
+		for (String key : data.keysIterable()) {
+			Object property = data.get(key);
+			
+			// If the property isn't a primitive, then convert it to something Rhino can handle by re-JSONing and unJSONing
+			if ((property instanceof JSONArray) || (property instanceof JSONObject))
+				property = toReturn.jsonParseFunction.call(context, childScope, childScope, new Object[] {property.toString()});
+
+			childScope.put(key, childScope, property);
+
+		}
 		
 		for (Script script : compiledScripts)
 			toReturn.result = script.exec(context, childScope);
