@@ -128,6 +128,8 @@ namespace ObjectCloud.Javascript.SubProcess
             _Process.EnableRaisingEvents = true;
             _Process.Exited += new EventHandler(Process_Exited);
 
+            log.Info("Starting sub process for " + javascriptContainer.FullPath);
+
             if (!Process.Start())
             {
                 Exception e = new JavascriptException("Could not start sub process");
