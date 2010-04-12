@@ -20,6 +20,6 @@ namespace ObjectCloud.Interfaces.WebServer
         /// </summary>
         /// <typeparam name="TWebHandler"></typeparam>
         /// <returns>Enumerable of the "string" of each function.  These will need to be enclosed in { funcA, funcB, ... funcZ } </returns>
-        IEnumerable<string> GenerateWrapper(Set<Type> webHandlerTypes);
+        List<string> GenerateWrapper(Set<Type> webHandlerTypes);
     }
 }

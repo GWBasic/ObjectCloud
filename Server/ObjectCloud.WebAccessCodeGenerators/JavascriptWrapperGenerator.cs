@@ -16,20 +16,20 @@ namespace ObjectCloud.WebAccessCodeGenerators
     {
         static JavascriptWrapperGenerator()
         {
-            WrappersCache = new Cache<Set<Type>, IEnumerable<string>>(GenerateWrapperForCache);
+            WrappersCache = new Cache<Set<Type>, List<string>>(GenerateWrapperForCache);
         }
 
         /// <summary>
         /// Cache of generated JavaScript wrappers
         /// </summary>
-        private static Cache<Set<Type>, IEnumerable<string>> WrappersCache;
+        private static Cache<Set<Type>, List<string>> WrappersCache;
 
-        public IEnumerable<string> GenerateWrapper(Set<Type> webHandlerTypes)
+        public List<string> GenerateWrapper(Set<Type> webHandlerTypes)
         {
             return WrappersCache[webHandlerTypes];
         }
 
-        private static IEnumerable<string> GenerateWrapperForCache(Set<Type> types)
+        private static List<string> GenerateWrapperForCache(Set<Type> types)
         {
             List<string> javascriptMethods = new List<string>();
 
@@ -79,8 +79,6 @@ namespace ObjectCloud.WebAccessCodeGenerators
 
             javascriptMethods.Add("\"FullPath\": \"{0}\"");
             javascriptMethods.Add("\"Filename\": \"{1}\"");
-            javascriptMethods.Add("\"Url\": \"{2}\"");
-            javascriptMethods.Add("\"Permission\": \"{3}\"");
 
             return javascriptMethods;
         }

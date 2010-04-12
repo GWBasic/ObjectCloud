@@ -4,7 +4,9 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
 	xsi:schemaLocation="http://www.springframework.net, http://www.springframework.net/xsd/spring-objects-1.1.xsd">
 
-  <object id="SubProcessFactory" type="ObjectCloud.Javascript.SubProcess.SubProcessFactory, ObjectCloud.Javascript.SubProcess" />
+  <object id="SubProcessFactory" type="ObjectCloud.Javascript.SubProcess.SubProcessFactory, ObjectCloud.Javascript.SubProcess">
+    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+  </object>
 
   <object id="ExecutionEnvironmentFactory" type="ObjectCloud.Javascript.SubProcess.ExecutionEnvironmentFactory, ObjectCloud.Javascript.SubProcess">
     <property name="SubProcessFactory" ref="SubProcessFactory" />

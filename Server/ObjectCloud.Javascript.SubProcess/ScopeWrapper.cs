@@ -35,9 +35,14 @@ namespace ObjectCloud.Javascript.SubProcess
         }
         private readonly int _ScopeId;
 
-        private SubProcess SubProcess = null;
-        Dictionary<string, MethodInfo> FunctionsInScope;
-        string Javascript;
+        private ISubProcessFactory SubProcessFactory;
+        private IFileContainer JavascriptContainer;
+
+        public SubProcess SubProcess
+        {
+            get { return _SubProcess; }
+        }
+        private SubProcess _SubProcess = null;
 
         /// <summary>
         /// Pointers to cache IDs
@@ -83,12 +88,13 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <param name="fileContainer"></param>
         public ScopeWrapper(
             FileHandlerFactoryLocator fileHandlerFactoryLocator,
-            string javascript,
-            IFileContainer fileContainer,
-            GenericReturn<SubProcess> getSubProcessDelegate)
+            IFileContainer javascriptContainer,
+            ISubProcessFactory subProcessFactory,
+            IFileContainer fileContainer)
         {
-            GetSubProcessDelegate = getSubProcessDelegate;
             _FileContainer = fileContainer;
+            SubProcessFactory = subProcessFactory;
+            JavascriptContainer = javascriptContainer;
 
             using (TimedLock.Lock(IdCtr))
             {
@@ -101,55 +107,22 @@ namespace ObjectCloud.Javascript.SubProcess
             }
 
             _FileHandlerFactoryLocator = fileHandlerFactoryLocator;
-            Javascript = javascript;
 
-            int tryCtr = 0;
-
-            while (null == SubProcess)
-                try
-                {
-                    ConstructScope();
-                }
-                catch (SubProcess.AbortedException)
-                {
-                    // Allow a max of 3 tries
-                    if (tryCtr >= 3)
-                        throw;
-
-                    tryCtr++;
-                    ConstructScope();
-                }
+            ConstructScope();
         }
 
-        /// <summary>
-        /// Constructs the sub process
-        /// </summary>
-        /// <param name="webConnection"></param>
-        public void ConstructScope()
+        private void ConstructScope()
         {
             log.Info("Constructing Javascript scope for " + FileContainer.FullPath);
 
             CacheIDsByKey = new Dictionary<object, object>();
-            SubProcess subProcess = GetSubProcessDelegate();
-            subProcess.RegisterParentFunctionDelegate(ScopeId, CallParentFunction);
+
+            SubProcess subProcess = SubProcessFactory.GetOrCreateSubProcess(JavascriptContainer);
+            _SubProcess.RegisterParentFunctionDelegate(ScopeId, CallParentFunction);
             FunctionCallers = new Dictionary<string, FunctionCaller>();
 
-            List<string> scriptsToEval = new List<string>();
-
-            List<string> requestedScripts = new List<string>(new string[] { "/API/AJAX_serverside.js", "/API/json2.js" });
-
-            // Find dependant scripts
-            if (Javascript.StartsWith("// Scripts:"))
-            {
-                // get first line
-                string scriptsLine = Javascript.Split('\n')[0];
-
-                foreach (string script in scriptsLine.Substring(11).Split(','))
-                    requestedScripts.Add(script.Trim());
-            }
-
             ISession ownerSession = FileHandlerFactoryLocator.SessionManagerHandler.CreateSession();
-            SubProcess.EvalScopeResults data;
+            SubProcess.CreateScopeResults data;
 
             try
             {
@@ -165,72 +138,13 @@ namespace ObjectCloud.Javascript.SubProcess
                     CallingFrom.Web,
                     WebMethod.GET);
 
-                IEnumerable<ScriptAndMD5> dependantScriptsAndMD5s = FileHandlerFactoryLocator.WebServer.WebComponentResolver.DetermineDependantScripts(
-                    requestedScripts,
-                    ownerWebConnection);
-
-                FunctionsInScope = new Dictionary<string, MethodInfo>();
-
-                // Load static methods that are passed into the Javascript environment as-is
-                foreach (Type javascriptFunctionsType in GetTypesThatHaveJavascriptFunctions(_FileContainer))
-                    foreach (MethodInfo method in javascriptFunctionsType.GetMethods(BindingFlags.Static | BindingFlags.Public))
-                        FunctionsInScope[method.Name] = method;
-
-                // Load all dependant scripts
-                foreach (ScriptAndMD5 dependantScript in dependantScriptsAndMD5s)
-                {
-                    /*string toEval = ownerWebConnection.ShellTo(dependantScript.ScriptName).ResultsAsString;
-                    FunctionCaller.UseTemporaryCaller<SubProcess.EvalScopeResults>(
-                        this, FileContainer, ownerWebConnection, delegate()
-                        {
-                            return subProcess.EvalScope(
-                                ScopeId,
-                                Thread.CurrentThread.ManagedThreadId,
-                                toEval,
-                                FunctionsInScope.Keys,
-                                false);
-                        });*/
-
-                    scriptsToEval.Add(ownerWebConnection.ShellTo(dependantScript.ScriptName).ResultsAsString);
-                }
-
-                StringBuilder metadataBuilder = new StringBuilder();
-                AddMetadata(metadataBuilder);
-
-                // Construct Javascript to shell to the "base" webHandler
-                string baseWrapper = FileContainer.WebHandler.GetJavascriptWrapperForBase(ownerWebConnection, "base");
-                metadataBuilder.Append(baseWrapper);
-                /*FunctionCaller.UseTemporaryCaller<SubProcess.EvalScopeResults>(
+                data = FunctionCaller.UseTemporaryCaller<SubProcess.CreateScopeResults>(
                     this, FileContainer, ownerWebConnection, delegate()
                     {
-                        return subProcess.EvalScope(
+                        return subProcess.CreateScope(
                             ScopeId,
                             Thread.CurrentThread.ManagedThreadId,
-                            metadataBuilder.ToString(),
-                            FunctionsInScope.Keys,
-                            false);
-
-                    });*/
-
-                scriptsToEval.Add(metadataBuilder.ToString());
-                scriptsToEval.Add(Javascript + "\nif (this.options) options; else null;");
-
-                data = FunctionCaller.UseTemporaryCaller<SubProcess.EvalScopeResults>(
-                    this, FileContainer, ownerWebConnection, delegate()
-                    {
-                        /*return subProcess.EvalScope(
-                            ScopeId,
-                            Thread.CurrentThread.ManagedThreadId,
-                            Javascript + "\nif (this.options) options; else null;",
-                            FunctionsInScope.Keys,
-                            true);*/
-
-                        return subProcess.EvalScope(
-                            ScopeId,
-                            Thread.CurrentThread.ManagedThreadId,
-                            scriptsToEval,
-                            FunctionsInScope.Keys,
-                            true);
+                            CreateMetadata());
                     });
             }
             finally
@@ -262,7 +176,7 @@ namespace ObjectCloud.Javascript.SubProcess
                 ParseOptions((Dictionary<string, object>)data.Result);
 
             // Don't switch over to the new sub process until everything is constructed
-            SubProcess = subProcess;
+            _SubProcess = subProcess;
         }
 
         ~ScopeWrapper()
@@ -281,27 +195,24 @@ namespace ObjectCloud.Javascript.SubProcess
             }
         }
 
-        /// <summary>
-        /// Delegate to get a sub process in the event that the current sub process becomes incapacitated
-        /// </summary>
-        private GenericReturn<SubProcess> GetSubProcessDelegate;
-
         internal bool Disposed = false;
 
         public void Dispose()
         {
             Disposed = true;
-            SubProcess.DisposeScope(ScopeId, Thread.CurrentThread.ManagedThreadId);
+            _SubProcess.DisposeScope(ScopeId, Thread.CurrentThread.ManagedThreadId);
             GC.SuppressFinalize(this);
         }
 
         /// <summary>
-        /// Adds runtime metadata to the server-side javascript
+        /// Generates runtime metadata for the server-side javascript
         /// </summary>
         /// <param name="webConnection"></param>
         /// <param name="context"></param>
-        private void AddMetadata(StringBuilder scriptBuilder)
+        private Dictionary<string, object> CreateMetadata()
         {
+            Dictionary<string, object> toReturn = new Dictionary<string, object>();
+
             //Ability to know the following from within Javascript:  File name, file path, owner name, owner ID, connected user name, connected user id
             Dictionary<string, object> fileMetadata = new Dictionary<string, object>();
             fileMetadata["filename"] = FileContainer.Filename;
@@ -322,35 +233,18 @@ namespace ObjectCloud.Javascript.SubProcess
                 }
             }
 
-            AddObject(scriptBuilder, "fileMetadata", fileMetadata);
+            toReturn["fileMetadata"] = fileMetadata;
 
             Dictionary<string, object> hostMetadata = new Dictionary<string, object>();
             hostMetadata["host"] = FileHandlerFactoryLocator.HostnameAndPort;
             hostMetadata["justHost"] = FileHandlerFactoryLocator.Hostname;
             hostMetadata["port"] = FileHandlerFactoryLocator.WebServer.Port;
 
-            AddObject(scriptBuilder, "hostMetadata", hostMetadata);
+            toReturn["hostMetadata"] = hostMetadata;
+
+            return toReturn;
         }
 		
-		/// <summary>
-		/// Returns the types that have static functions to assist with the given FileHandler based on its type 
-		/// </summary>
-		/// <param name="fileContainer">
-		/// A <see cref="IFileContainer"/>
-		/// </param>
-		/// <returns>
-		/// A <see cref="IEnumerable"/>
-		/// </returns>
-		private static IEnumerable<Type> GetTypesThatHaveJavascriptFunctions(IFileContainer fileContainer)
-		{
-			yield return typeof(JavascriptFunctions);
-			
-			IFileHandler fileHandler = fileContainer.FileHandler;
-			
-			if (fileHandler is IDatabaseHandler)
-				yield return typeof(JavascriptDatabaseFunctions);
-		}
-
         /// <summary>
         /// The FileHandlerFactoryLocator
         /// </summary>
@@ -402,7 +296,7 @@ namespace ObjectCloud.Javascript.SubProcess
             while (true)
                 try
                 {
-                    return SubProcess.CallFunctionInScope(ScopeId, Thread.CurrentThread.ManagedThreadId, functionName, arguments);
+                    return _SubProcess.CallFunctionInScope(ScopeId, Thread.CurrentThread.ManagedThreadId, functionName, arguments);
                 }
                 catch (SubProcess.AbortedException)
                 {
@@ -437,7 +331,7 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             try
             {
-                MethodInfo toInvoke = FunctionsInScope[functionName];
+                MethodInfo toInvoke = SubProcess.FunctionsInScope[functionName];
                 ParameterInfo[] parameters = toInvoke.GetParameters();
 
                 object[] allArguments = new object[parameters.Length];
@@ -462,23 +356,12 @@ namespace ObjectCloud.Javascript.SubProcess
                         allArguments[argCtr] = parameterType.IsValueType ? Activator.CreateInstance(parameterType) : null;
                 }
 
-                return FunctionsInScope[functionName].Invoke(null, allArguments);
+                return SubProcess.FunctionsInScope[functionName].Invoke(null, allArguments);
             }
             catch (TargetInvocationException tie)
             {
                 throw tie.InnerException;
             }
-        }
-
-        /// <summary>
-        /// Adds an object to be accessible from within the scope
-        /// </summary>
-        /// <param name="name"></param>
-        /// <param name="?"></param>
-        private void AddObject(StringBuilder scriptBuilder, string name, object toAdd)
-        {
-            string serialized = JsonWriter.Serialize(toAdd);
-            scriptBuilder.AppendFormat("{0} = {1};", name, serialized);
         }
 
         /// <summary>

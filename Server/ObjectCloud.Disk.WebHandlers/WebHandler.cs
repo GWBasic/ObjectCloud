@@ -172,13 +172,22 @@ namespace ObjectCloud.Disk.WebHandlers
             // Not worth syncronizing, nothing bad will happen if multiple threads enter this block at the same time
             if (null == cachedInBrowserJSWrapper)
             {
-                string javascriptWrapper = StringGenerator.GenerateSeperatedList(
-                    FileHandlerFactoryLocator.WebServer.JavascriptWebAccessCodeGenerator.GenerateWrapper(WebHandlerTypes), ",\n");
+                List<string> javascriptMethods =
+                    FileHandlerFactoryLocator.WebServer.JavascriptWebAccessCodeGenerator.GenerateWrapper(WebHandlerTypes);
+                
+                javascriptMethods.Add(
+                    "\"Url\": \"" + "http://" + FileHandlerFactoryLocator.HostnameAndPort + FileContainer.FullPath + "\"");
+
+                // Insert the user's permission to the file
+                javascriptMethods.Add("\"Permission\": \"{3}\"");
+
+                string javascriptWrapper = StringGenerator.GenerateSeperatedList(javascriptMethods, ",\n");
 
                 // Replace some key constants
                 javascriptWrapper = javascriptWrapper.Replace("{0}", FileContainer.FullPath);
                 javascriptWrapper = javascriptWrapper.Replace("{1}", FileContainer.Filename);
-                cachedInBrowserJSWrapper = javascriptWrapper.Replace("{2}", "http://" + FileHandlerFactoryLocator.HostnameAndPort + FileContainer.FullPath);
+
+                cachedInBrowserJSWrapper = javascriptWrapper;
             }
 
             string javascriptToReturn = cachedInBrowserJSWrapper;
@@ -242,29 +251,6 @@ namespace ObjectCloud.Disk.WebHandlers
 
             toReturn.ContentType = "application/javascript";
             return toReturn;
-        }
-
-        /// <summary>
-        /// This should return a Javascript object that can perform all calls to all methods marked as WebCallable through server-side Javascript.
-        /// </summary>
-        /// <param name="webConnection"></param>
-        /// <param name="assignToVariable">The variable to assign the wrapper object to</param>
-        /// <returns></returns>
-        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Read)]
-        public IWebResults GetServersideJavascriptWrapper(IWebConnection webConnection, string assignToVariable)
-        {
-            return GetJSW(webConnection, assignToVariable, null, true);
-        }
-
-        /// <summary>
-        /// Used internally
-        /// </summary>
-        /// <param name="webConnection"></param>
-        /// <param name="assignToVariable"></param>
-        /// <returns></returns>
-        public string GetJavascriptWrapperForBase(IWebConnection webConnection, string assignToVariable)
-        {
-            return GetJSW(webConnection, assignToVariable, null, true).ResultsAsString;
         }
 
         /// <summary>

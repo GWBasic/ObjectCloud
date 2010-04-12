@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 
 using ObjectCloud.Common;
+using ObjectCloud.Interfaces.Disk;
 
 namespace ObjectCloud.Javascript.SubProcess
 {
@@ -16,127 +17,68 @@ namespace ObjectCloud.Javascript.SubProcess
     /// </summary>
     public class SubProcessFactory : ISubProcessFactory
     {
-        /// <summary>
-        /// The number of active sub processes
-        /// </summary>
-        public int NumSubProcesses
+        public FileHandlerFactoryLocator FileHandlerFactoryLocator
         {
-            get 
-            {
-                if (null == _NumSubProcesses)
-                    throw new JavascriptException("NumSubProcesses not set");
-
-                return _NumSubProcesses.Value; 
-            }
-            set 
-            {
-                using (TimedLock.Lock(SubProcessCtr))
-                {
-                    _NumSubProcesses = value;
-
-                    // See if new cubbyholes need to be allocated / removed
-                    AllocateSubProcesses();
-                }
-            }
+            get { return _FileHandlerFactoryLocator; }
+            set { _FileHandlerFactoryLocator = value; }
         }
-        private int? _NumSubProcesses;
+        FileHandlerFactoryLocator _FileHandlerFactoryLocator;
 
         /// <summary>
-        /// The existing sub processes
+        /// All of the sub processes, indexed by the full path to their class
         /// </summary>
-        private SubProcess[] SubProcesses = null;
+        private Dictionary<string, SubProcess> SubProcessesByClass = new Dictionary<string, SubProcess>();
 
         /// <summary>
-        /// The existing keys
+        /// When the sub processes were last modified, used to kill a sub process when its class is modified
         /// </summary>
-        private object[] Keys = null;
+        private Dictionary<string, DateTime> ClassLastModified = new Dictionary<string, DateTime>();
 
         /// <summary>
-        /// The current sub process that will be returned
+        /// Returns the corresponding sub process for the given class.  Creates it if it isn't running, restarts if the class was modified
         /// </summary>
-        private Wrapped<int> SubProcessCtr = 0;
-
-        public SubProcess GetSubProcess()
+        /// <param name="javascriptContainer"></param>
+        /// <returns></returns>
+        public SubProcess GetOrCreateSubProcess(IFileContainer javascriptContainer)
         {
-            int subProcessCtr;
-            using (TimedLock.Lock(SubProcessCtr))
+            using (TimedLock.Lock(SubProcessesByClass))
             {
-                // Figure out which sub process to return;
+                SubProcess toReturn;
+                if (!SubProcessesByClass.TryGetValue(javascriptContainer.FullPath, out toReturn))
+                    return CreateSubProcess(javascriptContainer, ref toReturn);
 
-                if (SubProcessCtr.Value >= NumSubProcesses)
-                    SubProcessCtr.Value = 0;
-
-                subProcessCtr = SubProcessCtr.Value;
-                SubProcessCtr.Value++;
-            }
-
-            SubProcess toReturn = SubProcesses[subProcessCtr];
-
-            // If the sub-process is alive, return without locking
-            if (toReturn.Alive)
-                return toReturn;
-
-            // The sub-process isn't alive, create with locking
-            using (TimedLock.Lock(Keys[subProcessCtr]))
-            {
-                toReturn = SubProcesses[subProcessCtr];
-
-                if (!toReturn.Alive)
-                {
-                    toReturn = new SubProcess();
-                    SubProcesses[subProcessCtr] = toReturn;
-                }
-
-                return toReturn;
-            }
-        }
-
-        /// <summary>
-        /// Allocates sub processes
-        /// </summary>
-        private void AllocateSubProcesses()
-        {
-            if (null != SubProcesses)
-                if (SubProcesses.Length != NumSubProcesses)
-                {
-                    if (null != SubProcesses)
-                        foreach (SubProcess oldSubProcess in SubProcesses)
-                            try
-                            {
-                                oldSubProcess.Process.Kill();
-                            }
-                            catch { }
-                }
+                if (javascriptContainer.LastModified == ClassLastModified[javascriptContainer.FullPath])
+                    return toReturn;
                 else
-                    return;
-
-            SubProcesses = new SubProcess[NumSubProcesses];
-            Keys = new object[NumSubProcesses];
-
-            List<Thread> threadsToJoin = new List<Thread>();
-
-            for (int ctr = 0; ctr < NumSubProcesses; ctr++)
-            {
-                Thread createThread = new Thread(new ParameterizedThreadStart(CreateSubProcess));
-                createThread.Start(ctr);
-
-                threadsToJoin.Add(createThread);
+                {
+                    SubProcessesByClass[javascriptContainer.FullPath].Dispose();
+                    return CreateSubProcess(javascriptContainer, ref toReturn);
+                }
             }
+        }
 
-            foreach (Thread createThread in threadsToJoin)
-                createThread.Join();
+        private SubProcess CreateSubProcess(IFileContainer javascriptContainer, ref SubProcess toReturn)
+        {
+            ClassLastModified[javascriptContainer.FullPath] = javascriptContainer.LastModified;
+            toReturn = new SubProcess(javascriptContainer, FileHandlerFactoryLocator);
+            SubProcessesByClass[javascriptContainer.FullPath] = toReturn;
+
+            return toReturn;
         }
 
         /// <summary>
-        /// Creates a sub process
+        /// If the corresponding sub process is based on an outdated version of the class, disposes it
         /// </summary>
-        /// <param name="state"></param>
-        private void CreateSubProcess(object state)
+        /// <param name="javascriptContainer"></param>
+        public void DisposeSubProcessIfOutdated(IFileContainer javascriptContainer)
         {
-            int subProcessCtr = (int)state;
-
-            SubProcesses[subProcessCtr] = new SubProcess();
-            Keys[subProcessCtr] = new object();
+            using (TimedLock.Lock(SubProcessesByClass))
+                if (javascriptContainer.LastModified != ClassLastModified[javascriptContainer.FullPath])
+                {
+                    SubProcessesByClass[javascriptContainer.FullPath].Dispose();
+                    SubProcessesByClass.Remove(javascriptContainer.FullPath);
+                    ClassLastModified.Remove(javascriptContainer.FullPath);
+                }
         }
     }
 }

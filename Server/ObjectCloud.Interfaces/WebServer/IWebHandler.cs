@@ -30,20 +30,12 @@ namespace ObjectCloud.Interfaces.WebServer
         /// <returns></returns>
         IWebResults GetJSW(IWebConnection webConnection, string assignToVariable, string EncodeFor, bool bypassJavascript);
 
-        /// <summary>
-        /// Returns Javascript for running on the server-side that only exposes access to the WebHandler
-        /// </summary>
-        /// <param name="userId"></param>
-        /// <param name="assignToVariable"></param>
-        /// <returns></returns>
-        string GetJavascriptWrapperForBase(IWebConnection webConnection, string assignToVariable);
-
-        /// <summary>
+        /*// <summary>
         /// This should return a Javascript object that can perform all calls to all methods marked as WebCallable through server-side Javascript.
         /// </summary>
         /// <param name="webConnection"></param>
         /// <returns></returns>
-        IWebResults GetServersideJavascriptWrapper(IWebConnection webConnection, string assignToVariable);
+        IWebResults GetServersideJavascriptWrapper(IWebConnection webConnection, string assignToVariable);*/
 
         /// <summary>
         /// Returns any server-side Javascript errors, if they can be determined.

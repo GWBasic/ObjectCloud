@@ -18,7 +18,8 @@ namespace ObjectCloud.Javascript.SubProcess
             IFileContainer fileContainer,
             IFileContainer javascriptContainer)
         {
-            return new ExecutionEnvironment(fileHandlerFactoryLocator, fileContainer, javascriptContainer, SubProcessFactory.GetSubProcess);
+            return new ExecutionEnvironment(
+                fileHandlerFactoryLocator, javascriptContainer, fileContainer, SubProcessFactory);
         }
 
         public ISubProcessFactory SubProcessFactory

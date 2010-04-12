@@ -33,59 +33,24 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <param name="javascriptContainer">The text file that contains the javascript</param>
         public ExecutionEnvironment(
             FileHandlerFactoryLocator fileHandlerFactoryLocator,
-            IFileContainer fileContainer,
             IFileContainer javascriptContainer,
-            GenericReturn<SubProcess> getSubProcessDelegate)
+            IFileContainer fileContainer,
+            ISubProcessFactory subProcessFactory)
         {
             _FileHandlerFactoryLocator = fileHandlerFactoryLocator;
-            _JavascriptContainer = javascriptContainer;
-
-            // load both the javascript and its date in a lock
-            ITextHandler javascriptTextHandler = javascriptContainer.CastFileHandler<ITextHandler>();
-
-            IEnumerable<string> javascript;
-
-            using (TimedLock.Lock(javascriptTextHandler))
-            {
-                _JavascriptLastModified = javascriptTextHandler.FileContainer.LastModified;
-                javascript = javascriptTextHandler.ReadLines();
-            }
-
-            StringBuilder javascriptBuilder = new StringBuilder();
-            bool buildingAnnotations = true;
-
-            // parse the javascript to find each function and its attributes
-            foreach (string line in javascript)
-                if (buildingAnnotations)
-                    if (line.StartsWith("// @"))
-                    {
-                        string[] nameAndValue = line.Substring(4).Split(new char[] { ':' }, 2);
-
-                        if (2 == nameAndValue.Length)
-                            ScriptAnnotations[nameAndValue[0].Trim()] = nameAndValue[1].Trim();
-                        else if (1 == nameAndValue.Length)
-                            ScriptAnnotations[nameAndValue[0].Trim()] = string.Empty;
-                    }
-                    else
-                    {
-                        javascriptBuilder.AppendLine(line);
-                        buildingAnnotations = false;
-                    }
-                else
-                    javascriptBuilder.AppendLine(line);
 
             try
             {
                 ScopeWrapper = new ObjectCloud.Javascript.SubProcess.ScopeWrapper(
                     fileHandlerFactoryLocator,
-                    javascriptBuilder.ToString(),
-                    fileContainer,
-                    getSubProcessDelegate);
+                    javascriptContainer,
+                    subProcessFactory,
+                    fileContainer);
             }
             catch (Exception e)
             {
                 // If the Javascript has an error in it, it must be ignored.  If an error were returned, then malformed Javascript could hose the system!
-
+                this._ExecutionEnvironmentErrors = e.ToString();
                 log.Error("Error creating scope", e);
             }
         }
@@ -93,7 +58,7 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <summary>
         /// The scope wrapper
         /// </summary>
-        ScopeWrapper ScopeWrapper = null;
+        ScopeWrapper ScopeWrapper;
         
         /// <summary>
         /// The FileHandlerFactoryLocator
@@ -104,29 +69,15 @@ namespace ObjectCloud.Javascript.SubProcess
         }
         private readonly FileHandlerFactoryLocator _FileHandlerFactoryLocator;
 
-        /// <summary>
-        /// The file that contains the JavaScript
-        /// </summary>
         public IFileContainer JavascriptContainer
         {
-            get { return _JavascriptContainer; }
+            get { return ScopeWrapper.SubProcess.JavascriptContainer; }
         }
-        private readonly IFileContainer _JavascriptContainer;
 
         public DateTime JavascriptLastModified
         {
-            get { return _JavascriptLastModified; }
+            get { return ScopeWrapper.SubProcess.JavascriptLastModified; }
         }
-        private readonly DateTime _JavascriptLastModified;
-
-        /// <summary>
-        /// The script's attributes.  These are declared at the beginning of the script with lines that start with // @
-        /// </summary>
-        public Dictionary<string, string> ScriptAnnotations
-        {
-            get { return _ScriptAnnotations; }
-        }
-        private readonly Dictionary<string, string> _ScriptAnnotations = new Dictionary<string, string>();
 
         /// <summary>
         /// Returns a delegate to handle the incoming request
