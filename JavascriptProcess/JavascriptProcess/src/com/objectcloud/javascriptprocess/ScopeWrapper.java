@@ -179,6 +179,46 @@ public class ScopeWrapper {
 		
 		this.scope = scriptableAndResult.scope;
 	    jsonStringifyFunction = scriptableAndResult.jsonStringifyFunction;
+	    
+	    JSONObject functions = new JSONObject();
+		outData.put("Functions", functions);
+		
+        for (Object id : scope.getIds()) {
+
+        	String functionName = id.toString();
+
+            Object javascriptMethodObject = scope.get(functionName, scope);
+
+            // If the value is a Javascript function...
+            if (Function.class.isInstance(javascriptMethodObject)) {
+            	JSONObject function = new JSONObject();
+            	functions.put(functionName, function);
+            	
+            	JSONObject properties = new JSONObject();
+            	function.put("Properties", properties);
+            	
+                Function javascriptMethod = (Function)javascriptMethodObject;
+
+                for (Object fId : javascriptMethod.getIds())
+                	properties.put(fId.toString(), javascriptMethod.get(fId.toString(), scope));
+
+                // Try to get the arguments
+            	JSONArray arguments = new JSONArray();
+            	function.put("Arguments", arguments);
+
+            	String unbrokenArgs = context.evaluateString(scope, functionName + ".toSource();", "<cmd>", 1, null).toString();
+            	unbrokenArgs = unbrokenArgs.substring(unbrokenArgs.indexOf('(') + 1);
+            	unbrokenArgs = unbrokenArgs.substring(0, unbrokenArgs.indexOf(')'));
+
+            	if (unbrokenArgs.length() > 0) {
+                	
+                	String[] args = unbrokenArgs.split(",");
+                	for (String arg : args)
+                		arguments.put(arg.trim());
+                }
+            }
+        }
+
 		
 	    returnResult("RespondCreateScope", context, threadID, scriptableAndResult.result, outData, "Result");
 	}
