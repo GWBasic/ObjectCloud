@@ -18,6 +18,7 @@ import org.mozilla.javascript.Context;
 import org.mozilla.javascript.EcmaError;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.JavaScriptException;
+import org.mozilla.javascript.Script;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.Undefined;
@@ -166,19 +167,35 @@ public class ScopeWrapper {
 		
 		ParentScope.ScriptableAndResult scriptableAndResult;
 		JSONObject outData = new JSONObject();
-		
-		try {
-			scriptableAndResult = parentScope.createScope(context, data);
-		} catch (JavaScriptException je) {
-			returnResult("RespondCreateScope", context, threadID, je.getValue(), outData, "Exception");
-			throw je;
-		} catch (Exception e) {
-			returnResult("RespondCreateScope", context, threadID, e.getMessage(), outData, "Exception");
-			throw e;
-		}
-		
+		scriptableAndResult = parentScope.createScope(context);
 		this.scope = scriptableAndResult.scope;
 	    jsonStringifyFunction = scriptableAndResult.jsonStringifyFunction;
+	    Function jsonParseFunction = scriptableAndResult.jsonParseFunction;
+
+		for (String key : data.keysIterable()) {
+			Object property = data.get(key);
+			
+			// If the property isn't a primitive, then convert it to something Rhino can handle by re-JSONing and unJSONing
+			if ((property instanceof JSONArray) || (property instanceof JSONObject))
+				property = jsonParseFunction.call(context, scope, scope, new Object[] {property.toString()});
+
+			scope.put(key, scope, property);
+		}
+
+	    Object result = null;
+		try {
+
+			for (Script script : parentScope.getCompiledScripts())
+				result = script.exec(context, scope);
+			
+		} catch (JavaScriptException je) {
+			returnResult("RespondCreateScope", context, threadID, je.getValue(), outData, "Exception");
+			return;
+		} catch (Exception e) {
+			returnResult("RespondCreateScope", context, threadID, e.getMessage(), outData, "Exception");
+			return;
+		}
+		
 	    
 	    JSONObject functions = new JSONObject();
 		outData.put("Functions", functions);
@@ -220,7 +237,7 @@ public class ScopeWrapper {
         }
 
 		
-	    returnResult("RespondCreateScope", context, threadID, scriptableAndResult.result, outData, "Result");
+	    returnResult("RespondCreateScope", context, threadID, result, outData, "Result");
 	}
 	
 	private void callFunctionInScope(Context context, Object threadID, JSONObject data) throws Exception {
@@ -287,19 +304,20 @@ public class ScopeWrapper {
 	
 	private void returnResult(String command, final Context context, Object threadID, final Object callResults, JSONObject outData, String resultsName) throws JSONException, IOException {
 		
-		if (!(callResults instanceof Undefined)) {
-			final Object serializedCallResults = jsonStringifyFunction.call(context, scope, scope, new Object[] { callResults });
-			
-			if (serializedCallResults instanceof String)
-				outData.put(resultsName, new JSONString() {
-					
-					@Override
-					public String toJSONString() {
-						return (String)serializedCallResults;
-					}
-					
-				});		
-			}
+		if (callResults != null)
+			if (!(callResults instanceof Undefined)) {
+				final Object serializedCallResults = jsonStringifyFunction.call(context, scope, scope, new Object[] { callResults });
+				
+				if (serializedCallResults instanceof String)
+					outData.put(resultsName, new JSONString() {
+						
+						@Override
+						public String toJSONString() {
+							return (String)serializedCallResults;
+						}
+						
+					});		
+				}
 		
 		sendCommand(command, threadID, outData);
 	}
