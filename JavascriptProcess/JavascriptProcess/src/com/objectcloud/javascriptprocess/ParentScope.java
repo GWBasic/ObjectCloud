@@ -137,12 +137,11 @@ public class ParentScope {
 	
 	public class ScriptableAndResult {
 		public Scriptable scope;
-		public Object result;
 		public Function jsonStringifyFunction;
 		public Function jsonParseFunction;
 	}
 	
-	public ScriptableAndResult createScope(Context context, JSONObject data) throws JSONException {
+	public ScriptableAndResult createScope(Context context) {
 
 		Scriptable childScope = context.newObject(scope);
 		childScope.setPrototype(scope);
@@ -152,22 +151,12 @@ public class ParentScope {
 		toReturn.scope = childScope;
 		toReturn.jsonStringifyFunction = (Function)getJsonStringifyFunction.exec(context, childScope);
 		toReturn.jsonParseFunction = (Function)getJsonParseFunction.exec(context, childScope);
-
-		for (String key : data.keysIterable()) {
-			Object property = data.get(key);
-			
-			// If the property isn't a primitive, then convert it to something Rhino can handle by re-JSONing and unJSONing
-			if ((property instanceof JSONArray) || (property instanceof JSONObject))
-				property = toReturn.jsonParseFunction.call(context, childScope, childScope, new Object[] {property.toString()});
-
-			childScope.put(key, childScope, property);
-
-		}
-		
-		for (Script script : compiledScripts)
-			toReturn.result = script.exec(context, childScope);
 		
 		return toReturn;
+	}
+
+	public ArrayList<Script> getCompiledScripts() {
+		return compiledScripts;
 	}
 
 	// json2.js, minimized

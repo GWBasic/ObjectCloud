@@ -165,10 +165,9 @@
 
 
 {
-   "Scripts": ["var a = 0; function getA(){return a;} function setA(newA){a = newA;} function getB(){return b;}"],
+   "Scripts": ["var a = 0; function getA(){return a;} function setA(newA){a = newA;} function getB(){return b;} 123;"],
    "Functions":[]
 }
-
 {
    "ScopeID":1,
    "Command":"CreateScope",
@@ -233,4 +232,15 @@
       "FunctionName":"getA",
       "Arguments":[]
    }
+}
+
+{
+   "Scripts": ["throw 'ooops';"],
+   "Functions":[]
+}
+{
+   "ScopeID":1,
+   "Command":"CreateScope",
+   "ThreadID":456,
+   "Data": {b:[0,1,2,3,4,5]}
 }
