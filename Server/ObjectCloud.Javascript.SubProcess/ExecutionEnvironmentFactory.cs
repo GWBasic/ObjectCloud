@@ -28,5 +28,11 @@ namespace ObjectCloud.Javascript.SubProcess
             set { _SubProcessFactory = value; }
         }
         private ISubProcessFactory _SubProcessFactory;
+
+        public void Start(IEnumerable<IFileContainer> files)
+        {
+            foreach (IFileContainer file in files)
+                SubProcessFactory.GetOrCreateSubProcess(file);
+        }
     }
 }

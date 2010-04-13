@@ -22,6 +22,15 @@ namespace ObjectCloud.Interfaces.Javascript
         /// <param name="theObject"></param>
         /// <param name="javascriptContainer"></param>
         /// <returns></returns>
-        IExecutionEnvironment Create(FileHandlerFactoryLocator fileHandlerFactoryLocator, IFileContainer theObject, IFileContainer javascriptContainer);
+        IExecutionEnvironment Create(
+            FileHandlerFactoryLocator fileHandlerFactoryLocator,
+            IFileContainer theObject,
+            IFileContainer javascriptContainer);
+
+        /// <summary>
+        /// Pre-loads and compiles the classes that are stored in the passed-in files
+        /// </summary>
+        /// <param name="files"></param>
+        void Start(IEnumerable<IFileContainer> files);
     }
 }
