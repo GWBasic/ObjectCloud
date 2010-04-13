@@ -309,14 +309,21 @@ namespace ObjectCloud.Javascript.SubProcess
 
         void Process_Exited(object sender, EventArgs e)
         {
-            ((Process)sender).Exited -= new EventHandler(Process_Exited);
-            using (TimedLock.Lock(SubProcesses))
-                SubProcesses.Remove(((Process)sender));
-
-            if (!Disposed)
+            try
             {
-                Dispose();
-                Aborted = true;
+                ((Process)sender).Exited -= new EventHandler(Process_Exited);
+                using (TimedLock.Lock(SubProcesses))
+                    SubProcesses.Remove(((Process)sender));
+
+                if (!Disposed)
+                {
+                    Dispose();
+                    Aborted = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("Exception when a sub process exited", ex);
             }
         }
 

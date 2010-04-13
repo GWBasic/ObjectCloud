@@ -117,8 +117,8 @@ namespace ObjectCloud.Javascript.SubProcess
 
             CacheIDsByKey = new Dictionary<object, object>();
 
-            SubProcess subProcess = SubProcessFactory.GetOrCreateSubProcess(JavascriptContainer);
-            subProcess.RegisterParentFunctionDelegate(ScopeId, CallParentFunction);
+            _SubProcess = SubProcessFactory.GetOrCreateSubProcess(JavascriptContainer);
+            _SubProcess.RegisterParentFunctionDelegate(ScopeId, CallParentFunction);
             FunctionCallers = new Dictionary<string, FunctionCaller>();
 
             ISession ownerSession = FileHandlerFactoryLocator.SessionManagerHandler.CreateSession();
@@ -141,7 +141,7 @@ namespace ObjectCloud.Javascript.SubProcess
                 data = FunctionCaller.UseTemporaryCaller<SubProcess.CreateScopeResults>(
                     this, FileContainer, ownerWebConnection, delegate()
                     {
-                        return subProcess.CreateScope(
+                        return _SubProcess.CreateScope(
                             ScopeId,
                             Thread.CurrentThread.ManagedThreadId,
                             CreateMetadata());
@@ -174,9 +174,6 @@ namespace ObjectCloud.Javascript.SubProcess
             // Get options
             if (data.Result is Dictionary<string, object>)
                 ParseOptions((Dictionary<string, object>)data.Result);
-
-            // Don't switch over to the new sub process until everything is constructed
-            _SubProcess = subProcess;
         }
 
         ~ScopeWrapper()
