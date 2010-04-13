@@ -1,4 +1,5 @@
 // Scripts: /System/Proxy?Method=GetJSW&assignToVariable=Proxy
+// FileType: text
 
 HelloWorld.webCallable = "GET";
 function HelloWorld()

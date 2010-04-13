@@ -38,6 +38,8 @@ namespace ObjectCloud.Javascript.SubProcess
             ISubProcessFactory subProcessFactory)
         {
             _FileHandlerFactoryLocator = fileHandlerFactoryLocator;
+            _JavascriptContainer = javascriptContainer;
+            _JavascriptLastModified = javascriptContainer.LastModified;
 
             try
             {
@@ -71,13 +73,15 @@ namespace ObjectCloud.Javascript.SubProcess
 
         public IFileContainer JavascriptContainer
         {
-            get { return ScopeWrapper.SubProcess.JavascriptContainer; }
+            get { return _JavascriptContainer; }
         }
+        private IFileContainer _JavascriptContainer;
 
         public DateTime JavascriptLastModified
         {
-            get { return ScopeWrapper.SubProcess.JavascriptLastModified; }
+            get { return _JavascriptLastModified; }
         }
+        private DateTime _JavascriptLastModified;
 
         /// <summary>
         /// Returns a delegate to handle the incoming request

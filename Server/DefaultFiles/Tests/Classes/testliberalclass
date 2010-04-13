@@ -1,3 +1,5 @@
+// FileType: text
+
 var options =
 {
    BlockWebMethods: false

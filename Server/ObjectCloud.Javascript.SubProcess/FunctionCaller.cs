@@ -36,7 +36,7 @@ namespace ObjectCloud.Javascript.SubProcess
             ScopeWrapper scopeWrapper,
             IFileContainer fileContainer,
             string functionName,
-            SubProcess.EvalScopeFunctionInfo functionInfo)
+            SubProcess.CreateScopeFunctionInfo functionInfo)
         {
             Dictionary<string, object> properties = functionInfo.Properties;
 

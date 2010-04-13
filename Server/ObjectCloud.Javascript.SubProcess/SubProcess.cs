@@ -273,8 +273,8 @@ namespace ObjectCloud.Javascript.SubProcess
             string javascriptToReturn = StringGenerator.GenerateSeperatedList(javascriptMethods, ",\n");
 
             // Replace some key constants
-            javascriptToReturn = javascriptToReturn.Replace("{0}", "fileMetadata.fullpath");
-            javascriptToReturn = javascriptToReturn.Replace("{1}", "fileMetadata.filename");
+            javascriptToReturn = javascriptToReturn.Replace("{0}", "' + fileMetadata.fullpath + '");
+            javascriptToReturn = javascriptToReturn.Replace("{1}", "' + fileMetadata.filename + '");
 
             javascriptToReturn = javascriptToReturn.Replace("{4}", "true");
 
@@ -442,13 +442,13 @@ namespace ObjectCloud.Javascript.SubProcess
             /// <summary>
             /// The functions that are present in the scope
             /// </summary>
-            public Dictionary<string, EvalScopeFunctionInfo> Functions;
+            public Dictionary<string, CreateScopeFunctionInfo> Functions;
         }
 
         /// <summary>
         /// Information about a function
         /// </summary>
-        public struct EvalScopeFunctionInfo
+        public struct CreateScopeFunctionInfo
         {
             /// <summary>
             /// The function's properties
@@ -472,8 +472,7 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             CheckIfAbortedOrDisposed();
 
-            Dictionary<string, object> command;
-            CreateCommand(scopeId, threadID, "CreateScope", out command, out data);
+            Dictionary<string, object> command = CreateCommand(scopeId, threadID, "CreateScope", data);
 
             Dictionary<string, object> dataToReturn = SendCommandAndWaitForResponse(command, scopeId);
 
@@ -481,11 +480,11 @@ namespace ObjectCloud.Javascript.SubProcess
             toReturn.Result = dataToReturn["Result"];
 
             object functionsObj = dataToReturn["Functions"];
-            Dictionary<string, EvalScopeFunctionInfo> functionsToReturn = new Dictionary<string, EvalScopeFunctionInfo>();
+            Dictionary<string, CreateScopeFunctionInfo> functionsToReturn = new Dictionary<string, CreateScopeFunctionInfo>();
 
             foreach (KeyValuePair<string, object> functionKVP in (IEnumerable<KeyValuePair<string, object>>)functionsObj)
             {
-                EvalScopeFunctionInfo functionInfo = new EvalScopeFunctionInfo();
+                CreateScopeFunctionInfo functionInfo = new CreateScopeFunctionInfo();
                 Dictionary<string, object> value = (Dictionary<string, object>)functionKVP.Value;
 
                 functionInfo.Properties = (Dictionary<string, object>)value["Properties"];
@@ -528,9 +527,7 @@ namespace ObjectCloud.Javascript.SubProcess
 
             ParentFunctionDelegatesByScopeId.Remove(scopeId);
 
-            Dictionary<string, object> command;
-            Dictionary<string, object> data;
-            CreateCommand(scopeId, threadID, "DisposeScope", out command, out data);
+            Dictionary<string, object> command = CreateCommand(scopeId, threadID, "DisposeScope", new Dictionary<string, object>());
 
             using (TimedLock.Lock(SendKey))
                 JSONSender.Write(command);
@@ -548,12 +545,11 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             CheckIfAbortedOrDisposed();
 
-            Dictionary<string, object> command;
-            Dictionary<string, object> data;
-            CreateCommand(scopeId, threadID, "CallFunctionInScope", out command, out data);
-
+            Dictionary<string, object> data = new Dictionary<string,object>();
             data["FunctionName"] = functionName;
             data["Arguments"] = arguments;
+
+            Dictionary<string, object> command = CreateCommand(scopeId, threadID, "CallFunctionInScope", data);
 
             Dictionary<string, object> dataToReturn = SendCommandAndWaitForResponse(command, scopeId);
             return dataToReturn["Result"];
@@ -571,12 +567,11 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             CheckIfAbortedOrDisposed();
 
-            Dictionary<string, object> command;
-            Dictionary<string, object> data;
-            CreateCommand(scopeId, threadID, "CallCallback", out command, out data);
-
+            Dictionary<string, object> data = new Dictionary<string,object>();
             data["CallbackId"] = callbackId;
             data["Arguments"] = arguments;
+
+            Dictionary<string, object> command = CreateCommand(scopeId, threadID, "CallCallback", data);
 
             Dictionary<string, object> dataToReturn = SendCommandAndWaitForResponse(command, scopeId);
             return dataToReturn["Result"];
@@ -632,16 +627,17 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <param name="threadID"></param>
         /// <param name="command"></param>
         /// <param name="data"></param>
-        private static void CreateCommand(
-            int scopeId, object threadID, string commandName, out Dictionary<string, object> command, out Dictionary<string, object> data)
+        private static Dictionary<string, object> CreateCommand(
+            int scopeId, object threadID, string commandName, Dictionary<string, object> data)
         {
+            Dictionary<string, object> command;
             command = new Dictionary<string, object>();
             command["ScopeID"] = scopeId;
             command["ThreadID"] = threadID;
             command["Command"] = commandName;
-
-            data = new Dictionary<string, object>();
             command["Data"] = data;
+
+            return command;
         }
 
         /// <summary>
@@ -738,9 +734,8 @@ namespace ObjectCloud.Javascript.SubProcess
                                         }
                             }
 
-                        Dictionary<string, object> outCommand;
-                        Dictionary<string, object> outData;
-                        CreateCommand(scopeId, threadId, "RespondCallParentFunction", out outCommand, out outData);
+                        Dictionary<string, object> outData = new Dictionary<string,object>();
+                        Dictionary<string, object> outCommand = CreateCommand(scopeId, threadId, "RespondCallParentFunction", outData);
 
                         try
                         {

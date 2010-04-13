@@ -118,7 +118,7 @@ namespace ObjectCloud.Javascript.SubProcess
             CacheIDsByKey = new Dictionary<object, object>();
 
             SubProcess subProcess = SubProcessFactory.GetOrCreateSubProcess(JavascriptContainer);
-            _SubProcess.RegisterParentFunctionDelegate(ScopeId, CallParentFunction);
+            subProcess.RegisterParentFunctionDelegate(ScopeId, CallParentFunction);
             FunctionCallers = new Dictionary<string, FunctionCaller>();
 
             ISession ownerSession = FileHandlerFactoryLocator.SessionManagerHandler.CreateSession();
@@ -153,10 +153,10 @@ namespace ObjectCloud.Javascript.SubProcess
             }
 
             // Initialize each function caller
-            foreach (KeyValuePair<string, SubProcess.EvalScopeFunctionInfo> functionKVP in data.Functions)
+            foreach (KeyValuePair<string, SubProcess.CreateScopeFunctionInfo> functionKVP in data.Functions)
             {
                 string functionName = functionKVP.Key;
-                SubProcess.EvalScopeFunctionInfo functionInfo = functionKVP.Value;
+                SubProcess.CreateScopeFunctionInfo functionInfo = functionKVP.Value;
                 Dictionary<string, object> properties = functionInfo.Properties;
 
                 // ... and it's marked as webCallable, create a FunctionCaller
@@ -293,9 +293,12 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             int tryCtr = 0;
 
+            SubProcess subProcess = null;
+
             while (true)
                 try
                 {
+                    subProcess = _SubProcess;
                     return _SubProcess.CallFunctionInScope(ScopeId, Thread.CurrentThread.ManagedThreadId, functionName, arguments);
                 }
                 catch (SubProcess.AbortedException)
@@ -305,7 +308,11 @@ namespace ObjectCloud.Javascript.SubProcess
                         throw;
 
                     tryCtr++;
-                    ConstructScope();
+
+                    if (subProcess != _SubProcess)
+                    using (TimedLock.Lock(subProcess))
+                        if (subProcess != _SubProcess)
+                            ConstructScope();
                 }
         }
 

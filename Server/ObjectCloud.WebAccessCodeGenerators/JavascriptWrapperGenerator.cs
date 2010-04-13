@@ -77,8 +77,8 @@ namespace ObjectCloud.WebAccessCodeGenerators
                     }
                 }
 
-            javascriptMethods.Add("\"FullPath\": \"{0}\"");
-            javascriptMethods.Add("\"Filename\": \"{1}\"");
+            javascriptMethods.Add("\"FullPath\": '{0}'");
+            javascriptMethods.Add("\"Filename\": '{1}'");
 
             return javascriptMethods;
         }
