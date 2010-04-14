@@ -633,6 +633,41 @@ namespace ObjectCloud.Disk.WebHandlers
             IEnumerable<IGroupAndAlias> groupAndAliases = FileHandler.GetGroupsThatUserIsIn(webConnection.Session.User.Id);
             return ReturnAsJSON(groupAndAliases);
         }
+
+        /// <summary>
+        /// Returns true if the user is in the specified group, false otherwise
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="groupname">The group name to match.</param>
+        /// <param name="groupid">The group ID.  Either this or groupname must be set</param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JSON)]
+        	public IWebResults IsUserInGroup(IWebConnection webConnection, string groupname, string groupid)
+		{
+			IGroup group = GetGroupInt(webConnection, groupname, groupid);
+			return WebResults.ToJson(FileHandler.IsUserInGroup(webConnection.Session.User.Id, group.Id));
+        }
+
+        /// <summary>
+        /// Returns true if the user is in the specified groups or the username is specified
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="groupOrUserNames">The group and user names.  Returns true if the user is a member of any of these groups, or if the user name is specified</param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JSON)]
+        	public IWebResults IsUserInGroupsOrMatch(IWebConnection webConnection, string[] groupAndUserNames)
+		{
+			Set<string> namesSet = new Set<string>(groupAndUserNames);
+			
+			if (namesSet.Contains(webConnection.Session.User.Name))
+				return WebResults.ToJson(true);
+			
+			foreach (IGroup group in FileHandler.GetGroupsThatUserIsIn(webConnection.Session.User.Id))
+				if (namesSet.Contains(group.Name))
+					return WebResults.ToJson(true);
+			
+			return WebResults.ToJson(false);
+        }
 		
         /// <summary>
         /// Starts the process of logging into this server using an OpenId.  The result is that the user will be rediected to a new page
