@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+using Common.Logging;
+
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Javascript;
 
@@ -13,6 +15,8 @@ namespace ObjectCloud.Javascript.SubProcess
 {
     public class ExecutionEnvironmentFactory : IExecutionEnvironmentFactory
     {
+		private static ILog log = LogManager.GetLogger<ExecutionEnvironmentFactory>();
+		
         public IExecutionEnvironment Create(
             FileHandlerFactoryLocator fileHandlerFactoryLocator, 
             IFileContainer fileContainer,
@@ -32,7 +36,14 @@ namespace ObjectCloud.Javascript.SubProcess
         public void Start(IEnumerable<IFileContainer> files)
         {
             foreach (IFileContainer file in files)
-                SubProcessFactory.GetOrCreateSubProcess(file);
+				try
+				{
+                		SubProcessFactory.GetOrCreateSubProcess(file);
+				}
+				catch (Exception e)
+				{
+					log.Error("Error compiling Javascript", e);
+				}
         }
     }
 }
