@@ -166,6 +166,10 @@
 			SendNotifications="False" />
 	</File>
 	<File
+		Name="htmlparser.js"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
 		Name="jquery.js"
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
@@ -290,11 +294,6 @@
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
-			UserOrGroupId="00000000-0000-0000-0000-000000000000"
-			Level="Read"
-			Inherit="False"
-			SendNotifications="False" />
-		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
 			Level="Administer"
 			Inherit="False"
@@ -302,6 +301,11 @@
 		<Permission
 			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
 			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="00000000-0000-0000-0000-000000000000"
+			Level="Read"
 			Inherit="False"
 			SendNotifications="False" />
 	</File>
@@ -325,11 +329,6 @@
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
-			UserOrGroupId="00000000-0000-0000-0000-000000000000"
-			Level="Read"
-			Inherit="False"
-			SendNotifications="False" />
-		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
 			Level="Administer"
 			Inherit="False"
@@ -337,6 +336,11 @@
 		<Permission
 			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
 			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="00000000-0000-0000-0000-000000000000"
+			Level="Read"
 			Inherit="False"
 			SendNotifications="False" />
 	</File>
