@@ -98,7 +98,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             newPairs = webConnection.PostParameters;
 
-            FileHandler.WriteAll(webConnection.Session.User, newPairs, true);
+            FileHandler.WriteAll(webConnection.Session.User, newPairs, false);
 
             return WebResults.FromString(Status._202_Accepted, "Saved");
         }
@@ -107,21 +107,21 @@ namespace ObjectCloud.Disk.WebHandlers
         /// Sets all of the values based on the results of a POST query
         /// </summary>
         /// <param name="webConnection"></param>
-        /// <param name="data"></param>
+        /// <param name="pairs"></param>
         /// <returns></returns>
-        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Administer)]
-        public IWebResults SetAllDataJson(IWebConnection webConnection, JsonReader data)
+        [WebCallable(WebCallingConvention.POST_JSON, WebReturnConvention.Status, FilePermissionEnum.Administer)]
+        public IWebResults SetAllDataJson(IWebConnection webConnection, JsonReader pairs)
         {
             // Decode the new pairs
             Dictionary<string, string> newPairs = new Dictionary<string, string>();
 
-			foreach (KeyValuePair<string, object> kvp in (IEnumerable<KeyValuePair<string, object>>)data.Deserialize())
+			foreach (KeyValuePair<string, object> kvp in (IEnumerable<KeyValuePair<string, object>>)pairs.Deserialize())
 				if (kvp.Value is string)
 					newPairs.Add(kvp.Key, kvp.Value.ToString());
 				else
 					newPairs.Add(kvp.Key, JsonWriter.Serialize(kvp.Value));
 
-            FileHandler.WriteAll(webConnection.Session.User, newPairs, true);
+            FileHandler.WriteAll(webConnection.Session.User, newPairs, false);
 
             return WebResults.FromString(Status._202_Accepted, "Saved");
         }
