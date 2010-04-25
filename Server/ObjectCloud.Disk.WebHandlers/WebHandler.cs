@@ -1324,6 +1324,72 @@ namespace ObjectCloud.Disk.WebHandlers
 		}
 
 		/// <summary>
+		/// helper to determine if the execution environment is ready 
+		/// </summary>
+		/// <param name="javascriptContainer">
+		/// A <see cref="IFileContainer"/>
+		/// </param>
+		/// <returns>
+		/// A <see cref="System.Boolean"/>
+		/// </returns>
+		private bool IsExecutionEnvironmentReady_Helper(out IFileContainer javascriptContainer)
+		{
+            // Files without an extension can not have a local execution environment
+            string extension = FileContainer.Extension;
+            if (null == extension)
+			{
+				javascriptContainer = null;
+                return true;
+			}
+			
+            // Try to find the javascript file
+            javascriptContainer = FindJavascriptContainer(extension, FileContainer.ParentDirectoryHandler);
+
+            // If a javascript container was found, make sure there's an up-to-date ExecutionEnvironment
+            if (null != javascriptContainer)
+                using (TimedLock.Lock(ExecutionEnvironmentLock))
+					
+					// If the execution environment isn't created, then it isn't ready
+                    if (null == _ExecutionEnvironment)
+					{
+		                _ExecutionEnvironment = null;
+                        return false;
+					}
+			
+					// Or it's based around the wrong file, then it isn't ready
+                    else if (_ExecutionEnvironment.JavascriptContainer != javascriptContainer)
+					{
+		                _ExecutionEnvironment = null;
+                        return false;
+					}
+			
+					// Or it's outdated, then it isn't ready
+                    else if (javascriptContainer.LastModified > _ExecutionEnvironment.JavascriptLastModified)
+					{
+		                _ExecutionEnvironment = null;
+                        return false;
+					}
+					else
+	                    return true;
+
+			else
+			{
+				// There is no execution environment
+                _ExecutionEnvironment = null;
+				return true;
+			}
+		}
+		
+		public bool IsExecutionEnvironmentReady 
+		{
+			get
+			{
+				IFileContainer javascriptContainer;
+				return IsExecutionEnvironmentReady_Helper(out javascriptContainer);
+			}
+		}
+		
+		/// <summary>
         /// Where Javascript is executed
         /// </summary>
         public IExecutionEnvironment GetOrCreateExecutionEnvironment()
@@ -1333,35 +1399,15 @@ namespace ObjectCloud.Disk.WebHandlers
             if (null == extension)
                 return null;
 
-            // Try to find the javascript file
-            IFileContainer javascriptContainer = FindJavascriptContainer(extension, FileContainer.ParentDirectoryHandler);
-
-            // If a javascript container was found, make sure there's an up-to-date ExecutionEnvironment
-            if (null != javascriptContainer)
-            {
-                using (TimedLock.Lock(ExecutionEnvironmentLock))
-                {
-                    IExecutionEnvironmentFactory factory = FileHandlerFactoryLocator.ExecutionEnvironmentFactory;
-
-                    if (null == _ExecutionEnvironment)
-                        _ExecutionEnvironment = factory.Create(FileHandlerFactoryLocator, FileContainer, javascriptContainer);
-                    else if (_ExecutionEnvironment.JavascriptContainer != javascriptContainer)
-                        _ExecutionEnvironment = factory.Create(FileHandlerFactoryLocator, FileContainer, javascriptContainer);
-                    else if (javascriptContainer.LastModified > _ExecutionEnvironment.JavascriptLastModified)
-                        _ExecutionEnvironment = factory.Create(FileHandlerFactoryLocator, FileContainer, javascriptContainer);
-
-                    // using a local version of the object outside of the lock avoids a potential null reference issue if the file is deleted while its javascript is run
-                    return _ExecutionEnvironment;
-                }
-            }
-            else
-            {
-                // If there is no javascript container, make sure that the execution environment is explicitly disabled!
-                using (TimedLock.Lock(ExecutionEnvironmentLock))
-                    _ExecutionEnvironment = null;
-
-                return null;
-            }
+			IFileContainer javascriptContainer;
+            using (TimedLock.Lock(ExecutionEnvironmentLock))
+				if (!IsExecutionEnvironmentReady_Helper(out javascriptContainer))
+				{
+					IExecutionEnvironmentFactory factory = FileHandlerFactoryLocator.ExecutionEnvironmentFactory;
+					_ExecutionEnvironment = factory.Create(FileHandlerFactoryLocator, FileContainer, javascriptContainer);
+				}
+			
+			return _ExecutionEnvironment;
         }
 
         /// <summary>

@@ -8,6 +8,7 @@ using System.Text;
 
 using Common.Logging;
 
+using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Javascript;
 
@@ -35,7 +36,7 @@ namespace ObjectCloud.Javascript.SubProcess
 
         public void Start(IEnumerable<IFileContainer> files)
         {
-            foreach (IFileContainer file in files)
+            /*foreach (IFileContainer file in files)
 				try
 				{
                 		SubProcessFactory.GetOrCreateSubProcess(file);
@@ -43,7 +44,22 @@ namespace ObjectCloud.Javascript.SubProcess
 				catch (Exception e)
 				{
 					log.Error("Error compiling Javascript", e);
-				}
+				}*/
+			
+			Enumerable<IFileContainer>.MultithreadedEach(
+				1,
+			    files,
+			    delegate(IFileContainer file)
+			    {
+					try
+					{
+	                		SubProcessFactory.GetOrCreateSubProcess(file);
+					}
+					catch (Exception e)
+					{
+						log.Error("Error compiling Javascript", e);
+					}
+				});
         }
     }
 }

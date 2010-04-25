@@ -188,6 +188,11 @@ namespace ObjectCloud.Interfaces.WebServer
         IExecutionEnvironment GetOrCreateExecutionEnvironment();
 		
 		/// <summary>
+		/// True if the execution environment is ready to be used, false if there will be a delay while it is allocated.  Also returns true if there isn't an execution environment 
+		/// </summary>
+		bool IsExecutionEnvironmentReady { get; }
+		
+		/// <summary>
 		/// Resets the execution environment 
 		/// </summary>
 		void ResetExecutionEnvironment();

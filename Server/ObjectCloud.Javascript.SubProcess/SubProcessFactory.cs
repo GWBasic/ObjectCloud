@@ -1,4 +1,4 @@
-﻿// Copyright 2009, 2010 Andrew Rondeau
+// Copyright 2009, 2010 Andrew Rondeau
 // This code is released under the Simple Public License (SimPL) 2.0.  Some additional privelages are granted.
 // For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
 
@@ -41,29 +41,28 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <returns></returns>
         public SubProcess GetOrCreateSubProcess(IFileContainer javascriptContainer)
         {
-            using (TimedLock.Lock(SubProcessesByClass))
-            {
-                SubProcess toReturn;
-                if (!SubProcessesByClass.TryGetValue(javascriptContainer.FullPath, out toReturn))
-                    return CreateSubProcess(javascriptContainer, ref toReturn);
+	        SubProcess toReturn;
 
-                if (javascriptContainer.LastModified == ClassLastModified[javascriptContainer.FullPath])
-                    return toReturn;
-                else
-                {
-                    SubProcessesByClass[javascriptContainer.FullPath].Dispose();
-                    return CreateSubProcess(javascriptContainer, ref toReturn);
-                }
-            }
-        }
+			using (TimedLock.Lock(javascriptContainer))
+			{
+	            using (TimedLock.Lock(SubProcessesByClass))
+	            {
+	                if (SubProcessesByClass.TryGetValue(javascriptContainer.FullPath, out toReturn))
+		                if (javascriptContainer.LastModified == ClassLastModified[javascriptContainer.FullPath])
+	    		                return toReturn;
+	            		    else
+							toReturn.Dispose();
 
-        private SubProcess CreateSubProcess(IFileContainer javascriptContainer, ref SubProcess toReturn)
-        {
-            ClassLastModified[javascriptContainer.FullPath] = javascriptContainer.LastModified;
-            toReturn = new SubProcess(javascriptContainer, FileHandlerFactoryLocator);
-            SubProcessesByClass[javascriptContainer.FullPath] = toReturn;
-
-            return toReturn;
+					ClassLastModified[javascriptContainer.FullPath] = javascriptContainer.LastModified;
+	            }
+				
+				toReturn = new SubProcess(javascriptContainer, FileHandlerFactoryLocator);
+	
+	            using (TimedLock.Lock(SubProcessesByClass))
+					SubProcessesByClass[javascriptContainer.FullPath] = toReturn;
+	
+	            return toReturn;
+			}
         }
 
         /// <summary>

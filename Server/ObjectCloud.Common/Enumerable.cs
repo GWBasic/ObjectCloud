@@ -6,6 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace ObjectCloud.Common
 {
@@ -33,6 +34,97 @@ namespace ObjectCloud.Common
             foreach (object o in toCast)
                 yield return (T)o;
         }
+		
+		/// <summary>
+		/// Enumerates over all of the members of a collection in a multithreaded manner 
+		/// </summary>
+		/// <param name="numThreadsPerCPU">
+		/// The number of threads per CPU.  This can be a fractional number.  If the total number of threads is less then a whole number, it will be rounded up
+		/// </param>
+		/// <param name="toEnumerate">
+		/// The objects to enumerate over
+		/// </param>
+		/// <param name="del">
+		/// The delegate called for each object
+		/// </param>
+		/// <returns>
+		/// All of the unhandled exceptions that occured, paired with the object that triggered the exception
+		/// </returns>
+		public static IEnumerable<KeyValuePair<T,Exception>> MultithreadedEach(
+			float numThreadsPerCPU,
+		    IEnumerable<T> toEnumerate,
+		    GenericArgument<T> del)
+		{
+			List<T> list = new List<T>(toEnumerate);
+			
+			List<KeyValuePair<T,Exception>> exceptions = new List<KeyValuePair<T, Exception>>();
+			
+			// If there's nothing to enumerate, then just return now
+			if (0 == list.Count)
+				return exceptions;
+				
+			float numThreadsFloat = numThreadsPerCPU * Convert.ToSingle(Environment.ProcessorCount);
+			int numThreads = Convert.ToInt32(numThreadsFloat);
+			
+			// If the number of threads is less then a whole number, increase it
+			if (Convert.ToSingle(numThreads) < numThreadsFloat)
+				numThreads++;
+			
+			// Make sure that there is at least one thread
+			if (numThreads < 1)
+				numThreads = 1;
+			
+			// Make sure that there isn't more threads then items to iterate over
+			if (list.Count < numThreads)
+				numThreads = list.Count;
+			
+			IEnumerator<T> enumerator = list.GetEnumerator();
+			
+			// This is the wrapper delegate used on every thread
+			ThreadStart threadStart = delegate()
+			{
+				T t = default(T);
+				
+				while (true)
+				{
+					using (TimedLock.Lock(enumerator))
+					{
+						if (!enumerator.MoveNext())
+							return;
+						
+						t = enumerator.Current;
+					}
+					
+					try
+					{
+						del(t);
+					}
+					catch (Exception e)
+					{
+						using (TimedLock.Lock(exceptions))
+							exceptions.Add(new KeyValuePair<T, Exception>(t, e));
+					}
+				}
+			};
+			
+			// Allocate the threads; note that this thread also does calculations
+			Thread[] threads = new Thread[numThreads - 1];
+			for (int ctr = 0; ctr < (numThreads - 1); ctr++)
+				threads[ctr] = new Thread(threadStart);
+			
+			// Start the threads
+			foreach (Thread thread in threads)
+				thread.Start();
+			
+			// Do some calculations on this thread
+			threadStart();
+			
+			// Block until the other threads are complete
+			foreach (Thread thread in threads)
+				thread.Join();
+			
+			return exceptions;
+		}
     }
 
     public static class Enumerable
