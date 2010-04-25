@@ -16,6 +16,11 @@ namespace ObjectCloud.Interfaces.Disk
     /// </summary>
     public interface IFileSystemResolver
     {
+		/// <summary>
+		/// The FileHandlerFactoryLocator 
+		/// </summary>
+		FileHandlerFactoryLocator FileHandlerFactoryLocator { get;}
+		
         /// <summary>
         /// The object that handles the root directory
         /// </summary>
