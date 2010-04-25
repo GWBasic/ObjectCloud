@@ -93,6 +93,26 @@ namespace ObjectCloud.Interfaces.Disk
         /// Stops threads that the filesystem needs
         /// </summary>
         void Stop();
+		
+		/// <summary>
+		/// Occurs before the file system starts 
+		/// </summary>
+		event EventHandler<IFileSystemResolver, EventArgs> Starting;
+		
+		/// <summary>
+		/// Occurs after the file system starts 
+		/// </summary>
+		event EventHandler<IFileSystemResolver, EventArgs> Started;
+		
+		/// <summary>
+		/// Occurs before the file system stops 
+		/// </summary>
+		event EventHandler<IFileSystemResolver, EventArgs> Stopping;
+		
+		/// <summary>
+		/// Occurs after the file system stops 
+		/// </summary>
+		event EventHandler<IFileSystemResolver, EventArgs> Stopped;
 
         /// <summary>
         /// Returns true once the file system is started

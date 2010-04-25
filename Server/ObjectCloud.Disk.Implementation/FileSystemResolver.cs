@@ -306,7 +306,10 @@ namespace ObjectCloud.Disk.Implementation
 
         public void Start()
         {
-            log.Info("Initializing plugins...");
+			if (null != Starting)
+				Starting(this, new EventArgs());
+
+			log.Info("Initializing plugins...");
             foreach (Plugin plugin in FileHandlerFactoryLocator.Plugins)
                 plugin.Initialize();
 
@@ -381,10 +384,16 @@ namespace ObjectCloud.Disk.Implementation
             FileHandlerFactoryLocator.ExecutionEnvironmentFactory.Start(classesFolder.CastFileHandler<IDirectoryHandler>().Files);
 
             log.Info("...ObjectCloud's File System is started!");
+
+			if (null != Started)
+				Started(this, new EventArgs());
         }
 
         public void Stop()
         {
+			if (null != Stopping)
+				Stopping(this, new EventArgs());
+			
             _IsStarted = false;
 
             foreach (Thread thread in ServiceThreads)
@@ -408,6 +417,29 @@ namespace ObjectCloud.Disk.Implementation
 				((IObjectCloudLoggingFactoryAdapter)loggerFactoryAdapter).ObjectCloudLogHandler = null;
 				log.Info("Logger stopped");
 			}
+
+			if (null != Stopped)
+				Stopped(this, new EventArgs());
         }
+		
+		/// <summary>
+		/// Occurs before the file system starts 
+		/// </summary>
+		public event EventHandler<IFileSystemResolver, EventArgs> Starting;
+		
+		/// <summary>
+		/// Occurs after the file system starts 
+		/// </summary>
+		public event EventHandler<IFileSystemResolver, EventArgs> Started;
+		
+		/// <summary>
+		/// Occurs before the file system stops 
+		/// </summary>
+		public event EventHandler<IFileSystemResolver, EventArgs> Stopping;
+		
+		/// <summary>
+		/// Occurs after the file system stops 
+		/// </summary>
+		public event EventHandler<IFileSystemResolver, EventArgs> Stopped;
     }
 }
