@@ -51,7 +51,16 @@ namespace ObjectCloud
                 if (0 == args.Length)
                     using (IWebServer webServer = fileHandlerFactoryLocator.WebServer)
                     {
-                        webServer.StartServer();
+                        fileHandlerFactoryLocator.FileSystemResolver.Started += FileSystemResolver_Started;
+
+                        try
+                        {
+                            webServer.StartServer();
+                        }
+                        finally
+                        {
+                            fileHandlerFactoryLocator.FileSystemResolver.Started -= FileSystemResolver_Started;
+                        }
                         
 						object blockResult = Blocker.Block();
 					
@@ -179,6 +188,15 @@ namespace ObjectCloud
                 if (System.Diagnostics.Debugger.IsAttached)
                     System.Diagnostics.Debugger.Break();
             }
+        }
+
+        /// <summary>
+        /// Loads a bunch of scopes on the threadpool  
+        /// </summary>
+        private static void FileSystemResolver_Started(IFileSystemResolver sender, EventArgs e)
+        {
+            IFileContainer classesFolder = sender.ResolveFile("/Classes");
+            sender.FileHandlerFactoryLocator.ExecutionEnvironmentFactory.Start(classesFolder.CastFileHandler<IDirectoryHandler>().Files);
         }
     }
 }

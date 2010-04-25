@@ -380,9 +380,6 @@ namespace ObjectCloud.Disk.Implementation
 
             _IsStarted = true;
 
-            IFileContainer classesFolder = ResolveFile("/Classes");
-            FileHandlerFactoryLocator.ExecutionEnvironmentFactory.Start(classesFolder.CastFileHandler<IDirectoryHandler>().Files);
-
             log.Info("...ObjectCloud's File System is started!");
 
 			if (null != Started)
