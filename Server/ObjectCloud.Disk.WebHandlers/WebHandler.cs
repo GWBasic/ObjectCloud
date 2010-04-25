@@ -1380,6 +1380,9 @@ namespace ObjectCloud.Disk.WebHandlers
 			}
 		}
 		
+        /// <summary>
+        /// Returns true if the execution environment is ready for use, or if there is no execution environment.  Returns false if there will be a delay while the execution environment is allocation.
+        /// </summary>
 		public bool IsExecutionEnvironmentReady 
 		{
 			get

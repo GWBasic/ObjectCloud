@@ -652,7 +652,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// Returns true if the user is in the specified groups or the username is specified
         /// </summary>
         /// <param name="webConnection"></param>
-        /// <param name="groupOrUserNames">The group and user names.  Returns true if the user is a member of any of these groups, or if the user name is specified</param>
+        /// <param name="groupAndUserNames">The group and user names.  Returns true if the user is a member of any of these groups, or if the user name is specified</param>
         /// <returns></returns>
         [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JSON)]
         	public IWebResults IsUserInGroupsOrMatch(IWebConnection webConnection, string[] groupAndUserNames)
