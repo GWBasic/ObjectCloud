@@ -201,7 +201,15 @@ var bkLib = {
 			    if (this.readyState == "complete"){bkLib.domLoaded();}
 			};
 		}
-	    window.onload = bkLib.domLoaded;
+
+            var myOldOnload = window.onload;
+	    window.onload = function()
+            {
+               if (myOldOnload)
+                  myOldOnload();
+
+               bkLib.domLoaded();
+            }
 	}
 };
 
