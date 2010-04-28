@@ -78,7 +78,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="webConnection"></param>
         /// <param name="Name"></param>
         /// <returns></returns>
-        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.Primitive, FilePermissionEnum.Read)]
+        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JSON, FilePermissionEnum.Read)]
         public IWebResults Contains(IWebConnection webConnection, string Name)
         {
             return WebResults.ToJson(FileHandler.Contains(Name));

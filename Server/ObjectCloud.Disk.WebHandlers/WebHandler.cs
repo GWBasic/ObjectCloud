@@ -276,7 +276,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="UserOrGroupId"></param>
         /// <param name="SendNotifications"></param>
         [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Primitive, FilePermissionEnum.Administer)]
-        public IWebResults SetPermission(IWebConnection webConnection, string UserOrGroupId, string UserOrGroup, string FilePermission, bool? Inherit, bool? SendNotifications)
+        public IWebResults SetPermission(IWebConnection webConnection, string UserOrGroupId, string UserOrGroup, string FilePermission, bool? Inherit, bool? SendNotifications, string[] namedPermissions)
         {
             ID<IUserOrGroup, Guid> userOrGroupId;
 
@@ -307,7 +307,22 @@ namespace ObjectCloud.Disk.WebHandlers
             // Null permissions just remove the permission
             if (null != level)
             {
-                FileHandler.FileContainer.ParentDirectoryHandler.SetPermission(webConnection.Session.User.Id, FileHandler.FileContainer.Filename, userOrGroupId, level.Value, inherit, sendNotifications);
+                FileHandler.FileContainer.ParentDirectoryHandler.SetPermission(
+                   webConnection.Session.User.Id,
+                   FileHandler.FileContainer.Filename,
+                   userOrGroupId,
+                   level.Value,
+                   inherit,
+                   sendNotifications);
+				
+				if (null != namedPermissions)
+					foreach (string namedPermission in namedPermissions)
+						FileHandler.FileContainer.ParentDirectoryHandler.SetNamedPermission(
+	                        FileContainer.FileId,
+	                        namedPermission,
+	                        userOrGroupId,
+	                        false);
+				
                 return WebResults.FromString(Status._202_Accepted, "Permission set to " + level.ToString());
             }
             else
@@ -394,6 +409,12 @@ namespace ObjectCloud.Disk.WebHandlers
                 permission["Identity"] = userOrGroup.Identity;
                 permission["Inherit"] = filePermission.Inherit;
                 permission["SendNotifications"] = filePermission.SendNotifications;
+				
+				Dictionary<string, object> namedPermissions = new Dictionary<string, object>();
+				permission["NamedPermissions"] = namedPermissions;
+				
+				foreach (KeyValuePair<string, bool> namedPermission in filePermission.NamedPermissions)
+					namedPermissions[namedPermission.Key] = namedPermission.Value ? "NoInherit" : "Inherit";
 
                 permissionsList.Add(permission);
             }
@@ -405,14 +426,21 @@ namespace ObjectCloud.Disk.WebHandlers
         /// Sets a named permission
         /// </summary>
         /// <param name="webConnection"></param>
+        /// <param name="UserOrGroupId"></param>
         /// <param name="usernameOrGroup"></param>
         /// <param name="namedPermission"></param>
         /// <param name="inherit"></param>
+        /// <param name="namedPermissions"></param>
         /// <returns></returns>
         [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Administer)]
-        public IWebResults SetNamedPermission(IWebConnection webConnection, string usernameOrGroup, string namedPermission, bool inherit)
+        public IWebResults SetNamedPermission(IWebConnection webConnection, Guid? UserOrGroupId, string usernameOrGroup, string namedPermission, bool inherit)
         {
-            IUserOrGroup userOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupOrOpenId(usernameOrGroup);
+			IUserOrGroup userOrGroup;
+			
+			if (null != UserOrGroupId)
+				userOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroup(new ID<IUserOrGroup, Guid>(UserOrGroupId.Value));
+			else
+            		userOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupOrOpenId(usernameOrGroup);
 
             FileContainer.ParentDirectoryHandler.SetNamedPermission(
                 FileContainer.FileId,
@@ -427,13 +455,19 @@ namespace ObjectCloud.Disk.WebHandlers
         /// Removes the named permission
         /// </summary>
         /// <param name="webConnection"></param>
+        /// <param name="UserOrGroupId"></param>
         /// <param name="usernameOrGroup"></param>
         /// <param name="namedPermission"></param>
         /// <returns></returns>
         [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Administer)]
-        public IWebResults RemoveNamedPermission(IWebConnection webConnection, string usernameOrGroup, string namedPermission)
+        public IWebResults RemoveNamedPermission(IWebConnection webConnection, Guid? UserOrGroupId, string usernameOrGroup, string namedPermission)
         {
-            IUserOrGroup userOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupOrOpenId(usernameOrGroup);
+			IUserOrGroup userOrGroup;
+			
+			if (null != UserOrGroupId)
+				userOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroup(new ID<IUserOrGroup, Guid>(UserOrGroupId.Value));
+			else
+            		userOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupOrOpenId(usernameOrGroup);
 
             FileContainer.ParentDirectoryHandler.RemoveNamedPermission(
                 FileContainer.FileId,

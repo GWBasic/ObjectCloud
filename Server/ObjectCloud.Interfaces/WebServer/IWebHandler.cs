@@ -54,7 +54,7 @@ namespace ObjectCloud.Interfaces.WebServer
         /// <param name="UserOrGroup"></param>
         /// <param name="UserOrGroupId"></param>
         /// <param name="SendNotifications"></param>
-        IWebResults SetPermission(IWebConnection webConnection, string UserOrGroupId, string UserOrGroup, string FilePermission, bool? Inherit, bool? SendNotifications);
+        IWebResults SetPermission(IWebConnection webConnection, string UserOrGroupId, string UserOrGroup, string FilePermission, bool? Inherit, bool? SendNotifications, string[] namedPermissions);
 
         /// <summary>
         /// Returns the currently logged un user's permission for this file.  If the user doesn't have an assigned permission, a 0-length string is returned.

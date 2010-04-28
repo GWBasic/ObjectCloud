@@ -417,13 +417,19 @@ namespace ObjectCloud.Disk.FileHandlers
             IFileId fileId = FileIDCacheByName[filename].Value;
 
             foreach (IPermission_Readable permission in
-                DatabaseConnection.Permission.Select(Permission_Table.FileId == fileId))
+                new List<IPermission_Readable>(DatabaseConnection.Permission.Select(Permission_Table.FileId == fileId)))
             {
                 FilePermission toYield = new FilePermission();
                 toYield.UserOrGroupId = permission.UserOrGroupId;
                 toYield.FilePermissionEnum = permission.Level;
                 toYield.Inherit = permission.Inherit;
                 toYield.SendNotifications = permission.SendNotifications;
+				
+				Dictionary<string, bool> namedPermissions = new Dictionary<string, bool>();
+				foreach(INamedPermission_Readable namedPermission in DatabaseConnection.NamedPermission.Select(NamedPermission_Table.FileId == fileId & NamedPermission_Table.UserOrGroup == permission.UserOrGroupId))
+					namedPermissions[namedPermission.NamedPermission] = namedPermission.Inherit;
+				
+				toYield.NamedPermissions = namedPermissions;
 
                 yield return toYield;
             }

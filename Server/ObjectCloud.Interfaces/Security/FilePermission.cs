@@ -3,6 +3,7 @@
 // For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
 
 using System;
+using System.Collections.Generic;
 
 using ObjectCloud.Common;
 
@@ -29,5 +30,10 @@ namespace ObjectCloud.Interfaces.Security
         /// True if the target user or group recieves notifications when the file changes, false otherwise
         /// </summary>
         public bool SendNotifications;
+		
+		/// <summary>
+		/// All of the user's named permissions.  If the name is present in the dictionary, the user has the named permission.  If the value associated with the name is true, then the permission is inheritable
+		/// </summary>
+		public Dictionary<string, bool> NamedPermissions;
 	}
 }

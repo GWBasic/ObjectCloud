@@ -318,7 +318,7 @@ namespace ObjectCloud.Disk.WebHandlers
                     WebResults.FromString(Status._404_Not_Found, FileName + " doesn't exist"));
             }
 
-            return file.WebHandler.SetPermission(webConnection, UserOrGroupId, UserOrGroup, FilePermission, Inherit, SendNotifications);
+            return file.WebHandler.SetPermission(webConnection, UserOrGroupId, UserOrGroup, FilePermission, Inherit, SendNotifications, null);
         }
 		
 		/// <summary>
