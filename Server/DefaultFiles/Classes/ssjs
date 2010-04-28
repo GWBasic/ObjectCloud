@@ -54,6 +54,10 @@ function runBlock(toRun, scope)
    }
    catch (exception)
    {
+      // This has to do with how ObjectCloud moves C# exceptions through the process barrier
+      if (exception.ParentObjectId)
+         return 'An error occurred inside of ObjectCloud.  For more information, see the system logs' + ' ' + endString;
+
       return exception + ' ' + endString;
    }
 
