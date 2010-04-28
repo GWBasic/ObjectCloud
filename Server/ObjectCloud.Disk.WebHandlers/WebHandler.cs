@@ -321,7 +321,7 @@ namespace ObjectCloud.Disk.WebHandlers
 	                        FileContainer.FileId,
 	                        namedPermission,
 	                        userOrGroupId,
-	                        false);
+	                        inherit);
 				
                 return WebResults.FromString(Status._202_Accepted, "Permission set to " + level.ToString());
             }
