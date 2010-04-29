@@ -306,9 +306,9 @@ namespace ObjectCloud.Javascript.SubProcess
 
                     tryCtr++;
 
-                    if (subProcess != _SubProcess)
+                    if (subProcess == _SubProcess)
                     using (TimedLock.Lock(subProcess))
-                        if (subProcess != _SubProcess)
+                        if (subProcess == _SubProcess)
                             ConstructScope();
                 }
         }
