@@ -275,6 +275,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="UserOrGroup"></param>
         /// <param name="UserOrGroupId"></param>
         /// <param name="SendNotifications"></param>
+        /// <param name="namedPermissions"></param>
         [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Primitive, FilePermissionEnum.Administer)]
         public IWebResults SetPermission(IWebConnection webConnection, string UserOrGroupId, string UserOrGroup, string FilePermission, bool? Inherit, bool? SendNotifications, string[] namedPermissions)
         {
@@ -430,7 +431,6 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="usernameOrGroup"></param>
         /// <param name="namedPermission"></param>
         /// <param name="inherit"></param>
-        /// <param name="namedPermissions"></param>
         /// <returns></returns>
         [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Administer)]
         public IWebResults SetNamedPermission(IWebConnection webConnection, Guid? UserOrGroupId, string usernameOrGroup, string namedPermission, bool inherit)
