@@ -133,7 +133,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <summary>
         /// The cached in-browser JavaScript wrapper
         /// </summary>
-        private string cachedInBrowserJSWrapper = null;
+        private string CachedInBrowserJSWrapper = null;
 
         /// <summary>
         /// The web handler types
@@ -170,7 +170,7 @@ namespace ObjectCloud.Disk.WebHandlers
         public IWebResults GetJSW(IWebConnection webConnection, string assignToVariable, string EncodeFor, bool bypassJavascript)
         {
             // Not worth syncronizing, nothing bad will happen if multiple threads enter this block at the same time
-            if (null == cachedInBrowserJSWrapper)
+            if (null == CachedInBrowserJSWrapper)
             {
                 List<string> javascriptMethods =
                     FileHandlerFactoryLocator.WebServer.JavascriptWebAccessCodeGenerator.GenerateWrapper(WebHandlerTypes);
@@ -187,10 +187,10 @@ namespace ObjectCloud.Disk.WebHandlers
                 javascriptWrapper = javascriptWrapper.Replace("{0}", FileContainer.FullPath);
                 javascriptWrapper = javascriptWrapper.Replace("{1}", FileContainer.Filename);
 
-                cachedInBrowserJSWrapper = javascriptWrapper;
+                CachedInBrowserJSWrapper = javascriptWrapper;
             }
 
-            string javascriptToReturn = cachedInBrowserJSWrapper;
+            string javascriptToReturn = CachedInBrowserJSWrapper;
 
             // Insert the user's permission to the file
             javascriptToReturn = javascriptToReturn.Replace("{3}", FileContainer.LoadPermission(webConnection.Session.User.Id).ToString());
@@ -1355,6 +1355,8 @@ namespace ObjectCloud.Disk.WebHandlers
 		{
             using (TimedLock.Lock(ExecutionEnvironmentLock))
 				_ExecutionEnvironment = null;
+			
+			CachedInBrowserJSWrapper = null;
 		}
 
 		/// <summary>
