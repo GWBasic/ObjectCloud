@@ -41,7 +41,7 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <returns></returns>
         public SubProcess GetOrCreateSubProcess(IFileContainer javascriptContainer)
         {
-	        SubProcess toReturn;
+	        SubProcess toReturn = null;
 
 			using (TimedLock.Lock(javascriptContainer))
 			{
@@ -49,13 +49,14 @@ namespace ObjectCloud.Javascript.SubProcess
 	            {
 	                if (SubProcessesByClass.TryGetValue(javascriptContainer.FullPath, out toReturn))
 		                if (javascriptContainer.LastModified == ClassLastModified[javascriptContainer.FullPath])
-	    		                return toReturn;
-	            		    else
-							toReturn.Dispose();
-
-					ClassLastModified[javascriptContainer.FullPath] = javascriptContainer.LastModified;
+							if (toReturn.Alive)
+	    		                		return toReturn;
 	            }
-				
+
+				if (null != toReturn)
+					toReturn.Dispose();
+
+				ClassLastModified[javascriptContainer.FullPath] = javascriptContainer.LastModified;
 				toReturn = new SubProcess(javascriptContainer, FileHandlerFactoryLocator);
 	
 	            using (TimedLock.Lock(SubProcessesByClass))
