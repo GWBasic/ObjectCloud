@@ -65,17 +65,17 @@ function rpy_createReplyElement(reply)
       '<a href="' + reply.File.OwnerIdentity + '">' + reply.File.Owner + '</a>, at ';
    replyHtml += new Date(reply.File.Created) + ', says:';
 
-   var toReturn = $(document.createElement('div'));
+   var toReturn = document.createElement('div');
 
-   var headerSpan = $(document.createElement('span'));
+   var headerSpan = document.createElement('span');
    headerSpan.innerHTML = replyHtml;
    toReturn.appendChild(headerSpan);
 
-   var contentDiv = $(document.createElement('div'));
+   var contentDiv = document.createElement('div');
    contentDiv.innerHTML = reply.View.Content;
    toReturn.appendChild(contentDiv);
 
-   var linkDiv = $(document.createElement('span'));
+   var linkDiv = document.createElement('span');
    linkDiv.innerHTML = '<a href="' + reply.File.FullPath + '">View / Reply</a>';
    toReturn.appendChild(linkDiv);
 
