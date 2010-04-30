@@ -39,6 +39,11 @@ namespace ObjectCloud.Interfaces.WebServer
 				PreloadObjects();
 			};
 			FileHandlerFactoryLocator.FileSystemResolver.Started += preloadObjects;
+			
+			EventHandler<IFileSystemResolver, EventArgs> abortInError = delegate(IFileSystemResolver sender, EventArgs e)
+			{
+				Monitor.PulseAll(AcceptingSocketsSignal);
+			};
 
 			try
 			{
@@ -47,19 +52,28 @@ namespace ObjectCloud.Interfaces.WebServer
 	            thread.IsBackground = true;
 	            thread.Name = GetType().FullName;
 	
-	            thread.Start();
-
-				// Wait for the web server to start
-				Thread.BeginCriticalRegion();
+				FileHandlerFactoryLocator.FileSystemResolver.Stopped += abortInError;
+				
 				try
 				{
-		            if (!AcceptingSockets && (null == TerminatingException))
-						using (TimedLock.Lock(AcceptingSocketsSignal))
-			                Monitor.Wait(AcceptingSocketsSignal);
+		            thread.Start();
+
+					// Wait for the web server to start
+					Thread.BeginCriticalRegion();
+					try
+					{
+			            if (!AcceptingSockets && (null == TerminatingException))
+							using (TimedLock.Lock(AcceptingSocketsSignal))
+				                Monitor.Wait(AcceptingSocketsSignal);
+					}
+					finally
+					{
+						Thread.EndCriticalRegion();
+					}
 				}
 				finally
 				{
-					Thread.EndCriticalRegion();
+					FileHandlerFactoryLocator.FileSystemResolver.Stopped -= abortInError;
 				}
 			}
 			finally
