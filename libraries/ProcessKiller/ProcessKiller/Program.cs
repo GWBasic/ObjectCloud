@@ -81,7 +81,7 @@ namespace ProcessKiller
 			}
 			finally
 			{
-                foreach(Process p in SubProcesses)
+                foreach(Process p in new List<Process>(SubProcesses))
                     try
                     {
 						Console.WriteLine("Killing: " + p.ToString());
