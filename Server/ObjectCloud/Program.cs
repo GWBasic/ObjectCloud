@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Xml;
 
 using SignalHandller;
@@ -65,6 +66,18 @@ namespace ObjectCloud
 						object blockResult = Blocker.Block();
 					
 						Console.WriteLine("Recieved " + blockResult.ToString());
+
+                        Thread forceExitThread = new Thread(delegate()
+                            {
+                                Thread.Sleep(3000);
+								System.Diagnostics.Process.GetCurrentProcess().Kill();
+                                	Environment.Exit(0);
+                            });
+
+                        forceExitThread.Name = "Forces the process to exit";
+                        forceExitThread.IsBackground = false;
+
+                        forceExitThread.Start();
                     }
                 else
                     switch (args[0])

@@ -26,65 +26,100 @@ namespace ProcessKiller
 
             try
             {
-                Process parent = Process.GetProcessById(Convert.ToInt32(args[0]));
+				int parentProcessId = Convert.ToInt32(args[0]);
 				
-				Console.WriteLine("Got parent process");
-				Console.WriteLine(parent.ToString());
+				Process parent = Process.GetProcessById(parentProcessId);
 				
-				parent.EnableRaisingEvents = true;
-                parent.Exited += new EventHandler(parent_Exited);
-				
-				Console.WriteLine("Registered exit handler");
-				
-				// If running on unix, trap signals
-				int p = (int) Environment.OSVersion.Platform;
-				if ((p == 4) || (p == 6) || (p == 128))
+				try
 				{
-					Thread signalTrapper = new Thread(UnixSignalTrapper);
-					signalTrapper.Name = "Unix Signal Trapper";
-					signalTrapper.IsBackground = true;
-						
-					signalTrapper.Start();
-				}
-
-
-                while (StayOpen)
-                {
-					string processId = Console.ReadLine();
+					Console.WriteLine("Got parent process");
+					Console.WriteLine(parent.ToString());
 					
-					if (null != processId)
+					parent.EnableRaisingEvents = true;
+					
+					// If running on unix, trap signals
+					int p = (int) Environment.OSVersion.Platform;
+					if ((p == 4) || (p == 6) || (p == 128))
 					{
-						if (processId.Length > 0)
-						{
-							Console.WriteLine(processId);
+						Thread signalTrapper = new Thread(UnixSignalTrapper);
+						signalTrapper.Name = "Unix Signal Trapper";
+						signalTrapper.IsBackground = true;
 							
-		                    Process newProcess = Process.GetProcessById(Convert.ToInt32(processId.Trim()));
-						
-							Console.WriteLine("Got sub process");
-							Console.WriteLine(newProcess.ToString());
-						
-							newProcess.EnableRaisingEvents = true;
-		                    newProcess.Exited += new EventHandler(newProcess_Exited);
-		                    SubProcesses.Add(newProcess);
-						}
+						signalTrapper.Start();
 					}
-					else
+					
+					Thread readThread = new Thread(new ThreadStart(ReadFromConsole));
+					readThread.IsBackground = true;
+					readThread.Start();
+					
+					// All this junk, instead of a simple WaitForExit() call, is to work around Mono issues
+					do 
+					{
 						Thread.Sleep(3000);
-                }
-
+						parent.WaitForExit();
+						
+						// parent.HasExited is problematic on Mono
+						if (!parent.HasExited)
+						{
+							parent.Dispose();
+							parent = Process.GetProcessById(parentProcessId);
+							parent.EnableRaisingEvents = true;
+						}
+					} while (!parent.HasExited);
+					
+					Console.WriteLine("Parent process ended");
+					StayOpen = false;
+				}
+				finally
+				{
+					parent.Dispose();
+				}
             }
             catch (Exception e)
             {
                 System.Console.Error.WriteLine(e.ToString());
-
+			}
+			finally
+			{
                 foreach(Process p in SubProcesses)
                     try
                     {
+						Console.WriteLine("Killing: " + p.ToString());
                         p.Kill();
                     }
                     catch { }
             }
+			
+			Process.GetCurrentProcess().Kill();
+            Environment.Exit(0);
         }
+	
+		private static void ReadFromConsole()
+		{
+            while (StayOpen)
+            {
+				string processId = Console.ReadLine();
+				
+				if (null != processId)
+				{
+					if (processId.Length > 0)
+					{
+						Console.WriteLine(processId);
+						
+	                    Process newProcess = Process.GetProcessById(Convert.ToInt32(processId.Trim()));
+					
+						Console.WriteLine("Got sub process");
+						Console.WriteLine(newProcess.ToString());
+					
+						newProcess.EnableRaisingEvents = true;
+	                    newProcess.Exited += new EventHandler(newProcess_Exited);
+	                    SubProcesses.Add(newProcess);
+					}
+				}
+				else
+					Thread.Sleep(3000);
+            }
+		}
 		
 		static bool StayOpen = true;
 		
@@ -123,25 +158,6 @@ namespace ProcessKiller
                 SubProcesses.Remove((Process)sender);
             }
             catch { }
-        }
-
-        static void parent_Exited(object sender, EventArgs e)
-        {
-			Console.WriteLine("Parent process exited");
-			
-			Thread.Sleep(5000);
-			
-            foreach (Process p in SubProcesses)
-                try
-                {
-					Console.WriteLine("Killing: " + p.ToString());
-                    p.Kill();
-                }
-                catch { }
-
-			Console.WriteLine("Killing Process Killer " + Process.GetCurrentProcess().Id.ToString());
-			StayOpen = false;
-            Environment.Exit(0);
         }
 
         /// <summary>
