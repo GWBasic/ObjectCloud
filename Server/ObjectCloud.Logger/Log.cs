@@ -68,13 +68,15 @@ namespace ObjectCloud.Logger
         {
             IObjectCloudLogHandler logHandler = LoggerFactoryAdapter.ObjectCloudLogHandler;
 
-            bool writeToConsole = true;
+            bool writeToConsole;
 
             if (null != logHandler)
             {
                 writeToConsole = logHandler.WriteToConsole;
                 logHandler.WriteLog(Name, LogLevelMap[level], LoggerFactoryAdapter.Session, LoggerFactoryAdapter.RemoteEndPoint, message.ToString(), e);
             }
+			else
+				writeToConsole = true;
 
             if (writeToConsole)
             {
