@@ -33,16 +33,40 @@ namespace ObjectCloud.Interfaces.WebServer
 
             AcceptingSockets = false;
 
-            Thread thread = new Thread(new ThreadStart(RunServer));
+			// Register an event handler to preload default ObjectCloud objects
+			EventHandler<IFileSystemResolver, EventArgs> preloadObjects = delegate(IFileSystemResolver sender, EventArgs e)
+			{
+				PreloadObjects();
+			};
+			FileHandlerFactoryLocator.FileSystemResolver.Started += preloadObjects;
 
-            thread.IsBackground = true;
-            thread.Name = GetType().FullName;
+			try
+			{
+	            Thread thread = new Thread(new ThreadStart(RunServer));
+	
+	            thread.IsBackground = true;
+	            thread.Name = GetType().FullName;
+	
+	            thread.Start();
 
-            thread.Start();
-
-            while (!AcceptingSockets && (null == TerminatingException))
-                Thread.Sleep(50);
-
+				// Wait for the web server to start
+				Thread.BeginCriticalRegion();
+				try
+				{
+		            if (!AcceptingSockets && (null == TerminatingException))
+						using (TimedLock.Lock(AcceptingSocketsSignal))
+			                Monitor.Wait(AcceptingSocketsSignal);
+				}
+				finally
+				{
+					Thread.EndCriticalRegion();
+				}
+			}
+			finally
+			{
+				FileHandlerFactoryLocator.FileSystemResolver.Started -= preloadObjects;
+			}
+	
             // If the web server couldn't start due to an exception, then re-throw the exception
             if (null != TerminatingException)
                 throw TerminatingException;
@@ -56,7 +80,20 @@ namespace ObjectCloud.Interfaces.WebServer
         /// <summary>
         /// Flag to indicate that StartServer() can return.  It should not return until sockets can be accepted 
         /// </summary>
-        protected volatile bool AcceptingSockets = false;
+        protected bool AcceptingSockets
+		{
+			get { return _AcceptingSockets; }
+			set
+			{
+				_AcceptingSockets = value;
+				
+				if (value)
+					using (TimedLock.Lock(AcceptingSocketsSignal))
+						Monitor.PulseAll(AcceptingSocketsSignal);
+			}
+		}
+        private volatile bool _AcceptingSockets = false;
+		private object AcceptingSocketsSignal = new object();
 
         /// <summary>
         /// The port to accept connections on
@@ -388,5 +425,64 @@ namespace ObjectCloud.Interfaces.WebServer
             set { _TerminatingException = value; }
         }
         private Exception _TerminatingException = null;
+		
+		/// <summary>
+		/// Comma-seperated list of all of the objects to pre-load.  Directories will be traversed 
+		/// </summary>
+		public string PreloadedObjects
+		{
+			get { return _PreloadedObjects; }
+			set { _PreloadedObjects = value; }
+		}
+		private string _PreloadedObjects = null;
+		
+		private void PreloadObjects()
+		{
+			try
+			{
+				if (null == PreloadedObjects)
+					return;
+				
+				IEnumerable<string> preloadedObjects = StringParser.ParseCommaSeperated(PreloadedObjects);
+				IEnumerable<IFileContainer> toPreLoad = GetObjectsAndTraverseDirectories(preloadedObjects);
+				
+				Enumerable<IFileContainer>.MultithreadedEach(
+					1,
+					toPreLoad,
+					delegate(IFileContainer fileContainer)
+					{
+						fileContainer.WebHandler.GetOrCreateExecutionEnvironment();
+					});
+			}
+			catch (Exception e)
+			{
+				log.Error("Error pre-loading objects", e);
+			}
+		}
+		
+		private IEnumerable<IFileContainer> GetObjectsAndTraverseDirectories(IEnumerable<string> objectNames)
+		{
+			foreach (string objectName in objectNames)
+			{
+				IFileContainer toYield = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(objectName);
+				yield return toYield;
+				
+				if (toYield.FileHandler is IDirectoryHandler)
+					foreach (IFileContainer subToYield in GetObjectsAndTraverseDirectories((IDirectoryHandler)toYield.FileHandler))
+						yield return subToYield;
+			}
+		}
+		
+		private IEnumerable<IFileContainer> GetObjectsAndTraverseDirectories(IDirectoryHandler directory)
+		{
+			foreach (IFileContainer toYield in directory.Files)
+			{
+				yield return toYield;
+				
+				if (toYield.FileHandler is IDirectoryHandler)
+					foreach (IFileContainer subToYield in GetObjectsAndTraverseDirectories((IDirectoryHandler)toYield.FileHandler))
+						yield return subToYield;
+			}
+		}
     }
 }

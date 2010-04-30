@@ -22,12 +22,10 @@ For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/licen
     CachingEnabled="true"
     CheckDeadConnectionsFrequencySeconds="15"
     MaxConnectionIdleSeconds="45"
+    PreloadedObjects="/Shell,/Docs"
     />
 
   <!-- When running a real server, this line should be deleted.  Writing to the console really kills performance -->
   <LogHandlerFactory WriteToConsole="true" />
-
-  <SubProcessFactory
-    NumSubProcesses="6" />
 
 </ObjectCloudConfig>
