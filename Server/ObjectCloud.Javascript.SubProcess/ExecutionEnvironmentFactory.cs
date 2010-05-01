@@ -36,16 +36,6 @@ namespace ObjectCloud.Javascript.SubProcess
 
         public void Start(IEnumerable<IFileContainer> files)
         {
-            /*foreach (IFileContainer file in files)
-				try
-				{
-                		SubProcessFactory.GetOrCreateSubProcess(file);
-				}
-				catch (Exception e)
-				{
-					log.Error("Error compiling Javascript", e);
-				}*/
-			
 			Enumerable<IFileContainer>.MultithreadedEach(
 				1,
 			    files,
@@ -57,7 +47,7 @@ namespace ObjectCloud.Javascript.SubProcess
 					}
 					catch (Exception e)
 					{
-						log.Error("Error compiling Javascript", e);
+						log.Error("Error compiling Javascript for " + file.FullPath, e);
 					}
 				});
         }

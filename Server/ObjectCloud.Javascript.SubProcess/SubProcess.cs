@@ -133,7 +133,7 @@ namespace ObjectCloud.Javascript.SubProcess
             if (!Process.Start())
             {
                 Exception e = new JavascriptException("Could not start sub process");
-                log.Error("Error starting Javascript sub process", e);
+                log.Error("Error starting Javascript sub process for " + javascriptContainer.FullPath, e);
 
                 throw e;
             }
@@ -146,11 +146,14 @@ namespace ObjectCloud.Javascript.SubProcess
 
             JSONSender = new JsonWriter(_Process.StandardInput);
 
+			// Failed attempt to handle processes without Threads
+			//_Process.ErrorDataReceived += Handle_ProcessErrorDataReceived;
+			//_Process.BeginErrorReadLine();
             Thread monitorForErrorsThread = new Thread(new ThreadStart(MonitorForErrors));
             monitorForErrorsThread.IsBackground = true;
             monitorForErrorsThread.Name = "SubProcessErrors#" + _Process.Id.ToString();
             monitorForErrorsThread.Start();
-
+			
             using (TimedLock.Lock(SubProcesses))
                 SubProcesses.Add(_Process);
 
@@ -220,22 +223,50 @@ namespace ObjectCloud.Javascript.SubProcess
                 command["Scripts"] = scriptsToEval;
                 command["Functions"] = _FunctionsInScope.Keys;
 
+				// Failed attempt to do IO without threads
+				/*string inCommandString = null;// = _Process.StandardOutput.ReadLine();
+				object signal = new object();
+				
+				// This weirdness with the delegate and events is because we can't mix event-driven IO and stream-driven IO
+				
+				DataReceivedEventHandler handleCreationResult = delegate(object sender, DataReceivedEventArgs e)
+				{
+					inCommandString = e.Data;
+	
+					lock(signal)
+						Monitor.PulseAll(signal);
+				};
+				
+				_Process.OutputDataReceived += handleCreationResult;
+				_Process.BeginOutputReadLine();
+
                 // Send the command
+                using (TimedLock.Lock(SendKey))
+                    JSONSender.Write(command);
+
+				lock(signal)
+					Monitor.Wait(signal);
+				
+				_Process.OutputDataReceived += Handle_ProcessOutputDataReceived;
+				_Process.OutputDataReceived -= handleCreationResult;*/
+				
+				
+				// Send the command
                 using (TimedLock.Lock(SendKey))
                     JSONSender.Write(command);
 
                 string inCommandString = _Process.StandardOutput.ReadLine();
                 Dictionary<string, object> inCommand = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
-
+				
                 object exception;
                 if (inCommand.TryGetValue("Exception", out exception))
-                    throw new JavascriptException("Exception compiling Javascript: " + exception.ToString());
+                    throw new JavascriptException("Exception compiling Javascript for " + JavascriptContainer.FullPath + ": " + exception.ToString());
 
                 Thread monitorForResponsesThread = new Thread(new ThreadStart(MonitorForResponses));
                 monitorForResponsesThread.IsBackground = true;
                 monitorForResponsesThread.Name = "SubProcessOutput#" + _Process.Id.ToString();
                 monitorForResponsesThread.Start();
-            }
+			}
             finally
             {
                 fileHandlerFactoryLocator.SessionManagerHandler.EndSession(ownerSession.SessionId);
@@ -311,7 +342,7 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             try
             {
-                ((Process)sender).Exited -= new EventHandler(Process_Exited);
+				((Process)sender).Exited -= new EventHandler(Process_Exited);
                 using (TimedLock.Lock(SubProcesses))
                     SubProcesses.Remove(((Process)sender));
 
@@ -327,7 +358,7 @@ namespace ObjectCloud.Javascript.SubProcess
             }
         }
 
-        /// <summary>
+		     /// <summary>
         /// Handles incoming responses on a thread
         /// </summary>
         private void MonitorForResponses()
@@ -347,9 +378,9 @@ namespace ObjectCloud.Javascript.SubProcess
                     UnblockWaitingThread(threadID, inCommand);
                 }
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                log.Error("Error reading from Javascript sub process", e);
+                log.Error("Error reading from Javascript sub process stderr: " + JavascriptContainer.FullPath, ex);
                 Dispose();
             }
         }
@@ -362,14 +393,60 @@ namespace ObjectCloud.Javascript.SubProcess
             try
             {
                 while (!_Process.StandardError.EndOfStream)
-                    log.Error("Javascript sub process error: " + _Process.StandardError.ReadLine());
+                    log.Error("Javascript sub process error (" + JavascriptContainer.FullPath + "): " + _Process.StandardError.ReadLine());
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                log.Error("Error reading from Javascript sub process", e);
+                log.Error("Error reading from Javascript sub process stdio: " + JavascriptContainer.FullPath, ex);
                 Dispose();
             }
         }
+
+		// Failed attempt at event-based IO handling
+		/*// <summary>
+		/// Handles incoming responses
+        /// </summary>
+        void Handle_ProcessOutputDataReceived (object sender, DataReceivedEventArgs e)
+        {
+            try
+            {
+                Dictionary<string, object> inCommand = JsonReader.Deserialize<Dictionary<string, object>>(e.Data);
+
+                object threadID = inCommand["ThreadID"];
+
+                using (TimedLock.Lock(InCommandsByThreadId))
+                    InCommandsByThreadId[threadID] = inCommand;
+
+                UnblockWaitingThread(threadID, inCommand);
+            }
+            catch (Exception ex)
+            {
+                log.Error("Error reading from Javascript sub process: " + JavascriptContainer.FullPath, ex);
+                Dispose();
+            }
+        }
+
+		/// <summary>
+		/// Handles incoming errors 
+		/// </summary>
+		/// <param name="sender">
+		/// A <see cref="System.Object"/>
+		/// </param>
+		/// <param name="e">
+		/// A <see cref="DataReceivedEventArgs"/>
+		/// </param>
+        void Handle_ProcessErrorDataReceived (object sender, DataReceivedEventArgs e)
+        {
+            try
+            {
+	            log.Error("Javascript sub process error: " + JavascriptContainer.FullPath + e.Data);
+            }
+            catch (Exception ex)
+            {
+                log.Error("Error reading from Javascript sub process: " + JavascriptContainer.FullPath, ex);
+                Dispose();
+            }
+        }*/
 
         /// <summary>
         /// Unblocks a waiting thread

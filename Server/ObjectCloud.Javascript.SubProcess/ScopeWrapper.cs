@@ -197,8 +197,11 @@ namespace ObjectCloud.Javascript.SubProcess
         public void Dispose()
         {
             Disposed = true;
-            _SubProcess.DisposeScope(ScopeId, Thread.CurrentThread.ManagedThreadId);
-            GC.SuppressFinalize(this);
+			
+			if (null != _SubProcess)
+            		_SubProcess.DisposeScope(ScopeId, Thread.CurrentThread.ManagedThreadId);
+            
+			GC.SuppressFinalize(this);
         }
 
         /// <summary>
