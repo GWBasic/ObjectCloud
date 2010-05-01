@@ -14,10 +14,31 @@ namespace ObjectCloud.Common
     /// </summary>
     public static class SRandom
     {
+		static SRandom()
+		{
+			Seed = DateTime.UtcNow.Ticks;
+		}
+		private static Wrapped<long> Seed;
+		
         /// <summary>
         /// The wrapped inner random object
         /// </summary>
-        static Random Random = new Random();
+        private static Random Random
+		{
+			get
+			{
+				if (null == _Random)
+					lock (Seed)
+					{
+						_Random = new Random(Seed.Value.GetHashCode());
+						Seed.Value = Seed.Value + 1;
+					}
+				
+				return _Random;
+			}
+		}
+        [ThreadStatic]
+        static Random _Random = null;
 
         /// <summary>
         /// Returns the next integer

@@ -38,7 +38,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="FileType">The file type</param>
         /// <param name="ErrorIfExists">True to return an error if the file already exists</param>
         /// <param name="fileNameSuggestion">A suggestion for creating a file name.  ObjectCloud will attempt to generate a real file name from this suggestion</param>
-        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.JavaScriptObject)]
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Write)]
         public IWebResults CreateFile(IWebConnection webConnection, string FileName, string extension, string fileNameSuggestion, string FileType, bool? ErrorIfExists)
         {
             using (TimedLock.Lock(CreateFileLock))
@@ -393,7 +393,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <returns></returns>
         /// <param name="DestinationFilename">The destination file</param>
         /// <param name="SourceFilename">The source file</param>
-        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Administer)]
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Write)]
         public IWebResults CopyFile(IWebConnection webConnection, string SourceFilename, string DestinationFilename)
         {
             IFileContainer toCopy;
