@@ -138,10 +138,19 @@ namespace ObjectCloud.Disk.WebHandlers
 		[WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.Primitive, FilePermissionEnum.Read)]
 		public IWebResults GetAvatar(IWebConnection webConnection)
 		{
-			if (FileHandler.Contains("Avatar"))
-				return webConnection.ShellTo(FileHandler["Avatar"]);
+            string avatar;
+
+            if (FileHandler.Contains("Avatar"))
+                avatar = FileHandler["Avatar"];
+            else
+                avatar = "/Shell/UserManagers/No Profile.png";
+
+            string requestString = HTTPStringFunctions.AppendGetParameter(avatar, "Method", "GetScaled");
+            foreach (KeyValuePair<string, string> getParameter in webConnection.GetParameters)
+                if (getParameter.Key != "Method")
+                    requestString = HTTPStringFunctions.AppendGetParameter(requestString, getParameter.Key, getParameter.Value);
 			
-			return webConnection.ShellTo("/Shell/UserManagers/No Profile.png");
+			return webConnection.ShellTo(requestString);
 		}
 
         /// <summary>
