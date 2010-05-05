@@ -38,7 +38,7 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
 
                 try
                 {
-                    toReturn = MethodInfo.Invoke(webHandlerPlugin, new object[] { arguments });
+                    toReturn = MethodInfo.Invoke(webHandlerPlugin, arguments);
                 }
                 catch (TargetInvocationException e)
                 {
