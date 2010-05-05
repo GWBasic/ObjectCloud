@@ -42,7 +42,8 @@ namespace ObjectCloud.Interfaces.WebServer
 			
 			EventHandler<IFileSystemResolver, EventArgs> abortInError = delegate(IFileSystemResolver sender, EventArgs e)
 			{
-				Monitor.PulseAll(AcceptingSocketsSignal);
+                using (TimedLock.Lock(AcceptingSocketsSignal))
+				    Monitor.PulseAll(AcceptingSocketsSignal);
 			};
 
 			try

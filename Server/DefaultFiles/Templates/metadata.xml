@@ -47,7 +47,7 @@
 	</File>
 	<File
 		Name="Large Image Template.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -62,7 +62,7 @@
 	</File>
 	<File
 		Name="Medium Image Template.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -137,7 +137,7 @@
 	</File>
 	<File
 		Name="Small Image Template.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"

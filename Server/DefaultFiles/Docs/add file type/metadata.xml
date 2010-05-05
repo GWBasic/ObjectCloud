@@ -2,7 +2,7 @@
 <Directory>
 	<File
 		Name="bypassing permission.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -17,7 +17,7 @@
 	</File>
 	<File
 		Name="permission denied.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"

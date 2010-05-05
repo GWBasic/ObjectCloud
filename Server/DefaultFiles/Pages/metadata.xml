@@ -77,7 +77,7 @@
 	</File>
 	<File
 		Name="powered-by-banner.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"

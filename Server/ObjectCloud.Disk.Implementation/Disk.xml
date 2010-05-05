@@ -106,6 +106,9 @@
         <entry key="binary">
           <ref object="BinaryHandlerFactory" />
         </entry>
+        <entry key="image">
+          <ref object="BinaryHandlerFactory" />
+        </entry>
         <entry key="user">
           <ref object="UserHandlerFactory" />
         </entry>
@@ -170,6 +173,11 @@
         <entry key="binary">
           <object type="System.Type" factory-method="GetType" id="binaryWebHandlerType">
             <constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.BinaryWebHandler, ObjectCloud.Disk.WebHandlers" />
+          </object>
+        </entry>
+        <entry key="image">
+          <object type="System.Type" factory-method="GetType" id="imageWebHandlerType">
+            <constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.ImageWebHandler, ObjectCloud.Disk.WebHandlers" />
           </object>
         </entry>
         <entry key="user">

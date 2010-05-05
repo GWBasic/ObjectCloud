@@ -2,7 +2,7 @@
 <Directory>
 	<File
 		Name="airbrush.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -17,7 +17,7 @@
 	</File>
 	<File
 		Name="brush.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -32,7 +32,7 @@
 	</File>
 	<File
 		Name="bucket.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -47,7 +47,7 @@
 	</File>
 	<File
 		Name="bucket2.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -62,7 +62,7 @@
 	</File>
 	<File
 		Name="curve.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -77,7 +77,7 @@
 	</File>
 	<File
 		Name="ellipse.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -92,7 +92,7 @@
 	</File>
 	<File
 		Name="eraser.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -107,7 +107,7 @@
 	</File>
 	<File
 		Name="ffselect.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -122,7 +122,7 @@
 	</File>
 	<File
 		Name="line.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -137,7 +137,7 @@
 	</File>
 	<File
 		Name="pencil.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -152,7 +152,7 @@
 	</File>
 	<File
 		Name="picker.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -167,7 +167,7 @@
 	</File>
 	<File
 		Name="picker2.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -182,7 +182,7 @@
 	</File>
 	<File
 		Name="polygon.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -197,7 +197,7 @@
 	</File>
 	<File
 		Name="rectangle.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -212,7 +212,7 @@
 	</File>
 	<File
 		Name="rounded.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -227,7 +227,7 @@
 	</File>
 	<File
 		Name="select.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -242,7 +242,7 @@
 	</File>
 	<File
 		Name="text.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -257,7 +257,7 @@
 	</File>
 	<File
 		Name="zoom.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"

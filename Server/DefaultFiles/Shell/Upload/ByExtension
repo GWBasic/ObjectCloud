@@ -1,12 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <NameValuePairs>
-	<NameValuePair Name="webcomponent" Value="text" />
-	<NameValuePair Name="jpg" Value="binary" />
-	<NameValuePair Name="png" Value="binary" />
-	<NameValuePair Name="wchtml" Value="text" />
-	<NameValuePair Name="gif" Value="binary" />
-	<NameValuePair Name="jpeg" Value="binary" />
+	<NameValuePair Name="gif" Value="image" />
 	<NameValuePair Name="htm" Value="text" />
-	<NameValuePair Name="txt" Value="text" />
 	<NameValuePair Name="html" Value="text" />
+	<NameValuePair Name="jpeg" Value="image" />
+	<NameValuePair Name="jpg" Value="image" />
+	<NameValuePair Name="png" Value="image" />
+	<NameValuePair Name="txt" Value="text" />
+	<NameValuePair Name="wchtml" Value="text" />
+	<NameValuePair Name="webcomponent" Value="text" />
 </NameValuePairs>

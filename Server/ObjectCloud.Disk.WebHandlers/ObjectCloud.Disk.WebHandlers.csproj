@@ -48,6 +48,7 @@
     <Compile Include="GroupWebHandler.cs" />
     <Compile Include="HTTPWebProxy.cs" />
     <Compile Include="Comet\MultiplexingCometWebHandler.cs" />
+    <Compile Include="ImageWebHandler.cs" />
     <Compile Include="NameValuePairsWebHandler.cs" />
     <Compile Include="SessionManagerWebHandler.cs" />
     <Compile Include="TextWebHandler.cs" />
@@ -59,6 +60,7 @@
   <ItemGroup>
     <Reference Include="System.Data" />
     <Reference Include="System" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml" />
     <Reference Include="ExtremeSwank.OpenId, Version=4.0.1.1, Culture=neutral, PublicKeyToken=7e26a780dbe2aeef">
       <SpecificVersion>False</SpecificVersion>

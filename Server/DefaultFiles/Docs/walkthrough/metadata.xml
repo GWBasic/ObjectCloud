@@ -2,7 +2,7 @@
 <Directory>
 	<File
 		Name="account created.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -17,7 +17,7 @@
 	</File>
 	<File
 		Name="add permission for everybody.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -32,7 +32,7 @@
 	</File>
 	<File
 		Name="add permission.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -47,7 +47,7 @@
 	</File>
 	<File
 		Name="beware-of-pickpockets-and-l.jpg"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -62,7 +62,7 @@
 	</File>
 	<File
 		Name="browser opened.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -77,7 +77,7 @@
 	</File>
 	<File
 		Name="change password.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -92,7 +92,7 @@
 	</File>
 	<File
 		Name="create account.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -107,7 +107,7 @@
 	</File>
 	<File
 		Name="create user.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -122,7 +122,7 @@
 	</File>
 	<File
 		Name="document created.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -137,7 +137,7 @@
 	</File>
 	<File
 		Name="edit file.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -152,7 +152,7 @@
 	</File>
 	<File
 		Name="editor.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -167,7 +167,7 @@
 	</File>
 	<File
 		Name="empty home directory.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -182,7 +182,7 @@
 	</File>
 	<File
 		Name="include image.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -197,7 +197,7 @@
 	</File>
 	<File
 		Name="logged in.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -212,7 +212,7 @@
 	</File>
 	<File
 		Name="my files.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -227,7 +227,7 @@
 	</File>
 	<File
 		Name="open permissions.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -242,7 +242,7 @@
 	</File>
 	<File
 		Name="permission added.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -257,7 +257,7 @@
 	</File>
 	<File
 		Name="permission denied.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -272,7 +272,7 @@
 	</File>
 	<File
 		Name="server started.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -287,7 +287,7 @@
 	</File>
 	<File
 		Name="shared with everybody.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -302,7 +302,7 @@
 	</File>
 	<File
 		Name="shared with gwbasic.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -317,7 +317,7 @@
 	</File>
 	<File
 		Name="upload image.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
@@ -332,7 +332,7 @@
 	</File>
 	<File
 		Name="view new page.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"

@@ -102,7 +102,7 @@
 	</File>
 	<File
 		Name="No Profile.png"
-		TypeId="binary"
+		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="00000000-0000-0000-0000-000000000000"
