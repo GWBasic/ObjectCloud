@@ -31,5 +31,35 @@ namespace ObjectCloud.Interfaces.Disk
         /// Occurs whenever the data changes
         /// </summary>
         event EventHandler<IBinaryHandler, EventArgs> ContentsChanged;
+
+        /// <summary>
+        /// Returns true if there is a cached precalculated view for the given name
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        bool IsCachedPresent(string key);
+
+        /// <summary>
+        /// Sets a named cached view.  Cached views are deleted as soon as the object is overwritten
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="view"></param>
+        void SetCached(string key, byte[] view);
+
+        /// <summary>
+        /// Gets the cached view
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        /// <exception cref="KeyNotFound">Thrown if there is no named cached view</exception>
+        byte[] GetCached(string key);
+
+        /// <summary>
+        /// Tries to get the cached view for the given key.  Returns true if the cached view is present.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="view"></param>
+        /// <returns></returns>
+        bool TryGetCached(string key, out byte[] view);
     }
 }

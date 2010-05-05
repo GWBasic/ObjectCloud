@@ -17,31 +17,19 @@ namespace ObjectCloud.Disk.Factories
     {
         public override void CreateFile(string path, FileId fileId)
         {
-            string subPath = CreateBinaryFilename(path);
-
-            System.IO.File.WriteAllBytes(subPath, new byte[0]);
+            System.IO.File.WriteAllBytes(BinaryHandler.CreateBinaryFilename(path), new byte[0]);
         }
 
         public override IBinaryHandler OpenFile(string path, FileId fileId)
         {
-            return new BinaryHandler(CreateBinaryFilename(path), FileHandlerFactoryLocator);
-        }
-
-        /// <summary>
-        /// Creates the text file name
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        private string CreateBinaryFilename(string path)
-        {
-            return string.Format("{0}{1}file.bin", path, Path.DirectorySeparatorChar);
+            return new BinaryHandler(path, FileHandlerFactoryLocator);
         }
 
         public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID)
         {
             CreateFile(fileId);
             System.IO.File.WriteAllBytes(
-                CreateBinaryFilename(FileSystem.GetFullPath(fileId)),
+                BinaryHandler.CreateBinaryFilename(FileSystem.GetFullPath(fileId)),
                 sourceFileHandler.FileContainer.CastFileHandler<IBinaryHandler>().ReadAll());
         }
 
@@ -49,7 +37,7 @@ namespace ObjectCloud.Disk.Factories
         {
             CreateFile(fileId);
             System.IO.File.WriteAllBytes(
-                CreateBinaryFilename(FileSystem.GetFullPath(fileId)),
+                BinaryHandler.CreateBinaryFilename(FileSystem.GetFullPath(fileId)),
                 File.ReadAllBytes(pathToRestoreFrom));
         }
     }
