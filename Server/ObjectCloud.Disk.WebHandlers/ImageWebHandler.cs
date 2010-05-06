@@ -1,4 +1,4 @@
-﻿// Copyright 2009, 2010 Andrew Rondeau
+// Copyright 2009, 2010 Andrew Rondeau
 // This code is released under the Simple Public License (SimPL) 2.0.  Some additional privelages are granted.
 // For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
 
@@ -153,12 +153,13 @@ namespace ObjectCloud.Disk.WebHandlers
                 MemoryStream ms = new MemoryStream();
                 thumbnail.Save(ms, info[1], encoderParameters);
                 resizedImageBytes = new byte[ms.Length];
-                ms.Read(resizedImageBytes, 0, resizedImageBytes.Length);
 
+				// Saved the resized image in the cache
+				ms.Seek(0, SeekOrigin.Begin);
+				ms.Read(resizedImageBytes, 0, resizedImageBytes.Length);
                 FileHandler.SetCached(cacheKey, resizedImageBytes);
 
                 ms.Seek(0, SeekOrigin.Begin);
-
                 toReturn = WebResults.FromStream(Status._200_OK, ms);
             }
 
