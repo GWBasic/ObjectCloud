@@ -1,15 +1,21 @@
 /*
  * JavaScript Pretty Date
  * Copyright (c) 2008 John Resig (jquery.com)
+ * Contains minor modifications by Andrew Rondeau
  * Licensed under the MIT license.
  */
 
-// Takes an ISO time and returns a string representing how
+// Takes an ISO time as a string, or a Javascript Date object, and returns a string representing how
 // long ago the date represents.
 function prettyDate(time){
-	var date = new Date((time || "").replace(/-/g,"/").replace(/[TZ]/g," ")),
-		diff = (((new Date()).getTime() - date.getTime()) / 1000),
-		day_diff = Math.floor(diff / 86400);
+	var date;
+        if (time instanceof Date)
+           date = time;
+        else
+           date = new Date((time || "").replace(/-/g,"/").replace(/[TZ]/g," "));
+
+        diff = (((new Date()).getTime() - date.getTime()) / 1000);
+        day_diff = Math.floor(diff / 86400);
 			
 	if ( isNaN(day_diff) || day_diff < 0 || day_diff >= 31 )
 		return;
