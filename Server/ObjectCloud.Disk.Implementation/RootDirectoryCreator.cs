@@ -31,19 +31,27 @@ namespace ObjectCloud.Disk.Implementation
             IUserFactory userFactory = FileHandlerFactoryLocator.UserFactory;
 
             //IUser anonymousUser = 
-            userManager.CreateUser(
+            IUser anonymousUser = userManager.CreateUser(
                 "anonymous",
                 "",
                 userFactory.AnonymousUser.Id,
                 true);
 
             usersDirectory.DeleteFile(null, "anonymous");
+			usersDirectory.RestoreFile("anonymous avatar.jpg", "image", "anonymous avatar.jpg", userFactory.RootUser.Id);
+			usersDirectory.SetPermission(null, "anonymous avatar.jpg", userFactory.Everybody.Id, FilePermissionEnum.Read, false, false);
+			anonymousUser.UserHandler.Set(null, "Avatar", "/Users/anonymous avatar.jpg");
 
             IUser rootUser = userManager.CreateUser(
                 "root",
                 DefaultRootPassword,
                 userFactory.RootUser.Id,
                 true);
+			
+			IDirectoryHandler rootUserDirectoryHandler = usersDirectory.OpenFile("root").CastFileHandler<IDirectoryHandler>();
+			rootUserDirectoryHandler.RestoreFile("Root Avatar.jpg", "image", "Root Avatar.jpg", userFactory.RootUser.Id);
+			rootUser.UserHandler.Set(rootUser, "Avatar", "/Users/root/Root Avatar.jpg");
+			rootUserDirectoryHandler.SetPermission(null, "Root Avatar.jpg", userFactory.Everybody.Id, FilePermissionEnum.Read, false, false);
 
             // Create groups
             IGroup everybody = userManager.CreateGroup(userFactory.Everybody.Name, null, userFactory.Everybody.Id, true, true, GroupType.Private);

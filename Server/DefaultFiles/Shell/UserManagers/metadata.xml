@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Directory>
 	<File
 		Name="Create Account.wchtml"
@@ -101,7 +101,7 @@
 			SendNotifications="False" />
 	</File>
 	<File
-		Name="No Profile.png"
+		Name="No Profile.jpg"
 		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission

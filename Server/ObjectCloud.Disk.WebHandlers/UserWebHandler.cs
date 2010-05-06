@@ -143,7 +143,7 @@ namespace ObjectCloud.Disk.WebHandlers
             if (FileHandler.Contains("Avatar"))
                 avatar = FileHandler["Avatar"];
             else
-                avatar = "/Shell/UserManagers/No Profile.png";
+                avatar = "/Shell/UserManagers/No Profile.jpg";
 
             string requestString = HTTPStringFunctions.AppendGetParameter(avatar, "Method", "GetScaled");
             foreach (KeyValuePair<string, string> getParameter in webConnection.GetParameters)
