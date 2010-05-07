@@ -5,6 +5,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Text;
 
@@ -75,7 +76,7 @@ namespace ObjectCloud.Javascript.SubProcess
             Dictionary<string, object> toReturn = new Dictionary<string, object>();
             toReturn["Status"] = (int)webResults.Status;
             toReturn["Content"] = webResults.ResultsAsString;
-            toReturn["Headers"] = webResults.Headers;
+			toReturn["Headers"] = webResults.Headers;
 
             return toReturn;
         }
@@ -176,7 +177,8 @@ namespace ObjectCloud.Javascript.SubProcess
             string webMethodString,
             string url,
             string contentType,
-            object postArguments)
+            object postArguments,
+		    Dictionary<string, object> options)
         {
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
 
@@ -195,19 +197,6 @@ namespace ObjectCloud.Javascript.SubProcess
 
                     content = requestParameters.ToBytes();
                 }
-                /*else if (postArguments is object[])
-                {
-                    RequestParameters requestParameters = new RequestParameters();
-
-                    ulong ctr = 0;
-                    foreach (KeyValuePair<string, object> requestParameter in (IEnumerable)postArguments)
-                    {
-                        requestParameters.Add(ctr.ToString(), requestParameter.Value.ToString());
-                        ctr++;
-                    }
-
-                    content = requestParameters.ToBytes();
-                }*/
                 else
                     content = Encoding.UTF8.GetBytes(postArguments.ToString());
             }
@@ -222,6 +211,20 @@ namespace ObjectCloud.Javascript.SubProcess
                 functionCallContext.CallingFrom,
                 functionCallContext.WebConnection.BypassJavascript);
 
+			if (null != options)
+			{
+				object resultsAsBase64;
+				if (options.TryGetValue("EncodeAsBase64", out resultsAsBase64))
+					if (resultsAsBase64 is bool)
+						if ((bool)resultsAsBase64)
+							using (Stream contentStream = shellResult.ResultsAsStream)
+							{
+								byte[] buffer = new byte[contentStream.Length];
+								contentStream.Read(buffer, 0, buffer.Length);
+								return Convert.ToBase64String(buffer);
+							}
+			}
+			
             return ConvertWebResultToJavascript(shellResult);
         }
 
