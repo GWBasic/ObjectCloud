@@ -153,6 +153,7 @@ namespace ObjectCloud.Javascript.SubProcess
             monitorForErrorsThread.IsBackground = true;
             monitorForErrorsThread.Name = "SubProcessErrors#" + _Process.Id.ToString();
             monitorForErrorsThread.Start();
+			Threads.Add(monitorForErrorsThread);
 			
             using (TimedLock.Lock(SubProcesses))
                 SubProcesses.Add(_Process);
@@ -266,6 +267,7 @@ namespace ObjectCloud.Javascript.SubProcess
                 monitorForResponsesThread.IsBackground = true;
                 monitorForResponsesThread.Name = "SubProcessOutput#" + _Process.Id.ToString();
                 monitorForResponsesThread.Start();
+				Threads.Add(monitorForResponsesThread);
 			}
             finally
             {
@@ -345,6 +347,9 @@ namespace ObjectCloud.Javascript.SubProcess
 				((Process)sender).Exited -= new EventHandler(Process_Exited);
                 using (TimedLock.Lock(SubProcesses))
                     SubProcesses.Remove(((Process)sender));
+				
+				//foreach (Thread thread in Threads)
+				//	thread.Abort();
 
                 if (!Disposed)
                 {
@@ -358,7 +363,12 @@ namespace ObjectCloud.Javascript.SubProcess
             }
         }
 
-		     /// <summary>
+		/// <summary>
+		/// The threads that monitor the sub process 
+		/// </summary>
+		List<Thread> Threads = new List<Thread>();
+		
+		/// <summary>
         /// Handles incoming responses on a thread
         /// </summary>
         private void MonitorForResponses()
