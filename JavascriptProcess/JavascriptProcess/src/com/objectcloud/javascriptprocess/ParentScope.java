@@ -65,6 +65,15 @@ public class ParentScope {
             	callFunctionInParentProcessMethod,
             	scope);
             scope.put(callFunctionInParentProcessName, scope, callFunctionInParentProcessMethodFunctionObject);
+            
+        	/* // Uncomment to test stderr
+            // Add function to test stderr
+            Method testErrorMethod = ParentScope.class.getMethod("testError", String.class);
+            FunctionObject testErrorMethodFunctionObject = new FunctionObject(
+            	"testError",
+            	testErrorMethod,
+            	scope);
+            scope.put("testError", scope, testErrorMethodFunctionObject);*/
 
             if (data.has("Functions")) {
 				JSONArray functions = data.getJSONArray("Functions");
@@ -109,6 +118,11 @@ public class ParentScope {
             Context.exit();
         }
 	}
+	
+	/* // Uncomment to test stderr
+	public static void testError(String errorString) {
+		System.err.println(errorString);
+	}*/
 
 	private void returnResult(Context context, Object callResults, JSONObject outData, String resultsName) throws JSONException, IOException {
 

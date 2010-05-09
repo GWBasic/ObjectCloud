@@ -244,3 +244,15 @@
    "ThreadID":456,
    "Data": {b:[0,1,2,3,4,5]}
 }
+
+{
+   "Scripts": ["testError(\"err\");"],
+   "Functions":[]
+}
+{
+   "ScopeID":1,
+   "Command":"CreateScope",
+   "ThreadID":456,
+   "Data": {}
+}
+
