@@ -41,29 +41,34 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <returns></returns>
         public SubProcess GetOrCreateSubProcess(IFileContainer javascriptContainer)
         {
-	        SubProcess toReturn = null;
+            SubProcess toReturn = null;
 
-			using (TimedLock.Lock(javascriptContainer))
-			{
-	            using (TimedLock.Lock(SubProcessesByClass))
-	            {
-	                if (SubProcessesByClass.TryGetValue(javascriptContainer.FullPath, out toReturn))
-		                if (javascriptContainer.LastModified == ClassLastModified[javascriptContainer.FullPath])
-							if (toReturn.Alive)
-	    		                		return toReturn;
-	            }
+            using (TimedLock.Lock(javascriptContainer))
+            {
+                using (TimedLock.Lock(SubProcessesByClass))
+                {
+                    if (SubProcessesByClass.TryGetValue(javascriptContainer.FullPath, out toReturn))
+                    {
+                        DateTime classLastModified;
+                        if (ClassLastModified.TryGetValue(javascriptContainer.FullPath, out classLastModified))
+                            if (javascriptContainer.LastModified == classLastModified)
+                                if (toReturn.Alive)
+                                    return toReturn;
+                    }
 
-				if (null != toReturn)
-					toReturn.Dispose();
+                    if (null != toReturn)
+                        toReturn.Dispose();
 
-				ClassLastModified[javascriptContainer.FullPath] = javascriptContainer.LastModified;
-				toReturn = new SubProcess(javascriptContainer, FileHandlerFactoryLocator);
-	
-	            using (TimedLock.Lock(SubProcessesByClass))
-					SubProcessesByClass[javascriptContainer.FullPath] = toReturn;
-	
-	            return toReturn;
-			}
+                    ClassLastModified[javascriptContainer.FullPath] = javascriptContainer.LastModified;
+                }
+
+                toReturn = new SubProcess(javascriptContainer, FileHandlerFactoryLocator);
+
+                using (TimedLock.Lock(SubProcessesByClass))
+                    SubProcessesByClass[javascriptContainer.FullPath] = toReturn;
+
+                return toReturn;
+            }
         }
 
         /// <summary>

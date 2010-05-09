@@ -172,8 +172,8 @@ namespace ObjectCloud.Disk.WebHandlers
             // Not worth syncronizing, nothing bad will happen if multiple threads enter this block at the same time
             if (null == CachedInBrowserJSWrapper)
             {
-                List<string> javascriptMethods =
-                    FileHandlerFactoryLocator.WebServer.JavascriptWebAccessCodeGenerator.GenerateWrapper(WebHandlerTypes);
+                List<string> javascriptMethods = new List<string>(
+                    FileHandlerFactoryLocator.WebServer.JavascriptWebAccessCodeGenerator.GenerateWrapper(WebHandlerTypes));
                 
                 javascriptMethods.Add(
                     "\"Url\": \"" + "http://" + FileHandlerFactoryLocator.HostnameAndPort + FileContainer.FullPath + "\"");
