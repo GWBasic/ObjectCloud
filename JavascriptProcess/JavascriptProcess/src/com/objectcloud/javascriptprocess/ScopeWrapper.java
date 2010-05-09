@@ -75,7 +75,7 @@ public class ScopeWrapper {
 		}
 	};
 	
-public void handle(JSONObject inCommand) {
+	public void handle(JSONObject inCommand) {
 		
 		try {
 			
