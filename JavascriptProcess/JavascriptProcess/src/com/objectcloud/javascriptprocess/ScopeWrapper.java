@@ -140,12 +140,11 @@ public class ScopeWrapper {
 				// It's unlikely that this block will be called; it's just here in case of a potential weirdo
 				// syncronization glitch
 				else if (command.equals("RespondCallParentFunction")) {
-					Thread.sleep(25);
 					handle(inCommand);
 				}
 
 				else
-					System.err.println(command + " is unsupported");
+					System.err.println(JSONObject.quote(command + " is unsupported"));
 		
 			} finally {
 				scopeWrapperAndThreadIDStack.get().pop();
@@ -159,7 +158,7 @@ public class ScopeWrapper {
 			for (StackTraceElement ste : e.getStackTrace())
 				toReturn.append(ste.toString() + "<br />");
 			
-			System.err.println(toReturn.toString());
+			System.err.println(JSONObject.quote(toReturn.toString()));
 		}
 	}
 	
