@@ -782,36 +782,45 @@ namespace ObjectCloud.Javascript.SubProcess
 
             do
             {
-                // TODO:  This is a potential Livelock.  A thread with a pending response can't get it until the NEXT response comes in
-                // This is mitigated because Javascript never blocks; all "blocking" calls will unblock a lock here
-
-                lock (RespondKey)
+                // If there's a response waiting, return it
+                lock (InCommandsByThreadId)
                 {
-                    // If there's a response waiting, return it
                     if (InCommandsByThreadId.TryGetValue(threadID, out inCommand))
                     {
                         InCommandsByThreadId.Remove(threadID);
                         return inCommand;
                     }
+                }
+
+                lock (RespondKey)
+                {
+                    // (double-check in case something changed while waiting for the lock...)
+                    // If there's a response waiting, return it
+                    lock (InCommandsByThreadId)
+                    {
+                        if (InCommandsByThreadId.TryGetValue(threadID, out inCommand))
+                        {
+                            InCommandsByThreadId.Remove(threadID);
+                            return inCommand;
+                        }
+                    }
 
                     // else, if there isn't a waiting response that came in on another thread, and if there aren't waiting responses, wait for a response
-                    else
-                    {
-                        if (Process.StandardOutput.EndOfStream || Process.HasExited)
-                            throw new JavascriptException("The sub process has exited");
+                    if (Process.StandardOutput.EndOfStream || Process.HasExited)
+                        throw new JavascriptException("The sub process has exited");
 
-                        string inCommandString = _Process.StandardOutput.ReadLine();
-                        inCommand = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
+                    string inCommandString = _Process.StandardOutput.ReadLine();
+                    inCommand = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
 
-                        object commandThreadID = inCommand["ThreadID"];
+                    object commandThreadID = inCommand["ThreadID"];
 
-                        // If this is the command for this thread, return it
-                        if (commandThreadID == threadID)
-                            return inCommand;
+                    // If this is the command for this thread, return it
+                    if (commandThreadID == threadID)
+                        return inCommand;
 
-                        // else, stuff it into the dictionary of results
+                    // else, stuff it into the dictionary of results
+                    lock (InCommandsByThreadId)
                         InCommandsByThreadId[commandThreadID] = inCommand;
-                    }
                 }
 
                 // Make sure that a context switch occurs after the lock is released
