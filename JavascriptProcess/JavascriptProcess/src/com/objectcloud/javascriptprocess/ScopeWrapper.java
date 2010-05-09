@@ -140,6 +140,7 @@ public class ScopeWrapper {
 				// It's unlikely that this block will be called; it's just here in case of a potential weirdo
 				// syncronization glitch
 				else if (command.equals("RespondCallParentFunction")) {
+					Thread.sleep(25);
 					handle(inCommand);
 				}
 
