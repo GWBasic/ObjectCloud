@@ -114,13 +114,6 @@ namespace ObjectCloud.Javascript.SubProcess
         }
         readonly Dictionary<string, MethodInfo> _FunctionsInScope = new Dictionary<string, MethodInfo>();
 
-        /*// <summary>
-        /// Monitors javascript sub-processes
-        /// </summary>
-        private InterrupThread InterrupThread = new InterrupThread("Javascript Sub-Process monitor");*/
-
-        byte[] ErrorBuffer = new byte[1024];
-
         public SubProcess(IFileContainer javascriptContainer, FileHandlerFactoryLocator fileHandlerFactoryLocator)
         {
             FileHandlerFactoryLocator = fileHandlerFactoryLocator;
