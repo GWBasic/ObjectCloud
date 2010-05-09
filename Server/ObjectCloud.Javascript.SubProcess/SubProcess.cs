@@ -389,6 +389,9 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <param name="inCommand"></param>
         private void UnblockWaitingThread(object threadID, Dictionary<string, object> inCommand, int numTries)
         {
+			// This prevents hogging the CPU while waiting for a thread to register itself
+            Thread.Sleep(numTries * 100);
+
             using (TimedLock.Lock(MonitorObjectsByThreadId))
             {
                 object monitorObject;
@@ -399,8 +402,6 @@ namespace ObjectCloud.Javascript.SubProcess
                 else
                     if (numTries < 15)
                     {
-                        Thread.Sleep(numTries * 100);
-
                         ThreadPool.QueueUserWorkItem(
                             delegate(object state)
                             {
@@ -936,9 +937,17 @@ namespace ObjectCloud.Javascript.SubProcess
             if (Aborted)
                 return;
 
-            foreach (object monitorObject in MonitorObjectsByThreadId.Values)
-                lock (monitorObject)
-                    Monitor.Pulse(monitorObject);
+			try
+			{
+				using (TimedLock.Lock(MonitorObjectsByThreadId))
+		            foreach (object monitorObject in MonitorObjectsByThreadId.Values)
+		                lock (monitorObject)
+		                    Monitor.PulseAll(monitorObject);
+			}
+			catch (Exception e)
+			{
+				log.Warn("Error when de-blocking threads", e);
+			}
 
             Disposed = true;
 
