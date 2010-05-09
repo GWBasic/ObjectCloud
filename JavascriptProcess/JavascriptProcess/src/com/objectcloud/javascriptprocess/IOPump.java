@@ -1,8 +1,5 @@
 package com.objectcloud.javascriptprocess;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -53,53 +50,45 @@ public class IOPump {
 
 	public void start() throws Exception {
 		
-		ExecutorService threadPool = Executors.newCachedThreadPool();
+		JSONTokener tokener = new JSONTokener(new InputStreamReader(inStream));
+		OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outStream);
+		
+		// Create the parent scope
+		JSONObject inCommand = new JSONObject(tokener);
+		ParentScope parentScope = new ParentScope(this, inCommand, outputStreamWriter);
+		
+		inCommand = new JSONObject(tokener);
+		
+		while (inCommand.length() > 0) {
+		
+			// Get or create the scope wrapper
+			final ScopeWrapper scopeWrapper;
+			int scopeID = inCommand.getInt("ScopeID");
+			
+			synchronized(scopeWrappers) {
+				if (scopeWrappers.containsKey(scopeID))
+					scopeWrapper = scopeWrappers.get(scopeID);
+				else {
+					scopeWrapper = parentScope.createScopeWrapper(scopeID);
+					scopeWrappers.put(scopeID, scopeWrapper);
+				}
+			}
+			
+			final JSONObject inCommandFinal = inCommand;
+			
+			Thread thread = new Thread(new Runnable() {
 
-		try {
-			JSONTokener tokener = new JSONTokener(new InputStreamReader(inStream));
-			OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outStream);
-			
-			// Create the parent scope
-			JSONObject inCommand = new JSONObject(tokener);
-			ParentScope parentScope = new ParentScope(this, inCommand, outputStreamWriter);
-			
-			inCommand = new JSONObject(tokener);
-			
-			while (inCommand.length() > 0) {
-			
-				// Get or create the scope wrapper
-				final ScopeWrapper scopeWrapper;
-				int scopeID = inCommand.getInt("ScopeID");
-				
-				synchronized(scopeWrappers) {
-					if (scopeWrappers.containsKey(scopeID))
-						scopeWrapper = scopeWrappers.get(scopeID);
-					else {
-						scopeWrapper = parentScope.createScopeWrapper(scopeID);
-						scopeWrappers.put(scopeID, scopeWrapper);
-					}
+				@Override
+				public void run() {
+					scopeWrapper.handle(inCommandFinal);
 				}
 				
-				final JSONObject inCommandFinal = inCommand;
-				
-				Runnable command = new Runnable() {
-	
-					@Override
-					public void run() {
-						scopeWrapper.handle(inCommandFinal);
-					}
-					
-				};
-				
-				threadPool.execute(command);
-	
-				// This is done last before the loop
-				inCommand = new JSONObject(tokener);
-			}
-		}
-		finally {
-			threadPool.shutdown();
-			threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+			});
+			
+			thread.start();
+			
+			// This is done last before the loop
+			inCommand = new JSONObject(tokener);
 		}
 	}
 	

@@ -75,7 +75,7 @@ public class ScopeWrapper {
 		}
 	};
 	
-	public void handle(JSONObject inCommand) {
+public void handle(JSONObject inCommand) {
 		
 		try {
 			
@@ -154,14 +154,15 @@ public class ScopeWrapper {
 		
 		} catch (Exception e) {
 			StringBuilder toReturn = new StringBuilder();
-			toReturn.append(e.getMessage() + "<br />");
+			toReturn.append(e.getMessage());
 			
 			for (StackTraceElement ste : e.getStackTrace())
-				toReturn.append(ste.toString() + "<br />");
+				toReturn.append("\n" + ste.toString());
 			
 			System.err.println(JSONObject.quote(toReturn.toString()));
 		}
 	}
+
 	
 	private void callCreateScope(Context context, Object threadID, JSONObject data) throws Exception {
 		
