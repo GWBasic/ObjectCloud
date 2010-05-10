@@ -36,15 +36,18 @@ namespace ObjectCloud.Interfaces.Disk
             set 
             {
 #if DEBUG
-                if (ExistingFileHandlers.ContainsKey(value.FileId))
-                    if (ExistingFileHandlers[value.FileId].IsAlive)
-                        if (this != ExistingFileHandlers[value.FileId].Target)
-                            if (System.Diagnostics.Debugger.IsAttached)
-
-                                // If you hit this break, it means that there are two open FileHandlers!!!
-                                System.Diagnostics.Debugger.Break();
-
-                ExistingFileHandlers[value.FileId] = new WeakReference(this);
+				using (TimedLock.Lock(ExistingFileHandlers))
+				{
+	                if (ExistingFileHandlers.ContainsKey(value.FileId))
+	                    if (ExistingFileHandlers[value.FileId].IsAlive)
+	                        if (this != ExistingFileHandlers[value.FileId].Target)
+	                            if (System.Diagnostics.Debugger.IsAttached)
+	
+	                                // If you hit this break, it means that there are two open FileHandlers!!!
+	                                System.Diagnostics.Debugger.Break();
+	
+	                ExistingFileHandlers[value.FileId] = new WeakReference(this);
+				}
 #endif
                 _FileContainer = value;
             }
@@ -182,7 +185,8 @@ namespace ObjectCloud.Interfaces.Disk
             // Yeah, this is ugly, but that's not the point.  A lot of these file handlers are sitting in memory
             // after the FileSystem is stopped, but the FileSystem loses its WeakReferences to some of them.  This
             // Ensures that they don't flag the debugger when the objects are re-loaded for different instances of the database
-            ExistingFileHandlers.Clear();
+			using (TimedLock.Lock(ExistingFileHandlers))
+            		ExistingFileHandlers.Clear();
 #endif
         }
 		

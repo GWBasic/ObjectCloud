@@ -80,6 +80,14 @@ namespace ObjectCloud.Common
 			
 			IEnumerator<T> enumerator = list.GetEnumerator();
 			
+			/* // Decent way to diagnose livelocks
+			TimerCallback callback = delegate(object state)
+			{
+				Thread thread = (Thread)state;
+				Console.WriteLine("I'm stuck!!! (ThreadID: " + thread.ManagedThreadId + ")");
+				thread.Abort();
+			};*/
+			
 			// This is the wrapper delegate used on every thread
 			ThreadStart threadStart = delegate()
 			{
@@ -97,8 +105,17 @@ namespace ObjectCloud.Common
 					
 					try
 					{
+						// Commented-out code assists in diagnosing livelocks
+						//using (new Timer(callback, Thread.CurrentThread, 7500, 7500))
+						//{
 						del(t);
+						//}
 					}
+					/*catch (ThreadAbortException tae)
+					{
+						Console.WriteLine(tae.StackTrace);
+						Thread.ResetAbort();
+					}*/
 					catch (Exception e)
 					{
 						using (TimedLock.Lock(exceptions))
