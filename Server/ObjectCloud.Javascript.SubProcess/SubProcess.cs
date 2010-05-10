@@ -836,7 +836,9 @@ namespace ObjectCloud.Javascript.SubProcess
                 // Make sure that a context switch occurs after the lock is released
                 Thread.Sleep(0);
 
-            } while (true);
+            } while (!_Process.HasExited);
+			
+			throw new ObjectDisposedException("The sub processes has exited");
         }
 
         /// <summary>
