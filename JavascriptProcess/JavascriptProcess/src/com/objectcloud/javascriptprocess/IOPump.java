@@ -80,9 +80,6 @@ public class IOPump {
 					}
 				}
 				
-				// TODO:  This really needs to be optimized.  When responses are returned, a new thread is created and quickly disposed.
-				// Unfortunately, too many things to optimize, and trying to work on this is a distraction
-				
 				final JSONObject inCommandFinal = inCommand;
 				
 				Runnable command = new Runnable() {
