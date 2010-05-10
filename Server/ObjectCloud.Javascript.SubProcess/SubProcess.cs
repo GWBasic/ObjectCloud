@@ -626,9 +626,15 @@ namespace ObjectCloud.Javascript.SubProcess
                 do
                 {
                     Dictionary<string, object> inCommand;
+					
+					TimerCallback callback = delegate(object state)
+					{
+						log.Warn("Killing sub-process due to timeout: " + JavascriptContainer.FullPath);
+						Dispose();
+					};
                     
                     // If the thread waits, spin up a timer kill the process in case it runs too long
-                    using (new Timer(delegate(object state) { Dispose(); }, null, 30000, 0))
+                    using (new Timer(callback, null, 10000, 0))
                         inCommand = WaitForResponse();
 
                     Dictionary<string, object> dataToReturn = (Dictionary<string, object>)inCommand["Data"];
@@ -810,6 +816,10 @@ namespace ObjectCloud.Javascript.SubProcess
                         throw new JavascriptException("The sub process has exited");
 
                     string inCommandString = _Process.StandardOutput.ReadLine();
+					
+					if (null == inCommandString)
+						log.Warn("Null recieved from sub process");
+					
                     inCommand = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
 
                     object commandThreadID = inCommand["ThreadID"];
@@ -921,12 +931,18 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             try
             {
-                DateTime start = (DateTime)state;
-
-                if (DateTime.UtcNow - start > TimeSpan.FromSeconds(0.25))
-                    _Process.Kill();
-                else
-                    ThreadPool.QueueUserWorkItem(KillSubprocess, start);
+				if (!_Process.HasExited)
+				{
+	                DateTime start = (DateTime)state;
+	
+	                if (DateTime.UtcNow - start > TimeSpan.FromSeconds(0.25))
+	                    _Process.Kill();
+	                else
+					{
+						Thread.Sleep(25);
+	                    ThreadPool.QueueUserWorkItem(KillSubprocess, start);
+					}
+				}
             }
             catch { }
         }
