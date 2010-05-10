@@ -4,6 +4,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,48 +53,56 @@ public class IOPump {
 
 	public void start() throws Exception {
 		
-		JSONTokener tokener = new JSONTokener(new InputStreamReader(inStream));
-		OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outStream);
+		ExecutorService executorService = Executors.newCachedThreadPool();
 		
-		// Create the parent scope
-		JSONObject inCommand = new JSONObject(tokener);
-		ParentScope parentScope = new ParentScope(this, inCommand, outputStreamWriter);
-		
-		inCommand = new JSONObject(tokener);
-		
-		while (inCommand.length() > 0) {
-		
-			// Get or create the scope wrapper
-			final ScopeWrapper scopeWrapper;
-			int scopeID = inCommand.getInt("ScopeID");
+		try {
+			JSONTokener tokener = new JSONTokener(new InputStreamReader(inStream));
+			OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outStream);
 			
-			synchronized(scopeWrappers) {
-				if (scopeWrappers.containsKey(scopeID))
-					scopeWrapper = scopeWrappers.get(scopeID);
-				else {
-					scopeWrapper = parentScope.createScopeWrapper(scopeID);
-					scopeWrappers.put(scopeID, scopeWrapper);
-				}
-			}
+			// Create the parent scope
+			JSONObject inCommand = new JSONObject(tokener);
+			ParentScope parentScope = new ParentScope(this, inCommand, outputStreamWriter);
 			
-			// TODO:  This really needs to be optimized.  When responses are returned, a new thread is created and quickly disposed.
-			// Unfortunately, too many things to optimize, and trying to work on this is a distraction
+			inCommand = new JSONObject(tokener);
 			
-			final JSONObject inCommandFinal = inCommand;
+			while (inCommand.length() > 0) {
 			
-			Thread thread = new Thread(new Runnable() {
-
-				@Override
-				public void run() {
-					scopeWrapper.handle(inCommandFinal);
+				// Get or create the scope wrapper
+				final ScopeWrapper scopeWrapper;
+				int scopeID = inCommand.getInt("ScopeID");
+				
+				synchronized(scopeWrappers) {
+					if (scopeWrappers.containsKey(scopeID))
+						scopeWrapper = scopeWrappers.get(scopeID);
+					else {
+						scopeWrapper = parentScope.createScopeWrapper(scopeID);
+						scopeWrappers.put(scopeID, scopeWrapper);
+					}
 				}
 				
-			});
-			
-			thread.start();
-			
-			// This is done last before the loop
-			inCommand = new JSONObject(tokener);
+				// TODO:  This really needs to be optimized.  When responses are returned, a new thread is created and quickly disposed.
+				// Unfortunately, too many things to optimize, and trying to work on this is a distraction
+				
+				final JSONObject inCommandFinal = inCommand;
+				
+				Runnable command = new Runnable() {
+	
+					@Override
+					public void run() {
+						scopeWrapper.handle(inCommandFinal);
+					}
+					
+				};
+				
+				executorService.execute(command);
+				
+				// This is done last before the loop
+				inCommand = new JSONObject(tokener);
+			}
+		}
+		finally {
+			executorService.shutdown();
+			executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 		}
 	}
 	
