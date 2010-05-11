@@ -242,5 +242,12 @@ namespace ObjectCloud.Interfaces.WebServer
         /// All of the scripts used with the web connection; check this set before adding another script tag
         /// </summary>
         Set<string> Scripts { get; }
+
+        /// <summary>
+        /// Returns a url that contains the correct browser cache ID for the given URL
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        string GetBrowserCacheUrl(string url);
     }
 }

@@ -237,6 +237,20 @@ namespace ObjectCloud.WebServer.Implementation
                             }
                         }
                     }
+                    else if (webComponentTag.StartsWith("Cache("))
+                    {
+                        // <? Cache(...
+
+                        string[] splitAtCloseTag = splitAtOpenTag[ctr].Split(new string[] { "?>" }, 2, StringSplitOptions.None);
+
+                        if (2 != splitAtCloseTag.Length)
+                            splitAtOpenTag[ctr] = "<?" + tagContentsAndTrailer;
+                        else
+                        {
+                            string requestedUrl = splitAtCloseTag[0].Split(new char[] { '(' }, 2)[1].Split(')')[0];
+                            splitAtOpenTag[ctr] = webConnection.GetBrowserCacheUrl(requestedUrl) + splitAtCloseTag[1];
+                        }
+                    }
                     else
                         splitAtOpenTag[ctr] = "<?" + tagContentsAndTrailer;
                 }

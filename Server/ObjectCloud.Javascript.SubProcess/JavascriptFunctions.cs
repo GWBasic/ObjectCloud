@@ -518,5 +518,18 @@ namespace ObjectCloud.Javascript.SubProcess
 
             return connectionMetadata;
         }
+
+        /// <summary>
+        /// Returns a url with the browser cache MD5 in it so that the browser can cache the given object for a long time
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        public static string getBrowserCacheUrl(string url)
+        {
+            FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
+            IWebConnection webConnection = functionCallContext.WebConnection;
+
+            return webConnection.GetBrowserCacheUrl(url);
+        }
     }
 }

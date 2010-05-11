@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Security.Cryptography;
 using System.Text;
 
 using Common.Logging;
@@ -837,5 +838,51 @@ namespace ObjectCloud.Interfaces.WebServer
             get { return _Scripts; }
         }
         private readonly Set<string> _Scripts = new Set<string>();
+
+        /// <summary>
+        /// Precalculated browser cache urls
+        /// </summary>
+        private Dictionary<string, string> BrowserCacheUrls = new Dictionary<string, string>();
+
+        /// <summary>
+        /// The object that calculates the MD5
+        /// </summary>
+        private static HashAlgorithm HashAlgorithm = new System.Security.Cryptography.MD5CryptoServiceProvider();
+
+        /// <summary>
+        /// Returns a url that contains the correct browser cache ID for the given URL
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        public virtual string GetBrowserCacheUrl(string url)
+        {
+            // So, this function is somewhat CPU intense; but it's much faster then many calls coming in through the web
+
+            // In some cases, full urls might make it in.  This might happen when getting avatars, ect
+            if (url.StartsWith("http://" + WebServer.FileHandlerFactoryLocator.HostnameAndPort))
+                url = url.Substring(7 + WebServer.FileHandlerFactoryLocator.HostnameAndPort.Length);
+            else if (url.StartsWith("http://") || url.StartsWith("https://"))
+                return url;
+                
+            string toReturn;
+            if (BrowserCacheUrls.TryGetValue(url, out toReturn))
+                return toReturn;
+
+            if (url.Contains("BrowserCache="))
+                return url;
+
+            IWebResults urlResults = ShellTo(url);
+
+            byte[] scriptBytes = new byte[urlResults.ResultsAsStream.Length];
+            urlResults.ResultsAsStream.Read(scriptBytes, 0, scriptBytes.Length);
+            byte[] scriptHash = HashAlgorithm.ComputeHash(scriptBytes);
+
+            string hash = Convert.ToBase64String(scriptHash);
+
+            toReturn = HTTPStringFunctions.AppendGetParameter(url, "BrowserCache", hash);
+            BrowserCacheUrls[url] = toReturn;
+
+            return toReturn;
+        }
     }
 }

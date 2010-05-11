@@ -198,5 +198,13 @@ namespace ObjectCloud.Interfaces.WebServer
             }
         }
         private Set<string> _Scripts;
+
+        public override string GetBrowserCacheUrl(string url)
+        {
+            if ((null == BaseWebConnection) || (this == BaseWebConnection))
+                return base.GetBrowserCacheUrl(url);
+            else
+                return BaseWebConnection.GetBrowserCacheUrl(url);
+        }
     }
 }
