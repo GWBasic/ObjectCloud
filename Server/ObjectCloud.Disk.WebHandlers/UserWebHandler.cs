@@ -150,7 +150,18 @@ namespace ObjectCloud.Disk.WebHandlers
                 if (getParameter.Key != "Method")
                     requestString = HTTPStringFunctions.AppendGetParameter(requestString, getParameter.Key, getParameter.Value);
 			
-			return webConnection.ShellTo(requestString);
+            // Shell to get the avatar, but do the shell as if we're the user in question, instead of the currently-logged in user
+            // This works around permissions issues
+            IUser currentUser = webConnection.Session.User;
+            try
+            {
+                webConnection.Session.User = FileContainer.Owner;
+                return webConnection.ShellTo(requestString);
+            }
+            finally
+            {
+                webConnection.Session.User = currentUser;
+            }
 		}
 
         /// <summary>
