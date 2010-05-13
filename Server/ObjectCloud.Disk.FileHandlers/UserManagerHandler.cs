@@ -974,7 +974,7 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             uint returned = 0;
 
-            foreach (IUsers_Readable userFromDB in DatabaseConnection.Users.Select(Users_Table.Name.Like(query), max, ObjectCloud.ORM.DataAccess.OrderBy.Asc))
+            foreach (IUsers_Readable userFromDB in DatabaseConnection.Users.Select(Users_Table.Name.Like(query + "*"), max, ObjectCloud.ORM.DataAccess.OrderBy.Asc))
             {
                 returned++;
                 yield return CreateUserObject(userFromDB);
