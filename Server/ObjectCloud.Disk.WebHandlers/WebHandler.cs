@@ -286,7 +286,7 @@ namespace ObjectCloud.Disk.WebHandlers
             else
                 try
                 {
-                    userOrGroupId = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupOrOpenId(UserOrGroup).Id;
+                    userOrGroupId = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupOrOpenId(UserOrGroup.Trim()).Id;
                 }
                 catch (UnknownUser)
                 {
