@@ -1,13 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Directory>
-        <File
-                Name="autosuggest.css"
-		TypeId="text"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd"/>
-        <File
-                Name="autosuggest2.js"
-		TypeId="text"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd"/>
 	<File
 		Name="AJAX.js"
 		TypeId="text"
@@ -38,6 +30,14 @@
 			Inherit="False"
 			SendNotifications="False" />
 	</File>
+	<File
+		Name="autosuggest.css"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="autosuggest2.js"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 	<File
 		Name="buttonmenu.js"
 		TypeId="text"
@@ -356,4 +356,8 @@
 			Inherit="False"
 			SendNotifications="False" />
 	</File>
+	<File
+		Name="UserSuggest.js"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 </Directory>
