@@ -9,6 +9,7 @@ using System.Globalization;
 using System.Text;
 using System.Threading;
 
+using Common.Logging;
 using JsonFx.Json;
 
 using ObjectCloud.Common;
@@ -23,6 +24,8 @@ namespace ObjectCloud.Disk.WebHandlers
     /// </summary>
     public class DirectoryWebHandler : DatabaseWebHandler<IDirectoryHandler, DirectoryWebHandler>
     {
+		static ILog log = LogManager.GetLogger<DirectoryWebHandler>();
+		
         /// <summary>
         /// Synchronizes creating a file
         /// </summary>
@@ -517,6 +520,19 @@ namespace ObjectCloud.Disk.WebHandlers
                 System.IO.File.Delete(tempFile);
             }
 
+			// Create the scope asyncronously
+			ThreadPool.QueueUserWorkItem(delegate(object state)
+			{
+				try
+				{
+					FileHandler.OpenFile(filename).WebHandler.GetOrCreateExecutionEnvironment();
+				}
+				catch (Exception e)
+				{
+					log.Error("Exception creating scope", e);
+				}
+			});
+			
             string results = "Filename: " + filename + "<br/><br/>FileTypeId: " + fileFactoryType + "<br />";
 
             return WebResults.FromString(Status._201_Created, results);
