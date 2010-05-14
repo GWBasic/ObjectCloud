@@ -536,7 +536,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             // the file.extension convention will be used
             string[] filenameSplitAtDot = filename.Split('.');
-            string extension = filenameSplitAtDot[filenameSplitAtDot.Length - 1];
+            string extension = filenameSplitAtDot[filenameSplitAtDot.Length - 1].ToLowerInvariant();
 
             IFileContainer extensionContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("/Shell/Upload/ByExtension");
             INameValuePairsHandler extensionHandler = extensionContainer.CastFileHandler<INameValuePairsHandler>();

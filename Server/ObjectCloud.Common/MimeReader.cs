@@ -244,6 +244,21 @@ namespace ObjectCloud.Common
             }
 
             /// <summary>
+            /// Returns true if the part is a file
+            /// </summary>
+            public bool IsFile
+            {
+                get
+                {
+                    string filename;
+                    if (_ContentDisposition.TryGetValue("FILENAME", out filename))
+                        return filename.Length > 0;
+
+                    return false;
+                }
+            }
+
+            /// <summary>
             /// The parsed Content-Disposition, if sent.  All keys are in upper case
             /// </summary>
             public Dictionary<string, string> ContentDisposition
