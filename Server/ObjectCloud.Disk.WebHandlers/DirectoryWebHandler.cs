@@ -39,7 +39,38 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="ErrorIfExists">True to return an error if the file already exists</param>
         /// <param name="fileNameSuggestion">A suggestion for creating a file name.  ObjectCloud will attempt to generate a real file name from this suggestion</param>
         [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Write)]
-        public IWebResults CreateFile(IWebConnection webConnection, string FileName, string extension, string fileNameSuggestion, string FileType, bool? ErrorIfExists)
+        public IWebResults CreateFile(
+            IWebConnection webConnection,
+            string FileName,
+            string extension,
+            string fileNameSuggestion,
+            string FileType,
+            bool? ErrorIfExists)
+        {
+            IFileHandler fileHandler = CreateFileHelper(webConnection, FileName, extension, fileNameSuggestion, FileType, ErrorIfExists);
+
+            IWebResults toReturn = fileHandler.FileContainer.WebHandler.GetJSW(webConnection, null, null, false);
+            toReturn.Status = Status._201_Created;
+            return toReturn;
+        }
+
+        /// <summary>
+        /// Helps in creating a file
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="FileName"></param>
+        /// <param name="extension"></param>
+        /// <param name="fileNameSuggestion"></param>
+        /// <param name="FileType"></param>
+        /// <param name="ErrorIfExists"></param>
+        /// <returns></returns>
+        protected IFileHandler CreateFileHelper(
+            IWebConnection webConnection,
+            string FileName,
+            string extension,
+            string fileNameSuggestion,
+            string FileType,
+            bool? ErrorIfExists)
         {
             using (TimedLock.Lock(CreateFileLock))
             {
@@ -52,7 +83,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 {
                     if (extension.Length < 1)
                         throw new WebResultsOverrideException(
-                        WebResults.FromString(Status._400_Bad_Request, "The extension must be at least one character long"));
+                            WebResults.FromString(Status._400_Bad_Request, "The extension must be at least one character long"));
 
                     FileName = GenerateFilename(extension, fileNameSuggestion);
                 }
@@ -65,48 +96,50 @@ namespace ObjectCloud.Disk.WebHandlers
 
                 // This is a performance optimization when a file needs to be created if it doesn't exist
                 if (null != ErrorIfExists)
-                    if (!ErrorIfExists.Value)  //  ErrorIfExists.ToLowerInvariant().Equals("false"))
+                    if (!ErrorIfExists.Value)
                         if (FileHandler.IsFilePresent(FileName))
-                            return FileHandler.OpenFile(FileName).WebHandler.GetJSW(webConnection, null, null, false);
+                            return FileHandler.OpenFile(FileName).FileHandler;
 
                 // If the file type is not specified, try to load it from a server-side class
                 if (null == FileType)
                 {
-                    IFileContainer javascriptClass = FindJavascriptContainer(extension, FileHandler);
-
-                    // If there is server-side Javascript, try to infer the file type
-                    if (null != javascriptClass)
-                        if (javascriptClass.FileHandler is ITextHandler)
-                            foreach (string line in javascriptClass.CastFileHandler<ITextHandler>().ReadLines())
-                                if (line.Trim().StartsWith("// FileType:"))
-                                {
-                                    FileType = line.Substring(12).Trim();
-                                    goto FileTypeFound; // It's valid to use a goto to break a loop
-                                }
-
-                FileTypeFound:
+                    FileType = DetermineFileType(extension);
                     if (null == FileType)
                         throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, "FileType must be specified for files with extension ." + extension));
                 }
 
-                IFileHandler fileHandler;
                 try
                 {
-                    fileHandler = FileHandler.CreateFile(FileName, FileType, webConnection.Session.User.Id);
+                    return FileHandler.CreateFile(FileName, FileType, webConnection.Session.User.Id);
                 }
                 catch (DuplicateFile)
                 {
-                    return WebResults.FromString(Status._409_Conflict, FileName + " already exists");
+                    throw new WebResultsOverrideException(WebResults.FromString(Status._409_Conflict, FileName + " already exists"));
                 }
                 catch (BadFileName)
                 {
-                    return WebResults.FromString(Status._409_Conflict, FileName + " is an invalid file name");
+                    throw new WebResultsOverrideException(WebResults.FromString(Status._409_Conflict, FileName + " is an invalid file name"));
                 }
-
-                IWebResults toReturn = fileHandler.FileContainer.WebHandler.GetJSW(webConnection, null, null, false);
-                toReturn.Status = Status._201_Created;
-                return toReturn;
             }
+        }
+
+        /// <summary>
+        /// Assists in determining the file type given the extension
+        /// </summary>
+        /// <param name="extension"></param>
+        /// <returns></returns>
+        protected string DetermineFileType(string extension)
+        {
+            IFileContainer javascriptClass = FindJavascriptContainer(extension, FileHandler);
+
+            // If there is server-side Javascript, try to infer the file type
+            if (null != javascriptClass)
+                if (javascriptClass.FileHandler is ITextHandler)
+                    foreach (string line in javascriptClass.CastFileHandler<ITextHandler>().ReadLines())
+                        if (line.Trim().StartsWith("// FileType:"))
+                            return line.Substring(12).Trim();
+
+            return null;
         }
 
         /// <summary>
@@ -462,44 +495,11 @@ namespace ObjectCloud.Disk.WebHandlers
             if (null == File)
                 return WebResults.FromString(Status._412_Precondition_Failed, "Expected MIME part File");
 
-            string filename = File.ContentDisposition["FILENAME"];
+            string filename;
+            string fileFactoryType = GetFileFactoryTypeFromUpload(File, out filename);
 
             if (FileHandler.IsFilePresent(filename))
                 return WebResults.FromString(Status._409_Conflict, filename + " already exists");
-
-            // Figure out what kind of factory to use
-            string fileFactoryType;
-
-            string contentType = File.ContentType;
-
-            IFileContainer mimeContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("/Shell/Upload/ByMime");
-            INameValuePairsHandler mime = mimeContainer.CastFileHandler<INameValuePairsHandler>();
-            if (null != contentType)
-            {
-                fileFactoryType = mime[contentType];
-
-                if (null == fileFactoryType)
-                    fileFactoryType = "binary";
-            }
-            else
-            {
-                // the file.extension convention will be used
-                string[] filenameSplitAtDot = filename.Split('.');
-                string extension = filenameSplitAtDot[filenameSplitAtDot.Length - 1];
-
-                IFileContainer extensionContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("/Shell/Upload/ByExtension");
-                INameValuePairsHandler extensionHandler = extensionContainer.CastFileHandler<INameValuePairsHandler>();
-
-                if (extensionHandler.Contains(extension))
-                    fileFactoryType = extensionHandler[extension];
-                else
-                    // If all else fails, just treat the file like its bimary
-                    fileFactoryType = "binary";
-            }
-
-            // default to binary if no factory is found
-            if (!FileHandlerFactoryLocator.FileHandlerFactories.ContainsKey(fileFactoryType))
-                fileFactoryType = "binary";
 
             string tempFile = Path.GetTempFileName();
             try
@@ -517,9 +517,56 @@ namespace ObjectCloud.Disk.WebHandlers
                 System.IO.File.Delete(tempFile);
             }
 
-            string results = string.Format("Filename: {0}<br/>Mime type (from browser): {1}<br/>FileTypeId: {2}<br />", filename, contentType, fileFactoryType);
+            string results = "Filename: " + filename + "<br/><br/>FileTypeId: " + fileFactoryType + "<br />";
 
             return WebResults.FromString(Status._201_Created, results);
+        }
+
+        /// <summary>
+        /// Figures out the fileFactoryType from an upload
+        /// </summary>
+        /// <param name="File"></param>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        protected string GetFileFactoryTypeFromUpload(MimeReader.Part File, out string filename)
+        {
+            // Figure out what kind of factory to use
+            string contentType = File.ContentType;
+            filename = File.ContentDisposition["FILENAME"];
+
+            // the file.extension convention will be used
+            string[] filenameSplitAtDot = filename.Split('.');
+            string extension = filenameSplitAtDot[filenameSplitAtDot.Length - 1];
+
+            IFileContainer extensionContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("/Shell/Upload/ByExtension");
+            INameValuePairsHandler extensionHandler = extensionContainer.CastFileHandler<INameValuePairsHandler>();
+
+            // If there's a specific file type given the extension, let it override the MIME type
+            if (extensionHandler.Contains(extension))
+                return extensionHandler[extension];
+            else
+            {
+                string fileFactoryType = DetermineFileType(extension);
+
+                if (null != fileFactoryType)
+                    return fileFactoryType;
+
+                else if (null != contentType)
+                {
+                    IFileContainer mimeContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("/Shell/Upload/ByMime");
+                    INameValuePairsHandler mime = mimeContainer.CastFileHandler<INameValuePairsHandler>();
+
+                    fileFactoryType = mime[contentType];
+
+                    if (null == fileFactoryType)
+                        fileFactoryType = "binary";
+
+                    return fileFactoryType;
+                }
+                else
+                    // If all else fails, just treat the file like its bimary
+                    return "binary";
+            }
         }
 
         /// <summary>
