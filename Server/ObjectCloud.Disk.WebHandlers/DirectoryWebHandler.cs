@@ -304,7 +304,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="files"></param>
         /// <param name="webConnection"></param>
         /// <returns></returns>
-        private IWebResults ReturnFilesAsJSON(IWebConnection webConnection, IEnumerable<IFileContainer> files)
+        protected IWebResults ReturnFilesAsJSON(IWebConnection webConnection, IEnumerable<IFileContainer> files)
         {
             IList<IDictionary<string, object>> toReturn = GetFilesForJSON(webConnection.Session, files);
 
