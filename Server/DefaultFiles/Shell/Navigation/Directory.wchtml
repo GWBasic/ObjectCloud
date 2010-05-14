@@ -129,7 +129,7 @@ to <input id="DestinationFileNameInput" type="text" name="DestinationFilename" /
    <h3>Upload</h3>
 
    <input type="file" name="File" />
-   <input type="submit" value="upload" onclick="setTimeout('window.location.reload(true)', 2500)" />
+   <input type="submit" value="upload" />
 </form>
 
 <script>
