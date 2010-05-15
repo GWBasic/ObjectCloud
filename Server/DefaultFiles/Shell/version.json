@@ -2,7 +2,7 @@
    "Major":1,
    "Minor":0,
    "State":"alpha",
-   "Stable":false,
-   "Release":"3-0",
-   "Joke":"Many well-defined processes lead to java-chip ice cream"
+   "Stable":true,
+   "Release":"3-1",
+   "Joke":"A high thread count is only desirable in a fancy hotel room"
 }
