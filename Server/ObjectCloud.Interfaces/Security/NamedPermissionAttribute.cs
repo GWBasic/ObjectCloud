@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ObjectCloud.Interfaces.WebServer
+namespace ObjectCloud.Interfaces.Security
 {
     /// <summary>
     /// Attribute that declares a named permission that can allow a caller to call a web method even if that caller doesn't have the minimum permission

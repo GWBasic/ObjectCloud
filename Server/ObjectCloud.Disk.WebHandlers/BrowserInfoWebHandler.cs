@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 
 using ObjectCloud.Interfaces.Disk;
+using ObjectCloud.Interfaces.Security;
 using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.Disk.WebHandlers

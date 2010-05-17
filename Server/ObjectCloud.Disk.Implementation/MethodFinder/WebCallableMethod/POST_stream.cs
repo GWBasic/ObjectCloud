@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 
+using ObjectCloud.Interfaces.Security;
 using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.Disk.Implementation.MethodFinder

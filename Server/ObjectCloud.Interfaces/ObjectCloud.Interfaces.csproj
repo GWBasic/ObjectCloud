@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -107,7 +107,7 @@
     <Compile Include="Security\IUserOrGroup.cs" />
     <Compile Include="Security\ShellSession.cs" />
     <Compile Include="WebServer\BlockingShellWebConnection.cs" />
-    <Compile Include="WebServer\ChannelEndpointMinimumPermissionAttribute.cs" />
+    <Compile Include="Security\ChannelEndpointMinimumPermissionAttribute.cs" />
     <Compile Include="WebServer\CookieToSet.cs" />
     <Compile Include="WebServer\HasWebResultsException.cs" />
     <Compile Include="WebServer\IChannelEventWebAdaptor.cs" />
@@ -124,14 +124,14 @@
     <Compile Include="WebServer\IWebResults.cs" />
     <Compile Include="WebServer\IWebServer.cs" />
     <Compile Include="WebServer\MethodNameAndFileContainer.cs" />
-    <Compile Include="WebServer\NamedPermissionAttribute.cs" />
+    <Compile Include="Security\NamedPermissionAttribute.cs" />
     <Compile Include="WebServer\NonBlockingShellWebConnection.cs" />
     <Compile Include="WebServer\QueuingReliableCometTransport.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="WebServer\ResultsAlreadySent.cs" />
     <Compile Include="WebServer\Status.cs" />
-    <Compile Include="WebServer\WebCallableAttribute.cs" />
+    <Compile Include="Security\WebCallableAttribute.cs" />
     <Compile Include="WebServer\WebCallingConvention.cs" />
     <Compile Include="WebServer\WebDelegate.cs" />
     <Compile Include="WebServer\WebHandlerPlugin.cs" />

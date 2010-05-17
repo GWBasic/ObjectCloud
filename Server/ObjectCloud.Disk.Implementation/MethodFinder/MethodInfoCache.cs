@@ -9,6 +9,7 @@ using System.Text;
 
 using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Disk;
+using ObjectCloud.Interfaces.Security;
 using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.Disk.Implementation.MethodFinder

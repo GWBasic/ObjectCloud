@@ -6,9 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-using ObjectCloud.Interfaces.Security;
-
-namespace ObjectCloud.Interfaces.WebServer
+namespace ObjectCloud.Interfaces.Security
 {
     /// <summary>
     /// Attribute that declares the minimum permission needed to connect to a two-way channel endpoint on a server

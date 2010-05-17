@@ -6,9 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-using ObjectCloud.Interfaces.Security;
+using ObjectCloud.Interfaces.WebServer;
 
-namespace ObjectCloud.Interfaces.WebServer
+namespace ObjectCloud.Interfaces.Security
 {
     /// <summary>
     /// Attribute that declares that a method is to be exposed to the web
