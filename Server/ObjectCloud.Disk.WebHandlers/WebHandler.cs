@@ -1070,6 +1070,10 @@ namespace ObjectCloud.Disk.WebHandlers
             // Get the full path if it's not present
             if (!filename.StartsWith("/"))
                 filename = FileContainer.ParentDirectoryHandler.FileContainer.FullPath + "/" + filename;
+			
+			// The default relationship is "link"
+			if (null != relationship)
+				relationship = "link";
 
             IFileContainer relatedContainer;
             try
