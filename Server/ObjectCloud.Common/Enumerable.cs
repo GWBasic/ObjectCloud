@@ -78,6 +78,17 @@ namespace ObjectCloud.Common
 			if (list.Count < numThreads)
 				numThreads = list.Count;
 			
+			// Watch out for a special case on systems that have a low number of cores
+			// When the number of threads per CPU is less then one, it implies that the task shouldn't use all CPUs
+			if (numThreadsPerCPU < 1)
+				if (numThreads >= Environment.ProcessorCount)
+				{
+					numThreads = Environment.ProcessorCount - 1;
+				
+				    if (numThreads == 0)
+						numThreads = 1;
+				}
+			
 			IEnumerator<T> enumerator = list.GetEnumerator();
 			
 			/* // Decent way to diagnose livelocks
