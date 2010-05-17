@@ -38,7 +38,7 @@ namespace ObjectCloud.Disk.WebHandlers
             try
             {
                 IUser user = FileHandler.GetUser(username, password);
-                webConnection.Session.User = user;
+                webConnection.Session.Login(user);
 
                 // success
                 return WebResults.FromString(Status._202_Accepted, user.Name + " logged in");
@@ -86,7 +86,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 IUser user = FileHandler.CreateUser(username, password);
 				
 				if (assignSession)
-                	webConnection.Session.User = user;
+                	webConnection.Session.Login(user);
 
                 return WebResults.FromString(Status._201_Created, user.Name + " created");
             }
@@ -732,7 +732,7 @@ namespace ObjectCloud.Disk.WebHandlers
 			try
 			{
 				IUser user = FileHandler.GetOpenIdUser(identity);
-				webConnection.Session.User = user;
+				webConnection.Session.Login(user);
 
                 // success
                 if (webConnection.GetParameters.ContainsKey("redirect"))

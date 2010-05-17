@@ -58,8 +58,36 @@ namespace ObjectCloud.Interfaces.WebServer
             BaseWebConnection = webConnection;
 
             DetermineRequestedFileAndGetParameters(url);
-
             TryDecodePostParameters();
+        }
+
+        public ShellWebConnection(
+            IWebConnection webConnection,
+            ISession session,
+            string requestedFile,
+            RequestParameters getParameters,
+            byte[] content,
+            string contentType,
+            CookiesFromBrowser cookiesFromBrowser,
+            CallingFrom callingFrom)
+            : base(webConnection.WebServer, callingFrom, webConnection.Generation + 1)
+        {
+            _Content = new WebConnectionContent.InMemory(content);
+            _ContentType = contentType;
+            _Session = session;
+            _Method = WebMethod.GET;
+            _CookiesFromBrowser = cookiesFromBrowser;
+            _CookiesToSet = webConnection.CookiesToSet;
+            _HttpVersion = webConnection.HttpVersion;
+            _RequestedHost = webConnection.RequestedHost;
+            _Headers = new Dictionary<string, string>(webConnection.Headers);
+            _MimeReader = webConnection.MimeReader;
+
+            BaseWebConnection = webConnection;
+
+            _RequestedFile = requestedFile;
+            _GetParameters = getParameters;
+            _PostParameters = null;
         }
 
         public ShellWebConnection(
@@ -91,30 +119,14 @@ namespace ObjectCloud.Interfaces.WebServer
         /// <summary>
         /// Constructor for when a web request is generated publicly instead of externally
         /// </summary>
-        /// <param name="webServer">
-        /// A <see cref="IWebServer"/>
-        /// </param>
-        /// <param name="session">
-        /// A <see cref="ISession"/>
-        /// </param>
-        /// <param name="url">
-        /// A <see cref="System.String"/>
-        /// </param>
-        /// <param name="content">
-        /// A <see cref="System.Byte"/>
-        /// </param>
-        /// <param name="contentType">
-        /// A <see cref="System.String"/>
-        /// </param>
-        /// <param name="cookiesFromBrowser">
-        /// A <see cref="CookiesFromBrowser"/>
-        /// </param>
-        /// <param name="callingFrom">
-        /// A <see cref="CallingFrom"/>
-        /// </param>
-        /// <param name="method">
-        /// A <see cref="WebMethod"/>
-        /// </param>
+        /// <param name="webServer"></param>
+        /// <param name="session"></param>
+        /// <param name="url"></param>
+        /// <param name="content"></param>
+        /// <param name="contentType"></param>
+        /// <param name="cookiesFromBrowser"></param>
+        /// <param name="callingFrom"></param>
+        /// <param name="method"></param>
         public ShellWebConnection(
             IWebServer webServer,
             ISession session,

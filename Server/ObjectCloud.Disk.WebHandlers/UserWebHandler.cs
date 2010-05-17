@@ -152,16 +152,7 @@ namespace ObjectCloud.Disk.WebHandlers
 			
             // Shell to get the avatar, but do the shell as if we're the user in question, instead of the currently-logged in user
             // This works around permissions issues
-            IUser currentUser = webConnection.Session.User;
-            try
-            {
-                webConnection.Session.User = FileContainer.Owner;
-                return webConnection.ShellTo(requestString);
-            }
-            finally
-            {
-                webConnection.Session.User = currentUser;
-            }
+            return webConnection.ShellTo(requestString, FileContainer.Owner);
 		}
 
         /// <summary>

@@ -25,7 +25,13 @@ namespace ObjectCloud.Interfaces.Security
         /// <summary>
         /// The current user
         /// </summary>
-        IUser User { get; set; }
+        IUser User { get; }
+
+        /// <summary>
+        /// Logs the current user in.  Do not use this method for impersonating other users; instead, work with the IWebConnection's shell methods.
+        /// </summary>
+        /// <param name="user"></param>
+        void Login(IUser user);
 
         /// <summary>
         /// The maximum age that the session can live

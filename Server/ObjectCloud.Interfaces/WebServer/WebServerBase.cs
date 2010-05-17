@@ -265,7 +265,7 @@ namespace ObjectCloud.Interfaces.WebServer
         }
         private IWebAccessCodeGenerator _JavascriptWebAccessCodeGenerator;
 
-        public IWebResults ShellTo(IUser user, WebMethod method, string url, byte[] content, string contentType, CallingFrom callingFrom, bool bypassJavascript)
+        /*public IWebResults ShellTo(IUser user, WebMethod method, string url, byte[] content, string contentType, CallingFrom callingFrom, bool bypassJavascript)
         {
             ISession session = FileHandlerFactoryLocator.SessionManagerHandler.CreateSession();
 
@@ -283,7 +283,7 @@ namespace ObjectCloud.Interfaces.WebServer
                 method);
 
             return shellWebConnection.GenerateResultsForClient();
-        }
+        }*/
 
         public bool RedirectIfRequestedHostIsDifferent
         {

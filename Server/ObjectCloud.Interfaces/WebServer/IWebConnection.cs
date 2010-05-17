@@ -108,11 +108,25 @@ namespace ObjectCloud.Interfaces.WebServer
         string DoWebComponent(string url);
 
         /// <summary>
+        /// Returns a WebConnection that allows for impersonation of the given user
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        IWebConnection CreateShellConnection(IUser user);
+
+        /// <summary>
         /// Returns the results that would occur if the given URL was passed in
         /// </summary>
         /// <param name="url"></param>
         /// <returns></returns>
         IWebResults ShellTo(string url);
+
+        /// <summary>
+        /// Returns the results that would occur if the given URL was passed in and the specified user was logged in
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        IWebResults ShellTo(string url, IUser user);
 
         /// <summary>
         /// Returns the results that would occur if the given URL was passed in
@@ -209,12 +223,12 @@ namespace ObjectCloud.Interfaces.WebServer
         /// </summary>
         bool BypassJavascript { get; set; }
 
-        /// <summary>
+        /*// <summary>
         /// Temporarily switches the session to tempSession.  Runs the delegate while the session is swapped.
         /// </summary>
         /// <param name="tempSession"></param>
         /// <param name="del"></param>
-        void TemporaryChangeSession(ISession tempSession, GenericVoid del);
+        void TemporaryChangeSession(ISession tempSession, GenericVoid del);*/
 		
 		/// <value>
 		/// The remote endpoint, such as an IPv4 or IPv6 address 

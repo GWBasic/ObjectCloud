@@ -126,7 +126,7 @@ namespace ObjectCloud.Javascript.SubProcess
 
             try
             {
-                ownerSession.User = FileContainer.Owner;
+                ownerSession.Login(FileContainer.Owner);
 
                 IWebConnection ownerWebConnection = new BlockingShellWebConnection(
                     FileHandlerFactoryLocator.WebServer,

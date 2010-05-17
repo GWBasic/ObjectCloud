@@ -729,9 +729,47 @@ namespace ObjectCloud.Interfaces.WebServer
             return webResults.ResultsAsString;
         }
 
+        public IWebConnection CreateShellConnection(IUser user)
+        {
+            ISession shellSession = new ShellSession(Session, user);
+
+            ShellWebConnection shellWebConnection = new BlockingShellWebConnection(
+                this,
+                shellSession,
+                RequestedFile,
+                GetParameters,
+                new byte[0],
+                ContentType,
+                CookiesFromBrowser,
+                CallingFrom);
+
+            shellWebConnection._BypassJavascript = BypassJavascript;
+
+            return shellWebConnection;
+        }
+
         public IWebResults ShellTo(string url)
         {
             return ShellTo(url, CallingFrom, false);
+        }
+
+        public IWebResults ShellTo(string url, IUser user)
+        {
+            ISession shellSession = new ShellSession(Session, user);
+
+            ShellWebConnection shellWebConnection = new BlockingShellWebConnection(
+                WebServer,
+                shellSession,
+                url,
+                new byte[0],
+                ContentType,
+                CookiesFromBrowser,
+                CallingFrom,
+                WebMethod.GET);
+
+            shellWebConnection._BypassJavascript = BypassJavascript;
+
+            return shellWebConnection.GenerateResultsForClient();
         }
 
         public IWebResults ShellTo(string url, CallingFrom callingFrom, bool bypassJavascript)
@@ -794,7 +832,7 @@ namespace ObjectCloud.Interfaces.WebServer
         }
         protected bool _BypassJavascript = false;
 
-        public void TemporaryChangeSession(ISession tempSession, GenericVoid del)
+        /*public void TemporaryChangeSession(ISession tempSession, GenericVoid del)
         {
             ISession realSession = _Session;
             _Session = tempSession;
@@ -807,7 +845,7 @@ namespace ObjectCloud.Interfaces.WebServer
             {
                 _Session = realSession;
             }
-        }
+        }*/
 
         public void ChangeCallingFrom(CallingFrom newCallingFrom, GenericVoid toCall)
         {
@@ -845,9 +883,9 @@ namespace ObjectCloud.Interfaces.WebServer
         private Dictionary<string, string> BrowserCacheUrls = new Dictionary<string, string>();
 
         /// <summary>
-        /// The object that calculates the MD5
+        /// The objects that calculate the MD5.  This weird stack thing is because HashAlgorithm isn't ThreadSafe
         /// </summary>
-        private static HashAlgorithm HashAlgorithm = new System.Security.Cryptography.MD5CryptoServiceProvider();
+        private static Stack<HashAlgorithm> HashCalculators = new Stack<HashAlgorithm>();
 
         /// <summary>
         /// Returns a url that contains the correct browser cache ID for the given URL
@@ -875,7 +913,28 @@ namespace ObjectCloud.Interfaces.WebServer
 
             byte[] scriptBytes = new byte[urlResults.ResultsAsStream.Length];
             urlResults.ResultsAsStream.Read(scriptBytes, 0, scriptBytes.Length);
-            byte[] scriptHash = HashAlgorithm.ComputeHash(scriptBytes);
+
+            // Get a free hash calculator
+            HashAlgorithm hashAlgorithm = null;
+            using (TimedLock.Lock(HashCalculators))
+                if (HashCalculators.Count > 0)
+                    hashAlgorithm = HashCalculators.Pop();
+
+            // If one isn't free, make it
+            if (null == hashAlgorithm)
+                hashAlgorithm = new System.Security.Cryptography.MD5CryptoServiceProvider();
+
+            byte[] scriptHash;
+            try
+            {
+                scriptHash = hashAlgorithm.ComputeHash(scriptBytes);
+            }
+            finally
+            {
+                // Save the hash calculator for reuse
+                using (TimedLock.Lock(HashCalculators))
+                    HashCalculators.Push(hashAlgorithm);
+            }
 
             string hash = Convert.ToBase64String(scriptHash);
 

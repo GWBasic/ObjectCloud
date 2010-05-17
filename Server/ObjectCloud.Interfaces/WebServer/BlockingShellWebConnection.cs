@@ -41,6 +41,17 @@ namespace ObjectCloud.Interfaces.WebServer
             : base(webConnection, method, url, content, contentType, cookiesFromBrowser, callingFrom) { }
 
         public BlockingShellWebConnection(
+            IWebConnection webConnection,
+            ISession session,
+            string requestedFile,
+            RequestParameters getParameters,
+            byte[] content,
+            string contentType,
+            CookiesFromBrowser cookiesFromBrowser,
+            CallingFrom callingFrom)
+            : base(webConnection, session, requestedFile, getParameters, content, contentType, cookiesFromBrowser, callingFrom) { }
+
+        public BlockingShellWebConnection(
             IWebServer webServer,
             ISession session,
             string url,

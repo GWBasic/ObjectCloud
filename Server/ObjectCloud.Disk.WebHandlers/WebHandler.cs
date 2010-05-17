@@ -1383,31 +1383,32 @@ namespace ObjectCloud.Disk.WebHandlers
 
             // If a javascript container was found, make sure there's an up-to-date ExecutionEnvironment
             if (null != javascriptContainer)
-                using (TimedLock.Lock(ExecutionEnvironmentLock))
-					
-					// If the execution environment isn't created, then it isn't ready
+                // Note: a large timeout is used in case a thread is constructing the scope.  Constructing the scope can be time consuming
+                using (TimedLock.Lock(ExecutionEnvironmentLock, TimeSpan.FromSeconds(15)))
+                {
+                    // If the execution environment isn't created, then it isn't ready
                     if (null == _ExecutionEnvironment)
-					{
-		                _ExecutionEnvironment = null;
+                    {
+                        _ExecutionEnvironment = null;
                         return false;
-					}
-			
-					// Or it's based around the wrong file, then it isn't ready
-                    else if (_ExecutionEnvironment.JavascriptContainer != javascriptContainer)
-					{
-		                _ExecutionEnvironment = null;
-                        return false;
-					}
-			
-					// Or it's outdated, then it isn't ready
-                    else if (javascriptContainer.LastModified > _ExecutionEnvironment.JavascriptLastModified)
-					{
-		                _ExecutionEnvironment = null;
-                        return false;
-					}
-					else
-	                    return true;
+                    }
 
+                    // Or it's based around the wrong file, then it isn't ready
+                    else if (_ExecutionEnvironment.JavascriptContainer != javascriptContainer)
+                    {
+                        _ExecutionEnvironment = null;
+                        return false;
+                    }
+
+                    // Or it's outdated, then it isn't ready
+                    else if (javascriptContainer.LastModified > _ExecutionEnvironment.JavascriptLastModified)
+                    {
+                        _ExecutionEnvironment = null;
+                        return false;
+                    }
+                    else
+                        return true;
+                }
 			else
 			{
 				// There is no execution environment
@@ -1439,7 +1440,8 @@ namespace ObjectCloud.Disk.WebHandlers
                 return null;
 
 			IFileContainer javascriptContainer;
-            using (TimedLock.Lock(ExecutionEnvironmentLock))
+            // Note: a large timeout is used in case a thread is constructing the scope.  Constructing the scope can be time consuming
+            using (TimedLock.Lock(ExecutionEnvironmentLock, TimeSpan.FromSeconds(15)))
 				if (!IsExecutionEnvironmentReady_Helper(out javascriptContainer))
 				{
 					IExecutionEnvironmentFactory factory = FileHandlerFactoryLocator.ExecutionEnvironmentFactory;

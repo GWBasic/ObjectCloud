@@ -720,9 +720,9 @@ namespace ObjectCloud.WebServer.Implementation
         }
 
         /// <summary>
-        /// The object that calculates the MD5
+        /// The objects that calculate the MD5.  This weird stack thing is because HashAlgorithm isn't ThreadSafe
         /// </summary>
-        private HashAlgorithm HashAlgorithm = new System.Security.Cryptography.MD5CryptoServiceProvider();
+        private Stack<HashAlgorithm> HashCalculators = new Stack<HashAlgorithm>();
 
         /// <summary>
         /// Given an enumeration of script names, this returns ALL of the scripts that are needed, and their MD5s for caching.  This
@@ -803,7 +803,28 @@ namespace ObjectCloud.WebServer.Implementation
                     scriptAndMD5.ScriptName = scriptName;
 
                     byte[] scriptBytes = System.Text.Encoding.UTF8.GetBytes(loadedScriptCache[scriptName]);
-                    byte[] scriptHash = HashAlgorithm.ComputeHash(scriptBytes);
+
+                    // Get a free hash calculator
+                    HashAlgorithm hashAlgorithm = null;
+                    using (TimedLock.Lock(HashCalculators))
+                        if (HashCalculators.Count > 0)
+                            hashAlgorithm = HashCalculators.Pop();
+
+                    // If one isn't free, make it
+                    if (null == hashAlgorithm)
+                        hashAlgorithm = new System.Security.Cryptography.MD5CryptoServiceProvider();
+
+                    byte[] scriptHash;
+                    try
+                    {
+                        scriptHash = hashAlgorithm.ComputeHash(scriptBytes);
+                    }
+                    finally
+                    {
+                        // Save the hash calculator for reuse
+                        using (TimedLock.Lock(HashCalculators))
+                            HashCalculators.Push(hashAlgorithm);
+                    }
 
                     scriptAndMD5.MD5 = Convert.ToBase64String(scriptHash);
 

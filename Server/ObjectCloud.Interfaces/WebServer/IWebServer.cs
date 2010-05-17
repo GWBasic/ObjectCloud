@@ -100,7 +100,7 @@ namespace ObjectCloud.Interfaces.WebServer
         /// </summary>
         IWebAccessCodeGenerator JavascriptWebAccessCodeGenerator { get; set; }
 
-        /// <summary>
+        /*// <summary>
         /// Shells to the URL as the given user, with the given postBody, HTTP method, and calling security level
         /// </summary>
         /// <param name="user"></param>
@@ -118,7 +118,7 @@ namespace ObjectCloud.Interfaces.WebServer
             byte[] content,
             string contentType,
             CallingFrom callingFrom,
-            bool bypassJavascript);
+            bool bypassJavascript);*/
 
         /// <summary>
         /// When set to true, if the incoming HTTP request specifies a host that isn't exactly what the configured hostname is, then the

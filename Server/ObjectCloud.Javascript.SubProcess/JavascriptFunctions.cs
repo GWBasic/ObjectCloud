@@ -420,30 +420,25 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
 
-            ISession tempSession = functionCallContext.ScopeWrapper.FileHandlerFactoryLocator.SessionManagerHandler.CreateSession();
-
             ID<IUserOrGroup, Guid>? ownerId = functionCallContext.ScopeWrapper.FileContainer.OwnerId;
 
+            IUser owner;
             if (null != ownerId)
-            {
-                IUser owner = functionCallContext.ScopeWrapper.FileHandlerFactoryLocator.UserManagerHandler.GetUser(ownerId.Value);
-                tempSession.User = owner;
-            }
+                owner = functionCallContext.ScopeWrapper.FileHandlerFactoryLocator.UserManagerHandler.GetUser(ownerId.Value);
+            else
+                owner = functionCallContext.WebConnection.WebServer.FileHandlerFactoryLocator.UserFactory.AnonymousUser;
+
+            // When calling as the owner, a shell web connection is pushed that impersonates the owner
+            IWebConnection shellConnection = functionCallContext.WebConnection.CreateShellConnection(owner);
+            FunctionCaller.WebConnectionStack.Push(shellConnection);
 
             try
             {
-                object toReturn = null;
-
-                functionCallContext.WebConnection.TemporaryChangeSession(tempSession, delegate()
-                {
-                    toReturn = callback.Call(new object[0]);
-                });
-
-                return toReturn;
+                return callback.Call(new object[0]);
             }
             finally
             {
-                functionCallContext.ScopeWrapper.FileHandlerFactoryLocator.SessionManagerHandler.EndSession(tempSession.SessionId);
+                FunctionCaller.WebConnectionStack.Pop();
             }
         }
 

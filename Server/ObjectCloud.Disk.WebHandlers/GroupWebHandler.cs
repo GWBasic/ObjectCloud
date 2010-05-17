@@ -88,24 +88,19 @@ namespace ObjectCloud.Disk.WebHandlers
                 throw new WebResultsOverrideException(WebResults.FromString(
                     Status._403_Forbidden, "You must be logged in to join a group"));
 
-            IUser user = webConnection.Session.User;
+            ID<IUserOrGroup, Guid> ownerId = 
+                Group.OwnerId != null ? Group.OwnerId.Value : FileHandlerFactoryLocator.UserFactory.RootUser.Id;
+            
+            IUser groupOwner = FileHandlerFactoryLocator.UserManagerHandler.GetUser(ownerId);
 
-            try
-            {
-                ID<IUserOrGroup, Guid> ownerId = 
-                    Group.OwnerId != null ? Group.OwnerId.Value : FileHandlerFactoryLocator.UserFactory.RootUser.Id;
-                
-                IUser owner = FileHandlerFactoryLocator.UserManagerHandler.GetUser(ownerId);
+            IWebConnection shellWebConnection = webConnection.CreateShellConnection(groupOwner);
 
-                webConnection.Session.User = owner;
-
-                return UserManagerWebHandler.AddUserToGroup(
-                    webConnection, null, Group.Id.ToString(), null, user.Id.ToString());
-            }
-            finally
-            {
-                webConnection.Session.User = user;
-            }
+            return UserManagerWebHandler.AddUserToGroup(
+                shellWebConnection,
+                null,
+                Group.Id.ToString(),
+                null,
+                webConnection.Session.User.Id.ToString());
         }
 
         /// <summary>
@@ -121,24 +116,15 @@ namespace ObjectCloud.Disk.WebHandlers
                 throw new WebResultsOverrideException(WebResults.FromString(
                     Status._403_Forbidden, "This group is not public.  Contact the owner to leave."));
 
-            IUser user = webConnection.Session.User;
+            ID<IUserOrGroup, Guid> ownerId =
+                Group.OwnerId != null ? Group.OwnerId.Value : FileHandlerFactoryLocator.UserFactory.RootUser.Id;
 
-            try
-            {
-                ID<IUserOrGroup, Guid> ownerId =
-                    Group.OwnerId != null ? Group.OwnerId.Value : FileHandlerFactoryLocator.UserFactory.RootUser.Id;
+            IUser owner = FileHandlerFactoryLocator.UserManagerHandler.GetUser(ownerId);
 
-                IUser owner = FileHandlerFactoryLocator.UserManagerHandler.GetUser(ownerId);
+            IWebConnection shellWebConnection = webConnection.CreateShellConnection(owner);
 
-                webConnection.Session.User = owner;
-
-                return UserManagerWebHandler.RemoveUserFromGroup(
-                    webConnection, null, Group.Id.ToString(), null, user.Id.ToString());
-            }
-            finally
-            {
-                webConnection.Session.User = user;
-            }
+            return UserManagerWebHandler.RemoveUserFromGroup(
+                shellWebConnection, null, Group.Id.ToString(), null, webConnection.Session.User.Id.ToString());
         }
     }
 }

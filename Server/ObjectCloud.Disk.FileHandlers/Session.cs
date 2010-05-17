@@ -56,22 +56,23 @@ namespace ObjectCloud.Disk.FileHandlers
                     return _User;
                 }
             }
-            set
-            {
-                using (TimedLock.Lock(userLock))
-                {
-                    SessionManagerHandler.DatabaseConnection.Session.Update(Session_Table.SessionID == SessionId.Value,
-                        delegate(ISession_Writable session)
-                        {
-                            session.UserID = value.Id;
-                        });
-
-                    _User = value;
-                    FilesTouchedForUrls.Clear();
-                }
-            }
         }
         private IUser _User = null;
+
+        public void Login(IUser user)
+        {
+            using (TimedLock.Lock(userLock))
+            {
+                SessionManagerHandler.DatabaseConnection.Session.Update(Session_Table.SessionID == SessionId.Value,
+                    delegate(ISession_Writable session)
+                    {
+                        session.UserID = user.Id;
+                    });
+
+                _User = user;
+                FilesTouchedForUrls.Clear();
+            }
+        }
 
         /// <summary>
         /// Provides a lock for syncronizing user access

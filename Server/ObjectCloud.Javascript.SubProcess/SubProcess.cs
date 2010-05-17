@@ -180,7 +180,7 @@ namespace ObjectCloud.Javascript.SubProcess
 
             try
             {
-                ownerSession.User = javascriptContainer.Owner;
+                ownerSession.Login(javascriptContainer.Owner);
 
                 IWebConnection ownerWebConnection = new BlockingShellWebConnection(
                     fileHandlerFactoryLocator.WebServer,
