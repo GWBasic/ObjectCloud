@@ -51,7 +51,7 @@ namespace ObjectCloud.Common
 		/// All of the unhandled exceptions that occured, paired with the object that triggered the exception
 		/// </returns>
 		public static IEnumerable<KeyValuePair<T,Exception>> MultithreadedEach(
-			float numThreadsPerCPU,
+			double numThreadsPerCPU,
 		    IEnumerable<T> toEnumerate,
 		    GenericArgument<T> del)
 		{
@@ -63,11 +63,11 @@ namespace ObjectCloud.Common
 			if (0 == list.Count)
 				return exceptions;
 				
-			float numThreadsFloat = numThreadsPerCPU * Convert.ToSingle(Environment.ProcessorCount);
+			double numThreadsFloat = numThreadsPerCPU * Convert.ToSingle(Environment.ProcessorCount);
 			int numThreads = Convert.ToInt32(numThreadsFloat);
 			
 			// If the number of threads is less then a whole number, increase it
-			if (Convert.ToSingle(numThreads) < numThreadsFloat)
+			if (Convert.ToDouble(numThreads) < numThreadsFloat)
 				numThreads++;
 			
 			// Make sure that there is at least one thread
