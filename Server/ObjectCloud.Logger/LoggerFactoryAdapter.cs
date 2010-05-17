@@ -12,6 +12,7 @@ using Common.Logging;
 using Common.Logging.Simple;
 
 using ObjectCloud.Interfaces.Disk;
+using ObjectCloud.Interfaces.Security;
 using ObjectCloud.Interfaces.WebServer;
 
 using LogLevel = Common.Logging.LogLevel;

@@ -13,7 +13,7 @@ using ObjectCloud.DataAccess.SessionManager;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
 
-using ISession = ObjectCloud.Interfaces.WebServer.ISession;
+using ISession = ObjectCloud.Interfaces.Security.ISession;
 
 namespace ObjectCloud.Disk.FileHandlers
 {
@@ -78,7 +78,7 @@ namespace ObjectCloud.Disk.FileHandlers
             DatabaseConnection.Session.Delete(Session_Table.WhenToDelete <= DateTime.UtcNow);
         }
 
-        public ObjectCloud.Interfaces.WebServer.ISession CreateSession()
+        public ISession CreateSession()
         {
             ID<ISession, Guid> sessionId = new ID<ISession, Guid>(Guid.NewGuid());
 

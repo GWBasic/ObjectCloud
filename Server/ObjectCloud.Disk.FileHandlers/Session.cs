@@ -12,7 +12,7 @@ using ObjectCloud.DataAccess.SessionManager;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
 
-using ISession = ObjectCloud.Interfaces.WebServer.ISession;
+using ISession = ObjectCloud.Interfaces.Security.ISession;
 
 namespace ObjectCloud.Disk.FileHandlers
 {

@@ -91,6 +91,7 @@
     <Compile Include="Security\CallingFrom.cs" />
     <Compile Include="Security\FilePermissionEnum.cs" />
     <Compile Include="Security\GroupType.cs" />
+    <Compile Include="Security\ISession.cs" />
     <Compile Include="Security\IUserFactory.cs" />
     <Compile Include="Disk\IUserHandler.cs" />
     <Compile Include="Disk\IUserManagerHandler.cs" />
@@ -114,7 +115,6 @@
     <Compile Include="WebServer\IWebAccessCodeGenerator.cs" />
     <Compile Include="WebServer\IWebConnectionContent.cs" />
     <Compile Include="WebServer\IHasWebResults.cs" />
-    <Compile Include="WebServer\ISession.cs" />
     <Compile Include="WebServer\IWebComponentResolver.cs" />
     <Compile Include="WebServer\IWebConnection.cs" />
     <Compile Include="WebServer\IWebHandler.cs" />

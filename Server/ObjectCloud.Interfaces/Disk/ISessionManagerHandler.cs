@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Text;
 
 using ObjectCloud.Common;
+using ObjectCloud.Interfaces.Security;
 using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.Interfaces.Disk

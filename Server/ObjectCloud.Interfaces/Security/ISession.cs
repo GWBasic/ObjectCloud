@@ -10,7 +10,7 @@ using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
 
-namespace ObjectCloud.Interfaces.WebServer
+namespace ObjectCloud.Interfaces.Security
 {
     /// <summary>
     /// Encapsulates everything about the current session

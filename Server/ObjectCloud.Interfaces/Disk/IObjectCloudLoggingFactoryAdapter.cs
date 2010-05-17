@@ -3,6 +3,7 @@ using System.Net;
 
 using Common.Logging;
 
+using ObjectCloud.Interfaces.Security;
 using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.Interfaces.Disk
