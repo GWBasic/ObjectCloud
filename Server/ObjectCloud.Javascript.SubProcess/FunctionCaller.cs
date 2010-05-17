@@ -223,8 +223,52 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <summary>
         /// The current state of CallingFrom.  This always defaults to Web, and only within the context of a call to elevate() is it increased
         /// </summary>
+		/*internal static CallingFrom CallingFrom
+		{
+			get
+			{
+				if (null == _CallingFrom)
+					_CallingFrom = new Wrapped<CallingFrom>(CallingFrom.Web);
+				
+				return _CallingFrom.Value;
+			}
+			set
+			{
+				if (null == _CallingFrom)
+					_CallingFrom = new Wrapped<CallingFrom>(value);
+				else
+					_CallingFrom.Value = value;
+			}
+		}
         [ThreadStatic]
-        internal static CallingFrom CallingFrom = CallingFrom.Web;
+        private static Wrapped<CallingFrom> _CallingFrom = null;*/
+		[ThreadStatic]
+		internal static CallingFrom CallingFrom;
+
+        /// <summary>
+        /// The current state of bypassing Javascript
+        /// </summary>
+        /*internal static bool BypassJavascript
+		{
+			get
+			{
+				if (null == _BypassJavascript)
+					_BypassJavascript = new Wrapped<bool>(false);
+				
+				return _BypassJavascript.Value;
+			}
+			set
+			{
+				if (null == _BypassJavascript)
+					_BypassJavascript = new Wrapped<bool>(value);
+				else
+					_BypassJavascript.Value = value;
+			}
+		}
+        [ThreadStatic]
+        private static Wrapped<bool> _BypassJavascript = null;*/
+        [ThreadStatic]
+		internal static bool BypassJavascript;
 
         /// <summary>
         /// The method name
@@ -332,6 +376,7 @@ namespace ObjectCloud.Javascript.SubProcess
             _Current = this;
             CallingFrom priorCallingFrom = CallingFrom;
             CallingFrom = CallingFrom.Web;
+			BypassJavascript = webConnection.BypassJavascript;
 
             FilePermissionEnum? usersPermission = FileContainer.LoadPermission(webConnection.Session.User.Id);
 

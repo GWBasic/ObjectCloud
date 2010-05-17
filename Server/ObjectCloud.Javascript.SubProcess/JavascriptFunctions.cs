@@ -208,8 +208,8 @@ namespace ObjectCloud.Javascript.SubProcess
                 url,
                 content,
                 contentType,
-                functionCallContext.CallingFrom,
-                functionCallContext.WebConnection.BypassJavascript);
+                FunctionCaller.CallingFrom,
+                FunctionCaller.BypassJavascript);
 
 			if (null != options)
 			{
@@ -238,7 +238,7 @@ namespace ObjectCloud.Javascript.SubProcess
         public static object Shell_GET(string file, object method, Dictionary<string, object> getArguments, bool? bypassJavascriptNullable)
         {
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
-            bool bypassJavascript = bypassJavascriptNullable != null ? bypassJavascriptNullable.Value : false;
+            bool bypassJavascript = bypassJavascriptNullable != null ? bypassJavascriptNullable.Value : FunctionCaller.BypassJavascript;
 
             string url = file;
 
@@ -249,7 +249,7 @@ namespace ObjectCloud.Javascript.SubProcess
             if (null != method)
                 url = HTTPStringFunctions.AppendGetParameter(url, "Method", method.ToString());
 
-            IWebResults shellResult = functionCallContext.WebConnection.ShellTo(url, functionCallContext.CallingFrom, bypassJavascript);
+            IWebResults shellResult = functionCallContext.WebConnection.ShellTo(url, FunctionCaller.CallingFrom, bypassJavascript);
 
             return ConvertWebResultToJavascript(shellResult);
         }
@@ -264,7 +264,7 @@ namespace ObjectCloud.Javascript.SubProcess
         public static object Shell_POST_urlencoded(string file, object method, Dictionary<string, object> postArguments, bool? bypassJavascriptNullable)
         {
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
-            bool bypassJavascript = bypassJavascriptNullable != null ? bypassJavascriptNullable.Value : false;
+            bool bypassJavascript = bypassJavascriptNullable != null ? bypassJavascriptNullable.Value : FunctionCaller.BypassJavascript;
 
             string url = file;
 
@@ -284,7 +284,7 @@ namespace ObjectCloud.Javascript.SubProcess
                 url,
                 requestParameters.ToBytes(),
                 "application/x-www-form-urlencoded",
-                functionCallContext.CallingFrom,
+                FunctionCaller.CallingFrom,
                 bypassJavascript);
 
             return ConvertWebResultToJavascript(shellResult);
@@ -300,7 +300,7 @@ namespace ObjectCloud.Javascript.SubProcess
         public static object Shell_POST(string file, object method, object toPost, bool? bypassJavascriptNullable)
         {
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
-            bool bypassJavascript = bypassJavascriptNullable != null ? bypassJavascriptNullable.Value : false;
+            bool bypassJavascript = bypassJavascriptNullable != null ? bypassJavascriptNullable.Value : FunctionCaller.BypassJavascript;
 
             string url = file;
 
@@ -326,7 +326,7 @@ namespace ObjectCloud.Javascript.SubProcess
                 url,
                 content,
                 "",
-                functionCallContext.CallingFrom,
+                FunctionCaller.CallingFrom,
                 bypassJavascript);
 
             return ConvertWebResultToJavascript(shellResult);
@@ -381,10 +381,8 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <returns></returns>
         public static object bypassJavascript(SubProcess.Callback callback)
         {
-            FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
-
-            bool oldBypassJavascript = functionCallContext.WebConnection.BypassJavascript;
-            functionCallContext.WebConnection.BypassJavascript = true;
+            bool oldBypassJavascript = FunctionCaller.BypassJavascript;
+            FunctionCaller.BypassJavascript = true;
 
             try
             {
@@ -392,7 +390,7 @@ namespace ObjectCloud.Javascript.SubProcess
             }
             finally
             {
-                functionCallContext.WebConnection.BypassJavascript = oldBypassJavascript;
+                FunctionCaller.BypassJavascript = oldBypassJavascript;
             }
         }
 

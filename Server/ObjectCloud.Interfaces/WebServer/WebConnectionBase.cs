@@ -828,7 +828,6 @@ namespace ObjectCloud.Interfaces.WebServer
         public bool BypassJavascript
         {
             get { return _BypassJavascript; }
-            set { _BypassJavascript = value; }
         }
         protected bool _BypassJavascript = false;
 

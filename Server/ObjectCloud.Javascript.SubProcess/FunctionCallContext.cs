@@ -19,12 +19,6 @@ namespace ObjectCloud.Javascript.SubProcess
     /// </summary>
     public struct FunctionCallContext
     {
-        public CallingFrom CallingFrom
-        {
-            get { return _CallingFrom; }
-        }
-        private CallingFrom _CallingFrom;
-
         public ScopeWrapper ScopeWrapper
         {
             get { return _ScopeWrapper; }
@@ -51,7 +45,6 @@ namespace ObjectCloud.Javascript.SubProcess
             FunctionCallContext toReturn = new FunctionCallContext();
             toReturn._ScopeWrapper = current.ScopeWrapper;
             toReturn._WebConnection = FunctionCaller.WebConnection;
-            toReturn._CallingFrom = FunctionCaller.CallingFrom;
 
             return toReturn;
         }

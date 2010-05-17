@@ -221,7 +221,7 @@ namespace ObjectCloud.Interfaces.WebServer
         /// <summary>
         /// When set to true, server-side Javascript should be bypassed
         /// </summary>
-        bool BypassJavascript { get; set; }
+        bool BypassJavascript { get; }
 
         /*// <summary>
         /// Temporarily switches the session to tempSession.  Runs the delegate while the session is swapped.
