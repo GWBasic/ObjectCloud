@@ -186,7 +186,9 @@ namespace ObjectCloud.Javascript.SubProcess
             {
                 try
                 {
-                    log.Error("Error finalizing: ", e);
+					// Swallow errors that occur when exiting
+					if (FileHandlerFactoryLocator.WebServer.Running)
+                    		log.Error("Error finalizing: ", e);
                 }
                 catch { }
             }

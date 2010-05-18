@@ -121,9 +121,15 @@ namespace ObjectCloud.WebServer.Implementation
             {
                 Close();
             }
-            catch (SocketException se)
+			// Exceptions that occur when a socket is closed are just swallowed; this keeps the logs clean
+			catch (ObjectDisposedException)
+			{
+                WebConnectionIOState = WebConnectionIOState.Disconnected;
+                Close();
+            }
+            catch (SocketException)// se)
             {
-                log.InfoFormat("Error when performing IO for a connection from {0}", se, RemoteEndPoint);
+                //log.InfoFormat("Error when performing IO for a connection from {0}", se, RemoteEndPoint);
 
                 WebConnectionIOState = WebConnectionIOState.Disconnected;
                 Close();

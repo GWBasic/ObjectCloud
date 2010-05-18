@@ -75,7 +75,7 @@ namespace ObjectCloud
                             });
 
                         forceExitThread.Name = "Forces the process to exit";
-                        forceExitThread.IsBackground = false;
+                        forceExitThread.IsBackground = true;
 
                         forceExitThread.Start();
                     }

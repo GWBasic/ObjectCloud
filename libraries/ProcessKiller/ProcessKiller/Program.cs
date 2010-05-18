@@ -28,12 +28,21 @@ namespace ProcessKiller
             {
 				int parentProcessId = Convert.ToInt32(args[0]);
 				
-				Process parent = Process.GetProcessById(parentProcessId);
+				Process parent;
+				try
+				{
+					parent = Process.GetProcessById(parentProcessId);
+				}
+				catch (ArgumentException)
+				{
+					// If the parent process can't be obtained, just return.  It means that the parent process is done
+					return;
+				}
 				
 				try
 				{
-					Console.WriteLine("Got parent process");
-					Console.WriteLine(parent.ToString());
+					//Console.WriteLine("Got parent process");
+					//Console.WriteLine(parent.ToString());
 					
 					parent.EnableRaisingEvents = true;
 					
@@ -67,7 +76,7 @@ namespace ProcessKiller
 						}
 					} while (!parent.HasExited);
 					
-					Console.WriteLine("Parent process ended");
+					//Console.WriteLine("Parent process ended");
 					StayOpen = false;
 				}
 				finally
@@ -77,14 +86,14 @@ namespace ProcessKiller
             }
             catch (Exception e)
             {
-                System.Console.Error.WriteLine(e.ToString());
+                Console.Error.WriteLine(e.ToString());
 			}
 			finally
 			{
                 foreach(Process p in new List<Process>(SubProcesses))
                     try
                     {
-						Console.WriteLine("Killing: " + p.ToString());
+						//Console.WriteLine("Killing: " + p.ToString());
                         p.Kill();
                     }
                     catch { }
@@ -104,12 +113,12 @@ namespace ProcessKiller
 				{
 					if (processId.Length > 0)
 					{
-						Console.WriteLine(processId);
+						//Console.WriteLine(processId);
 						
 	                    Process newProcess = Process.GetProcessById(Convert.ToInt32(processId.Trim()));
 					
-						Console.WriteLine("Got sub process");
-						Console.WriteLine(newProcess.ToString());
+						//Console.WriteLine("Got sub process");
+						//Console.WriteLine(newProcess.ToString());
 					
 						newProcess.EnableRaisingEvents = true;
 	                    newProcess.Exited += new EventHandler(newProcess_Exited);
@@ -145,8 +154,8 @@ namespace ProcessKiller
 				signals.Add(new UnixSignal(quitSignal));
  
 	        // Wait for a signal to be delivered
-			while (StayOpen)
-        			Console.WriteLine(UnixSignal.WaitAny(signals.ToArray(), -1).ToString());
+			while (StayOpen) {}
+        			//Console.WriteLine(UnixSignal.WaitAny(signals.ToArray(), -1).ToString());
 			
 			Process.GetCurrentProcess().Kill();
 		}
