@@ -154,8 +154,9 @@ namespace ProcessKiller
 				signals.Add(new UnixSignal(quitSignal));
  
 	        // Wait for a signal to be delivered
-			while (StayOpen) {}
+			while (StayOpen)
         			//Console.WriteLine(UnixSignal.WaitAny(signals.ToArray(), -1).ToString());
+        			UnixSignal.WaitAny(signals.ToArray(), -1);
 			
 			Process.GetCurrentProcess().Kill();
 		}
