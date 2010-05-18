@@ -1072,7 +1072,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 filename = FileContainer.ParentDirectoryHandler.FileContainer.FullPath + "/" + filename;
 			
 			// The default relationship is "link"
-			if (null != relationship)
+			if (null == relationship)
 				relationship = "link";
 
             IFileContainer relatedContainer;
