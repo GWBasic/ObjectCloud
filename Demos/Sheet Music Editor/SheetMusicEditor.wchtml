@@ -1,0 +1,51 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+   <head>
+      <? Scripts(/API/Prototype.js, /SheetMusicEditor/SheetMusicEditor.js, <? $_GET["FileName"] ?>?Method=GetJSW&assignToVariable=File) ?>
+      <title>Web-based sheet music editor</title>
+      <link href="/Pages/objectcloud.css" type="text/css" rel="stylesheet" />
+      <link href="/API/proto.menu.css" type="text/css" rel="stylesheet" />
+
+      <script>
+         function render()
+         {
+            renderSheetMusic($('musicInput').value, $('sheetmusic'))
+         }
+
+         window.onload = render;
+
+         function save()
+         {
+            File.WriteAll(
+               $('musicInput').value,
+               function() { alert('saved'); },
+               function() { alert('error'); });
+         }
+      </script>
+
+   </head>
+   <body>
+      <h1>GWBasic's Web Based Sheet Music Editor</h1>
+
+      <!-- This is where the sheet music will be displayed -->
+      <div id="sheetmusic"></div>
+
+      <!-- This is where the sheet music is typed in -->
+      <div id="editor">
+         <textarea
+            id="musicInput" style="width: 95%" onkeyup="render()"
+            ><? WebComponent($_GET["FileName"] . "?Method=ReadAll") ?></textarea><br />
+         <input type="button" value="save" onclick="save()" />
+      </div>
+
+      <script>
+
+         var permission = <? WebComponent($_GET["FileName"] . "?Method=GetPermissionAsJSON") ?>;
+         if (!permission.CanWrite)
+            $('editor').hide();
+
+      </script>
+
+   </body>
+</html>
