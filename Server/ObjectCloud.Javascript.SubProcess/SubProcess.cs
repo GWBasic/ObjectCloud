@@ -21,7 +21,7 @@ using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.Javascript.SubProcess
 {
-    public class SubProcess : IDisposable
+    public class SubProcess : System.Runtime.ConstrainedExecution.CriticalFinalizerObject, IDisposable
     {
         static ILog log = LogManager.GetLogger<SubProcess>();
 
@@ -800,6 +800,8 @@ namespace ObjectCloud.Javascript.SubProcess
 
                 lock (RespondKey)
                 {
+                    bool checkForOutput;
+
                     // (double-check in case something changed while waiting for the lock...)
                     // If there's a response waiting, return it
                     lock (InCommandsByThreadId)
@@ -809,28 +811,34 @@ namespace ObjectCloud.Javascript.SubProcess
                             InCommandsByThreadId.Remove(threadID);
                             return inCommand;
                         }
+
+                        checkForOutput = InCommandsByThreadId.Count == 0;
                     }
 
                     // else, if there isn't a waiting response that came in on another thread, and if there aren't waiting responses, wait for a response
                     if (Process.StandardOutput.EndOfStream || Process.HasExited)
                         throw new JavascriptException("The sub process has exited");
 
-                    string inCommandString = _Process.StandardOutput.ReadLine();
-					
-					if (null == inCommandString)
-						log.Warn("Null recieved from sub process");
-					
-                    inCommand = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
+                    // Only wait for output if there are no pending responses.  If there are pending responses, let the waiting threads fight until they all get the responses
+                    if (checkForOutput)
+                    {
+                        string inCommandString = _Process.StandardOutput.ReadLine();
 
-                    object commandThreadID = inCommand["ThreadID"];
+                        if (null == inCommandString)
+                            log.Warn("Null recieved from sub process");
 
-                    // If this is the command for this thread, return it
-                    if (commandThreadID == threadID)
-                        return inCommand;
+                        inCommand = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
 
-                    // else, stuff it into the dictionary of results
-                    lock (InCommandsByThreadId)
-                        InCommandsByThreadId[commandThreadID] = inCommand;
+                        object commandThreadID = inCommand["ThreadID"];
+
+                        // If this is the command for this thread, return it
+                        if (commandThreadID == threadID)
+                            return inCommand;
+
+                        // else, stuff it into the dictionary of results
+                        lock (InCommandsByThreadId)
+                            InCommandsByThreadId[commandThreadID] = inCommand;
+                    }
                 }
 
                 // Make sure that a context switch occurs after the lock is released
@@ -951,7 +959,20 @@ namespace ObjectCloud.Javascript.SubProcess
 
         ~SubProcess()
         {
-            Dispose();
+            try
+            {
+                Dispose();
+            }
+            catch { }
+            finally
+            {
+                try
+                {
+                    if (!_Process.HasExited)
+	                    _Process.Kill();
+                }
+                catch { }
+            }
         }
     }
 

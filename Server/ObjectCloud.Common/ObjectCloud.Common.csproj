@@ -51,6 +51,17 @@
     <Compile Include="EventArgs.cs" />
     <Compile Include="EventBus.cs" />
     <Compile Include="GuidFunctions.cs" />
+    <Compile Include="JmBucknall.Structures\IPriorityConverter.cs" />
+    <Compile Include="JmBucknall.Structures\LimitedPriorityQueue.cs" />
+    <Compile Include="JmBucknall.Structures\LockFreeQueue.cs" />
+    <Compile Include="JmBucknall.Structures\LockFreeStack.cs" />
+    <Compile Include="JmBucknall.Structures\SingleLinkNode.cs" />
+    <Compile Include="JmBucknall.Structures\StringPriorityConverter.cs" />
+    <Compile Include="JmBucknall.Threading\ITask.cs" />
+    <Compile Include="JmBucknall.Threading\SyncMethods.cs" />
+    <Compile Include="JmBucknall.Threading\Task.cs" />
+    <Compile Include="JmBucknall.Threading\ThreadPool.cs" />
+    <Compile Include="JmBucknall.Threading\WaitableThread.cs" />
     <Compile Include="MimeReader.cs" />
     <Compile Include="MulticastEventWithTimeout.cs" />
     <Compile Include="MultiStream.cs" />
