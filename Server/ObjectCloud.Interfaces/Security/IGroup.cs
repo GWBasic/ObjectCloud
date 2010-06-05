@@ -13,7 +13,7 @@ namespace ObjectCloud.Interfaces.Security
 	/// </summary>
 	public interface IGroup : IUserOrGroup
 	{
-		//// <value>
+		/// <value>
 		/// The group's owner
 		/// </value>
 		ID<IUserOrGroup, Guid>? OwnerId { get; }
