@@ -58,7 +58,7 @@ namespace ObjectCloud.Common
             {
                 long numReadersAndWriteRequested = NumReadersAndWriteRequested;
 
-                if (numReadersAndWriteRequested > int.MaxValue)
+                if (numReadersAndWriteRequested >= WriteRequestedFlag)
                 {
                     // This queues readers until the writer competes.  A tradeoff is that if writers are queued, they will compete with readers
                     lock (WriterKey) { }
@@ -66,12 +66,6 @@ namespace ObjectCloud.Common
                     // By looping and sleeping after a write lock completes, priority is given to queued writers
                     loop = true;
                     Thread.Sleep(1);
-                }
-                else if (numReadersAndWriteRequested == int.MaxValue)
-                {
-                    // Corner case where there are too many readers for the system to handle
-                    loop = true;
-                    Thread.Sleep(0);
                 }
                 else
                 {
@@ -88,7 +82,7 @@ namespace ObjectCloud.Common
         /// <summary>
         /// The flag that is added to NumReadersAndWriteRequested when a writer has a lock and is waiting for all readers to complete
         /// </summary>
-        const long WriteRequestedFlag = 2147483648;
+        const long WriteRequestedFlag = 214748364800;
 
         /// <summary>
         /// Helps end a write lock by allowing the caller to use the "using" syntax
