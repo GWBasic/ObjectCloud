@@ -1,4 +1,4 @@
-﻿// Copyright 2009, 2010 Andrew Rondeau
+// Copyright 2009, 2010 Andrew Rondeau
 // This code is released under the Simple Public License (SimPL) 2.0.  Some additional privelages are granted.
 // For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
 
@@ -73,6 +73,9 @@ namespace ObjectCloud.Common
 
                     loop = numReadersAndWriteRequested != Interlocked.CompareExchange(
                         ref NumReadersAndWriteRequested, newNumReadersAndWriteRequested, numReadersAndWriteRequested);
+					
+					if (loop)
+						Thread.Sleep(1);
                 }
             } while (loop);
 
