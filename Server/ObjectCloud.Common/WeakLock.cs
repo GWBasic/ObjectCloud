@@ -21,11 +21,13 @@ namespace ObjectCloud.Common
 		/// <summary>
 		/// Blocks while there is a lock.  After calling this function, the resource will be read-safe for 25 miliseconds, or whatever is set in LockDelay
 		/// </summary>
-		public void PeekRead()
+		public void PeekRead()// take optional argument that is how long of a delay is needed
 		{
 			// Spin while there is a writer active
 			while (LockAquired)
 				lock (Key);
+			
+			// calculate when the next instant is that a writelock can be established, then set it in a check loop that verifies that the set value is >= to the desired value
 		}
 		
         /// <summary>
@@ -77,6 +79,7 @@ namespace ObjectCloud.Common
 			
 			LockAquired = true;
 
+			// Only sleep based on a set value
 			Thread.Sleep(LockDelay);
 			
             return new WriteLockCompleter(this);
