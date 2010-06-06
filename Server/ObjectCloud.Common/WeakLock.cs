@@ -25,7 +25,8 @@ namespace ObjectCloud.Common
 		{
 			// Spin while there is a writer active
 			while (LockAquired)
-				lock (Key);
+                lock (Key)
+                { }
 			
 			// calculate when the next instant is that a writelock can be established, then set it in a check loop that verifies that the set value is >= to the desired value
 		}
