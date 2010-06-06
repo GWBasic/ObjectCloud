@@ -66,6 +66,7 @@
     <Compile Include="MulticastEventWithTimeout.cs" />
     <Compile Include="MultiStream.cs" />
     <Compile Include="NonBlockingConsoleWriter.cs" />
+    <Compile Include="ReaderOrExclusiveLock.cs" />
     <Compile Include="Set.cs" />
     <Compile Include="StreamFunctions.cs" />
     <Compile Include="StringGenerator.cs" />
