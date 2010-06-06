@@ -66,6 +66,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DotNetReadWriteSyncronization.cs" />
+    <Compile Include="FastReadWriteLockSynchronization.cs" />
     <Compile Include="ISyncronized.cs" />
     <Compile Include="MonitorSyncronization.cs" />
     <Compile Include="NoSyncronization.cs" />
