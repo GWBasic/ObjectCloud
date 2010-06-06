@@ -95,7 +95,7 @@ namespace ObjectCloud.Common
             {
                 toPulse.Value = threadStart;
 
-                using (TimedLock.Lock(toPulse))
+                lock(toPulse)
                     Monitor.Pulse(toPulse);
             }
             else
@@ -128,7 +128,7 @@ namespace ObjectCloud.Common
 
                 CurrentIdleThreads.Push(toBePulsed);
 
-                using (TimedLock.Lock(toBePulsed))
+                lock(toBePulsed)
                     Monitor.Wait(toBePulsed);
 
                 toBePulsed.Value();
