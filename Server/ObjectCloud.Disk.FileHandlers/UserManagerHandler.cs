@@ -174,34 +174,42 @@ namespace ObjectCloud.Disk.FileHandlers
                     throw;
                 }
 
+                IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
+                string groupFileName = name + ".group";
+
+                IUser owner = null;
+                if (null != ownerId)
+                    owner = GetUser(ownerId.Value);
+
+                if (!automatic)
+                {
+                    // Decide where the object goes, for personal groups in the user's directory, for system groups in the users directory
+                    IDirectoryHandler groupObjectDestinationDirectory;
+                    if (groupType == GroupType.Personal)
+                        groupObjectDestinationDirectory = usersDirectory.OpenFile(owner.Name).CastFileHandler<IDirectoryHandler>();
+                    else
+                        groupObjectDestinationDirectory = usersDirectory;
+
+                    INameValuePairsHandler groupDB;
+                    try
+                    {
+                        groupDB = groupObjectDestinationDirectory.CreateFile(groupFileName, "group", ownerId).FileContainer.CastFileHandler<INameValuePairsHandler>(); ;
+                    }
+                    catch (DuplicateFile)
+                    {
+                        throw new UserAlreadyExistsException(name + " already exists");
+                    }
+                    groupObjectDestinationDirectory.SetPermission(ownerId, groupFileName, groupId, FilePermissionEnum.Read, true, true);
+
+                    // Everyone can read a public group
+                    if (GroupType.Public == groupType)
+                        usersDirectory.SetPermission(ownerId, groupFileName, FileHandlerFactoryLocator.UserFactory.Everybody.Id, FilePermissionEnum.Read, true, false);
+
+                    groupDB.Set(owner, "GroupId", groupId.Value.ToString());
+                }
+
                 transaction.Commit();
             });
-
-            IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
-            string groupFileName = name + ".group";
-
-            IUser owner = null;
-            if (null != ownerId)
-                owner = GetUser(ownerId.Value);
-
-            if (!automatic)
-            {
-                // Decide where the object goes, for personal groups in the user's directory, for system groups in the users directory
-                IDirectoryHandler groupObjectDestinationDirectory;
-                if (groupType == GroupType.Personal)
-                    groupObjectDestinationDirectory = usersDirectory.OpenFile(owner.Name).CastFileHandler<IDirectoryHandler>();
-                else
-                    groupObjectDestinationDirectory = usersDirectory;
-
-                INameValuePairsHandler groupDB = groupObjectDestinationDirectory.CreateFile(groupFileName, "group", ownerId).FileContainer.CastFileHandler<INameValuePairsHandler>(); ;
-                groupObjectDestinationDirectory.SetPermission(ownerId, groupFileName, groupId, FilePermissionEnum.Read, true, true);
-
-                // Everyone can read a public group
-                if (GroupType.Public == groupType)
-                    usersDirectory.SetPermission(ownerId, groupFileName, FileHandlerFactoryLocator.UserFactory.Everybody.Id, FilePermissionEnum.Read, true, false);
-
-                groupDB.Set(owner, "GroupId", groupId.Value.ToString());
-            }
 
             return groupObj;
         }

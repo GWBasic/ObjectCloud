@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
+using JmBucknall.Structures;
+
 namespace ObjectCloud.Common
 {
     /// <summary>
@@ -24,9 +26,8 @@ namespace ObjectCloud.Common
             public object state;
         }
 
-        volatile bool Running = false;
-        object Key = new object();
-        Queue<QueuedDelegate> QueuedDelegates = new Queue<QueuedDelegate>();
+        int Running = 0;
+        LockFreeQueue<QueuedDelegate> QueuedDelegates = new LockFreeQueue<QueuedDelegate>();
 
         /// <summary>
         /// Prints the text to the console.  Does not block.  All text is queued up to be printed
@@ -47,18 +48,14 @@ namespace ObjectCloud.Common
             queuedDelegate.Callback = callback;
             queuedDelegate.state = State;
 
-            using (TimedLock.Lock(Key))
-            {
-                QueuedDelegates.Enqueue(queuedDelegate);
+            QueuedDelegates.Enqueue(queuedDelegate);
 
-                if (!Running)
+            if (0 == Running)
+                if (0 == Interlocked.CompareExchange(ref Running, 1, 0))
                 {
-                    Running = true;
-
                     Thread thread = new Thread(Work);
                     thread.Start();
                 }
-            }
         }
 
         /// <summary>
@@ -66,26 +63,12 @@ namespace ObjectCloud.Common
         /// </summary>
         void Work()
         {
-            bool keepRunning = true;
+            QueuedDelegate queuedDelegate;
 
-            do
-            {
-                QueuedDelegate queuedDelegate;
-
-                using (TimedLock.Lock(Key))
-                    queuedDelegate = QueuedDelegates.Dequeue();
-
+            while (QueuedDelegates.Dequeue(out queuedDelegate))
                 queuedDelegate.Callback(queuedDelegate.state);
 
-                // If the queue was emptied, then end the loop
-                using (TimedLock.Lock(Key))
-                    if (QueuedDelegates.Count <= 0)
-                    {
-                        keepRunning = false;
-                        Running = false;
-                    }
-
-            } while (keepRunning);
+            Running = 0;
         }
     }
 }

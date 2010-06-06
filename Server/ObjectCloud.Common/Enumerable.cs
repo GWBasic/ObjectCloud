@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
+using JmBucknall.Structures;
+
 namespace ObjectCloud.Common
 {
     public static class Enumerable<T>
@@ -55,7 +57,9 @@ namespace ObjectCloud.Common
 		    IEnumerable<T> toEnumerate,
 		    GenericArgument<T> del)
 		{
-			List<T> list = new List<T>(toEnumerate);
+            LockFreeQueue_WithCount<T> list = new LockFreeQueue_WithCount<T>();
+            foreach (T t in toEnumerate)
+                list.Enqueue(t);
 			
 			List<KeyValuePair<T,Exception>> exceptions = new List<KeyValuePair<T, Exception>>();
 			
@@ -76,7 +80,7 @@ namespace ObjectCloud.Common
 			
 			// Make sure that there isn't more threads then items to iterate over
 			if (list.Count < numThreads)
-				numThreads = list.Count;
+				numThreads = Convert.ToInt32(list.Count);
 			
 			// Watch out for a special case on systems that have a low number of cores
 			// When the number of threads per CPU is less then one, it implies that the task shouldn't use all CPUs
@@ -89,8 +93,6 @@ namespace ObjectCloud.Common
 						numThreads = 1;
 				}
 			
-			IEnumerator<T> enumerator = list.GetEnumerator();
-			
 			/* // Decent way to diagnose livelocks
 			TimerCallback callback = delegate(object state)
 			{
@@ -102,18 +104,9 @@ namespace ObjectCloud.Common
 			// This is the wrapper delegate used on every thread
 			ThreadStart threadStart = delegate()
 			{
-				T t = default(T);
+				T t;
 				
-				while (true)
-				{
-					using (TimedLock.Lock(enumerator))
-					{
-						if (!enumerator.MoveNext())
-							return;
-						
-						t = enumerator.Current;
-					}
-					
+				while (list.Dequeue(out t))
 					try
 					{
 						// Commented-out code assists in diagnosing livelocks
@@ -132,7 +125,6 @@ namespace ObjectCloud.Common
 						using (TimedLock.Lock(exceptions))
 							exceptions.Add(new KeyValuePair<T, Exception>(t, e));
 					}
-				}
 			};
 			
 			// Allocate the threads; note that this thread also does calculations

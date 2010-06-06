@@ -10,6 +10,7 @@ using System.Security.Cryptography;
 using System.Text;
 
 using Common.Logging;
+using JmBucknall.Structures;
 using JsonFx.Json;
 
 using ObjectCloud.Common;
@@ -884,7 +885,7 @@ namespace ObjectCloud.Interfaces.WebServer
         /// <summary>
         /// The objects that calculate the MD5.  This weird stack thing is because HashAlgorithm isn't ThreadSafe
         /// </summary>
-        private static Stack<HashAlgorithm> HashCalculators = new Stack<HashAlgorithm>();
+        private static LockFreeStack<HashAlgorithm> HashCalculators = new LockFreeStack<HashAlgorithm>();
 
         /// <summary>
         /// Returns a url that contains the correct browser cache ID for the given URL
@@ -914,13 +915,9 @@ namespace ObjectCloud.Interfaces.WebServer
             urlResults.ResultsAsStream.Read(scriptBytes, 0, scriptBytes.Length);
 
             // Get a free hash calculator
-            HashAlgorithm hashAlgorithm = null;
-            using (TimedLock.Lock(HashCalculators))
-                if (HashCalculators.Count > 0)
-                    hashAlgorithm = HashCalculators.Pop();
-
-            // If one isn't free, make it
-            if (null == hashAlgorithm)
+            HashAlgorithm hashAlgorithm;
+            if (!HashCalculators.Pop(out hashAlgorithm))
+                // If one isn't free, make it
                 hashAlgorithm = new System.Security.Cryptography.MD5CryptoServiceProvider();
 
             byte[] scriptHash;
@@ -931,8 +928,7 @@ namespace ObjectCloud.Interfaces.WebServer
             finally
             {
                 // Save the hash calculator for reuse
-                using (TimedLock.Lock(HashCalculators))
-                    HashCalculators.Push(hashAlgorithm);
+                HashCalculators.Push(hashAlgorithm);
             }
 
             string hash = Convert.ToBase64String(scriptHash);

@@ -8,6 +8,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 
+using JmBucknall.Structures;
+
 namespace ObjectCloud.Common
 {
     /// <summary>
@@ -33,9 +35,9 @@ namespace ObjectCloud.Common
             {
                 _NumIdleThreads = value;
 
-                int difference = Math.Abs(value - CurrentIdleThreads.Count);
+                long difference = Math.Abs(value - CurrentIdleThreads.Count);
 
-                for (int ctr = 0; ctr < difference; ctr++)
+                for (long ctr = 0; ctr < difference; ctr++)
                     RunThreadStart(delegate(){});
             }
         }
@@ -53,31 +55,33 @@ namespace ObjectCloud.Common
         /// <summary>
         /// The next ID
         /// </summary>
-        public ulong NextId
+        public long NextId
         {
             get
             {
-                ulong toReturn;
-
-                using (TimedLock.Lock(_NextId))
+                long toReturn;
+                long nextId;
+                do
                 {
-                    toReturn = _NextId.Value;
+                    nextId = _NextId;
 
-                    if (ulong.MaxValue == _NextId.Value)
-                        _NextId.Value = 0;
+                    if (nextId < long.MaxValue)
+                        toReturn = nextId + 1;
                     else
-                        _NextId.Value++;
-                }
+                        toReturn = 0;
+
+                } while (nextId != Interlocked.CompareExchange(ref _NextId, toReturn, nextId));
 
                 return toReturn;
             }
         }
-        private readonly Wrapped<ulong> _NextId = 0;
+        private long _NextId = 0;
 
         /// <summary>
         /// Queue of objects waiting to be pulsed to start an idle thread
         /// </summary>
-        private Stack<Wrapped<ThreadStart>> CurrentIdleThreads = new Stack<Wrapped<ThreadStart>>();
+        private LockFreeStack_WithCount<Wrapped<ThreadStart>> CurrentIdleThreads =
+            new LockFreeStack_WithCount<Wrapped<ThreadStart>>();
 
         /// <summary>
         /// Runs the delegate on its own thread, re-using a thread if it's sitting around
@@ -85,29 +89,27 @@ namespace ObjectCloud.Common
         /// <param name="threadStart"></param>
         public void RunThreadStart(ThreadStart threadStart)
         {
-            using (TimedLock.Lock(CurrentIdleThreads))
+            Wrapped<ThreadStart> toPulse;
+
+            if (CurrentIdleThreads.Pop(out toPulse))
             {
-                if (0 == CurrentIdleThreads.Count)
+                toPulse.Value = threadStart;
+
+                using (TimedLock.Lock(toPulse))
+                    Monitor.Pulse(toPulse);
+            }
+            else
+            {
+                Thread thread = new Thread(delegate()
                 {
-                    Thread thread = new Thread(delegate()
-                    {
-                        threadStart();
-                        RunPooledThread();
-                    });
+                    threadStart();
+                    RunPooledThread();
+                });
 
-                    thread.Name = ThreadNamePrefix + " "  + NextId.ToString();
-                    thread.IsBackground = true;
+                thread.Name = ThreadNamePrefix + " " + NextId.ToString();
+                thread.IsBackground = true;
 
-                    thread.Start();
-                }
-                else
-                {
-                    Wrapped<ThreadStart> toPulse = CurrentIdleThreads.Pop();
-                    toPulse.Value = threadStart;
-
-                    using (TimedLock.Lock(toPulse))
-                        Monitor.Pulse(toPulse);
-                }
+                thread.Start();
             }
         }
 
@@ -120,14 +122,11 @@ namespace ObjectCloud.Common
 
             while (true)
             {
-                using (TimedLock.Lock(CurrentIdleThreads))
-                {
-                    // Kill the thread if there is already enough idle threads
-                    if (CurrentIdleThreads.Count >= NumIdleThreads)
-                        return;
+                // Kill the thread if there is already enough idle threads
+                if (CurrentIdleThreads.Count >= NumIdleThreads)
+                    return;
 
-                    CurrentIdleThreads.Push(toBePulsed);
-                }
+                CurrentIdleThreads.Push(toBePulsed);
 
                 using (TimedLock.Lock(toBePulsed))
                     Monitor.Wait(toBePulsed);

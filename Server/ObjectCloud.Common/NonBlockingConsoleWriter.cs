@@ -7,39 +7,28 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
+using JmBucknall.Structures;
+
 namespace ObjectCloud.Common
 {
     public static class NonBlockingConsoleWriter
     {
-        static volatile bool Running = false;
+        static int Running = 0;
 
         /// <summary>
-        /// Prints the text to the console.  Does not block in release builds.  All text is queued up to be printed
+        /// Prints the text to the console.  Does not block.  All text is queued up to be printed.  There is a small chance that text will sit in the buffer until the next write, thus it is assumed that this will be called on a regular basis
         /// </summary>
-        /// <param name="task"></param>
-        static public void Print(string task)
+        /// <param name="toPrint"></param>
+        static public void Print(string toPrint)
         {
-#if DEBUG
-            if (Running || (!Running))
-                Console.Write(task);
-#else
-            using (TimedLock.Lock(Key))
-            {
-                QueuedStrings.Enqueue(task);
+            QueuedStrings.Enqueue(toPrint);
 
-                if (!Running)
-                {
-                    Running = true;
-
+            if (0 == Running)
+                if (0 == Interlocked.CompareExchange(ref Running, 1, 0))
                     ThreadPool.QueueUserWorkItem(Work);
-                }
-            }
-#endif
         }
 
-#if !DEBUG
-        static object Key = new object();
-        static Queue<string> QueuedStrings = new Queue<string>();
+        static LockFreeQueue<string> QueuedStrings = new LockFreeQueue<string>();
 
 		/// <summary>
         /// Runs on the Thread to keep printing on the console
@@ -52,36 +41,27 @@ namespace ObjectCloud.Common
 
             do
             {
-                using (TimedLock.Lock(Key))
+                string toPrint;
+                if (QueuedStrings.Dequeue(out toPrint))
+                    toWrite.Append(toPrint);
+                else
                 {
-                    /*if (QueuedStrings.Count > 200)
-                    {
-                        toWrite = "I'm really, really busy!\n";
-                        QueuedStrings.Clear();
-                    }
-                    else*/
-                        
-                    toWrite.Append(QueuedStrings.Dequeue());
-
                     // If the queue was emptied, then end the loop
-                    if (QueuedStrings.Count <= 0)
-                    {
-                        keepRunning = false;
-                        Running = false;
-                    }
-
-                    if (toWrite.Length > 10000)
-                    {
-                        Console.Write(toWrite);
-                        toWrite = new StringBuilder();
-                    }
+                    Running = 0;
+                    keepRunning = false;
                 }
+
+                if (toWrite.Length > 10000)
+                {
+                    Console.Write(toWrite);
+                    toWrite = new StringBuilder();
+                }
+
             } while (keepRunning);
 
             // Note:  It's possible that things can be printed out-of-order when a lot of stuff is being printed
             if (toWrite.Length > 0)
                 Console.Write(toWrite.ToString());
         }
-#endif
     }
 }
