@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -32,6 +32,8 @@ namespace TimeLocks
 
         public TimeSpan TestReadOnSingleThread()
         {
+			GC.Collect(int.MaxValue, GCCollectionMode.Forced);
+			
             DateTime start = DateTime.UtcNow;
 
             int dummy;
@@ -55,6 +57,8 @@ namespace TimeLocks
             for (int ctr = 0; ctr < numThreads; ctr++)
                 threads.AddLast(new Thread(threadStart));
 
+			GC.Collect(int.MaxValue, GCCollectionMode.Forced);
+			
             DateTime start = DateTime.UtcNow;
 
             foreach (Thread thread in threads)
