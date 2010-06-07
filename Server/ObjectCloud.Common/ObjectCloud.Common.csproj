@@ -110,6 +110,7 @@
     <Compile Include="IRunnable.cs" />
     <Compile Include="CookiesFromBrowser.cs" />
     <Compile Include="InterrupThread.cs" />
+    <Compile Include="WeakLock.cs" />
     <Compile Include="Wrapped.cs" />
   </ItemGroup>
   <ItemGroup>

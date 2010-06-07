@@ -17,18 +17,24 @@ namespace ObjectCloud.Common
 		private object Key = new object();
 		
 		private volatile bool LockAquired = false;
+
+        /// <summary>
+        /// When the next wite lock is allowed
+        /// </summary>
+        private DateTime NextWritelock = DateTime.MinValue;
 		
 		/// <summary>
 		/// Blocks while there is a lock.  After calling this function, the resource will be read-safe for 25 miliseconds, or whatever is set in LockDelay
 		/// </summary>
-		public void PeekRead()// take optional argument that is how long of a delay is needed
+		public void PeekRead()
 		{
-			// Spin while there is a writer active
+			// Block while there is a writer active
 			while (LockAquired)
                 lock (Key)
                 { }
-			
-			// calculate when the next instant is that a writelock can be established, then set it in a check loop that verifies that the set value is >= to the desired value
+
+            // A write lock won't be allowed until after the given instant
+            NextWritelock = DateTime.UtcNow + LockDelay;
 		}
 		
         /// <summary>
@@ -79,6 +85,16 @@ namespace ObjectCloud.Common
                 throw new TimeoutException("Timeout establishing a lock");
 			
 			LockAquired = true;
+
+            // Sleep until any required delay from readers passes
+            DateTime nextWritelock = NextWritelock;
+            DateTime now = DateTime.UtcNow;
+            while (nextWritelock < now)
+            {
+                Thread.Sleep(now - nextWritelock);
+                nextWritelock = NextWritelock;
+                now = DateTime.UtcNow;
+            }
 
 			// Only sleep based on a set value
 			Thread.Sleep(LockDelay);
