@@ -101,7 +101,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// </summary>
         /// <param name="webConnection"></param>
         /// <param name="groupname"></param>
-        /// <param name="username"></param>
+        /// <param name="username">The group's owner, or null if the current user is the owner</param>
         /// <param name="grouptype"></param>
         /// <returns></returns>
         [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Read)]
@@ -126,7 +126,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             try
             {
-                IUser user = webConnection.Session.User; ;
+                IUser user = webConnection.Session.User;
 				
 				// Allow users with administrative privilages to create groups owned by other people
 				if (null != username)
@@ -156,7 +156,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="groupname"></param>
         /// <param name="groupId"></param>
         /// <returns></returns>
-        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Write)]
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Read)]
         public IWebResults DeleteGroup(IWebConnection webConnection, string groupname, Guid? groupId)
         {
             try
@@ -182,6 +182,16 @@ namespace ObjectCloud.Disk.WebHandlers
 					throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, "Specified object is a user"));
 				
 				IGroup group = (IGroup)groupObj;
+
+                // Make sure the user has permission to delete the group
+                FilePermissionEnum? permissionToGroupEditor = FileContainer.LoadPermission(webConnection.Session.User.Id);
+                if (null == group.OwnerId)
+                    if (FilePermissionEnum.Administer != permissionToGroupEditor)
+                        throw new WebResultsOverrideException(WebResults.FromString(Status._403_Forbidden, "You do not have permission to delete groups"));
+                else if (group.OwnerId.Value != webConnection.Session.User.Id)
+                    if (FilePermissionEnum.Administer != permissionToGroupEditor)
+                        throw new WebResultsOverrideException(WebResults.FromString(Status._403_Forbidden, "You do not have permission to delete groups"));
+
 				
 				// Determine if the user has permission to delete this group
 				// The user must either own the group, or have administrative privilages in order to delete a group
