@@ -346,7 +346,20 @@ namespace ObjectCloud.Disk.WebHandlers
         public IWebResults AddUserToGroup(IWebConnection webConnection, string groupname, string groupid, string username, string userid)
         {
             IGroup group = GetGroupInt(webConnection, groupname, groupid);
-			IUser user = GetUser(webConnection, username, userid);
+
+            IUser user;
+
+            try
+            {
+                user = GetUser(webConnection, username, userid);
+            }
+            catch (UnknownUser)
+            {
+                if (null != username)
+                    throw new WebResultsOverrideException(WebResults.FromString(Status._404_Not_Found, username + " doesn't exist"));
+                else
+                    throw new WebResultsOverrideException(WebResults.FromString(Status._404_Not_Found, "user doesn't exist"));
+            }
 			
 			// Determine if the user has permission to administer this group
 			// The user must either own the group, or have administrative privilages in order to delete a group
