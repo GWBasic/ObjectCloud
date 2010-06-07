@@ -26,7 +26,7 @@ namespace ObjectCloud.Common
 		/// <summary>
 		/// Blocks while there is a lock.  After calling this function, the resource will be read-safe for 25 miliseconds, or whatever is set in LockDelay
 		/// </summary>
-		public void PeekRead()
+		public DateTime PeekRead()
 		{
 			// Block while there is a writer active
 			while (LockAquired)
@@ -35,6 +35,9 @@ namespace ObjectCloud.Common
 
             // A write lock won't be allowed until after the given instant
             NextWritelock = DateTime.UtcNow + LockDelay;
+
+            // The field is returned in case another thread sets it
+            return NextWritelock;
 		}
 		
         /// <summary>
