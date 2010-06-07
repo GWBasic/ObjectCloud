@@ -342,7 +342,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="username"></param>
         /// <param name="userid"></param>
         /// <returns></returns>
-        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Administer)]
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Read)]
         public IWebResults AddUserToGroup(IWebConnection webConnection, string groupname, string groupid, string username, string userid)
         {
             IGroup group = GetGroupInt(webConnection, groupname, groupid);
@@ -374,7 +374,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="username"></param>
         /// <param name="userid"></param>
         /// <returns></returns>
-        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Administer)]
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Read)]
         public IWebResults RemoveUserFromGroup(IWebConnection webConnection, string groupname, string groupid, string username, string userid)
         {
             IGroup group = GetGroupInt(webConnection, groupname, groupid);
