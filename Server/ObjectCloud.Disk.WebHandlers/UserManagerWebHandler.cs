@@ -75,6 +75,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="password"></param>
         /// <returns></returns>
         [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Primitive, FilePermissionEnum.Write)]
+        [NamedPermission("CreateUser")]
         public IWebResults CreateUser(IWebConnection webConnection, string username, string password)
         {
 			bool assignSession = false;
@@ -121,8 +122,12 @@ namespace ObjectCloud.Disk.WebHandlers
 
             // Write permission is needed to add non-personal groups
             if (groupType > GroupType.Personal)
-                if (FileContainer.LoadPermission(webConnection.Session.User.Id) < FilePermissionEnum.Write)
-                    throw new WebResultsOverrideException(WebResults.FromString(Status._401_Unauthorized, "You must have write permission to create non-personal groups"));
+                if ((FileContainer.LoadPermission(webConnection.Session.User.Id) < FilePermissionEnum.Write)
+                    && (!FileContainer.HasNamedPermissions(webConnection.Session.User.Id, "CreateGroup")))
+                {
+                    throw new WebResultsOverrideException(WebResults.FromString(
+                        Status._401_Unauthorized, "You must have write or \"CreateGroup\" permission to /Users/UserDB create non-personal groups"));
+                }
 
             try
             {

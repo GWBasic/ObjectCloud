@@ -172,7 +172,7 @@ namespace ObjectCloud.Interfaces.Disk
             return ParentDirectoryHandler.LoadPermission(Filename, userId);
         }
 
-        public bool HasNamedPermissions(ID<IUserOrGroup, Guid> userId, IEnumerable<string> namedPermissions)
+        public bool HasNamedPermissions(ID<IUserOrGroup, Guid> userId, params string[] namedPermissions)
         {
             // The owner can always administer
             if (OwnerId == userId)

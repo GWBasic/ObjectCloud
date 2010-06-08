@@ -71,7 +71,7 @@ namespace ObjectCloud.Javascript.SubProcess
             object namedPermissionsObject;
             if (properties.TryGetValue("namedPermissions", out namedPermissionsObject))
                 if (null != namedPermissionsObject)
-                    _NamedPermissions = StringParser.ParseCommaSeperated(namedPermissionsObject.ToString());
+                    _NamedPermissions = new List<string>(StringParser.ParseCommaSeperated(namedPermissionsObject.ToString())).ToArray();
                 else
                     _NamedPermissions = new string[0];
             else
@@ -214,59 +214,21 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <summary>
         /// Any potential named permissions that allow someone to access a method even if he/she doesn't have the minimum permission
         /// </summary>
-        public IEnumerable<string> NamedPermissions
+        public string[] NamedPermissions
         {
             get { return _NamedPermissions; }
         }
-        private readonly IEnumerable<string> _NamedPermissions;
+        private readonly string[] _NamedPermissions;
 
         /// <summary>
         /// The current state of CallingFrom.  This always defaults to Web, and only within the context of a call to elevate() is it increased
         /// </summary>
-		/*internal static CallingFrom CallingFrom
-		{
-			get
-			{
-				if (null == _CallingFrom)
-					_CallingFrom = new Wrapped<CallingFrom>(CallingFrom.Web);
-				
-				return _CallingFrom.Value;
-			}
-			set
-			{
-				if (null == _CallingFrom)
-					_CallingFrom = new Wrapped<CallingFrom>(value);
-				else
-					_CallingFrom.Value = value;
-			}
-		}
-        [ThreadStatic]
-        private static Wrapped<CallingFrom> _CallingFrom = null;*/
 		[ThreadStatic]
 		internal static CallingFrom CallingFrom;
 
         /// <summary>
         /// The current state of bypassing Javascript
         /// </summary>
-        /*internal static bool BypassJavascript
-		{
-			get
-			{
-				if (null == _BypassJavascript)
-					_BypassJavascript = new Wrapped<bool>(false);
-				
-				return _BypassJavascript.Value;
-			}
-			set
-			{
-				if (null == _BypassJavascript)
-					_BypassJavascript = new Wrapped<bool>(value);
-				else
-					_BypassJavascript.Value = value;
-			}
-		}
-        [ThreadStatic]
-        private static Wrapped<bool> _BypassJavascript = null;*/
         [ThreadStatic]
 		internal static bool BypassJavascript;
 

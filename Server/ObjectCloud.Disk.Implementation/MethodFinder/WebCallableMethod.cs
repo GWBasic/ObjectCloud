@@ -28,8 +28,11 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
             for (uint parameterCtr = 0; parameterCtr < _Parameters.Length; parameterCtr++)
                 ParameterIndexes[_Parameters[parameterCtr].Name] = parameterCtr;
 
+            List<string> namedPermissions = new List<string>();
             foreach (NamedPermissionAttribute npa in methodInfo.GetCustomAttributes(typeof(NamedPermissionAttribute), true))
-                _NamedPermissions.Add(npa.NamedPermission);
+                namedPermissions.Add(npa.NamedPermission);
+
+            _NamedPermissions = namedPermissions.ToArray();
         }
 
         /// <summary>
@@ -96,10 +99,10 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
         /// <summary>
         /// All of the named permissions
         /// </summary>
-        public IEnumerable<string> NamedPermissions
+        public string[] NamedPermissions
         {
             get { return _NamedPermissions; }
         }
-        private readonly List<string> _NamedPermissions = new List<string>();
+        private readonly string[] _NamedPermissions;
     }
 }
