@@ -20,64 +20,102 @@ AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+// Note:  Contains modifications by Andrew Rondeau for ObjectCloud
 
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
-using JmBucknall.Threading;
-
-namespace JmBucknall.Structures
+namespace ObjectCloud.Common.Threading
 {
-    public class LockFreeStack<T>
+    public class LockFreeQueue<T>
     {
-        private SingleLinkNode<T> head;
 
-        public LockFreeStack()
+        SingleLinkNode<T> head;
+        SingleLinkNode<T> tail;
+
+        public LockFreeQueue()
         {
             head = new SingleLinkNode<T>();
+            tail = head;
         }
 
-        public virtual void Push(T item)
+        public virtual void Enqueue(T item)
         {
+            SingleLinkNode<T> oldTail = null;
+            SingleLinkNode<T> oldTailNext;
+
             SingleLinkNode<T> newNode = new SingleLinkNode<T>();
             newNode.Item = item;
-            do
+
+            bool newNodeWasAdded = false;
+            while (!newNodeWasAdded)
             {
-                newNode.Next = head.Next;
-            } while (!SyncMethods.CAS<SingleLinkNode<T>>(ref head.Next, newNode.Next, newNode));
+                oldTail = tail;
+                oldTailNext = oldTail.Next;
+
+                if (tail == oldTail)
+                {
+                    if (oldTailNext == null)
+                        newNodeWasAdded = SyncMethods.CAS<SingleLinkNode<T>>(ref tail.Next, null, newNode);
+                    else
+                        SyncMethods.CAS<SingleLinkNode<T>>(ref tail, oldTail, oldTailNext);
+                }
+            }
+
+            SyncMethods.CAS<SingleLinkNode<T>>(ref tail, oldTail, newNode);
         }
 
-        public virtual bool Pop(out T item)
+        public virtual bool Dequeue(out T item)
         {
-            SingleLinkNode<T> node;
-            do
+            item = default(T);
+            SingleLinkNode<T> oldHead = null;
+
+            bool haveAdvancedHead = false;
+            while (!haveAdvancedHead)
             {
-                node = head.Next;
-                if (node == null)
+
+                oldHead = head;
+                SingleLinkNode<T> oldTail = tail;
+                SingleLinkNode<T> oldHeadNext = oldHead.Next;
+
+                if (oldHead == head)
                 {
-                    item = default(T);
-                    return false;
+                    if (oldHead == oldTail)
+                    {
+                        if (oldHeadNext == null)
+                        {
+                            return false;
+                        }
+                        SyncMethods.CAS<SingleLinkNode<T>>(ref tail, oldTail, oldHeadNext);
+                    }
+
+                    else
+                    {
+                        item = oldHeadNext.Item;
+                        haveAdvancedHead =
+                          SyncMethods.CAS<SingleLinkNode<T>>(ref head, oldHead, oldHeadNext);
+                    }
                 }
-            } while (!SyncMethods.CAS<SingleLinkNode<T>>(ref head.Next, node, node.Next));
-            item = node.Item;
+            }
             return true;
         }
 
-        public T Pop()
+        public T Dequeue()
         {
             T result;
-            Pop(out result);
+            Dequeue(out result);
             return result;
         }
     }
 
+
     /// <summary>
-    /// Adds a count to the LockFreeStack
+    /// Adds a count to the LockFreeQueue
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class LockFreeStack_WithCount<T> : LockFreeStack<T>
+    public class LockFreeQueue_WithCount<T> : LockFreeQueue<T>
     {
         /// <summary>
         /// The number of items in the stack.  This might be inaccurate if a concurrent thread is pushing or popping, thus it should be treated as an estimate
@@ -88,9 +126,9 @@ namespace JmBucknall.Structures
         }
         private long _Count = 0;
 
-        public override void Push(T item)
+        public override void Enqueue(T item)
         {
-            base.Push(item);
+            base.Enqueue(item);
 
             long count;
             long oldCount;
@@ -101,11 +139,11 @@ namespace JmBucknall.Structures
             } while (oldCount != Interlocked.CompareExchange(ref _Count, count, oldCount));
         }
 
-        public override bool Pop(out T item)
+        public override bool Dequeue(out T item)
         {
-            bool popped = base.Pop(out item);
+            bool dequeued = base.Dequeue(out item);
 
-            if (popped)
+            if (dequeued)
             {
                 long count;
                 long oldCount;
@@ -116,7 +154,7 @@ namespace JmBucknall.Structures
                 } while (oldCount != Interlocked.CompareExchange(ref _Count, count, oldCount));
             }
 
-            return popped;
+            return dequeued;
         }
     }
 }

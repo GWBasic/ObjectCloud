@@ -8,8 +8,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 
-using JmBucknall.Structures;
-
 namespace ObjectCloud.Common.Threading
 {
     /// <summary>

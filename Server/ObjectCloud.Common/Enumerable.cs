@@ -8,8 +8,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
-using JmBucknall.Structures;
-
 using ObjectCloud.Common.Threading;
 
 namespace ObjectCloud.Common

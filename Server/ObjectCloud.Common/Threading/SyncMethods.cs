@@ -20,14 +20,23 @@ AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+// Note:  Contains modifications by Andrew Rondeau for ObjectCloud
 
-namespace JmBucknall.Structures
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading;
+
+namespace ObjectCloud.Common.Threading
 {
+    public static class SyncMethods
+    {
 
-    internal class SingleLinkNode<T> {
-      // Note; the Next member cannot be a property since it participates in
-      // many CAS operations
-      public SingleLinkNode<T> Next; 
-      public T Item;
+        public static bool CAS<T>(ref T location, T comparand, T newValue) where T : class
+        {
+            return
+                (object)comparand ==
+                (object)Interlocked.CompareExchange<T>(ref location, newValue, comparand);
+        }
     }
 }
