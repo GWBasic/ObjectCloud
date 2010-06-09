@@ -191,6 +191,28 @@ IKVM.OpenJDK.ClassLibrary.dll contains code from the OpenJDK, GNU Classpath and 
       <td><a href="http://www.sqlite.org/">SQLite<br />http://www.sqlite.org/</a></td><td><a href="http://en.wikipedia.org/wiki/D._Richard_Hipp">D. Richard Hipp</a></td><td>Lightweight embedded SQL database</td><td><a href="http://www.sqlite.org/copyright.html">Public Domain</a></td><td>ObjectCloud.ORM.DataAccess.SQLite opens SQLite ADO connections; once the connection is outside of this library it is treated as ordinary ADO.</td><td>sqlite3.dll and sqlite3.def</td>
    </tr>
 
+   <tr>
+      <td><a href="http://www.boyet.com/Articles/LockFreeRedux.html">Julian M Bucknall's Lock-Free data structures<br />http://www.boyet.com/Articles/LockFreeRedux.html</a></td><td><a href="http://blog.boyet.com/">Julian M Bucknall</a></td><td>Data structures optimized for concurrency</td><td>MIT:<pre>Copyright (c) 2010 Julian M Bucknall
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+and associated documentation files (the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or
+substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. </pre></td><td>ObjectCloud uses these data structures in low-level thread coordinating and message passing.</td>
+<td>ObjectCloud.Common.dll</td>
+<td>Changed namespace, added some additional counters</td>
+   </tr>
+
 </table>
 
 <? WebComponent("/Pages/footer.webcomponent") ?>
