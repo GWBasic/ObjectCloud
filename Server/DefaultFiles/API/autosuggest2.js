@@ -1,4 +1,3 @@
-
 /**
  * An autosuggest textbox control.
  * @class
@@ -204,6 +203,12 @@ AutoSuggestControl.prototype.highlightSuggestion = function (oSuggestionNode) {
  * @scope private
  */
 AutoSuggestControl.prototype.init = function () {
+
+    // ADR (June 9, 2010)
+    // Disable the browser's autocomplete as we're providing our own
+    try {
+       this.textbox.setAttribute("autocomplete","off"); 
+    } catch (exception)  {}
 
     //save a reference to this object
     var oThis = this;
