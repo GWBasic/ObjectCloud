@@ -69,6 +69,7 @@
     <Compile Include="MimeReader.cs" />
     <Compile Include="MulticastEventWithTimeout.cs" />
     <Compile Include="MultiStream.cs" />
+    <Compile Include="Recycler.cs" />
     <Compile Include="Set.cs" />
     <Compile Include="StreamFunctions.cs" />
     <Compile Include="StringGenerator.cs" />
