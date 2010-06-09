@@ -8,6 +8,7 @@ using System.IO;
 using System.Xml;
 
 using ObjectCloud.Common;
+using ObjectCloud.Common.Threading;
 using ObjectCloud.DataAccess.SessionManager;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;

@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
-namespace ObjectCloud.Common
+namespace ObjectCloud.Common.Threading
 {
     public struct Timeout : IDisposable
     {

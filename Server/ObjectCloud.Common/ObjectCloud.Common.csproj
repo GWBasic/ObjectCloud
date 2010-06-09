@@ -62,7 +62,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Array.cs" />
-    <Compile Include="DelegateQueue.cs" />
     <Compile Include="Enumerable.cs" />
     <Compile Include="EventArgs.cs" />
     <Compile Include="EventBus.cs" />
@@ -81,7 +80,6 @@
     <Compile Include="MimeReader.cs" />
     <Compile Include="MulticastEventWithTimeout.cs" />
     <Compile Include="MultiStream.cs" />
-    <Compile Include="NonBlockingConsoleWriter.cs" />
     <Compile Include="Set.cs" />
     <Compile Include="StreamFunctions.cs" />
     <Compile Include="StringGenerator.cs" />
@@ -100,17 +98,18 @@
     <Compile Include="SRandom.cs" />
     <Compile Include="DictionaryFunctions.cs" />
     <Compile Include="StringParser.cs" />
-    <Compile Include="ThreadPoolInstance.cs" />
-    <Compile Include="TimedLock.cs" />
-    <Compile Include="Timeout.cs" />
+    <Compile Include="Threading\DelegateQueue.cs" />
+    <Compile Include="Threading\InterrupThread.cs" />
+    <Compile Include="Threading\NonBlockingConsoleWriter.cs" />
+    <Compile Include="Threading\ThreadPoolInstance.cs" />
+    <Compile Include="Threading\TimedLock.cs" />
+    <Compile Include="Threading\Timeout.cs" />
+    <Compile Include="Threading\WeakLock.cs" />
     <Compile Include="TypeFunctions.cs" />
     <Compile Include="CommonDelegates.cs" />
     <Compile Include="Shared.cs" />
-    <Compile Include="SubProcess.cs" />
     <Compile Include="IRunnable.cs" />
     <Compile Include="CookiesFromBrowser.cs" />
-    <Compile Include="InterrupThread.cs" />
-    <Compile Include="WeakLock.cs" />
     <Compile Include="Wrapped.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -136,6 +135,7 @@
       <Name>JsonFx.Json</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

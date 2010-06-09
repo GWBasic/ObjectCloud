@@ -10,6 +10,7 @@ using Common.Logging;
 using Common.Logging.Simple;
 
 using ObjectCloud.Common;
+using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Disk;
 
 namespace ObjectCloud.Logger

@@ -9,7 +9,7 @@ using System.Threading;
 
 using JmBucknall.Structures;
 
-namespace ObjectCloud.Common
+namespace ObjectCloud.Common.Threading
 {
     /// <summary>
     /// Runs all delegates in order asyncronously.  This is an alternative to using the Threadpool in the event that each delegate would block each other, thus

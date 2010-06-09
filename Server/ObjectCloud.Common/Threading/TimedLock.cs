@@ -16,7 +16,7 @@ using System.Threading;
 // I'd have integrated their code into this system, except for the fact that I think MS's license
 // essentially forbids using their code in an open source project.
 
-namespace ObjectCloud.Common
+namespace ObjectCloud.Common.Threading
 {
     // Thanks to Eric Gunnerson for recommending this be a struct rather
     // than a class - avoids a heap allocation.

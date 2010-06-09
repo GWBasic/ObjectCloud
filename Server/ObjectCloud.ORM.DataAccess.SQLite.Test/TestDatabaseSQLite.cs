@@ -1,4 +1,5 @@
 using ObjectCloud.Common;
+using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Database;
 using ObjectCloud.ORM.DataAccess;
 using ObjectCloud.ORM.DataAccess.SQLite;
@@ -113,7 +114,7 @@ PRAGMA user_version = 2;
 			Path = path;
 			EmbeddedDatabaseConnector = embeddedDatabaseConnector;
 		
-			using (ObjectCloud.Common.Timeout timeout = ObjectCloud.Common.Timeout.RunMax(TimeSpan.FromSeconds(3), delegate(Thread thread) { EventBus.OnFatalException(this, new EventArgs<Exception>(new CantOpenDatabaseException("Can't open " + Path))); }))
+			using (ObjectCloud.Common.Threading.Timeout timeout = ObjectCloud.Common.Threading.Timeout.RunMax(TimeSpan.FromSeconds(3), delegate(Thread thread) { EventBus.OnFatalException(this, new EventArgs<Exception>(new CantOpenDatabaseException("Can't open " + Path))); }))
 			using (DbConnection connection = EmbeddedDatabaseConnector.Open("Data Source=\"" + Path + "\""))
 				try
 				{
@@ -132,7 +133,7 @@ PRAGMA user_version = 2;
 		
 		public IDatabaseConnection Connect()
 		{
-			using (ObjectCloud.Common.Timeout timeout = ObjectCloud.Common.Timeout.RunMax(TimeSpan.FromSeconds(3), delegate(Thread thread) { EventBus.OnFatalException(this, new EventArgs<Exception>(new CantOpenDatabaseException("Can't open " + Path))); }))
+			using (ObjectCloud.Common.Threading.Timeout timeout = ObjectCloud.Common.Threading.Timeout.RunMax(TimeSpan.FromSeconds(3), delegate(Thread thread) { EventBus.OnFatalException(this, new EventArgs<Exception>(new CantOpenDatabaseException("Can't open " + Path))); }))
 		{
 			DbConnection connection = EmbeddedDatabaseConnector.Open("Data Source=\"" + Path + "\"");
 		

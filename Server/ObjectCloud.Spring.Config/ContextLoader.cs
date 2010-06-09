@@ -13,6 +13,7 @@ using Spring.Context;
 using Spring.Context.Support;
 
 using ObjectCloud.Common;
+using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Disk;
 
 namespace ObjectCloud.Spring.Config

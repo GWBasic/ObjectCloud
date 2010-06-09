@@ -10,6 +10,8 @@ using System.Threading;
 
 using JmBucknall.Structures;
 
+using ObjectCloud.Common.Threading;
+
 namespace ObjectCloud.Common
 {
     public static class Enumerable<T>

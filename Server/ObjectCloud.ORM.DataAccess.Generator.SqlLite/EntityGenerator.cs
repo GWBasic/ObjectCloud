@@ -48,6 +48,7 @@ namespace ObjectCloud.ORM.DataAccess.Generator.SqLite
                 yield return "System.Text";
                 yield return "System.Threading";
                 yield return "ObjectCloud.Common";
+                yield return "ObjectCloud.Common.Threading";
                 yield return "ObjectCloud.Interfaces.Database";
                 yield return "ObjectCloud.ORM.DataAccess";
                 yield return "ObjectCloud.ORM.DataAccess.WhereConditionals";
@@ -134,7 +135,7 @@ namespace ObjectCloud.ORM.DataAccess.Generator.SqLite
             yield return "\t\t\tPath = path;\n";
             yield return "\t\t\tEmbeddedDatabaseConnector = embeddedDatabaseConnector;\n";
             yield return "\t\t\n";
-            yield return "\t\t\tusing (ObjectCloud.Common.Timeout timeout = ObjectCloud.Common.Timeout.RunMax(TimeSpan.FromSeconds(3), delegate(Thread thread) { EventBus.OnFatalException(this, new EventArgs<Exception>(new CantOpenDatabaseException(\"Can't open \" + Path))); }))\n";
+            yield return "\t\t\tusing (ObjectCloud.Common.Threading.Timeout timeout = ObjectCloud.Common.Threading.Timeout.RunMax(TimeSpan.FromSeconds(3), delegate(Thread thread) { EventBus.OnFatalException(this, new EventArgs<Exception>(new CantOpenDatabaseException(\"Can't open \" + Path))); }))\n";
             yield return "\t\t\tusing (DbConnection connection = EmbeddedDatabaseConnector.Open(\"Data Source=\\\"\" + Path + \"\\\"\"))\n";
             yield return "\t\t\t\ttry\n";
             yield return "\t\t\t\t{\n";
@@ -153,7 +154,7 @@ namespace ObjectCloud.ORM.DataAccess.Generator.SqLite
             yield return "\t\t\n";
             yield return "\t\tpublic IDatabaseConnection Connect()\n";
             yield return "\t\t{\n";
-            yield return "\t\t\tusing (ObjectCloud.Common.Timeout timeout = ObjectCloud.Common.Timeout.RunMax(TimeSpan.FromSeconds(3), delegate(Thread thread) { EventBus.OnFatalException(this, new EventArgs<Exception>(new CantOpenDatabaseException(\"Can't open \" + Path))); }))\n";
+            yield return "\t\t\tusing (ObjectCloud.Common.Threading.Timeout timeout = ObjectCloud.Common.Threading.Timeout.RunMax(TimeSpan.FromSeconds(3), delegate(Thread thread) { EventBus.OnFatalException(this, new EventArgs<Exception>(new CantOpenDatabaseException(\"Can't open \" + Path))); }))\n";
             yield return "\t\t{\n";
             yield return "\t\t\tDbConnection connection = EmbeddedDatabaseConnector.Open(\"Data Source=\\\"\" + Path + \"\\\"\");\n";
             yield return "\t\t\n";

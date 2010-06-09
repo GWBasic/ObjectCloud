@@ -10,7 +10,7 @@ using System.Threading;
 
 using JmBucknall.Structures;
 
-namespace ObjectCloud.Common
+namespace ObjectCloud.Common.Threading
 {
     /// <summary>
     /// An isolated controllable threadpool instance

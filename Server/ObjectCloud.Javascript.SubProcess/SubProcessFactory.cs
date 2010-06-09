@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 
 using ObjectCloud.Common;
+using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Disk;
 
 namespace ObjectCloud.Javascript.SubProcess

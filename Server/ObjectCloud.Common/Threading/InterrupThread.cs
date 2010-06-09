@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace ObjectCloud.Common
+namespace ObjectCloud.Common.Threading
 {
 	/// <summary>
 	/// Provides an on-going single thread that can be used to queue items where their starting thread must never die

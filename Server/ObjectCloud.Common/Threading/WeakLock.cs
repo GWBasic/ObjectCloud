@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
-namespace ObjectCloud.Common
+namespace ObjectCloud.Common.Threading
 {
 	/// <summary>
 	/// Not quite a reader / writer lock, but instead lets a reader delay a write lock for a short period of time so it can safely read

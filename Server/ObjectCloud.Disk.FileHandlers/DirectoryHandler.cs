@@ -13,6 +13,7 @@ using Common.Logging;
 using JsonFx.Json;
 
 using ObjectCloud.Common;
+using ObjectCloud.Common.Threading;
 using ObjectCloud.DataAccess.Directory;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Javascript;

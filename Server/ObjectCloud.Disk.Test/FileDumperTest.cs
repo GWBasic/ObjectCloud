@@ -13,6 +13,7 @@ using System.Xml;
 using NUnit.Framework;
 
 using ObjectCloud.Common;
+using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
 using ObjectCloud.Disk.Implementation;

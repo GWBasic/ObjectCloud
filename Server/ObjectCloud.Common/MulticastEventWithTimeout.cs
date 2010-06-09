@@ -9,6 +9,8 @@ using System.Threading;
 
 using Common.Logging;
 
+using ObjectCloud.Common.Threading;
+
 namespace ObjectCloud.Common
 {
     /// <summary>

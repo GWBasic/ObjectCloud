@@ -16,6 +16,7 @@ using Spring.Context;
 using Spring.Context.Support;
 
 using ObjectCloud.Common;
+using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.WebServer;
 using ObjectCloud.Spring.Config;
