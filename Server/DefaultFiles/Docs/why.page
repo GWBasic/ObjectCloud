@@ -1,0 +1,29 @@
+<div>Why ObjectCloud?</div><p><a href="/Docs/about.page">About ObjectCloud</a></p><h1>A Very Simple Explanation<br>
+</h1>
+<p>ObjectCloud's goal is to put you, the user, in control of your stuff
+when it's on the web or in the cloud. &nbsp;You know, baby photos, TODO lists, files, ect.
+&nbsp;It lets you share photos, documents, ect with anyone on the internet,
+even if they don't have an account with ObjectCloud. &nbsp;To do this,
+ObjectCloud supports OpenId.</p>
+<p>An eventual goal is to let you move or copy your files to another
+ObjectCloud instance on the internet.&nbsp; By keeping your stuff in
+ObjectCloud, it is always available whenever there is an internet
+connection.&nbsp; You can access it from any computer, phone, or television
+with a web browser.&nbsp; If your computer breaks down, or you loose your
+laptop, your stuff is still safe in ObjectCloud.&nbsp; This is because ObjectCloud takes advantage of cloud-style backup systems.<br>
+</p>
+<p>ObjectCloud does all this by integrating Operating-System style
+features into the web server.&nbsp; This means that you don't have to
+re-learn how to share or upload a file when you use different
+programs.&nbsp; It also helps programmers build better web applications by
+providing them with a vast set of pre-written functionality to build on
+top of.</p>
+<p>To start using ObjectCloud, take a look at the <a target="" title="" href="walkthrough.page">walkthrough</a>.<br>
+</p>
+<h1>A More Technical Explanation</h1>
+<p>ObjectCloud is a Web Server designed like an operating system.&nbsp; It is intended to be hosted in a "cloud-style" VM and  a building block for "Platform as a Service."&nbsp; As each
+ObjectCloud instance is its own web server; ObjectCloud is completely
+de-centralized.&nbsp; This means that an ObjectCloud developer isn't
+dependent on a single company or consortium; and the end user can rely
+on open competition among service providers.&nbsp; A goal of ObjectCloud is to handle about 80% of server-side programming for simple web applications.<br></p><p>There are tangible advantages for both the end user and software developer:<br></p><ul><li>End-user:</li><ul><li>A common look and feel among all applications</li><li>No need to re-learn simple tasks like sharing an item with a friend, or uploading</li><li>A unified place to keep all web data</li><li>Choice in which programs are used to view and manipulate files<br></li></ul><li>Software Developer:</li><ul><li>Ability to use or bypass the common look and feel.<br></li><li>A "pre-baked" Javascript API for manipulating data on the server</li><li>Components for managing and sharing files</li><li>Built-in user management integrated with OpenID</li><li>Popular Javascript libraries are included and <a target="_blank" title="" href="/API">placed into a common location</a></li></ul><ul><li>Access to core persistent data structures without the need to re-write simple data access routines:</li><ul><li>Text files</li><li>Name-value pairs</li><li>Embedded database</li></ul><li>Simplified techniques for server-side data validation<br></li></ul></ul><p>ObjectCloud's target use case is for web applications that have simple data storage needs, such as web-based document, presentation, and image editors.&nbsp; The primary goal is to enable simple web-based collaboration without relying on a 3rd party to host the data.&nbsp; ObjectCloud provides a wealth of pre-written server-side APIs.</p><p>The common look and feel on an ObjectCloud server can be changed by a system administrator or application integrator.&nbsp; This allows hosting services and bundled applications to brand themselves and have a unique look and feel that is different from other ObjectCloud servers and bundles.<br></p><h1>Dollars and Cents</h1><p>The true value of ObjectCloud comes from the applications written on top of it.&nbsp; As a result; ObjectCloud's current focus is to be the best development platform for future web applications.</p><p><a href="about.page">About ObjectCloud</a></p>
+
