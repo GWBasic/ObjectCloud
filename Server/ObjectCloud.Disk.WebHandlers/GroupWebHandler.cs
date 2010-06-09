@@ -126,5 +126,17 @@ namespace ObjectCloud.Disk.WebHandlers
             return UserManagerWebHandler.RemoveUserFromGroup(
                 shellWebConnection, null, Group.Id.ToString(), null, webConnection.Session.User.Id.ToString());
         }
+
+        /// <summary>
+        /// Returns true if the current user is a member of the group, false otherwise
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.GET, WebReturnConvention.JavaScriptObject)]
+        public IWebResults isMember(IWebConnection webConnection)
+        {
+            return WebResults.ToJson(
+                FileHandlerFactoryLocator.UserManagerHandler.IsUserInGroup(webConnection.Session.User.Id, Group.Id));
+        }
     }
 }
