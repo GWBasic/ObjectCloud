@@ -76,7 +76,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// </summary>
         /// <param name="webConnection"></param>
         /// <returns></returns>
-        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Read)]
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Read)]
         public IWebResults joinGroup(IWebConnection webConnection)
         {
             // Only let people join if the group is public
@@ -108,7 +108,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// </summary>
         /// <param name="webConnection"></param>
         /// <returns></returns>
-        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Read)]
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Read)]
         public IWebResults leaveGroup(IWebConnection webConnection)
         {
             // Only let people join if the group is public
