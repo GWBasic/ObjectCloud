@@ -43,8 +43,8 @@ public class ParentScope {
 	        try {
 	            context.setClassShutter(new ClassShutter() {
 					@Override
-					public boolean visibleToScripts(String arg0) {
-						return false;
+					public boolean visibleToScripts(String className) {
+						return className.startsWith("org.mozilla.javascript.");
 					}
 	            });
 	            

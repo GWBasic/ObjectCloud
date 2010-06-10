@@ -571,10 +571,23 @@ namespace ObjectCloud.Javascript.SubProcess
 
             public object Call(IEnumerable<object> arguments)
             {
-                return SubProcess.CallCallback(ScopeId, ThreadId, CallbackId, arguments);
-            }
-        }
-
+            		try
+            		{
+					return SubProcess.CallCallback(ScopeId, ThreadId, CallbackId, arguments);
+				}
+				catch (JavascriptException je)
+				{
+					// If there is an exception creating the scope, log some important information and then re-throw
+					log.ErrorFormat(
+						"Exception in Javascript calling callback.\nSource: {0}",
+					    je,
+					    SubProcess.JavascriptContainer.FullPath);
+					
+					throw;
+				}
+			}
+		}
+			
         /// <summary>
         /// Helper to create a command
         /// </summary>

@@ -140,14 +140,28 @@ namespace ObjectCloud.Javascript.SubProcess
                     CallingFrom.Web,
                     WebMethod.GET);
 
-                data = FunctionCaller.UseTemporaryCaller<SubProcess.CreateScopeResults>(
-                    this, FileContainer, ownerWebConnection, delegate()
-                    {
-                        return _SubProcess.CreateScope(
-                            ScopeId,
-                            Thread.CurrentThread.ManagedThreadId,
-                            CreateMetadata());
-                    });
+				try
+				{
+	                data = FunctionCaller.UseTemporaryCaller<SubProcess.CreateScopeResults>(
+	                    this, FileContainer, ownerWebConnection, delegate()
+	                    {
+	                        return _SubProcess.CreateScope(
+	                            ScopeId,
+	                            Thread.CurrentThread.ManagedThreadId,
+	                            CreateMetadata());
+	                    });
+				}
+				catch (JavascriptException je)
+				{
+					// If there is an exception creating the scope, log some important information and then re-throw
+					log.ErrorFormat(
+						"Exception in Javascript creating scope.\nSource: {0}\nObject: {1}",
+					    je,
+					    SubProcess.JavascriptContainer.FullPath,
+					    FileContainer.FullPath);
+					
+					throw;
+				}
             }
             finally
             {
@@ -305,6 +319,18 @@ namespace ObjectCloud.Javascript.SubProcess
                     subProcess = _SubProcess;
                     return _SubProcess.CallFunctionInScope(ScopeId, Thread.CurrentThread.ManagedThreadId, functionName, arguments);
                 }
+				catch (JavascriptException je)
+				{
+					// If there is an exception creating the scope, log some important information and then re-throw
+					log.ErrorFormat(
+						"Exception in Javascript function.\nSource: {0}\nObject: {1}\nFunction: {2}",
+					    je,
+					    SubProcess.JavascriptContainer.FullPath,
+					    FileContainer.FullPath,
+				        functionName);
+					
+					throw;
+				}
                 catch (SubProcess.AbortedException)
                 {
                     // Allow a max of 3 tries
