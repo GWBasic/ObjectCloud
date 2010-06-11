@@ -571,23 +571,23 @@ namespace ObjectCloud.Javascript.SubProcess
 
             public object Call(IEnumerable<object> arguments)
             {
-            		try
-            		{
-					return SubProcess.CallCallback(ScopeId, ThreadId, CallbackId, arguments);
-				}
-				catch (JavascriptException je)
-				{
-					// If there is an exception creating the scope, log some important information and then re-throw
-					log.ErrorFormat(
-						"Exception in Javascript calling callback.\nSource: {0}",
-					    je,
-					    SubProcess.JavascriptContainer.FullPath);
-					
-					throw;
-				}
-			}
-		}
-			
+                try
+                {
+                    return SubProcess.CallCallback(ScopeId, ThreadId, CallbackId, arguments);
+                }
+                catch (JavascriptException je)
+                {
+                    // If there is an exception creating the scope, log some important information and then re-throw
+                    log.ErrorFormat(
+                        "Exception in Javascript calling callback.\nSource: {0}",
+                        je,
+                        SubProcess.JavascriptContainer.FullPath);
+
+                    throw;
+                }
+            }
+        }
+
         /// <summary>
         /// Helper to create a command
         /// </summary>
@@ -640,13 +640,13 @@ namespace ObjectCloud.Javascript.SubProcess
                 do
                 {
                     Dictionary<string, object> inCommand;
-					
-					TimerCallback callback = delegate(object state)
-					{
-						log.Warn("Killing sub-process due to timeout: " + JavascriptContainer.FullPath);
-						Dispose();
-					};
-                    
+
+                    TimerCallback callback = delegate(object state)
+                    {
+                        log.Warn("Killing sub-process due to timeout: " + JavascriptContainer.FullPath);
+                        Dispose();
+                    };
+
                     // If the thread waits, spin up a timer kill the process in case it runs too long
                     using (new Timer(callback, null, 10000, 0))
                         inCommand = WaitForResponse();
@@ -791,16 +791,16 @@ namespace ObjectCloud.Javascript.SubProcess
         /// </summary>
         Dictionary<object, Dictionary<string, object>> InCommandsByThreadId = new Dictionary<object, Dictionary<string, object>>();*/
 
-		/// <summary>
-		/// The most recent command returned from the sub process 
-		/// </summary>
-		Dictionary<string, object> InCommand = null;
-		
-		/// <summary>
-		/// The thread that has a result waiting for it 
-		/// </summary>
-		int InCommandThreadId;
-			
+        /// <summary>
+        /// The most recent command returned from the sub process 
+        /// </summary>
+        Dictionary<string, object> InCommand = null;
+
+        /// <summary>
+        /// The thread that has a result waiting for it 
+        /// </summary>
+        int InCommandThreadId;
+
         /// <summary>
         /// Syncronizes the sub process's output stream and returns the appropriate response
         /// </summary>
@@ -811,34 +811,34 @@ namespace ObjectCloud.Javascript.SubProcess
 
             do
             {
-				// If there is a waiting result and it's for this thread, return it
-				if (null != InCommand)
-					if (threadID == InCommandThreadId)
-					{
-						Dictionary<string, object> toReturn = InCommand;
-						InCommand = null;
-						return toReturn;
-					}
+                // If there is a waiting result and it's for this thread, return it
+                if (null != InCommand)
+                    if (threadID == InCommandThreadId)
+                    {
+                        Dictionary<string, object> toReturn = InCommand;
+                        InCommand = null;
+                        return toReturn;
+                    }
 
-				// Only 1 thread can read from the sub process at a time
-				// all threads spin while waiting for a response
+                // Only 1 thread can read from the sub process at a time
+                // all threads spin while waiting for a response
                 lock (RespondKey)
-					if (null == InCommand)
-					{
-	                    // else, if there isn't a waiting response that came in on another thread, and if there aren't waiting responses, wait for a response
-	                    if (Process.StandardOutput.EndOfStream || Process.HasExited)
-	                        throw new JavascriptException("The sub process has exited");
+                    if (null == InCommand)
+                    {
+                        // else, if there isn't a waiting response that came in on another thread, and if there aren't waiting responses, wait for a response
+                        if (Process.StandardOutput.EndOfStream || Process.HasExited)
+                            throw new JavascriptException("The sub process has exited");
 
-						string inCommandString = _Process.StandardOutput.ReadLine();
-	
-	                    if (null == inCommandString)
-	                        log.Warn("Null recieved from sub process");
-						else
-						{
-		                   	InCommand = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
-							InCommandThreadId = Convert.ToInt32(InCommand["ThreadID"]);
-						}
-	                }
+                        string inCommandString = _Process.StandardOutput.ReadLine();
+
+                        if (null == inCommandString)
+                            log.Warn("Null recieved from sub process");
+                        else
+                        {
+                            InCommand = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
+                            InCommandThreadId = Convert.ToInt32(InCommand["ThreadID"]);
+                        }
+                    }
             } while (true);
         }
 
@@ -934,18 +934,18 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             try
             {
-				if (!_Process.HasExited)
-				{
-	                DateTime start = (DateTime)state;
-	
-	                if (DateTime.UtcNow - start > TimeSpan.FromSeconds(0.25))
-	                    _Process.Kill();
-	                else
-					{
-						Thread.Sleep(25);
-	                    ThreadPool.QueueUserWorkItem(KillSubprocess, start);
-					}
-				}
+                if (!_Process.HasExited)
+                {
+                    DateTime start = (DateTime)state;
+
+                    if (DateTime.UtcNow - start > TimeSpan.FromSeconds(0.25))
+                        _Process.Kill();
+                    else
+                    {
+                        Thread.Sleep(25);
+                        ThreadPool.QueueUserWorkItem(KillSubprocess, start);
+                    }
+                }
             }
             catch { }
         }
@@ -962,7 +962,7 @@ namespace ObjectCloud.Javascript.SubProcess
                 try
                 {
                     if (!_Process.HasExited)
-	                    _Process.Kill();
+                        _Process.Kill();
                 }
                 catch { }
             }
