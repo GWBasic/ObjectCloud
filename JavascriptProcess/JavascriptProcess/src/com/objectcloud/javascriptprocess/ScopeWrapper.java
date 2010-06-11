@@ -173,6 +173,8 @@ public class ScopeWrapper {
 	    jsonStringifyFunction = scriptableAndResult.jsonStringifyFunction;
 	    Function jsonParseFunction = scriptableAndResult.jsonParseFunction;
 
+		//long start = System.nanoTime();
+
 		for (String key : data.keysIterable()) {
 			Object property = data.get(key);
 			
@@ -183,11 +185,18 @@ public class ScopeWrapper {
 			scope.put(key, scope, property);
 		}
 
+		//Logger.log("evaling metadata took " + (new Long(System.nanoTime() - start)).toString());
+		//start = System.nanoTime();
+
 	    Object result = null;
 		try {
 
+			//start = System.nanoTime();
+
 			for (Script script : parentScope.getCompiledScripts())
 				result = script.exec(context, scope);
+
+			//Logger.log("running scope scripts took " + (new Long(System.nanoTime() - start)).toString());
 			
 		} catch (JavaScriptException je) {
 			returnResult("RespondCreateScope", context, threadID, je.getValue(), outData, "Exception");

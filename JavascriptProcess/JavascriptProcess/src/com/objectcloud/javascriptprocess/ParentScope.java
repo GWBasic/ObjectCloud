@@ -33,6 +33,10 @@ public class ParentScope {
 
 	public ParentScope(IOPump ioPump, JSONObject data, OutputStreamWriter outputStreamWriter) throws Exception {
 		
+		JSONArray scripts = data.getJSONArray("Scripts");
+		
+		//Logger.setFilename("log_" + new Integer(scripts.getString(scripts.length() - 1).hashCode()).toString() + ".log");
+						
 		this.ioPump = ioPump;
 		this.outputStreamWriter = outputStreamWriter;
 		
@@ -51,7 +55,12 @@ public class ParentScope {
 	        // For now these are being swallowed because they seem to occur if setting this twice
 	        } catch (SecurityException se) {}
 
-            scope = context.initStandardObjects();
+			//long start = System.nanoTime();
+
+			scope = context.initStandardObjects();
+
+			//Logger.log("context.initStandardObjects() took " + (new Long(System.nanoTime() - start)).toString());
+			//start = System.nanoTime();
 
             // Load JSON methods
             context.evaluateString(scope, json2, "<cmd>", 1, null);
@@ -65,6 +74,8 @@ public class ParentScope {
             	callFunctionInParentProcessMethod,
             	scope);
             scope.put(callFunctionInParentProcessName, scope, callFunctionInParentProcessMethodFunctionObject);
+
+			//Logger.log("Setting up default functions in scope took " + (new Long(System.nanoTime() - start)).toString());
             
         	/* // Uncomment to test stderr
             // Add function to test stderr
@@ -76,7 +87,9 @@ public class ParentScope {
             scope.put("testError", scope, testErrorMethodFunctionObject);*/
 
             if (data.has("Functions")) {
-				JSONArray functions = data.getJSONArray("Functions");
+    			//start = System.nanoTime();
+
+    			JSONArray functions = data.getJSONArray("Functions");
 				StringBuilder functionsBuilder = new StringBuilder();
 				
 				for (Object function : functions) {
@@ -91,15 +104,20 @@ public class ParentScope {
 				}
 				
 				context.evaluateString(scope, functionsBuilder.toString(), "<cmd>", 1, null);
+
+				//Logger.log("Setting up external functions in scope took " + (new Long(System.nanoTime() - start)).toString());
 			}
 	
 			JSONObject outData = new JSONObject();
 			
 			try {
-				JSONArray scripts = data.getJSONArray("Scripts");
-								
+				//start = System.nanoTime();
+				
 				for (int scriptCtr = 0; scriptCtr < scripts.length(); scriptCtr++)
 					compiledScripts.add(context.compileString(scripts.getString(scriptCtr), new Integer(scriptCtr).toString(), 0, null));
+				
+				//Logger.log("Compiling took " + (new Long(System.nanoTime() - start)).toString());
+				
 			} catch (JavaScriptException je) {
 				returnResult(context, je.getValue(), outData, "Exception");
 				throw je;
@@ -157,14 +175,31 @@ public class ParentScope {
 	
 	public ScriptableAndResult createScope(Context context) {
 
+		//long start = System.nanoTime();
+
 		Scriptable childScope = context.newObject(scope);
+
+		//Logger.log("context.newObject(scope) took " + (new Long(System.nanoTime() - start)).toString());
+		//start = System.nanoTime();
+		
 		childScope.setPrototype(scope);
+
+		//Logger.log("context.newObject(scope) took " + (new Long(System.nanoTime() - start)).toString());
+		//start = System.nanoTime();
+		
 		childScope.setParentScope(null);
+
+		//Logger.log("context.newObject(scope) took " + (new Long(System.nanoTime() - start)).toString());
+		//start = System.nanoTime();
+		
 		
 		ScriptableAndResult toReturn = new ScriptableAndResult();
 		toReturn.scope = childScope;
 		toReturn.jsonStringifyFunction = (Function)getJsonStringifyFunction.exec(context, childScope);
 		toReturn.jsonParseFunction = (Function)getJsonParseFunction.exec(context, childScope);
+
+		//Logger.log("setting up JSON functions took " + (new Long(System.nanoTime() - start)).toString());
+
 		
 		return toReturn;
 	}
