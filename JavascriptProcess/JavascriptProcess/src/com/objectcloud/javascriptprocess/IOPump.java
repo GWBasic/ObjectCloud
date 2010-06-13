@@ -65,7 +65,7 @@ public class IOPump {
 			final CompiledJavascriptTracker compiledJavascriptTracker = new CompiledJavascriptTracker(outputStreamWriter);
 
 			// Create the parent scope
-			ParentScope parentScope = new ParentScope();
+			ParentScope parentScope = new ParentScope(this, outputStreamWriter, compiledJavascriptTracker);
 			
 			JSONObject inCommand = new JSONObject(tokener);
 			
@@ -79,23 +79,26 @@ public class IOPump {
 				if (inCommand.has("ScopeID")) {
 					
 					// Get or create the scope wrapper
-					final ScopeWrapper scopeWrapper;
+					ScopeWrapper scopeWrapper = null;
 					int scopeID = inCommand.getInt("ScopeID");
 					
 					synchronized(scopeWrappers) {
 						if (scopeWrappers.containsKey(scopeID))
 							scopeWrapper = scopeWrappers.get(scopeID);
-						else {
-							scopeWrapper = parentScope.createScopeWrapper(scopeID);
-							scopeWrappers.put(scopeID, scopeWrapper);
-						}
 					}
+					
+					if (null == scopeWrapper) {
+						scopeWrapper = parentScope.createScopeWrapper(scopeID);
+						scopeWrappers.put(scopeID, scopeWrapper);
+					}
+					
+					final ScopeWrapper scopeWrapperFinal = scopeWrapper;
 					
 					command = new Runnable() {
 		
 						@Override
 						public void run() {
-							scopeWrapper.handle(inCommandFinal);
+							scopeWrapperFinal.handle(inCommandFinal);
 						}
 						
 					};

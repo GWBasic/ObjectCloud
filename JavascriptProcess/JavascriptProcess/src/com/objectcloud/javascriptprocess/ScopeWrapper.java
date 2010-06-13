@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -26,36 +25,31 @@ import org.mozilla.javascript.Undefined;
 
 public class ScopeWrapper {
 	
-	/*public ScopeWrapper(Context context, IOPump ioPump, OutputStreamWriter outputStreamWriter, Scriptable childScope, int scopeID) {
-	
-	this.ioPump = ioPump;
-	this.outputStreamWriter = outputStreamWriter;
-	this.scopeID = new Integer(scopeID);
-	this.scope = childScope;
-    jsonStringifyFunction = (Function)context.evaluateString(childScope, "JSON.stringify", "<cmd>", 1, null);
-}*/
-
-	public ScopeWrapper(IOPump ioPump, OutputStreamWriter outputStreamWriter, int scopeID, ParentScope parentScope) {
-	
-		this.ioPump = ioPump;
-		this.outputStreamWriter = outputStreamWriter;
-		this.scopeID = new Integer(scopeID);
-		this.parentScope = parentScope;
-	}
-
-	IOPump ioPump;
-	OutputStreamWriter outputStreamWriter;
-	Scriptable scope;
-	Integer scopeID;
-	Function jsonStringifyFunction;
-	Map<Object, Object> monitorObjectsByThreadID = new HashMap<Object, Object>();
-	Map<Object, JSONObject> inCommandByThreadID = new HashMap<Object, JSONObject>();
-	Map<Object, Function> callbacks = new HashMap<Object, Function>();
-	Map<Object, Object> cachedObjects = new HashMap<Object, Object>();
-	ParentScope parentScope;
+	private final IOPump ioPump;
+	private final OutputStreamWriter outputStreamWriter;
+	private final Scriptable scope;
+	private final Integer scopeID;
+	private final Function jsonStringifyFunction;
+	private final Function jsonParseFunction;
+	private final CompiledJavascriptTracker compiledJavascriptTracker;
+	private final Map<Object, Object> monitorObjectsByThreadID = new HashMap<Object, Object>();
+	private final Map<Object, JSONObject> inCommandByThreadID = new HashMap<Object, JSONObject>();
+	private final Map<Object, Function> callbacks = new HashMap<Object, Function>();
+	private final Map<Object, Object> cachedObjects = new HashMap<Object, Object>();
 	
 	static Random random = new Random();
 	
+	public ScopeWrapper(IOPump ioPump, OutputStreamWriter outputStreamWriter, int scopeID, Scriptable scope, Function jsonStringifyFunction, Function jsonParseFunction, CompiledJavascriptTracker compiledJavascriptTracker) {
+
+		this.ioPump = ioPump;
+		this.outputStreamWriter = outputStreamWriter;
+		this.scopeID = new Integer(scopeID);
+		this.scope = scope;
+		this.jsonStringifyFunction = jsonStringifyFunction;
+		this.jsonParseFunction = jsonParseFunction;
+		this.compiledJavascriptTracker = compiledJavascriptTracker;
+	}
+
 	// Pairing of ThreadID and ScopeWrapper
 	private class ScopeWrapperAndThreadID {
 		
@@ -131,8 +125,8 @@ public class ScopeWrapper {
 				else if (command.equals("CallCallback"))
 					callCallback(context, threadID, data);
 				
-				else if (command.equals("CreateScope"))
-					callCreateScope(context, threadID, data);
+				else if (command.equals("EvalScope"))
+					callEvalScope(context, threadID, data);
 				
 				else if (command.equals("DisposeScope"))
 					ioPump.DisposeScopeWrapper(scopeID);
@@ -165,70 +159,108 @@ public class ScopeWrapper {
 	}
 
 	
-	private void callCreateScope(Context context, Object threadID, JSONObject data) throws Exception {
+	private void callEvalScope(final Context context, Object threadID, JSONObject data) throws Exception {
 		
 		JSONObject outData = new JSONObject();
 		
-		Date start = new Date();
+		//Date start = new Date();
 		
-		ParentScope.ScriptableAndResult scriptableAndResult = parentScope.createScope(context);
+	
+		//Date complete = new Date();
+		//Logger.log(String.format("Amount of time needed to construct the scope from a potentially pre-cached scope: %d", complete.getTime() - start.getTime()));
 		
-		Date complete = new Date();
-		Logger.log(String.format("Amount of time needed to construct the scope from a potentially pre-cached scope: %d", complete.getTime() - start.getTime()));
-		
-		this.scope = scriptableAndResult.scope;
-	    jsonStringifyFunction = scriptableAndResult.jsonStringifyFunction;
-	    Function jsonParseFunction = scriptableAndResult.jsonParseFunction;
 
 		//long start = System.nanoTime();
 
-	    start = new Date();
+	    //start = new Date();
 	    
-		for (String key : data.keysIterable()) {
-			Object property = data.get(key);
+		if (data.has("Data")) {
 			
-			// If the property isn't a primitive, then convert it to something Rhino can handle by re-JSONing and unJSONing
-			if ((property instanceof JSONArray) || (property instanceof JSONObject))
-				property = jsonParseFunction.call(context, scope, scope, new Object[] {property.toString()});
-
-			scope.put(key, scope, property);
+			JSONObject subData = data.getJSONObject("Data");
+			
+			for (String key : subData.keysIterable()) {
+				Object property = subData.get(key);
+				
+				// If the property isn't a primitive, then convert it to something Rhino can handle by re-JSONing and unJSONing
+				if ((property instanceof JSONArray) || (property instanceof JSONObject))
+					property = jsonParseFunction.call(context, scope, scope, new Object[] {property.toString()});
+	
+				scope.put(key, scope, property);
+			}
 		}
+
+		// TODO
+		// THIS NEEDS SERIOUS OPTIMIZATION!!!
+		if (data.has("Functions")) {
+
+            JSONArray functions = data.getJSONArray("Functions");
+           
+            StringBuilder functionsBuilder = new StringBuilder();
+            
+            for (Object function : functions) {
+               
+                functionsBuilder.append("function ");
+                functionsBuilder.append(function.toString());
+                functionsBuilder.append("() { var args = []; for (var i = 0; i < arguments.length; i++) args[i] = arguments[i]; return ");
+                functionsBuilder.append(ParentScope.callFunctionInParentProcessName);
+                functionsBuilder.append("(\"");
+                functionsBuilder.append(function.toString());
+                functionsBuilder.append("\", args);} ");
+            }
+
+            context.evaluateString(scope, functionsBuilder.toString(), "<cmd>", 0, null);
+        }
 		
-		complete = new Date();
-		Logger.log(String.format("Amount of time needed to populate the scope with data: %d", complete.getTime() - start.getTime()));
+		//complete = new Date();
+		//Logger.log(String.format("Amount of time needed to populate the scope with data: %d", complete.getTime() - start.getTime()));
 
 		//Logger.log("evaling metadata took " + (new Long(System.nanoTime() - start)).toString());
 		//start = System.nanoTime();
 
-	    start = new Date();
+	    //start = new Date();
 	    
-	    Object result = scriptableAndResult.result;
-		try {
-
-			//start = System.nanoTime();
-
-			ArrayList<NativeFunction> compiledScripts = parentScope.getCompiledScripts();
-			for (int ctr = parentScope.getNumScriptsThatCanBePreloaded(); ctr < compiledScripts.size(); ctr++) {
-			    Date subStart = new Date();
-				
-			    result = compiledScripts.get(ctr).call(context, scope, scope, null);
-				
-			    Date subComplete = new Date();
-				Logger.log(String.format("Amount of time needed to run constructor %d: %d", ctr, subComplete.getTime() - subStart.getTime()));
-			}
-
-			//Logger.log("running scope scripts took " + (new Long(System.nanoTime() - start)).toString());
+		JSONArray results = new JSONArray();
+		outData.put("Results", results);
+		
+		JSONArray cacheIDs = null;
+		if (data.has("CacheIDs"))
+			cacheIDs = data.getJSONArray("CacheIDs");
+		
+		if (data.has("Scripts")) {
 			
-		} catch (JavaScriptException je) {
-			returnResult("RespondCreateScope", context, threadID, je.getValue(), outData, "Exception");
-			return;
-		} catch (Exception e) {
-			returnResult("RespondCreateScope", context, threadID, e.getMessage(), outData, "Exception");
-			return;
+			JSONArray scripts = data.getJSONArray("Scripts");
+			
+			try {
+
+				for (int ctr = 0; ctr < scripts.length(); ctr++) {
+					
+					Object scriptOrId = scripts.get(ctr);
+					final Object result;
+					
+					if (String.class.isInstance(scriptOrId)) {
+						
+						String script = (String)scriptOrId;
+						result = context.evaluateString(scope, script, "<cmd>", 0, null);
+					} else {
+						
+						int scriptID = Integer.parseInt(scriptOrId.toString());
+						result = compiledJavascriptTracker.getScript(scriptID).call(context, scope, scope, null); 
+					}
+					
+					results.put(generateJSONSerializerForJavascriptObject(context, result));
+					
+					if (null != cacheIDs)
+						cachedObjects.put(cacheIDs.get(ctr), result);
+				}
+
+			} catch (Exception e) {
+				sendException("RespondEvalScope", threadID, e.getMessage());
+				return;
+			}
 		}
 		
-		complete = new Date();
-		Logger.log(String.format("Amount of time needed to run remaining constructors: %d", complete.getTime() - start.getTime()));
+		//complete = new Date();
+		//Logger.log(String.format("Amount of time needed to run remaining constructors: %d", complete.getTime() - start.getTime()));
 	    
 	    JSONObject functions = new JSONObject();
 		outData.put("Functions", functions);
@@ -240,6 +272,8 @@ public class ScopeWrapper {
             Object javascriptMethodObject = scope.get(functionName, scope);
 
             // If the value is a Javascript function...
+            // TODO:
+            // OPTIMIZE THIS
             if (Function.class.isInstance(javascriptMethodObject)) {
             	JSONObject function = new JSONObject();
             	functions.put(functionName, function);
@@ -269,8 +303,17 @@ public class ScopeWrapper {
             }
         }
 
-		
-	    returnResult("RespondCreateScope", context, threadID, result, outData, "Result");
+		sendCommand("RespondEvalScope", threadID, outData);
+	}
+	
+	private Object generateJSONSerializerForJavascriptObject(final Context context, final Object result) {
+		return new JSONString() {
+			
+			@Override
+			public String toJSONString() {
+				return (String)jsonStringifyFunction.call(context, scope, scope, new Object[] {result});
+			}
+		};
 	}
 	
 	private void callFunctionInScope(Context context, Object threadID, JSONObject data) throws Exception {
@@ -284,7 +327,11 @@ public class ScopeWrapper {
 	private void callCallback(Context context, Object threadID, JSONObject data) throws Exception {
 		
 		Object callbackID = data.get("CallbackId");
-		Function function = callbacks.get(callbackID);
+
+		Function function;
+		synchronized (callbacks) {
+			function = callbacks.get(callbackID);
+		}
 		
 		callFunction("RespondCallCallback", context, threadID, function, data.getJSONArray("Arguments"));
 	}
@@ -312,50 +359,46 @@ public class ScopeWrapper {
 		}
 		
 		try {
-			Object callResults = function.call(context, scope, scope, arguments.toArray());
 			
-			returnResult(command, context, threadID, callResults, "Result");
+			Object result = function.call(context, scope, scope, arguments.toArray());
+			
+			JSONObject returnData = new JSONObject();
+			if (!Undefined.class.isInstance(result))
+				returnData.put("Result", generateJSONSerializerForJavascriptObject(context, result));
+			
+			sendCommand("RespondCallFunctionInScope", threadID, returnData);
+		
 		} catch (JavaScriptException je) {
-			returnResult("RespondEvalScope", context, threadID, je.getValue(), "Exception");
+			
+			sendException("RespondCallFunctionInScope", threadID, generateJSONSerializerForJavascriptObject(context, je.getValue()));
 			return;
+		
 		} catch (EcmaError ee) {
-			returnResult(command, context, threadID, ee.getMessage(), "Exception");
+		
+			sendException("RespondCallFunctionInScope", threadID, ee.getMessage());
+		
 		} catch (Exception e) {
 			
 			StringBuilder exceptionMessage = new StringBuilder(e.getMessage());
 			for (StackTraceElement ste : e.getStackTrace())
 				exceptionMessage.append("\n" + ste.toString());
 			
-			returnResult("RespondEvalScope", context, threadID, exceptionMessage.toString(), "Exception");
+			sendException("RespondEvalScope", threadID, exceptionMessage.toString());
 			return;
         }
 	}
 	
-	private void returnResult(String command, Context context, Object threadID, Object callResults, String resultsName) throws JSONException, IOException {
-		returnResult(command, context, threadID, callResults, new JSONObject(), resultsName);
-	}
 	
-	private void returnResult(String command, final Context context, Object threadID, final Object callResults, JSONObject outData, String resultsName) throws JSONException, IOException {
+
+	private void sendException(String command, Object threadID, Object exceptionMessage) throws JSONException, IOException {
 		
-		if (callResults != null)
-			if (!(callResults instanceof Undefined)) {
-				final Object serializedCallResults = jsonStringifyFunction.call(context, scope, scope, new Object[] { callResults });
-				
-				if (serializedCallResults instanceof String)
-					outData.put(resultsName, new JSONString() {
-						
-						@Override
-						public String toJSONString() {
-							return (String)serializedCallResults;
-						}
-						
-					});		
-				}
+		JSONObject outData = new JSONObject();
+		outData.put("Exception", exceptionMessage);
 		
 		sendCommand(command, threadID, outData);
 	}
 	
-	private void sendCommand(String command, Object threadID, JSONObject data) throws JSONException, IOException {
+	private void sendCommand(String command, Object threadID, Object data) throws JSONException, IOException {
 		
 		JSONObject outCommand = new JSONObject();
 		outCommand.put("Data", data);
@@ -427,8 +470,10 @@ public class ScopeWrapper {
 						callbackID = random.nextInt();
 					} while (callbacks.containsKey(callbackID));
 					
-					callbacks.put(callbackID, (Function)argument);
-					callbackIDs.add(callbackID);
+					synchronized (callbacks) {
+						callbacks.put(callbackID, (Function)argument);
+						callbackIDs.add(callbackID);
+					}
 					
 					JSONObject callbackIndicator = new JSONObject();
 					callbackIndicator.put("Callback", true);
@@ -494,7 +539,8 @@ public class ScopeWrapper {
 						// If the object is a JSONArray or JSONObject, then it can't be directly consumed in Rhino and must be
 						// re-de-serialized in Rhino
 						if (JSONArray.class.isInstance(toReturn) || JSONObject.class.isInstance(toReturn))				
-							toReturn = context.evaluateString(scope, "(" + toReturn.toString() + ")", "<cmd>", 1, null);
+							toReturn = jsonParseFunction.call(context, scope, scope, new Object[] { toReturn.toString() }); 
+								//context.evaluateString(scope, "(" + toReturn.toString() + ")", "<cmd>", 1, null);
 						
 						if (JSONObject.NULL == toReturn)
 							toReturn = null;
@@ -505,7 +551,18 @@ public class ScopeWrapper {
 						return toReturn;
 
 					} else if (dataFromParent.has("Eval")) {
-						Object toReturn = context.evaluateString(scope, dataFromParent.getString("Eval"), "<cmd>", 1, null);
+						
+						Object toEval = dataFromParent.get("Eval");
+						Object toReturn;
+						
+						if (String.class.isInstance(toEval))
+							toReturn = context.evaluateString(scope, (String)toEval, "<cmd>", 1, null);
+						else {
+							int scriptID = Integer.parseInt(toEval.toString());
+							NativeFunction script = this.compiledJavascriptTracker.getScript(scriptID);
+							
+							toReturn = script.call(context, scope, scope, new Object[0]);
+						}
 
 						if (dataFromParent.has("CacheID"))
 							cachedObjects.put(dataFromParent.get("CacheID"), toReturn);

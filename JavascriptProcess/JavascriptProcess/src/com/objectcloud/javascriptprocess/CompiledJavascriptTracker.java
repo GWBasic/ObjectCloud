@@ -106,7 +106,7 @@ public class CompiledJavascriptTracker {
 		String script = data.getString("Script");
 		int scriptId = data.getInt("ScriptID");
 		
-		String uniqueName = new Long(random.nextLong()).toString() + new Long(random.nextLong()).toString(); 
+		String uniqueName = new Long(Math.abs(random.nextLong())).toString() + new Long(Math.abs(random.nextLong())).toString(); 
 		
         Object[] classFiles = classCompiler.compileToClassFiles(script, "<cmd>", 0, "com.objectcloud.javascript.generated_" + uniqueName);
         
