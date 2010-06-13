@@ -344,6 +344,19 @@ namespace ObjectCloud.Javascript.SubProcess
                         if (subProcess == _SubProcess)
                             ConstructScope();
                 }
+                catch (ObjectDisposedException)
+                {
+                    // Allow a max of 3 tries
+                    if (tryCtr >= 3)
+                        throw;
+
+                    tryCtr++;
+
+                    if (subProcess == _SubProcess)
+                    using (TimedLock.Lock(subProcess))
+                        if (subProcess == _SubProcess)
+                            ConstructScope();
+                }
         }
 
         /// <summary>

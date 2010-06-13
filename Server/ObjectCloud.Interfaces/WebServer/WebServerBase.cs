@@ -459,7 +459,7 @@ namespace ObjectCloud.Interfaces.WebServer
 				if (null == PreloadedObjects)
 					return;
 				
-				IEnumerable<string> preloadedObjects = StringParser.ParseCommaSeperated(PreloadedObjects);
+				/*IEnumerable<string> preloadedObjects = StringParser.ParseCommaSeperated(PreloadedObjects);
 				IEnumerable<IFileContainer> toPreLoad = GetObjectsAndTraverseDirectories(preloadedObjects);
 				
 				Enumerable<IFileContainer>.MultithreadedEach(
@@ -468,7 +468,7 @@ namespace ObjectCloud.Interfaces.WebServer
 					delegate(IFileContainer fileContainer)
 					{
 						fileContainer.WebHandler.GetOrCreateExecutionEnvironment();
-					});
+					});*/
 			}
 			catch (Exception e)
 			{

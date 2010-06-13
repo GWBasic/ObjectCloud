@@ -12,6 +12,7 @@ using Common.Logging;
 
 using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Disk;
+using ObjectCloud.Interfaces.Javascript;
 using ObjectCloud.Interfaces.Security;
 using ObjectCloud.Interfaces.WebServer;
 using ObjectCloud.WebAccessCodeGenerators;
@@ -129,7 +130,7 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             get { return _ScopeWrapper; }
         }
-        private readonly ScopeWrapper _ScopeWrapper;
+        private ScopeWrapper _ScopeWrapper;
 
         /// <summary>
         /// The WebCallingConvention
@@ -330,9 +331,22 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <returns></returns>
         protected IWebResults CallFunction(IWebConnection webConnection, CallingFrom callingFrom, IDictionary<string, string> arguments)
         {
+			// If the scope wrapper is disposed, first try getting another one, then throw an exception
             if (ScopeWrapper.Disposed)
-                throw new ObjectDisposedException(FileContainer.FullPath + "'s javascript scope is disposed");
-
+			{
+				FileContainer.WebHandler.ResetExecutionEnvironment();
+				IExecutionEnvironment ee = FileContainer.WebHandler.GetOrCreateExecutionEnvironment();
+				
+				if (ee is ExecutionEnvironment)
+				{
+					ExecutionEnvironment executionEnvironment = (ExecutionEnvironment)ee;
+					_ScopeWrapper = executionEnvironment.ScopeWrapper;
+				}
+				                             
+	            if (ScopeWrapper.Disposed)
+    		            throw new ObjectDisposedException(FileContainer.FullPath + "'s javascript scope is disposed");
+			}
+			
             // This value is ThreadStatic so that if the function shells, it can still know about the connection
             FunctionCaller oldMe = _Current;
             _Current = this;

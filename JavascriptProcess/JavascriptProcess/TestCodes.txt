@@ -15,7 +15,7 @@
    "ThreadID":456,
    "Data":
    {
-      "CallbackId":-89448424,
+      "CallbackId":1683844457,
       "Arguments":[]
    }
 }
@@ -179,9 +179,18 @@
    "ThreadID":456,
    "Data": {}
 }
-
 {
    "ScopeID":1,
+   "Command":"CallFunctionInScope",
+   "ThreadID":456,
+   "Data":
+   {
+      "FunctionName":"getB",
+      "Arguments":[]
+   }
+}
+{
+   "ScopeID":2,
    "Command":"CallFunctionInScope",
    "ThreadID":456,
    "Data":

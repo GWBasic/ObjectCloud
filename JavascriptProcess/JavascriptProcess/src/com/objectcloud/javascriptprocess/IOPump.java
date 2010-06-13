@@ -4,11 +4,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -50,46 +50,65 @@ public class IOPump {
 	OutputStream outStream;
 	
 	Map<Integer, ScopeWrapper> scopeWrappers = new HashMap<Integer, ScopeWrapper>();
+	private final static ExecutorService executorService = Executors.newCachedThreadPool();
 
+	public static ExecutorService getExecutorservice() {
+		return executorService;
+	}
+	
 	public void start() throws Exception {
-		
-		ExecutorService executorService = Executors.newCachedThreadPool();
 		
 		try {
 			JSONTokener tokener = new JSONTokener(new InputStreamReader(inStream));
 			OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outStream);
 			
+			final CompiledJavascriptTracker compiledJavascriptTracker = new CompiledJavascriptTracker(outputStreamWriter);
+
 			// Create the parent scope
-			JSONObject inCommand = new JSONObject(tokener);
-			ParentScope parentScope = new ParentScope(this, inCommand, outputStreamWriter);
+			ParentScope parentScope = new ParentScope();
 			
-			inCommand = new JSONObject(tokener);
+			JSONObject inCommand = new JSONObject(tokener);
 			
 			while (inCommand.length() > 0) {
 			
-				// Get or create the scope wrapper
-				final ScopeWrapper scopeWrapper;
-				int scopeID = inCommand.getInt("ScopeID");
-				
-				synchronized(scopeWrappers) {
-					if (scopeWrappers.containsKey(scopeID))
-						scopeWrapper = scopeWrappers.get(scopeID);
-					else {
-						scopeWrapper = parentScope.createScopeWrapper(scopeID);
-						scopeWrappers.put(scopeID, scopeWrapper);
-					}
-				}
-				
 				final JSONObject inCommandFinal = inCommand;
+				Runnable command;
 				
-				Runnable command = new Runnable() {
-	
-					@Override
-					public void run() {
-						scopeWrapper.handle(inCommandFinal);
+				// If there's a scopeID, then the command will be handled in a scope
+				// Else, if there's no scopeID, then it has to do with compiled javascript
+				if (inCommand.has("ScopeID")) {
+					
+					// Get or create the scope wrapper
+					final ScopeWrapper scopeWrapper;
+					int scopeID = inCommand.getInt("ScopeID");
+					
+					synchronized(scopeWrappers) {
+						if (scopeWrappers.containsKey(scopeID))
+							scopeWrapper = scopeWrappers.get(scopeID);
+						else {
+							scopeWrapper = parentScope.createScopeWrapper(scopeID);
+							scopeWrappers.put(scopeID, scopeWrapper);
+						}
 					}
 					
-				};
+					command = new Runnable() {
+		
+						@Override
+						public void run() {
+							scopeWrapper.handle(inCommandFinal);
+						}
+						
+					};
+				
+				} else {
+					command = new Runnable() {
+						
+						@Override
+						public void run() {
+							compiledJavascriptTracker.handle(inCommandFinal);
+						}
+					};
+				}
 				
 				executorService.execute(command);
 				

@@ -43,7 +43,7 @@ namespace ObjectCloud.Javascript.SubProcess
 
             try
             {
-                ScopeWrapper = new ObjectCloud.Javascript.SubProcess.ScopeWrapper(
+                _ScopeWrapper = new ObjectCloud.Javascript.SubProcess.ScopeWrapper(
                     fileHandlerFactoryLocator,
                     javascriptContainer,
                     subProcessFactory,
@@ -60,8 +60,12 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <summary>
         /// The scope wrapper
         /// </summary>
-        ScopeWrapper ScopeWrapper;
-        
+        internal ScopeWrapper ScopeWrapper
+        {
+        		get { return _ScopeWrapper; }
+		}
+		ScopeWrapper _ScopeWrapper;
+		
         /// <summary>
         /// The FileHandlerFactoryLocator
         /// </summary>
@@ -95,8 +99,8 @@ namespace ObjectCloud.Javascript.SubProcess
             {
                 string method = webConnection.GetParameters["Method"];
 
-                if (null != ScopeWrapper)
-                    return ScopeWrapper.GetMethod(method);
+                if (null != _ScopeWrapper)
+                    return _ScopeWrapper.GetMethod(method);
             }
 
             // If all else fails, just return null to indicate that the Javascript environment can't handle this request
@@ -109,8 +113,8 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <returns></returns>
         public IEnumerable<string> GenerateJavascriptWrapper(IWebConnection webConnection)
         {
-            if (null != ScopeWrapper)
-                return ScopeWrapper.GenerateJavascriptWrapper();
+            if (null != _ScopeWrapper)
+                return _ScopeWrapper.GenerateJavascriptWrapper();
             else
                 return new string[0];
         }
@@ -126,8 +130,8 @@ namespace ObjectCloud.Javascript.SubProcess
 
         public bool IsBlockWebMethodsEnabled(IWebConnection webConnection)
         {
-            if (null != ScopeWrapper)
-                return ScopeWrapper.BlockWebMethods;
+            if (null != _ScopeWrapper)
+                return _ScopeWrapper.BlockWebMethods;
             else
                 return false;
         }

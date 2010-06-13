@@ -4,10 +4,11 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 
+
 // Assists in logging timing issues
 public class Logger {
 	
-	/*public static void setFilename(String filename) {
+	public static void setFilename(String filename) {
 		Logger.filename = filename;
 	}
 
@@ -40,5 +41,5 @@ public class Logger {
 		} catch (IOException e) {
 		}
 
-	}*/
+	}
 }

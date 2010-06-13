@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -18,7 +19,7 @@ import org.mozilla.javascript.Context;
 import org.mozilla.javascript.EcmaError;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.JavaScriptException;
-import org.mozilla.javascript.Script;
+import org.mozilla.javascript.NativeFunction;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.Undefined;
@@ -166,15 +167,23 @@ public class ScopeWrapper {
 	
 	private void callCreateScope(Context context, Object threadID, JSONObject data) throws Exception {
 		
-		ParentScope.ScriptableAndResult scriptableAndResult;
 		JSONObject outData = new JSONObject();
-		scriptableAndResult = parentScope.createScope(context);
+		
+		Date start = new Date();
+		
+		ParentScope.ScriptableAndResult scriptableAndResult = parentScope.createScope(context);
+		
+		Date complete = new Date();
+		Logger.log(String.format("Amount of time needed to construct the scope from a potentially pre-cached scope: %d", complete.getTime() - start.getTime()));
+		
 		this.scope = scriptableAndResult.scope;
 	    jsonStringifyFunction = scriptableAndResult.jsonStringifyFunction;
 	    Function jsonParseFunction = scriptableAndResult.jsonParseFunction;
 
 		//long start = System.nanoTime();
 
+	    start = new Date();
+	    
 		for (String key : data.keysIterable()) {
 			Object property = data.get(key);
 			
@@ -184,17 +193,29 @@ public class ScopeWrapper {
 
 			scope.put(key, scope, property);
 		}
+		
+		complete = new Date();
+		Logger.log(String.format("Amount of time needed to populate the scope with data: %d", complete.getTime() - start.getTime()));
 
 		//Logger.log("evaling metadata took " + (new Long(System.nanoTime() - start)).toString());
 		//start = System.nanoTime();
 
-	    Object result = null;
+	    start = new Date();
+	    
+	    Object result = scriptableAndResult.result;
 		try {
 
 			//start = System.nanoTime();
 
-			for (Script script : parentScope.getCompiledScripts())
-				result = script.exec(context, scope);
+			ArrayList<NativeFunction> compiledScripts = parentScope.getCompiledScripts();
+			for (int ctr = parentScope.getNumScriptsThatCanBePreloaded(); ctr < compiledScripts.size(); ctr++) {
+			    Date subStart = new Date();
+				
+			    result = compiledScripts.get(ctr).call(context, scope, scope, null);
+				
+			    Date subComplete = new Date();
+				Logger.log(String.format("Amount of time needed to run constructor %d: %d", ctr, subComplete.getTime() - subStart.getTime()));
+			}
 
 			//Logger.log("running scope scripts took " + (new Long(System.nanoTime() - start)).toString());
 			
@@ -206,6 +227,8 @@ public class ScopeWrapper {
 			return;
 		}
 		
+		complete = new Date();
+		Logger.log(String.format("Amount of time needed to run remaining constructors: %d", complete.getTime() - start.getTime()));
 	    
 	    JSONObject functions = new JSONObject();
 		outData.put("Functions", functions);

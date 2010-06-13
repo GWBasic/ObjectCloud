@@ -466,7 +466,6 @@ namespace ObjectCloud.Javascript.SubProcess
 
             if (Disposed)
                 throw new ObjectDisposedException("This Javascript sub process is disposed and can no longer be used");
-
         }
 
         /// <summary>
