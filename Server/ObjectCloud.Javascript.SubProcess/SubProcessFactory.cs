@@ -26,9 +26,7 @@ namespace ObjectCloud.Javascript.SubProcess
             get { return _NumSubProcesses; }
             set { _NumSubProcesses = value; }
         }
-        private int _NumSubProcesses = 6;
-
-        private Rotater<SubProcess> SubProcessRotater;
+        private int _NumSubProcesses = 2;
 
         /// <summary>
         /// All of the sub processes
@@ -45,9 +43,11 @@ namespace ObjectCloud.Javascript.SubProcess
                 _CompiledJavascriptManager = new CompiledJavascriptManager(value);
 
                 for (int ctr = 0; ctr < NumSubProcesses; ctr++)
-                    SubProcesses.Add(new SubProcess());
-
-                SubProcessRotater = new Rotater<SubProcess>(SubProcesses);
+				{
+					SubProcess subProcess = new SubProcess();
+                    SubProcesses.Add(subProcess);
+					Queue.Enqueue(subProcess);
+				}
             }
         }
         FileHandlerFactoryLocator _FileHandlerFactoryLocator;
@@ -58,6 +58,11 @@ namespace ObjectCloud.Javascript.SubProcess
         }
         private CompiledJavascriptManager _CompiledJavascriptManager;
 
+		/// <summary>
+		/// A queue of sub processes that is rotated through 
+		/// </summary>
+        private LockFreeQueue<SubProcess> Queue = new LockFreeQueue<SubProcess>();
+		
         /// <summary>
         /// Returns a sub-process
         /// </summary>
@@ -65,7 +70,16 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <returns></returns>
         public SubProcess GetSubProcess()
         {
-            return SubProcessRotater.Next();           
+            SubProcess toReturn;
+            while (!Queue.Dequeue(out toReturn))
+                Thread.Sleep(0);
+
+			if (!toReturn.Alive)
+				toReturn = new SubProcess();
+			
+            Queue.Enqueue(toReturn);
+
+            return toReturn;
         }
 
         ~SubProcessFactory()

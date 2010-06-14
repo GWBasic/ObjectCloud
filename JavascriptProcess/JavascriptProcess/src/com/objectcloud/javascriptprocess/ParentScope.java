@@ -1,12 +1,10 @@
 package com.objectcloud.javascriptprocess;
 
 import java.io.OutputStreamWriter;
-import java.lang.reflect.Method;
 
 import org.mozilla.javascript.ClassShutter;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
-import org.mozilla.javascript.FunctionObject;
 import org.mozilla.javascript.NativeFunction;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
@@ -19,7 +17,6 @@ public class ParentScope {
     private final ScriptableObject scope;
     private final NativeFunction getJsonStringifyFunction;
     private final NativeFunction getJsonParseFunction;
-    private final static Method callFunctionInParentProcessMethod = ScopeWrapper.getCallFunctionInParentProcessMethod();
     final static String callFunctionInParentProcessName = "_____callParentFunction";
    
     // This is a separate class for memory reasons
@@ -53,13 +50,6 @@ public class ParentScope {
             getJsonStringifyFunction = new Json2stringify();
             getJsonParseFunction = new Json2parse();
            
-            // Load external function caller
-            FunctionObject callFunctionInParentProcessMethodFunctionObject = new FunctionObject(
-                callFunctionInParentProcessName,
-                callFunctionInParentProcessMethod,
-                scope);
-            scope.put(callFunctionInParentProcessName, scope, callFunctionInParentProcessMethodFunctionObject);
-
             // This makes the parent scope sealed and immutable
             scope.sealObject();
         } finally {

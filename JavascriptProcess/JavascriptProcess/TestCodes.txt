@@ -34,7 +34,7 @@
    "ThreadID":456,
    "Data":
    {
-      "CallbackId":-1817622645,
+      "CallbackId":-311280961,
       "Arguments":[]
    }
 }
@@ -76,7 +76,8 @@
    "ScopeID": 8765,
    "Data":
    {
-      "Scripts": ["null", "1", "function foo(){}", "{}"]
+      "Scripts": ["null", "1", "function foo(a, b, c){}", "{}"],
+      "ReturnFunctions": true
    }
 }
 {

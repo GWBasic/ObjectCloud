@@ -152,7 +152,7 @@ public class CompiledJavascriptTracker {
 	
 	private final HashMap<Integer, NativeFunction> scripts = new HashMap<Integer, NativeFunction>(); 
 	
-	public class ScriptNotFound extends Exception {
+	public class ScriptNotFound extends RuntimeException {
 
 		/**
 		 * 

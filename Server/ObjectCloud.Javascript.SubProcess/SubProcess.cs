@@ -272,17 +272,17 @@ namespace ObjectCloud.Javascript.SubProcess
 
         void Process_Exited(object sender, EventArgs e)
         {
-            try
+            if (!Disposed)
+                Aborted = true;
+
+			try
             {
                 ((Process)sender).Exited -= new EventHandler(Process_Exited);
                 using (TimedLock.Lock(SubProcesses))
                     SubProcesses.Remove(((Process)sender));
 
                 if (!Disposed)
-                {
                     Dispose();
-                    Aborted = true;
-                }
             }
             catch (Exception ex)
             {
