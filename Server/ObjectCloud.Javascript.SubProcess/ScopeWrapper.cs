@@ -16,6 +16,7 @@ using JsonFx.Json;
 using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Disk;
+using ObjectCloud.Interfaces.Javascript;
 using ObjectCloud.Interfaces.Security;
 using ObjectCloud.Interfaces.WebServer;
 
@@ -314,52 +315,40 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <exception cref="AbortedException">Thrown if the sub process aborted anormally.  Callers should recover from this error condition</exception>
         public object CallFunction(IWebConnection webConnection, string functionName, IEnumerable arguments)
         {
-            //int tryCtr = 0;
-
-            while (true)
-                try
-                {
-                    return _SubProcess.CallFunctionInScope(ScopeId, Thread.CurrentThread.ManagedThreadId, functionName, arguments);
-                }
-				catch (JavascriptException je)
+			return CallFunction(webConnection, functionName, arguments, 0);
+		}
+		
+        private object CallFunction(IWebConnection webConnection, string functionName, IEnumerable arguments, int tryCtr)
+		{
+            try
+            {
+				// If the sub process crashed, try to reset the execution environment
+				if (!SubProcess.Alive & tryCtr < 3)
 				{
-					// If there is an exception creating the scope, log some important information and then re-throw
-					log.ErrorFormat(
-						"Exception in Javascript function.\nSource: {0}\nObject: {1}\nFunction: {2}",
-					    je,
-					    JavascriptContainer.FullPath,
-					    FileContainer.FullPath,
-				        functionName);
+					FileContainer.WebHandler.ResetExecutionEnvironment();
 					
-					throw;
+					IExecutionEnvironment executionEnvironment = FileContainer.WebHandler.GetOrCreateExecutionEnvironment();
+					if (executionEnvironment is ExecutionEnvironment)
+					{
+						ScopeWrapper replacement = ((ExecutionEnvironment)executionEnvironment).ScopeWrapper;
+						return replacement.CallFunction(webConnection, functionName, arguments, tryCtr + 1);
+					}
 				}
-            // TODO
-                /*catch (SubProcess.AbortedException)
-                {
-                    // Allow a max of 3 tries
-                    if (tryCtr >= 3)
-                        throw;
-
-                    tryCtr++;
-
-                    if (subProcess == _SubProcess)
-                    using (TimedLock.Lock(subProcess))
-                        if (subProcess == _SubProcess)
-                            ConstructScope();
-                }
-                catch (ObjectDisposedException)
-                {
-                    // Allow a max of 3 tries
-                    if (tryCtr >= 3)
-                        throw;
-
-                    tryCtr++;
-
-                    if (subProcess == _SubProcess)
-                    using (TimedLock.Lock(subProcess))
-                        if (subProcess == _SubProcess)
-                            ConstructScope();
-                }*/
+			
+                return _SubProcess.CallFunctionInScope(ScopeId, Thread.CurrentThread.ManagedThreadId, functionName, arguments);
+            }
+			catch (JavascriptException je)
+			{
+				// If there is an exception creating the scope, log some important information and then re-throw
+				log.ErrorFormat(
+					"Exception in Javascript function.\nSource: {0}\nObject: {1}\nFunction: {2}",
+				    je,
+				    JavascriptContainer.FullPath,
+				    FileContainer.FullPath,
+			        functionName);
+				
+				throw;
+			}
         }
 
         /// <summary>
