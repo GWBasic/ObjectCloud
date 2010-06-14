@@ -9,6 +9,7 @@ import java.util.Random;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.mozilla.javascript.CompilerEnvirons;
+import org.mozilla.javascript.EvaluatorException;
 import org.mozilla.javascript.NativeFunction;
 import org.mozilla.javascript.optimizer.ClassCompiler;
 
@@ -108,7 +109,15 @@ public class CompiledJavascriptTracker {
 		
 		String uniqueName = new Long(Math.abs(random.nextLong())).toString() + new Long(Math.abs(random.nextLong())).toString(); 
 		
-        Object[] classFiles = classCompiler.compileToClassFiles(script, "<cmd>", 0, "com.objectcloud.javascript.generated_" + uniqueName);
+        Object[] classFiles;
+        
+        try {
+            classFiles = classCompiler.compileToClassFiles(script, "<cmd>", 0, "com.objectcloud.javascript.generated_" + uniqueName);
+        } catch (EvaluatorException ee) {
+        	JSONObject toReturn = new JSONObject();
+        	toReturn.put("Exception", ee.getMessage() + "\nline: " + (new Integer(ee.lineNumber())).toString() + "\ncolumn: " + (new Integer(ee.columnNumber())).toString());
+        	return toReturn;
+        }
         
         // Convert Rhino's weirdo return format into a structure usable by the class loader and returnable
         ArrayList<byte[]> compiledClasses = new ArrayList<byte[]>();
@@ -143,9 +152,24 @@ public class CompiledJavascriptTracker {
 	
 	private final HashMap<Integer, NativeFunction> scripts = new HashMap<Integer, NativeFunction>(); 
 	
-	public NativeFunction getScript(int scriptID) {
-    	synchronized (scripts) {
-    		return scripts.get(new Integer(scriptID));
-    	}
+	public class ScriptNotFound extends Exception {
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 7812710462256075900L;
+
+		public ScriptNotFound(String message) {
+			super(message);
+		}
+	}
+	
+	public NativeFunction getScript(int scriptID) throws ScriptNotFound {
+		synchronized (scripts) {
+			if (scripts.containsKey(scriptID))
+				return scripts.get(new Integer(scriptID));
+		}
+
+		throw new ScriptNotFound("There is no script with ID " + new Integer(scriptID).toString());
 	}
 }

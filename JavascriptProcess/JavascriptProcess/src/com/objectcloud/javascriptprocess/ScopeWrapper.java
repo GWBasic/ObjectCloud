@@ -247,14 +247,18 @@ public class ScopeWrapper {
 						result = compiledJavascriptTracker.getScript(scriptID).call(context, scope, scope, null); 
 					}
 					
-					results.put(generateJSONSerializerForJavascriptObject(context, result));
+					if (Undefined.class.isInstance(result))
+						results.put((Object)null);
+					else
+						results.put(generateJSONSerializerForJavascriptObject(context, result));
 					
 					if (null != cacheIDs)
 						cachedObjects.put(cacheIDs.get(ctr), result);
 				}
 
 			} catch (Exception e) {
-				sendException("RespondEvalScope", threadID, e.getMessage());
+				String message = e.getMessage();
+				sendException("RespondEvalScope", threadID, message);
 				return;
 			}
 		}
@@ -262,46 +266,70 @@ public class ScopeWrapper {
 		//complete = new Date();
 		//Logger.log(String.format("Amount of time needed to run remaining constructors: %d", complete.getTime() - start.getTime()));
 	    
-	    JSONObject functions = new JSONObject();
-		outData.put("Functions", functions);
+		if (data.has("ReturnFunctions")) {
+			if (data.getBoolean("ReturnFunctions")) {
+				
+			    JSONObject functions = new JSONObject();
+				outData.put("Functions", functions);
+				
+		        for (Object id : scope.getIds()) {
 		
-        for (Object id : scope.getIds()) {
+		        	String functionName = id.toString();
+		
+		            Object javascriptMethodObject = scope.get(functionName, scope);
+		
+		            // If the value is a Javascript function...
+		            // TODO:
+		            // OPTIMIZE THIS
+		            if (Function.class.isInstance(javascriptMethodObject)) {
+		            	JSONObject function = new JSONObject();
+		            	functions.put(functionName, function);
+		            	
+		            	JSONObject properties = new JSONObject();
+		            	function.put("Properties", properties);
+		            	
+		                Function javascriptMethod = (Function)javascriptMethodObject;
+		
+		                for (Object fId : javascriptMethod.getIds())
+		                	properties.put(fId.toString(), javascriptMethod.get(fId.toString(), scope));
+		
+		                // Try to get the arguments
+		            	JSONArray arguments = new JSONArray();
+		            	function.put("Arguments", arguments);
+		
+		            	String unbrokenArgs = context.evaluateString(scope, functionName + ".toSource();", "<cmd>", 1, null).toString();
+		            	unbrokenArgs = unbrokenArgs.substring(unbrokenArgs.indexOf('(') + 1);
+		            	unbrokenArgs = unbrokenArgs.substring(0, unbrokenArgs.indexOf(')'));
+		
+		            	if (unbrokenArgs.length() > 0) {
+		                	
+		                	String[] args = unbrokenArgs.split(",");
+		                	for (String arg : args)
+		                		arguments.put(arg.trim());
+		                }
+		            }
+		        }
+			}
+		}
+		
 
-        	String functionName = id.toString();
+		/*JSONObject outCommand = new JSONObject();
+		outCommand.put("Data", outData);
+		outCommand.put("SerializedData", outData.toString());
+		outCommand.put("DataType", outData.getClass().getName());
+		outCommand.put("ScopeID", scopeID);
+		outCommand.put("ThreadID", threadID);
+		outCommand.put("Command", "RespondEvalScope");
+		outCommand.put("SerializedResults", results.toString());
 
-            Object javascriptMethodObject = scope.get(functionName, scope);
+		synchronized (outputStreamWriter) {
+			outputStreamWriter.write(outCommand.toString() + "\r\n");
+			outputStreamWriter.flush();
+		}*/
 
-            // If the value is a Javascript function...
-            // TODO:
-            // OPTIMIZE THIS
-            if (Function.class.isInstance(javascriptMethodObject)) {
-            	JSONObject function = new JSONObject();
-            	functions.put(functionName, function);
-            	
-            	JSONObject properties = new JSONObject();
-            	function.put("Properties", properties);
-            	
-                Function javascriptMethod = (Function)javascriptMethodObject;
-
-                for (Object fId : javascriptMethod.getIds())
-                	properties.put(fId.toString(), javascriptMethod.get(fId.toString(), scope));
-
-                // Try to get the arguments
-            	JSONArray arguments = new JSONArray();
-            	function.put("Arguments", arguments);
-
-            	String unbrokenArgs = context.evaluateString(scope, functionName + ".toSource();", "<cmd>", 1, null).toString();
-            	unbrokenArgs = unbrokenArgs.substring(unbrokenArgs.indexOf('(') + 1);
-            	unbrokenArgs = unbrokenArgs.substring(0, unbrokenArgs.indexOf(')'));
-
-            	if (unbrokenArgs.length() > 0) {
-                	
-                	String[] args = unbrokenArgs.split(",");
-                	for (String arg : args)
-                		arguments.put(arg.trim());
-                }
-            }
-        }
+		
+		
+		//outData.put("SerializedResults", results.toString());
 
 		sendCommand("RespondEvalScope", threadID, outData);
 	}
@@ -311,7 +339,15 @@ public class ScopeWrapper {
 			
 			@Override
 			public String toJSONString() {
-				return (String)jsonStringifyFunction.call(context, scope, scope, new Object[] {result});
+				try {
+					Object toReturn = jsonStringifyFunction.call(context, scope, scope, new Object[] {result});
+					if (String.class.isInstance(toReturn))
+						return (String)toReturn;
+					else
+						return "null";
+				} catch (Exception e) {
+					return JSONObject.quote(e.getMessage());
+				}
 			}
 		};
 	}
@@ -383,7 +419,7 @@ public class ScopeWrapper {
 			for (StackTraceElement ste : e.getStackTrace())
 				exceptionMessage.append("\n" + ste.toString());
 			
-			sendException("RespondEvalScope", threadID, exceptionMessage.toString());
+			sendException("RespondCallFunctionInScope", threadID, exceptionMessage.toString());
 			return;
         }
 	}
