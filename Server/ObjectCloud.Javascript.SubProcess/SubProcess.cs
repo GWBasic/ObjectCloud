@@ -89,15 +89,8 @@ namespace ObjectCloud.Javascript.SubProcess
             StartProcessKiller();
         }
 
-        private FileHandlerFactoryLocator FileHandlerFactoryLocator;
-
-        private CompiledJavascriptManager CompiledJavascriptManager;
-
-        public SubProcess(FileHandlerFactoryLocator fileHandlerFactoryLocator, CompiledJavascriptManager compiledJavascriptManager)
+        public SubProcess()
         {
-            FileHandlerFactoryLocator = fileHandlerFactoryLocator;
-            CompiledJavascriptManager = compiledJavascriptManager;
-
             _Process = new Process();
             _Process.StartInfo = new ProcessStartInfo("java", "-cp ." + Path.DirectorySeparatorChar + "js.jar -jar JavascriptProcess.jar " + Process.GetCurrentProcess().Id.ToString());
             _Process.StartInfo.RedirectStandardInput = true;
@@ -429,7 +422,8 @@ namespace ObjectCloud.Javascript.SubProcess
             data["ScriptID"] = scriptID;
 
             Dictionary<string, object> command = CreateCommand(threadID, "LoadCompiled", data);
-            Dictionary<string, object> dataToReturn = SendCommandAndHandleResponse(command);
+            //Dictionary<string, object> dataToReturn = 
+			SendCommandAndHandleResponse(command);
 
             using (TimedLock.Lock(LoadedScriptIDs))
                 LoadedScriptIDs.Add(scriptID);

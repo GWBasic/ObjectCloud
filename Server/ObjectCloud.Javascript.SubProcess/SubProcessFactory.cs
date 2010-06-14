@@ -45,7 +45,7 @@ namespace ObjectCloud.Javascript.SubProcess
                 _CompiledJavascriptManager = new CompiledJavascriptManager(value);
 
                 for (int ctr = 0; ctr < NumSubProcesses; ctr++)
-                    SubProcesses.Add(new SubProcess(value, _CompiledJavascriptManager));
+                    SubProcesses.Add(new SubProcess());
 
                 SubProcessRotater = new Rotater<SubProcess>(SubProcesses);
             }

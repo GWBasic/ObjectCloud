@@ -316,12 +316,9 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             //int tryCtr = 0;
 
-            SubProcess subProcess = null;
-
             while (true)
                 try
                 {
-                    subProcess = _SubProcess;
                     return _SubProcess.CallFunctionInScope(ScopeId, Thread.CurrentThread.ManagedThreadId, functionName, arguments);
                 }
 				catch (JavascriptException je)
