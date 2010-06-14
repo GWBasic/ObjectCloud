@@ -797,6 +797,7 @@ namespace ObjectCloud.WebServer.Implementation
                 {
                     ScriptAndMD5 scriptAndMD5 = new ScriptAndMD5();
                     scriptAndMD5.ScriptName = scriptName;
+                    scriptAndMD5.Script = loadedScriptCache[scriptName];
 
                     byte[] scriptBytes = System.Text.Encoding.UTF8.GetBytes(loadedScriptCache[scriptName]);
 

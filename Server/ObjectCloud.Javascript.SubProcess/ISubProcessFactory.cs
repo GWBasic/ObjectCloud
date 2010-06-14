@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Text;
 
 using ObjectCloud.Interfaces.Disk;
+using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.Javascript.SubProcess
 {
@@ -19,6 +20,6 @@ namespace ObjectCloud.Javascript.SubProcess
         /// Returns a sub process that can provide a scope for the given javascript container
         /// </summary>
         /// <returns></returns>
-        SubProcess GetOrCreateSubProcess(IFileContainer javascriptContainer);
+        SubProcess GetSubProcess();
     }
 }

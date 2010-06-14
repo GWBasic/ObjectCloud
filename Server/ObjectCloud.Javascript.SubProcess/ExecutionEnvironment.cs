@@ -35,19 +35,26 @@ namespace ObjectCloud.Javascript.SubProcess
             FileHandlerFactoryLocator fileHandlerFactoryLocator,
             IFileContainer javascriptContainer,
             IFileContainer fileContainer,
-            ISubProcessFactory subProcessFactory)
+            SubProcessFactory subProcessFactory)
         {
             _FileHandlerFactoryLocator = fileHandlerFactoryLocator;
             _JavascriptContainer = javascriptContainer;
             _JavascriptLastModified = javascriptContainer.LastModified;
 
+            SubProcess subProcess = subProcessFactory.GetSubProcess();
+            ScopeInfo scopeInfo = subProcessFactory.CompiledJavascriptManager.GetScopeInfoForClass(
+                javascriptContainer.CastFileHandler<ITextHandler>(),
+                subProcess);
+
             try
             {
-                _ScopeWrapper = new ObjectCloud.Javascript.SubProcess.ScopeWrapper(
+                _ScopeWrapper = new ScopeWrapper(
                     fileHandlerFactoryLocator,
                     javascriptContainer,
-                    subProcessFactory,
-                    fileContainer);
+                    subProcess,
+                    scopeInfo,
+                    fileContainer,
+                    subProcessFactory.CompiledJavascriptManager);
             }
             catch (Exception e)
             {
@@ -62,10 +69,10 @@ namespace ObjectCloud.Javascript.SubProcess
         /// </summary>
         internal ScopeWrapper ScopeWrapper
         {
-        		get { return _ScopeWrapper; }
-		}
-		ScopeWrapper _ScopeWrapper;
-		
+            get { return _ScopeWrapper; }
+        }
+        ScopeWrapper _ScopeWrapper;
+
         /// <summary>
         /// The FileHandlerFactoryLocator
         /// </summary>

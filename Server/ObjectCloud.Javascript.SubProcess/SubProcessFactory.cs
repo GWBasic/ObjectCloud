@@ -18,73 +18,68 @@ namespace ObjectCloud.Javascript.SubProcess
     /// </summary>
     public class SubProcessFactory : ISubProcessFactory
     {
+        /// <summary>
+        /// The number of sub processes to create
+        /// </summary>
+        public int NumSubProcesses
+        {
+            get { return _NumSubProcesses; }
+            set { _NumSubProcesses = value; }
+        }
+        private int _NumSubProcesses = 6;
+
+        private Rotater<SubProcess> SubProcessRotater;
+
+        /// <summary>
+        /// All of the sub processes
+        /// </summary>
+        private List<SubProcess> SubProcesses = new List<SubProcess>();
+
         public FileHandlerFactoryLocator FileHandlerFactoryLocator
         {
             get { return _FileHandlerFactoryLocator; }
-            set { _FileHandlerFactoryLocator = value; }
+            set 
+            {
+                _FileHandlerFactoryLocator = value;
+
+                _CompiledJavascriptManager = new CompiledJavascriptManager(value);
+
+                for (int ctr = 0; ctr < NumSubProcesses; ctr++)
+                    SubProcesses.Add(new SubProcess(value, _CompiledJavascriptManager));
+
+                SubProcessRotater = new Rotater<SubProcess>(SubProcesses);
+            }
         }
         FileHandlerFactoryLocator _FileHandlerFactoryLocator;
 
-        /// <summary>
-        /// All of the sub processes, indexed by the full path to their class
-        /// </summary>
-        private Dictionary<string, SubProcess> SubProcessesByClass = new Dictionary<string, SubProcess>();
+        public CompiledJavascriptManager CompiledJavascriptManager
+        {
+            get { return _CompiledJavascriptManager; }
+        }
+        private CompiledJavascriptManager _CompiledJavascriptManager;
 
         /// <summary>
-        /// When the sub processes were last modified, used to kill a sub process when its class is modified
-        /// </summary>
-        private Dictionary<string, DateTime> ClassLastModified = new Dictionary<string, DateTime>();
-
-        /// <summary>
-        /// Returns the corresponding sub process for the given class.  Creates it if it isn't running, restarts if the class was modified
+        /// Returns a sub-process
         /// </summary>
         /// <param name="javascriptContainer"></param>
         /// <returns></returns>
-        public SubProcess GetOrCreateSubProcess(IFileContainer javascriptContainer)
+        public SubProcess GetSubProcess()
         {
-            SubProcess toReturn = null;
-
-            using (TimedLock.Lock(javascriptContainer))
-            {
-                using (TimedLock.Lock(SubProcessesByClass))
-                {
-                    if (SubProcessesByClass.TryGetValue(javascriptContainer.FullPath, out toReturn))
-                    {
-                        DateTime classLastModified;
-                        if (ClassLastModified.TryGetValue(javascriptContainer.FullPath, out classLastModified))
-                            if (javascriptContainer.LastModified == classLastModified)
-                                if (toReturn.Alive)
-                                    return toReturn;
-                    }
-
-                    if (null != toReturn)
-                        toReturn.Dispose();
-
-                    ClassLastModified[javascriptContainer.FullPath] = javascriptContainer.LastModified;
-                }
-
-                toReturn = new SubProcess(javascriptContainer, FileHandlerFactoryLocator);
-
-                using (TimedLock.Lock(SubProcessesByClass))
-                    SubProcessesByClass[javascriptContainer.FullPath] = toReturn;
-
-                return toReturn;
-            }
+            return SubProcessRotater.Next();           
         }
 
-        /// <summary>
-        /// If the corresponding sub process is based on an outdated version of the class, disposes it
-        /// </summary>
-        /// <param name="javascriptContainer"></param>
-        public void DisposeSubProcessIfOutdated(IFileContainer javascriptContainer)
+        ~SubProcessFactory()
         {
-            using (TimedLock.Lock(SubProcessesByClass))
-                if (javascriptContainer.LastModified != ClassLastModified[javascriptContainer.FullPath])
-                {
-                    SubProcessesByClass[javascriptContainer.FullPath].Dispose();
-                    SubProcessesByClass.Remove(javascriptContainer.FullPath);
-                    ClassLastModified.Remove(javascriptContainer.FullPath);
-                }
+            try
+            {
+                foreach (SubProcess subProcess in SubProcesses)
+                    try
+                    {
+                        subProcess.Dispose();
+                    }
+                    catch { }
+            }
+            catch { }
         }
     }
 }

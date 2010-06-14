@@ -388,6 +388,10 @@ namespace ObjectCloud.Disk.Implementation
                     false);
             }
 
+            // Make sure there is a cache for name-value pairs
+            if (!systemDirectory.IsFilePresent("CompiledJavascriptCache"))
+                systemDirectory.CreateFile("CompiledJavascriptCache", "directory", null);
+
             IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
             string groupFileName = FileHandlerFactoryLocator.UserFactory.Administrators.Name.ToLower() + ".group";
             if (!usersDirectory.IsFilePresent(groupFileName))

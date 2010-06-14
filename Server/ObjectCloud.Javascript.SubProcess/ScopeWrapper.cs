@@ -36,14 +36,17 @@ namespace ObjectCloud.Javascript.SubProcess
         }
         private readonly int _ScopeId;
 
-        private ISubProcessFactory SubProcessFactory;
         private IFileContainer JavascriptContainer;
 
         public SubProcess SubProcess
         {
             get { return _SubProcess; }
         }
-        private SubProcess _SubProcess = null;
+        private readonly SubProcess _SubProcess = null;
+
+        private readonly ScopeInfo ScopeInfo;
+
+        private readonly CompiledJavascriptManager CompiledJavascriptManager;
 
         /// <summary>
         /// Pointers to cache IDs
@@ -90,12 +93,16 @@ namespace ObjectCloud.Javascript.SubProcess
         public ScopeWrapper(
             FileHandlerFactoryLocator fileHandlerFactoryLocator,
             IFileContainer javascriptContainer,
-            ISubProcessFactory subProcessFactory,
-            IFileContainer fileContainer)
+            SubProcess subProcess,
+            ScopeInfo scopeInfo,
+            IFileContainer fileContainer,
+            CompiledJavascriptManager compiledJavascriptManager)
         {
             _FileContainer = fileContainer;
-            SubProcessFactory = subProcessFactory;
+            _SubProcess = subProcess;
             JavascriptContainer = javascriptContainer;
+            ScopeInfo = scopeInfo;
+            CompiledJavascriptManager = compiledJavascriptManager;
 
             using (TimedLock.Lock(IdCtr))
             {
@@ -109,21 +116,15 @@ namespace ObjectCloud.Javascript.SubProcess
 
             _FileHandlerFactoryLocator = fileHandlerFactoryLocator;
 
-            ConstructScope();
-        }
-
-        private void ConstructScope()
-        {
             log.Info("Constructing Javascript scope for " + FileContainer.FullPath);
 
             CacheIDsByKey = new Dictionary<object, object>();
 
-            _SubProcess = SubProcessFactory.GetOrCreateSubProcess(JavascriptContainer);
             _SubProcess.RegisterParentFunctionDelegate(ScopeId, CallParentFunction);
             FunctionCallers = new Dictionary<string, FunctionCaller>();
 
             ISession ownerSession = FileHandlerFactoryLocator.SessionManagerHandler.CreateSession();
-            SubProcess.CreateScopeResults data;
+            SubProcess.EvalScopeResults data;
 
             try
             {
@@ -142,13 +143,16 @@ namespace ObjectCloud.Javascript.SubProcess
 
 				try
 				{
-	                data = FunctionCaller.UseTemporaryCaller<SubProcess.CreateScopeResults>(
+	                data = FunctionCaller.UseTemporaryCaller<SubProcess.EvalScopeResults>(
 	                    this, FileContainer, ownerWebConnection, delegate()
 	                    {
-	                        return _SubProcess.CreateScope(
+	                        return _SubProcess.EvalScope(
 	                            ScopeId,
 	                            Thread.CurrentThread.ManagedThreadId,
-	                            CreateMetadata());
+	                            CreateMetadata(),
+                                scopeInfo.ScriptIDsToBuildScope,
+                                scopeInfo.FunctionsInScope.Keys,
+                                true);
 	                    });
 				}
 				catch (JavascriptException je)
@@ -157,7 +161,7 @@ namespace ObjectCloud.Javascript.SubProcess
 					log.ErrorFormat(
 						"Exception in Javascript creating scope.\nSource: {0}\nObject: {1}",
 					    je,
-					    SubProcess.JavascriptContainer.FullPath,
+					    JavascriptContainer.FullPath,
 					    FileContainer.FullPath);
 					
 					throw;
@@ -188,8 +192,9 @@ namespace ObjectCloud.Javascript.SubProcess
             }
 
             // Get options
-            if (data.Result is Dictionary<string, object>)
-                ParseOptions((Dictionary<string, object>)data.Result);
+            object result = data.Results[data.Results.Count - 1];
+            if (result is Dictionary<string, object>)
+                ParseOptions((Dictionary<string, object>)result);
         }
 
         ~ScopeWrapper()
@@ -309,7 +314,7 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <exception cref="AbortedException">Thrown if the sub process aborted anormally.  Callers should recover from this error condition</exception>
         public object CallFunction(IWebConnection webConnection, string functionName, IEnumerable arguments)
         {
-            int tryCtr = 0;
+            //int tryCtr = 0;
 
             SubProcess subProcess = null;
 
@@ -325,13 +330,14 @@ namespace ObjectCloud.Javascript.SubProcess
 					log.ErrorFormat(
 						"Exception in Javascript function.\nSource: {0}\nObject: {1}\nFunction: {2}",
 					    je,
-					    SubProcess.JavascriptContainer.FullPath,
+					    JavascriptContainer.FullPath,
 					    FileContainer.FullPath,
 				        functionName);
 					
 					throw;
 				}
-                catch (SubProcess.AbortedException)
+            // TODO
+                /*catch (SubProcess.AbortedException)
                 {
                     // Allow a max of 3 tries
                     if (tryCtr >= 3)
@@ -356,7 +362,7 @@ namespace ObjectCloud.Javascript.SubProcess
                     using (TimedLock.Lock(subProcess))
                         if (subProcess == _SubProcess)
                             ConstructScope();
-                }
+                }*/
         }
 
         /// <summary>
@@ -381,7 +387,7 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             try
             {
-                MethodInfo toInvoke = SubProcess.FunctionsInScope[functionName];
+                MethodInfo toInvoke = ScopeInfo.FunctionsInScope[functionName];
                 ParameterInfo[] parameters = toInvoke.GetParameters();
 
                 object[] allArguments = new object[parameters.Length];
@@ -406,7 +412,7 @@ namespace ObjectCloud.Javascript.SubProcess
                         allArguments[argCtr] = parameterType.IsValueType ? Activator.CreateInstance(parameterType) : null;
                 }
 
-                return SubProcess.FunctionsInScope[functionName].Invoke(null, allArguments);
+                return ScopeInfo.FunctionsInScope[functionName].Invoke(null, allArguments);
             }
             catch (TargetInvocationException tie)
             {
@@ -496,7 +502,6 @@ namespace ObjectCloud.Javascript.SubProcess
             try
             {
                 textHandler = fileContainer.CastFileHandler<ITextHandler>();
-                LoadedLibrariesLastModified[toLoad] = fileContainer.LastModified;
             }
             catch (Exception e)
             {
@@ -504,21 +509,36 @@ namespace ObjectCloud.Javascript.SubProcess
                 return false;
             }
 
+            using (TimedLock.Lock(LoadedLibrariesLastModified))
+                LoadedLibrariesLastModified[toLoad] = fileContainer.LastModified;
+
+
             object cacheId;
             string cacheIdKey = "Use:::::::" + toLoad;
 
             // If the library is already loaded, then the return value is cached.
             if (GetCacheID(cacheIdKey, out cacheId))
             {
-                if (fileContainer.LastModified == UseLastModified[toLoad])
-                    return new SubProcess.CachedObjectId(cacheId);
+                using (TimedLock.Lock(UseLastModified))
+                    if (fileContainer.LastModified == UseLastModified[toLoad])
+                        return new SubProcess.CachedObjectId(cacheId);
             }
             else
                 cacheId = GenerateCacheID(cacheIdKey);
 
-            UseLastModified[toLoad] = fileContainer.LastModified;
-            return new SubProcess.StringToEval(
-                textHandler.ReadAll(),
+            using (TimedLock.Lock(UseLastModified))
+                UseLastModified[toLoad] = fileContainer.LastModified;
+
+            string script = textHandler.ReadAll();
+
+            int scriptID = CompiledJavascriptManager.GetScriptID(
+                toLoad,
+                StringParser.GenerateMD5String(script),
+                script,
+                SubProcess);
+
+            return new SubProcess.ScriptToRun(
+                scriptID,
                 cacheId);
         }
 
@@ -535,24 +555,33 @@ namespace ObjectCloud.Javascript.SubProcess
         public object Open(IWebConnection webConnection, string toOpen)
         {
             object cacheId;
-            string cacheIdKey = "Open-+-+-+-+" + toOpen;
+            string cacheIdKey = "Open-+-+-+-+" + toOpen + "____" + webConnection.Session.User.Identity;
 
             IFileContainer fileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(toOpen);
 
             // If the library is already loaded, then the return value is cached.
             if (GetCacheID(cacheIdKey, out cacheId))
             {
-                if (fileContainer.LastModified == OpenLastModified[toOpen])
-                    return new SubProcess.CachedObjectId(cacheId);
+                using (TimedLock.Lock(OpenLastModified))
+                    if (fileContainer.LastModified == OpenLastModified[toOpen])
+                        return new SubProcess.CachedObjectId(cacheId);
             }
             else
                 cacheId = GenerateCacheID(cacheIdKey);
 
-            string wrapper = fileContainer.WebHandler.GetJSW(webConnection, null, null, false).ResultsAsString;
+            string wrapper = '(' + fileContainer.WebHandler.GetJSW(webConnection, null, null, false).ResultsAsString + ')';
 
-            OpenLastModified[toOpen] = fileContainer.LastModified;
-            return new SubProcess.StringToEval(
-                "(" + wrapper + ")",
+            int scriptID = CompiledJavascriptManager.GetScriptID(
+                cacheIdKey,
+                StringParser.GenerateMD5String(wrapper),
+                wrapper,
+                SubProcess);
+
+            using (TimedLock.Lock(OpenLastModified))
+                OpenLastModified[toOpen] = fileContainer.LastModified;
+
+            return new SubProcess.ScriptToRun(
+                scriptID,
                 cacheId);
         }
     }
