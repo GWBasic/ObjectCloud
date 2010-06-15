@@ -7,9 +7,10 @@ using System.Collections.Generic;
 using System.Text;
 
 using ObjectCloud.Interfaces.Disk;
+using ObjectCloud.Interfaces.Javascript;
 using ObjectCloud.Interfaces.WebServer;
 
-namespace ObjectCloud.Javascript.SubProcess
+namespace ObjectCloud.Interfaces.Javascript
 {
     /// <summary>
     /// Interface for objects that construct and divy sub processes
@@ -20,6 +21,12 @@ namespace ObjectCloud.Javascript.SubProcess
         /// Returns a sub process that can provide a scope for the given javascript container
         /// </summary>
         /// <returns></returns>
-        SubProcess GetSubProcess();
+        ISubProcess GetSubProcess();
+
+        /// <summary>
+        /// Returns a unique scope ID
+        /// </summary>
+        /// <returns></returns>
+        int GenerateScopeId();
     }
 }

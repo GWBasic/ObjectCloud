@@ -17,12 +17,13 @@ using JsonFx.Json;
 using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Disk;
+using ObjectCloud.Interfaces.Javascript;
 using ObjectCloud.Interfaces.Security;
 using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.Javascript.SubProcess
 {
-    public class SubProcess : System.Runtime.ConstrainedExecution.CriticalFinalizerObject, IDisposable
+    public class SubProcess : System.Runtime.ConstrainedExecution.CriticalFinalizerObject, IDisposable, ISubProcess
     {
         static ILog log = LogManager.GetLogger<SubProcess>();
 
@@ -366,38 +367,6 @@ namespace ObjectCloud.Javascript.SubProcess
             ParentFunctionDelegatesByScopeId[scopeId] = parentFunctionDelegate;
         }
 
-        /// <summary>
-        /// The results of calling EvalScope
-        /// </summary>
-        public struct EvalScopeResults
-        {
-            /// <summary>
-            /// The call's results
-            /// </summary>
-            public List<object> Results;
-
-            /// <summary>
-            /// The functions that are present in the scope
-            /// </summary>
-            public Dictionary<string, CreateScopeFunctionInfo> Functions;
-        }
-
-        /// <summary>
-        /// Information about a function
-        /// </summary>
-        public struct CreateScopeFunctionInfo
-        {
-            /// <summary>
-            /// The function's properties
-            /// </summary>
-            public Dictionary<string, object> Properties;
-
-            /// <summary>
-            /// The function's arguments
-            /// </summary>
-            public IEnumerable<string> Arguments;
-        }
-
         private Set<int> LoadedScriptIDs = new Set<int>();
 
         /// <summary>
@@ -450,13 +419,25 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <param name="threadID"></param>
         /// <param name="data">The data that is placed into the scope</param>
         /// <returns></returns>
-        public EvalScopeResults EvalScope(int scopeId, object threadID, Dictionary<string, object> metadata, IEnumerable<int> scriptIDs, IEnumerable<string> functionsToAdd, bool returnFunctions)
+        public EvalScopeResults EvalScope(
+            int scopeId,
+            object threadID,
+            Dictionary<string, object> metadata,
+            IEnumerable scriptIDsAndScriptsEnum,
+            IEnumerable<string> functionsToAdd,
+            bool returnFunctions)
         {
             CheckIfAbortedOrDisposed();
 
             Dictionary<string, object> data = new Dictionary<string, object>();
-            data["Data"] = metadata;
-            data["Scripts"] = new List<int>(scriptIDs);
+            if (null != metadata)
+                data["Data"] = metadata;
+
+            ArrayList scriptIDsAndScripts = new ArrayList();
+            foreach (object scriptOrID in scriptIDsAndScriptsEnum)
+                scriptIDsAndScripts.Add(scriptOrID);
+
+            data["Scripts"] = scriptIDsAndScripts;
 
             if (null != functionsToAdd)
                 data["Functions"] = new List<string>(functionsToAdd);
@@ -957,7 +938,7 @@ namespace ObjectCloud.Javascript.SubProcess
                         if (toReturn.ContainsKey("StackTrace"))
                         {
                             LogSubProcessError(toReturn);
-                            throw new JavascriptException(JsonWriter.Serialize(toReturn));
+                            throw new JavascriptException(toReturn["Message"].ToString());
                         }
 
                         return toReturn;
@@ -989,20 +970,6 @@ namespace ObjectCloud.Javascript.SubProcess
                     Thread.Sleep(0);
 
             } while (true);
-        }
-
-        /// <summary>
-        /// Represents an undefined value
-        /// </summary>
-        public class Undefined
-        {
-            private Undefined() { }
-
-            public static Undefined Value
-            {
-                get { return _Instance; }
-            }
-            private static readonly Undefined _Instance = new Undefined();
         }
 
         /// <summary>
@@ -1147,12 +1114,4 @@ namespace ObjectCloud.Javascript.SubProcess
             }
         }
     }
-
-    /// <summary>
-    /// Delegate for calling parent functions
-    /// </summary>
-    /// <param name="functionName"></param>
-    /// <param name="arguments"></param>
-    /// <returns></returns>
-    public delegate object CallParentFunctionDelegate(string functionName, object threadId, object[] arguments);
 }

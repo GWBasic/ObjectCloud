@@ -227,5 +227,12 @@ namespace ObjectCloud.Interfaces.Disk
             set { _Plugins = value; }
         }
         private List<Plugin> _Plugins = new List<Plugin>();
+
+        public ISubProcessFactory SubProcessFactory
+        {
+            get { return _SubProcessFactory; }
+            set { _SubProcessFactory = value; }
+        }
+        private ISubProcessFactory _SubProcessFactory;
     }
 }

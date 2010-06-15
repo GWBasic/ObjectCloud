@@ -388,9 +388,13 @@ namespace ObjectCloud.Disk.Implementation
                     false);
             }
 
-            // Make sure there is a cache for name-value pairs
+            // Make sure there is a cache for pre-compiled Javascript
             if (!systemDirectory.IsFilePresent("CompiledJavascriptCache"))
                 systemDirectory.CreateFile("CompiledJavascriptCache", "directory", null);
+
+            // Create an executor for .ssjs files that runs much faster then eval
+            if (!systemDirectory.IsFilePresent("ServerSideJavascriptExecutor"))
+                systemDirectory.CreateFile("ServerSideJavascriptExecutor", "ssjsexecutor", null);
 
             IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
             string groupFileName = FileHandlerFactoryLocator.UserFactory.Administrators.Name.ToLower() + ".group";

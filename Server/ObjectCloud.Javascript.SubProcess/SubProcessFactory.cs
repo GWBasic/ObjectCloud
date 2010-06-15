@@ -10,6 +10,7 @@ using System.Threading;
 using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Disk;
+using ObjectCloud.Interfaces.Javascript;
 
 namespace ObjectCloud.Javascript.SubProcess
 {
@@ -82,6 +83,11 @@ namespace ObjectCloud.Javascript.SubProcess
             return toReturn;
         }
 
+        ISubProcess ISubProcessFactory.GetSubProcess()
+        {
+            return GetSubProcess();
+        }
+
         ~SubProcessFactory()
         {
             try
@@ -94,6 +100,13 @@ namespace ObjectCloud.Javascript.SubProcess
                     catch { }
             }
             catch { }
+        }
+
+        private int IdCtr = int.MinValue;
+
+        public int GenerateScopeId()
+        {
+            return Interlocked.Increment(ref IdCtr);
         }
     }
 }

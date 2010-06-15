@@ -6,14 +6,14 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ObjectCloud.Javascript.SubProcess
+namespace ObjectCloud.Interfaces.Javascript
 {
     /// <summary>
     /// Class for exceptions that originate from the Javascript execution engine
     /// </summary>
     public class JavascriptException : Exception
     {
-        internal JavascriptException(string message) : base(message) { }
-        internal JavascriptException(string message, Exception inner) : base(message, inner) { }
+        public JavascriptException(string message) : base(message) { }
+        public JavascriptException(string message, Exception inner) : base(message, inner) { }
     }
 }
