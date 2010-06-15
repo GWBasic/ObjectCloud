@@ -100,7 +100,10 @@ public class CompiledJavascriptTracker {
 		String script = data.getString("Script");
 		int scriptId = data.getInt("ScriptID");
 		
-		String uniqueName = new Long(Math.abs(random.nextLong())).toString() + new Long(Math.abs(random.nextLong())).toString(); 
+		String uniqueName;
+		synchronized (random) {
+			uniqueName = new Long(Math.abs(random.nextLong())).toString() + new Long(Math.abs(random.nextLong())).toString() + new Integer(Math.abs(script.hashCode())).toString(); 
+		}
 		
         Object[] classFiles;
         
