@@ -27,50 +27,39 @@ public class CompiledJavascriptTracker {
         this.outputStreamWriter = outputStreamWriter;
 	}
 	
-	public void handle(JSONObject inCommand) {
+	public void handle(JSONObject inCommand) throws Exception {
+		String command = inCommand.getString("Command");
+		JSONObject data = inCommand.getJSONObject("Data");
+		
+		JSONObject toReturn = new JSONObject();
+
 		try {
-			String command = inCommand.getString("Command");
-			JSONObject data = inCommand.getJSONObject("Data");
-			
-			JSONObject toReturn = new JSONObject();
-
-			try {
-				if (command.equals("LoadCompiled")) {
-					toReturn.put("Command", "RespondLoadCompiled");
-					data = loadCompiled(data);
-				}
-				
-				else if (command.equals("Compile")) {
-					toReturn.put("Command", "RespondCompiled");
-					data = compile(data);
-				}
-				
-				else {
-					System.err.println(JSONObject.quote(command + " is unsupported"));
-					return;
-				}
-			} catch (Exception e) {
-				data = new JSONObject();
-				data.put("Exception", e.getMessage());
+			if (command.equals("LoadCompiled")) {
+				toReturn.put("Command", "RespondLoadCompiled");
+				data = loadCompiled(data);
 			}
 			
-			toReturn.put("Data", data);
-			toReturn.put("ThreadID", inCommand.get("ThreadID"));
-			
-			// Send the result back to the parent process
-			synchronized (outputStreamWriter) {
-				outputStreamWriter.write(toReturn.toString() + "\r\n");
-				outputStreamWriter.flush();
+			else if (command.equals("Compile")) {
+				toReturn.put("Command", "RespondCompiled");
+				data = compile(data);
 			}
-
+			
+			else {
+				System.err.println(JSONObject.quote(command + " is unsupported"));
+				return;
+			}
 		} catch (Exception e) {
-			StringBuilder toReturn = new StringBuilder();
-			toReturn.append(e.getMessage());
-			
-			for (StackTraceElement ste : e.getStackTrace())
-				toReturn.append("\n" + ste.toString());
-			
-			System.err.println(JSONObject.quote(toReturn.toString()));
+			data = new JSONObject();
+			data.put("Exception", e.getMessage());
+		}
+		
+		toReturn.put("Data", data);
+		toReturn.put("ThreadID", inCommand.get("ThreadID"));
+		
+		// Send the result back to the parent process
+		synchronized (outputStreamWriter) {
+			outputStreamWriter.write(toReturn.toString() + "\r\n");
+			outputStreamWriter.flush();
 		}
 	}
 	
@@ -91,9 +80,13 @@ public class CompiledJavascriptTracker {
     	Iterator<byte[]> iterator = compiledClasses.iterator();
     	
     	// Load all of the classes, holding on to the first one
-    	Class<?> compiledClass = classLoader.loadClass(iterator.next());
-    	while (iterator.hasNext())
-    		classLoader.loadClass(iterator.next());
+    	Class<?> compiledClass;
+    	// TODO:  Not sure if this needs to be synched
+    	synchronized (classLoader) {
+	    	compiledClass = classLoader.loadClass(iterator.next());
+	    	while (iterator.hasNext())
+	    		classLoader.loadClass(iterator.next());
+    	}
     	
     	NativeFunction script = (NativeFunction)compiledClass.getConstructor().newInstance();
     	
@@ -112,7 +105,10 @@ public class CompiledJavascriptTracker {
         Object[] classFiles;
         
         try {
-            classFiles = classCompiler.compileToClassFiles(script, "<cmd>", 0, "com.objectcloud.javascript.generated_" + uniqueName);
+        	// TODO:  Not sure if this needs to be synched
+        	synchronized (classCompiler) {
+        		classFiles = classCompiler.compileToClassFiles(script, "<cmd>", 0, "com.objectcloud.javascript.generated_" + uniqueName);
+        	}
         } catch (EvaluatorException ee) {
         	JSONObject toReturn = new JSONObject();
         	toReturn.put("Exception", ee.getMessage() + "\nline: " + (new Integer(ee.lineNumber())).toString() + "\ncolumn: " + (new Integer(ee.columnNumber())).toString());
