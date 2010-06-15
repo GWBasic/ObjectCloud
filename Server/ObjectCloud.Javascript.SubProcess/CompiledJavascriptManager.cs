@@ -220,7 +220,7 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <summary>
         /// Returns the script ID for the named script
         /// </summary>
-        /// <param name="scriptName">The name of the script.  The caller must ensure that this is unique</param>
+        /// <param name="scriptNameHex">The name of the script.  The caller must ensure that this is unique</param>
         /// <param name="recompileIfOlderThen">If the pre-compiled script is older then this date, then it's recompiled</param>
         /// <param name="loadScript">Delegate used to load the script</param>
         /// <param name="subProcess">The sub process to compile or load the script in</param>
@@ -229,13 +229,12 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             // Unfortunately, all of this data won't fit in a name-value-pairs file
             // This is a quick-and-dirty way to keep filenames valid
-            string oldScriptName = scriptName;
-            scriptName = StringGenerator.ToHexString(Encoding.Unicode.GetBytes(scriptName));
+            string scriptNameHex = StringGenerator.ToHexString(Encoding.Unicode.GetBytes(scriptName));
 
             string storedJSONobject = null;
             using (TimedLock.Lock(CompiledJavascriptCache))
-                if (CompiledJavascriptCache.IsFilePresent(scriptName))
-                    storedJSONobject = CompiledJavascriptCache.OpenFile(scriptName).CastFileHandler<ITextHandler>().ReadAll();
+                if (CompiledJavascriptCache.IsFilePresent(scriptNameHex))
+                    storedJSONobject = CompiledJavascriptCache.OpenFile(scriptNameHex).CastFileHandler<ITextHandler>().ReadAll();
 
             Dictionary<string, object> precompiled = null;
             if (null != storedJSONobject)
@@ -255,7 +254,7 @@ namespace ObjectCloud.Javascript.SubProcess
 
                 DateTime start = DateTime.UtcNow;
                 if (log.IsDebugEnabled)
-                    log.Debug("Compiling " + oldScriptName);
+                    log.Debug("Compiling " + scriptName);
 
                 object data;
                 try
@@ -264,11 +263,11 @@ namespace ObjectCloud.Javascript.SubProcess
                 }
                 catch (Exception e)
                 {
-                    log.ErrorFormat("Exception compiling {0}\n{1}", e, oldScriptName, script);
+                    log.ErrorFormat("Exception compiling {0}\n{1}", e, scriptName, script);
                     throw e;
                 }
 
-                log.InfoFormat("Compiling {0} took {1}", oldScriptName, DateTime.UtcNow - start);
+                log.InfoFormat("Compiling {0} took {1}", scriptName, DateTime.UtcNow - start);
 
                 precompiled = new Dictionary<string, object>();
                 precompiled["ScriptID"] = scriptID;
@@ -280,10 +279,10 @@ namespace ObjectCloud.Javascript.SubProcess
 
                 storedJSONobject = JsonWriter.Serialize(precompiled);
                 using (TimedLock.Lock(CompiledJavascriptCache))
-                    if (CompiledJavascriptCache.IsFilePresent(scriptName))
-                        CompiledJavascriptCache.OpenFile(scriptName).CastFileHandler<ITextHandler>().WriteAll(null, storedJSONobject);
+                    if (CompiledJavascriptCache.IsFilePresent(scriptNameHex))
+                        CompiledJavascriptCache.OpenFile(scriptNameHex).CastFileHandler<ITextHandler>().WriteAll(null, storedJSONobject);
                     else
-                        ((ITextHandler)CompiledJavascriptCache.CreateFile(scriptName, "text", null)).WriteAll(null, storedJSONobject);
+                        ((ITextHandler)CompiledJavascriptCache.CreateFile(scriptNameHex, "text", null)).WriteAll(null, storedJSONobject);
             }
             else
             {
@@ -294,7 +293,7 @@ namespace ObjectCloud.Javascript.SubProcess
                 using (TimedLock.Lock(PrecompiledScriptDataByID))
                     PrecompiledScriptDataByID[scriptID] = data;
 
-                log.Info("Loading " + oldScriptName);
+                log.Info("Loading " + scriptName);
 
                 subProcess.LoadCompiled(Thread.CurrentThread.ManagedThreadId, data, scriptID);
             }

@@ -301,24 +301,38 @@ namespace ObjectCloud.Javascript.SubProcess
         /// </param>
         void Process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
-            string error = e.Data;
+            Dictionary<string, object> subProcessError;
 
-            if (null != error)
-                try
-                {
-                    // Try deserializing as if it's a string encoded in JSON.  This is so that many-line strings can be transmitted
-                    try
-                    {
-                        error = JsonReader.Deserialize<string>(error);
-                    }
-                    catch { }
+            try
+            {
+                subProcessError = JsonReader.Deserialize<Dictionary<string, object>>(e.Data);
+            }
+            catch
+            {
+                log.Error("Javascript sub process error: " + e.Data);
+                return;
+            }
 
-                    log.Error("Javascript sub process error: " + error);
-                }
-                catch (Exception ex)
-                {
-                    log.Error("Error reading from Javascript sub process", ex);
-                }
+            LogSubProcessError(subProcessError);
+        }
+
+        /// <summary>
+        /// Assists in logging a sub process error
+        /// </summary>
+        /// <param name="subProcessError"></param>
+        private static void LogSubProcessError(Dictionary<string, object> subProcessError)
+        {
+            StringBuilder errorStringBuilder = new StringBuilder("Javascript sub process error");
+
+            object message;
+            if (subProcessError.TryGetValue("Message", out message))
+                errorStringBuilder.Append("\nMessage: " + message.ToString());
+
+            object stackTrace;
+            if (subProcessError.TryGetValue("StackTrace", out stackTrace))
+                errorStringBuilder.Append("\nStack Trace: " + stackTrace.ToString());
+
+            log.Error(errorStringBuilder.ToString());
         }
 
         /// <summary>
@@ -938,28 +952,42 @@ namespace ObjectCloud.Javascript.SubProcess
                     {
                         Dictionary<string, object> toReturn = InCommand;
                         InCommand = null;
+
+                        // If the sub process had a recoverable error, just push it up the stack
+                        if (toReturn.ContainsKey("StackTrace"))
+                        {
+                            LogSubProcessError(toReturn);
+                            throw new JavascriptException(JsonWriter.Serialize(toReturn));
+                        }
+
                         return toReturn;
                     }
 
                 // Only 1 thread can read from the sub process at a time
                 // all threads spin while waiting for a response
-                lock (RespondKey)
-                    if (null == InCommand)
-                    {
-                        // else, if there isn't a waiting response that came in on another thread, and if there aren't waiting responses, wait for a response
-                        if (Process.StandardOutput.EndOfStream || Process.HasExited)
-                            throw new JavascriptException("The sub process has exited");
-
-                        string inCommandString = _Process.StandardOutput.ReadLine();
-
-                        if (null == inCommandString)
-                            log.Warn("Null recieved from sub process");
-                        else
+                if (null == InCommand)
+                {
+                    lock (RespondKey)
+                        if (null == InCommand)
                         {
-                            InCommand = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
-                            InCommandThreadId = Convert.ToInt32(InCommand["ThreadID"]);
+                            // else, if there isn't a waiting response that came in on another thread, and if there aren't waiting responses, wait for a response
+                            if (Process.StandardOutput.EndOfStream || Process.HasExited)
+                                throw new JavascriptException("The sub process has exited");
+
+                            string inCommandString = _Process.StandardOutput.ReadLine();
+
+                            if (null == inCommandString)
+                                log.Warn("Null recieved from sub process");
+                            else
+                            {
+                                InCommand = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
+                                InCommandThreadId = Convert.ToInt32(InCommand["ThreadID"]);
+                            }
                         }
-                    }
+                }
+                else
+                    Thread.Sleep(0);
+
             } while (true);
         }
 
