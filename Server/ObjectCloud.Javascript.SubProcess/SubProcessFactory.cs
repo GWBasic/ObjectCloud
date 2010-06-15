@@ -32,7 +32,7 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <summary>
         /// All of the sub processes
         /// </summary>
-        private List<SubProcess> SubProcesses = new List<SubProcess>();
+        private Set<SubProcess> SubProcesses = new Set<SubProcess>();
 
         public FileHandlerFactoryLocator FileHandlerFactoryLocator
         {
@@ -43,12 +43,20 @@ namespace ObjectCloud.Javascript.SubProcess
 
                 _CompiledJavascriptManager = new CompiledJavascriptManager(value);
 
-                for (int ctr = 0; ctr < NumSubProcesses; ctr++)
-				{
-					SubProcess subProcess = new SubProcess();
-                    SubProcesses.Add(subProcess);
-					Queue.Enqueue(subProcess);
-				}
+                using (TimedLock.Lock(SubProcesses))
+                {
+                    foreach (SubProcess subProcess in SubProcesses)
+                        subProcess.Dispose();
+
+                    SubProcesses.Clear();
+
+                    for (int ctr = 0; ctr < NumSubProcesses; ctr++)
+                    {
+                        SubProcess subProcess = new SubProcess();
+                        SubProcesses.Add(subProcess);
+                        Queue.Enqueue(subProcess);
+                    }
+                }
             }
         }
         FileHandlerFactoryLocator _FileHandlerFactoryLocator;
@@ -75,9 +83,18 @@ namespace ObjectCloud.Javascript.SubProcess
             while (!Queue.Dequeue(out toReturn))
                 Thread.Sleep(0);
 
-			if (!toReturn.Alive)
-				toReturn = new SubProcess();
-			
+            if (!toReturn.Alive)
+            {
+                SubProcess newSubProcess = new SubProcess();
+
+                using (TimedLock.Lock(SubProcesses))
+                {
+                    SubProcesses.Remove(toReturn);
+                    toReturn = newSubProcess;
+                    SubProcesses.Add(toReturn);
+                }
+            }
+
             Queue.Enqueue(toReturn);
 
             return toReturn;
