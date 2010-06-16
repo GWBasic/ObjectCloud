@@ -14,6 +14,7 @@ using JsonFx.Json;
 using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Disk;
+using ObjectCloud.Interfaces.Javascript;
 using ObjectCloud.Interfaces.Security;
 using ObjectCloud.Interfaces.WebServer;
 
@@ -22,7 +23,7 @@ namespace ObjectCloud.Javascript.SubProcess
     /// <summary>
     /// Manages compiled Javascript
     /// </summary>
-    public class CompiledJavascriptManager
+    public class CompiledJavascriptManager : ICompiledJavascriptManager
     {
         private static ILog log = LogManager.GetLogger<CompiledJavascriptManager>();
 
@@ -204,7 +205,7 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <param name="loadScript">Delegate used to load the script</param>
         /// <param name="subProcess">The sub process to compile or load the script in</param>
         /// <returns></returns>
-        public int GetScriptID(string scriptName, string md5, string script, SubProcess subProcess)
+        public int GetScriptID(string scriptName, string md5, string script, ISubProcess subProcess)
         {
             // Unfortunately, all of this data won't fit in a name-value-pairs file
             // This is a quick-and-dirty way to keep filenames valid
@@ -246,22 +247,26 @@ namespace ObjectCloud.Javascript.SubProcess
                     throw e;
                 }
 
-                log.InfoFormat("Compiling {0} took {1}", scriptName, DateTime.UtcNow - start);
+                // If another thread compiled the script, we'll get back null
+                if (null != data)
+                {
+                    log.InfoFormat("Compiling {0} took {1}", scriptName, DateTime.UtcNow - start);
 
-                precompiled = new Dictionary<string, object>();
-                precompiled["ScriptID"] = scriptID;
-                precompiled["MD5"] = md5;
-                precompiled["Data"] = data;
+                    precompiled = new Dictionary<string, object>();
+                    precompiled["ScriptID"] = scriptID;
+                    precompiled["MD5"] = md5;
+                    precompiled["Data"] = data;
 
-                using (TimedLock.Lock(PrecompiledScriptDataByID))
-                    PrecompiledScriptDataByID[scriptID] = data;
+                    using (TimedLock.Lock(PrecompiledScriptDataByID))
+                        PrecompiledScriptDataByID[scriptID] = data;
 
-                storedJSONobject = JsonWriter.Serialize(precompiled);
-                using (TimedLock.Lock(CompiledJavascriptCache))
-                    if (CompiledJavascriptCache.IsFilePresent(scriptNameHex))
-                        CompiledJavascriptCache.OpenFile(scriptNameHex).CastFileHandler<ITextHandler>().WriteAll(null, storedJSONobject);
-                    else
-                        ((ITextHandler)CompiledJavascriptCache.CreateFile(scriptNameHex, "text", null)).WriteAll(null, storedJSONobject);
+                    storedJSONobject = JsonWriter.Serialize(precompiled);
+                    using (TimedLock.Lock(CompiledJavascriptCache))
+                        if (CompiledJavascriptCache.IsFilePresent(scriptNameHex))
+                            CompiledJavascriptCache.OpenFile(scriptNameHex).CastFileHandler<ITextHandler>().WriteAll(null, storedJSONobject);
+                        else
+                            ((ITextHandler)CompiledJavascriptCache.CreateFile(scriptNameHex, "text", null)).WriteAll(null, storedJSONobject);
+                }
             }
             else
             {

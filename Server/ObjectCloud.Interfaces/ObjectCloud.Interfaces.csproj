@@ -86,6 +86,7 @@
     <Compile Include="Disk\Plugin.cs" />
     <Compile Include="Disk\TooManyCometSessions.cs" />
     <Compile Include="Disk\UnsupportedFileHandlerFactory.cs" />
+    <Compile Include="Javascript\ICompiledJavascriptManager.cs" />
     <Compile Include="Javascript\IExecutionEnvironment.cs" />
     <Compile Include="Javascript\IExecutionEnvironmentFactory.cs" />
     <Compile Include="Javascript\IScopeWrapper.cs" />

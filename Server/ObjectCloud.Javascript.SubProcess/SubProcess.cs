@@ -90,8 +90,12 @@ namespace ObjectCloud.Javascript.SubProcess
             StartProcessKiller();
         }
 
-        public SubProcess()
+        private readonly SubProcessFactory SubProcessFactory;
+
+        public SubProcess(SubProcessFactory subProcessFactory)
         {
+            SubProcessFactory = subProcessFactory;
+
             _Process = new Process();
             _Process.StartInfo = new ProcessStartInfo("java", "-cp ." + Path.DirectorySeparatorChar + "js.jar -jar JavascriptProcess.jar " + Process.GetCurrentProcess().Id.ToString());
             _Process.StartInfo.RedirectStandardInput = true;
@@ -127,128 +131,6 @@ namespace ObjectCloud.Javascript.SubProcess
             using (TimedLock.Lock(SubProcesses))
                 SubProcesses.Add(_Process);
         }
-
-        /*public SubProcess(IFileContainer javascriptContainer, FileHandlerFactoryLocator fileHandlerFactoryLocator)
-        {
-            FileHandlerFactoryLocator = fileHandlerFactoryLocator;
-            _JavascriptContainer = javascriptContainer;
-
-            _Process = new Process();
-            _Process.StartInfo = new ProcessStartInfo("java", "-cp ." + Path.DirectorySeparatorChar + "js.jar -jar JavascriptProcess.jar " + Process.GetCurrentProcess().Id.ToString());
-            _Process.StartInfo.RedirectStandardInput = true;
-            _Process.StartInfo.RedirectStandardOutput = true;
-            _Process.StartInfo.RedirectStandardError = true;
-            _Process.StartInfo.UseShellExecute = false;
-            _Process.EnableRaisingEvents = true;
-            _Process.Exited += new EventHandler(Process_Exited);
-
-            log.Info("Starting sub process for " + javascriptContainer.FullPath);
-
-            if (!Process.Start())
-            {
-                Exception e = new JavascriptException("Could not start sub process");
-                log.Error("Error starting Javascript sub process for " + javascriptContainer.FullPath, e);
-
-                throw e;
-            }
-
-            log.Info("Javascript sub process started: " + _Process.ToString());
-
-            if (null != SubProcessIdWriteStream)
-                using (TimedLock.Lock(SubProcessIdWriteStream))
-                    SubProcessIdWriteStream.WriteLine(_Process.Id.ToString());
-
-            JSONSender = new JsonWriter(_Process.StandardInput);
-
-            // Failed attempt to handle processes without Threads
-            _Process.ErrorDataReceived += new DataReceivedEventHandler(Process_ErrorDataReceived);
-            _Process.BeginErrorReadLine();
-
-            using (TimedLock.Lock(SubProcesses))
-                SubProcesses.Add(_Process);
-
-            List<string> scriptsToEval = new List<string>();
-            List<string> requestedScripts = new List<string>(new string[] { "/API/AJAX_serverside.js", "/API/json2.js" });
-
-            _JavascriptLastModified = javascriptContainer.LastModified;
-            string fileType = null;
-            StringBuilder javascriptBuilder = new StringBuilder();
-            foreach (string line in javascriptContainer.CastFileHandler<ITextHandler>().ReadLines())
-            {
-                // find file type
-                if (line.Trim().StartsWith("// FileType:"))
-                    fileType = line.Substring(12).Trim();
-
-                // Find dependant scripts
-                else if (line.Trim().StartsWith("// Scripts:"))
-                    foreach (string script in line.Substring(11).Split(','))
-                        requestedScripts.Add(script.Trim());
-
-                else
-                    javascriptBuilder.AppendFormat("{0}\n", line);
-            }
-
-            string javascript = javascriptBuilder.ToString();
-
-            ISession ownerSession = fileHandlerFactoryLocator.SessionManagerHandler.CreateSession();
-
-            try
-            {
-                ownerSession.Login(javascriptContainer.Owner);
-
-                IWebConnection ownerWebConnection = new BlockingShellWebConnection(
-                    fileHandlerFactoryLocator.WebServer,
-                    ownerSession,
-                    javascriptContainer.FullPath,
-                    null,
-                    null,
-                    new CookiesFromBrowser(),
-                    CallingFrom.Web,
-                    WebMethod.GET);
-
-                IEnumerable<ScriptAndMD5> dependantScriptsAndMD5s = fileHandlerFactoryLocator.WebServer.WebComponentResolver.DetermineDependantScripts(
-                    requestedScripts,
-                    ownerWebConnection);
-
-                // Load static methods that are passed into the Javascript environment as-is
-                foreach (Type javascriptFunctionsType in GetTypesThatHaveJavascriptFunctions(fileType))
-                    foreach (MethodInfo method in javascriptFunctionsType.GetMethods(BindingFlags.Static | BindingFlags.Public))
-                        _FunctionsInScope[method.Name] = method;
-
-                // Load all dependant scripts
-                foreach (ScriptAndMD5 dependantScript in dependantScriptsAndMD5s)
-                    scriptsToEval.Add(ownerWebConnection.ShellTo(dependantScript.ScriptName).ResultsAsString);
-
-                // Construct Javascript to shell to the "base" webHandler
-                Set<Type> webHandlerTypes = new Set<Type>(fileHandlerFactoryLocator.WebHandlerPlugins);
-                if (null != fileType)
-                    webHandlerTypes.Add(fileHandlerFactoryLocator.WebHandlerClasses[fileType]);
-
-                string baseWrapper = GetJavascriptWrapperForBase("base", webHandlerTypes);
-
-                scriptsToEval.Add(baseWrapper);
-                scriptsToEval.Add(javascript + "\nif (this.options) options; else null;");
-
-                Dictionary<string, object> command = new Dictionary<string, object>();
-                command["Scripts"] = scriptsToEval;
-                command["Functions"] = _FunctionsInScope.Keys;
-
-                // Send the command
-                using (TimedLock.Lock(SendKey))
-                    JSONSender.Write(command);
-
-                string inCommandString = _Process.StandardOutput.ReadLine();
-                Dictionary<string, object> inCommand = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
-
-                object exception;
-                if (inCommand.TryGetValue("Exception", out exception))
-                    throw new JavascriptException("Exception compiling Javascript for " + JavascriptContainer.FullPath + ": " + exception.ToString());
-            }
-            finally
-            {
-                fileHandlerFactoryLocator.SessionManagerHandler.EndSession(ownerSession.SessionId);
-            }
-        }*/
 
         /// <summary>
         /// Set to true if the sub process terminates abnormally; indicating to owners that they need to take actions to recreate their scopes
@@ -367,7 +249,15 @@ namespace ObjectCloud.Javascript.SubProcess
             ParentFunctionDelegatesByScopeId[scopeId] = parentFunctionDelegate;
         }
 
+        /// <summary>
+        /// ScriptIDs that are already loaded
+        /// </summary>
         private Set<int> LoadedScriptIDs = new Set<int>();
+
+        /// <summary>
+        /// ScriptIDs that currently are being loaded and thus another user must block
+        /// </summary>
+        private Dictionary<int, object> LoadingScriptIDs = new Dictionary<int, object>();
 
         /// <summary>
         /// Compiles the script
@@ -375,41 +265,114 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <param name="threadID"></param>
         /// <param name="script"></param>
         /// <param name="scriptID"></param>
-        /// <returns></returns>
+        /// <returns>An object that can be used to re-load the script, or null if another thread happened to compile at the same time</returns>
         public object Compile(object threadID, string script, int scriptID)
         {
             CheckIfAbortedOrDisposed();
 
-            Dictionary<string, object> data = new Dictionary<string, object>();
-            data["Script"] = script;
-            data["ScriptID"] = scriptID;
+            object loadingMonitor;
+            if (BlockWhileAnotherThreadIsLoading(scriptID, out loadingMonitor))
+                return null;
 
-            Dictionary<string, object> command = CreateCommand(threadID, "Compile", data);
-            Dictionary<string, object> dataToReturn = SendCommandAndHandleResponse(command);
+            try
+            {
+                Dictionary<string, object> data = new Dictionary<string, object>();
+                data["Script"] = script;
+                data["ScriptID"] = scriptID;
 
-            using (TimedLock.Lock(LoadedScriptIDs))
-                LoadedScriptIDs.Add(scriptID);
+                Dictionary<string, object> command = CreateCommand(threadID, "Compile", data);
+                Dictionary<string, object> dataToReturn = SendCommandAndHandleResponse(command);
 
-            return dataToReturn["CompiledScript"];
+                using (TimedLock.Lock(LoadedScriptIDs))
+                    LoadedScriptIDs.Add(scriptID);
+
+                return dataToReturn["CompiledScript"];
+            }
+            finally
+            {
+                using (TimedLock.Lock(LoadingScriptIDs))
+                    LoadingScriptIDs.Remove(scriptID);
+
+                lock(loadingMonitor)
+                    Monitor.Pulse(loadingMonitor);
+            }
         }
 
+        /// <summary>
+        /// Blocks if another thread is loading or compiling the same scriptID, returns true if another thread loaded or compiled the same script ID
+        /// </summary>
+        /// <param name="scriptID"></param>
+        /// <param name="loadingMonitor"></param>
+        /// <param name="otherThreadLoading"></param>
+        private bool BlockWhileAnotherThreadIsLoading(int scriptID, out object loadingMonitor)
+        {
+            bool otherThreadLoading;
 
+            using (TimedLock.Lock(LoadingScriptIDs))
+            {
+                otherThreadLoading = LoadingScriptIDs.TryGetValue(scriptID, out loadingMonitor);
+
+                if (!otherThreadLoading)
+                {
+                    loadingMonitor = new object();
+                    LoadingScriptIDs[scriptID] = loadingMonitor;
+                }
+            }
+
+            // If another thread is loading, monitor it, but put a timeout in case the other thread
+            // removed the token when we weren't looking
+            bool doneWaiting;
+            if (otherThreadLoading)
+                do
+                {
+                    lock (loadingMonitor)
+                        Monitor.Wait(loadingMonitor, 250);
+
+                    using (TimedLock.Lock(LoadedScriptIDs))
+                        doneWaiting = LoadedScriptIDs.Contains(scriptID);
+
+                } while (doneWaiting);
+
+            return otherThreadLoading;
+        }
+
+        /// <summary>
+        /// Loads a pre-compiled script from ID
+        /// </summary>
+        /// <param name="threadID"></param>
+        /// <param name="preCompiled"></param>
+        /// <param name="scriptID"></param>
         public void LoadCompiled(object threadID, object preCompiled, int scriptID)
         {
             using (TimedLock.Lock(LoadedScriptIDs))
                 if (LoadedScriptIDs.Contains(scriptID))
                     return;
 
-            Dictionary<string, object> data = new Dictionary<string, object>();
-            data["CompiledScript"] = preCompiled;
-            data["ScriptID"] = scriptID;
+            object loadingMonitor;
+            if (BlockWhileAnotherThreadIsLoading(scriptID, out loadingMonitor))
+                return;
 
-            Dictionary<string, object> command = CreateCommand(threadID, "LoadCompiled", data);
-            //Dictionary<string, object> dataToReturn = 
-			SendCommandAndHandleResponse(command);
+            try
+            {
+                Dictionary<string, object> data = new Dictionary<string, object>();
+                data["CompiledScript"] = preCompiled;
+                data["ScriptID"] = scriptID;
 
-            using (TimedLock.Lock(LoadedScriptIDs))
-                LoadedScriptIDs.Add(scriptID);
+                Dictionary<string, object> command = CreateCommand(threadID, "LoadCompiled", data);
+                //Dictionary<string, object> dataToReturn = 
+                SendCommandAndHandleResponse(command);
+
+                using (TimedLock.Lock(LoadedScriptIDs))
+                    LoadedScriptIDs.Add(scriptID);
+            }
+            finally
+            {
+                using (TimedLock.Lock(LoadingScriptIDs))
+                    LoadingScriptIDs.Remove(scriptID);
+
+                lock (loadingMonitor)
+                    Monitor.Pulse(loadingMonitor);
+            }
         }
 
         /// <summary>
@@ -662,6 +625,16 @@ namespace ObjectCloud.Javascript.SubProcess
         uint NumInJavascriptCalls = 0;
 
         /// <summary>
+        /// Helper callback for timers to kill timed out sub processes
+        /// </summary>
+        /// <param name="state"></param>
+        private void HandleSubProcessTimeout(object state)
+        {
+            log.Warn("Killing sub-process due to timeout");
+            Dispose();
+        }
+
+        /// <summary>
         /// Helper to block a thread until the response comes back
         /// </summary>
         /// <returns></returns>
@@ -673,14 +646,8 @@ namespace ObjectCloud.Javascript.SubProcess
 
             Dictionary<string, object> inCommand;
 
-            TimerCallback callback = delegate(object state)
-            {
-                log.Warn("Killing sub-process due to timeout");
-                Dispose();
-            };
-
             // If the thread waits, spin up a timer kill the process in case it runs too long
-            using (new Timer(callback, null, 60000, 0))
+            using (new Timer(HandleSubProcessTimeout, null, SubProcessFactory.CompileTimeout, 0))
                 inCommand = WaitForResponse();
 
             Dictionary<string, object> dataToReturn = (Dictionary<string, object>)inCommand["Data"];
@@ -724,14 +691,8 @@ namespace ObjectCloud.Javascript.SubProcess
                 {
                     Dictionary<string, object> inCommand;
 
-                    TimerCallback callback = delegate(object state)
-                    {
-                        log.Warn("Killing sub-process due to timeout");
-                        Dispose();
-                    };
-
                     // If the thread waits, spin up a timer kill the process in case it runs too long
-                    using (new Timer(callback, null, 10000, 0))
+                    using (new Timer(HandleSubProcessTimeout, null, SubProcessFactory.ExecuteTimeout, 0))
                         inCommand = WaitForResponse();
 
                     Dictionary<string, object> dataToReturn = (Dictionary<string, object>)inCommand["Data"];
@@ -952,7 +913,8 @@ namespace ObjectCloud.Javascript.SubProcess
                         if (null == InCommand)
                         {
                             // else, if there isn't a waiting response that came in on another thread, and if there aren't waiting responses, wait for a response
-                            if (Process.StandardOutput.EndOfStream || Process.HasExited)
+                            //if (Process.StandardOutput.EndOfStream || Process.HasExited)
+                            if (Process.HasExited)
                                 throw new JavascriptException("The sub process has exited");
 
                             string inCommandString = _Process.StandardOutput.ReadLine();

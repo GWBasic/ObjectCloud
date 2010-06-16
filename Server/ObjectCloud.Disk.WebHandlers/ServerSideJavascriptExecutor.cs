@@ -11,6 +11,7 @@ using System.Threading;
 
 using Common.Logging;
 
+using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Javascript;
 using ObjectCloud.Interfaces.Security;
@@ -33,6 +34,27 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <returns></returns>
         [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.Primitive, FilePermissionEnum.Read)]
         public IWebResults Run(IWebConnection webConnection, string filename)
+        {
+            // This loop is in case the process aborts
+            int ctr = 0;
+
+            do
+            {
+                try
+                {
+                    return RunInt(webConnection, filename);
+                }
+                catch (ObjectDisposedException)
+                {
+                    ctr++;
+
+                    if (3 == ctr)
+                        throw;
+                }
+            } while (true);
+        }
+
+        private IWebResults RunInt(IWebConnection webConnection, string filename)
         {
             IFileContainer fileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(filename);
             ITextHandler file = fileContainer.CastFileHandler<ITextHandler>();
@@ -57,21 +79,87 @@ namespace ObjectCloud.Disk.WebHandlers
                 stringBuilder = new StringBuilder(brokenAtTags[0]);
             }
 
-            // This is for compatibility with older scripts that use the "scope" convention
-            Dictionary<string, object> metadata = new Dictionary<string, object>();
-            metadata["scope"] = new Dictionary<string, object>();
-
-            using (IScopeWrapper scopeWrapper = FileHandlerFactoryLocator.SubProcessFactory.GenerateScopeWrapper(
-                metadata,
-                new object[0],
-                FileContainer))
+            using (IScopeWrapper scopeWrapper = GetPreConstructedScope())
                 for (; ctr < brokenAtTags.Length; ctr++)
                     RunBlock(stringBuilder, filename, webConnection, brokenAtTags[ctr], scopeWrapper);
 
             return WebResults.FromString(Status._200_OK, stringBuilder.ToString());
         }
 
-        private void RunBlock(StringBuilder stringBuilder, string filename, IWebConnection webConnection, string toRun, IScopeWrapper scopeWrapper)
+        /// <summary>
+        /// Pre-constructed scope wrappers
+        /// </summary>
+        private LockFreeQueue<IScopeWrapper> PreConstructedScopeWrappers = null;
+
+        /// <summary>
+        /// The number of a scope wrappers to pre-construct
+        /// </summary>
+        public int NumScopeWrappersToPreConstruct
+        {
+            get { return _NumScopeWrappersToPreConstruct; }
+            set { _NumScopeWrappersToPreConstruct = value; }
+        }
+        private int _NumScopeWrappersToPreConstruct = 10;
+
+        /// <summary>
+        /// Gets a pre-constructed scope if its available, else, creates one
+        /// </summary>
+        /// <returns></returns>
+        private IScopeWrapper GetPreConstructedScope()
+        {
+            if (null == PreConstructedScopeWrappers)
+            {
+                ThreadPool.QueueUserWorkItem(PreConstructScopes);
+                return ConstructScope();
+            }
+
+            IScopeWrapper scopeWrapper;
+            if (PreConstructedScopeWrappers.Dequeue(out scopeWrapper))
+            {
+                ThreadPool.QueueUserWorkItem(delegate(object state)
+                {
+                    PreConstructedScopeWrappers.Enqueue(ConstructScope());
+                });
+
+                if (scopeWrapper.SubProcess.Alive)
+                    return scopeWrapper;
+            }
+
+            return ConstructScope();
+        }
+
+        private void PreConstructScopes(object state)
+        {
+            if (null == Interlocked.CompareExchange<LockFreeQueue<IScopeWrapper>>(
+                ref PreConstructedScopeWrappers, new LockFreeQueue<IScopeWrapper>(), null))
+            {
+                for (int ctr = 0; ctr < NumScopeWrappersToPreConstruct; ctr++)
+                    PreConstructedScopeWrappers.Enqueue(ConstructScope());
+            }
+        }
+
+        /// <summary>
+        /// Constructs a scope with the needed semantics
+        /// </summary>
+        /// <returns></returns>
+        private IScopeWrapper ConstructScope()
+        {
+            // This is for compatibility with older scripts that use the "scope" convention
+            Dictionary<string, object> metadata = new Dictionary<string, object>();
+            metadata["scope"] = new Dictionary<string, object>();
+
+            return FileHandlerFactoryLocator.SubProcessFactory.GenerateScopeWrapper(
+                metadata,
+                new object[0],
+                FileContainer);
+        }
+
+        private void RunBlock(
+            StringBuilder stringBuilder, 
+            string filename, 
+            IWebConnection webConnection, 
+            string toRun, 
+            IScopeWrapper scopeWrapper)
         {
             if (0 == toRun.IndexOf(" Scripts("))
             {
@@ -88,12 +176,25 @@ namespace ObjectCloud.Disk.WebHandlers
                 return;
             }
 
+            string script = scriptAndPostString[0];
+            int scriptHash = script.GetHashCode();
+
+            int scriptId = FileHandlerFactoryLocator.SubProcessFactory.CompiledJavascriptManager.GetScriptID(
+                filename + "___HASH___" + scriptHash.ToString(),
+                scriptHash.ToString(),
+                script,
+                scopeWrapper.SubProcess);
+
             string endString = scriptAndPostString[1];
 
             object[] results;
             try
             {
-                results = scopeWrapper.EvalScope(webConnection, new string[] { scriptAndPostString[0] });
+                results = scopeWrapper.EvalScope(webConnection, new object[] { scriptId });
+            }
+            catch (ObjectDisposedException)
+            {
+                throw;
             }
             catch (JavascriptException je)
             {

@@ -32,6 +32,26 @@ namespace ObjectCloud.Javascript.SubProcess
         private int _NumSubProcesses = 2;
 
         /// <summary>
+        /// The amount of time in milliseconds that must elapse before the sub process is killed when compiling
+        /// </summary>
+        public int CompileTimeout
+        {
+            get { return _CompileTimeout; }
+            set { _CompileTimeout = value; }
+        }
+        private int _CompileTimeout = 60000;
+
+        /// <summary>
+        /// The amount of time in milliseconds that must elapse before the sub process is killed when executing
+        /// </summary>
+        public int ExecuteTimeout
+        {
+            get { return _ExecuteTimeout; }
+            set { _ExecuteTimeout = value; }
+        }
+        private int _ExecuteTimeout = 30000;
+
+        /// <summary>
         /// All of the sub processes
         /// </summary>
         private Set<SubProcess> SubProcesses = new Set<SubProcess>();
@@ -54,7 +74,7 @@ namespace ObjectCloud.Javascript.SubProcess
 
                     for (int ctr = 0; ctr < NumSubProcesses; ctr++)
                     {
-                        SubProcess subProcess = new SubProcess();
+                        SubProcess subProcess = new SubProcess(this);
                         SubProcesses.Add(subProcess);
                         Queue.Enqueue(subProcess);
                     }
@@ -64,6 +84,10 @@ namespace ObjectCloud.Javascript.SubProcess
         FileHandlerFactoryLocator _FileHandlerFactoryLocator;
 
         public CompiledJavascriptManager CompiledJavascriptManager
+        {
+            get { return _CompiledJavascriptManager; }
+        }
+        ICompiledJavascriptManager ISubProcessFactory.CompiledJavascriptManager
         {
             get { return _CompiledJavascriptManager; }
         }
@@ -87,7 +111,7 @@ namespace ObjectCloud.Javascript.SubProcess
 
             if (!toReturn.Alive)
             {
-                SubProcess newSubProcess = new SubProcess();
+                SubProcess newSubProcess = new SubProcess(this);
 
                 using (TimedLock.Lock(SubProcesses))
                 {

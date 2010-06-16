@@ -20,6 +20,21 @@ namespace ObjectCloud.Interfaces.Javascript
     public interface ISubProcessFactory
     {
         /// <summary>
+        /// The amount of time in milliseconds that must elapse before the sub process is killed when compiling
+        /// </summary>
+        int CompileTimeout { get; set; }
+
+        /// <summary>
+        /// The amount of time in milliseconds that must elapse before the sub process is killed when executing
+        /// </summary>
+        int ExecuteTimeout { get; set; }
+
+        /// <summary>
+        /// Manages compiled javascript
+        /// </summary>
+        ICompiledJavascriptManager CompiledJavascriptManager { get; }
+
+        /// <summary>
         /// Returns a sub process that can provide a scope for the given javascript container
         /// </summary>
         /// <returns></returns>
