@@ -71,7 +71,7 @@ namespace ObjectCloud.Javascript.SubProcess
                 if (toReturn.JavascriptLastModified == javascriptLastModified)
                 {
                     using (TimedLock.Lock(PrecompiledScriptDataByID))
-                        foreach (int scriptID in toReturn.ScriptIDsToBuildScope)
+                        foreach (int scriptID in toReturn.ScriptsAndIDsToBuildScope)
                             subProcess.LoadCompiled(
                                 Thread.CurrentThread.ManagedThreadId,
                                 PrecompiledScriptDataByID[scriptID],
@@ -82,7 +82,6 @@ namespace ObjectCloud.Javascript.SubProcess
 
             string javascript = javascriptClass.ReadAll();
             string fileType = null;
-            Dictionary<string, MethodInfo> functionsInScope = new Dictionary<string, MethodInfo>();
             List<int> scriptIDsToBuildScope = new List<int>();
 
             ISession ownerSession = FileHandlerFactoryLocator.SessionManagerHandler.CreateSession();
@@ -106,9 +105,7 @@ namespace ObjectCloud.Javascript.SubProcess
                     ownerWebConnection);
 
                 // Load static methods that are passed into the Javascript environment as-is
-                foreach (Type javascriptFunctionsType in GetTypesThatHaveJavascriptFunctions(fileType))
-                    foreach (MethodInfo method in javascriptFunctionsType.GetMethods(BindingFlags.Static | BindingFlags.Public))
-                        functionsInScope[method.Name] = method;
+                Dictionary<string, MethodInfo> functionsInScope = SubProcessFactory.GetFunctionsForFileType(fileType);
 
                 // Load all dependant scripts
                 foreach (ScriptAndMD5 dependantScript in dependantScriptsAndMD5s)
@@ -152,7 +149,6 @@ namespace ObjectCloud.Javascript.SubProcess
                         subProcess));
 
                 toReturn = new ScopeInfo(
-                    javascriptClass.FileContainer,
                     javascriptLastModified,
                     functionsInScope,
                     scriptIDsToBuildScope);
@@ -193,23 +189,6 @@ namespace ObjectCloud.Javascript.SubProcess
             }
 
             return toReturn;
-        }
-
-        /// <summary>
-        /// Returns the types that have static functions to assist with the given FileHandler based on its type 
-        /// </summary>
-        /// <param name="fileContainer">
-        /// A <see cref="IFileContainer"/>
-        /// </param>
-        /// <returns>
-        /// A <see cref="IEnumerable"/>
-        /// </returns>
-        private static IEnumerable<Type> GetTypesThatHaveJavascriptFunctions(string fileType)
-        {
-            yield return typeof(JavascriptFunctions);
-
-            if ("database" == fileType)
-                yield return typeof(JavascriptDatabaseFunctions);
         }
 
         /// <summary>

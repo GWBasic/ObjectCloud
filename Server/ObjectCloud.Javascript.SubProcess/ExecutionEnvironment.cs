@@ -46,15 +46,18 @@ namespace ObjectCloud.Javascript.SubProcess
                 javascriptContainer.CastFileHandler<ITextHandler>(),
                 subProcess);
 
+            EvalScopeResults evalScopeResults = null;
             try
             {
                 _ScopeWrapper = new ScopeWrapper(
                     fileHandlerFactoryLocator,
-                    javascriptContainer,
                     subProcess,
                     scopeInfo,
                     fileContainer,
-                    subProcessFactory.CompiledJavascriptManager);
+                    subProcessFactory.CompiledJavascriptManager,
+                    subProcessFactory.GenerateScopeId(),
+                    new Dictionary<string,object>(),
+                    out evalScopeResults);
             }
             catch (Exception e)
             {
@@ -62,6 +65,17 @@ namespace ObjectCloud.Javascript.SubProcess
                 this._ExecutionEnvironmentErrors = e.ToString();
                 log.Error("Error creating scope", e);
             }
+
+            _BlockWebMethods = true;
+
+            // Get options
+            if (null != evalScopeResults)
+                if (null != evalScopeResults.Results)
+                {
+                    object result = evalScopeResults.Results[evalScopeResults.Results.Count - 1];
+                    if (result is Dictionary<string, object>)
+                        ParseOptions((Dictionary<string, object>)result);
+                }
         }
 
         /// <summary>
@@ -135,12 +149,30 @@ namespace ObjectCloud.Javascript.SubProcess
         }
         private string _ExecutionEnvironmentErrors = null;
 
-        public bool IsBlockWebMethodsEnabled(IWebConnection webConnection)
+        /// <summary>
+        /// Loads options from the javascript
+        /// </summary>
+        private void ParseOptions(Dictionary<string, object> options)
         {
-            if (null != _ScopeWrapper)
-                return _ScopeWrapper.BlockWebMethods;
-            else
-                return false;
+            object blockWebMethods = null;
+            if (options.TryGetValue("BlockWebMethods", out blockWebMethods))
+                try
+                {
+                    _BlockWebMethods = Convert.ToBoolean(blockWebMethods);
+                }
+                catch (Exception e)
+                {
+                    log.Error("Error when parsing options.BlockWebMethods", e);
+                }
         }
+
+        /// <summary>
+        /// Returns true if underlying web methods are blocked, false otherwise
+        /// </summary>
+        public bool BlockWebMethods
+        {
+            get { return _BlockWebMethods; }
+        }
+        private bool _BlockWebMethods = false;
     }
 }

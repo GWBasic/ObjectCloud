@@ -3,7 +3,9 @@
 // For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 
@@ -124,6 +126,81 @@ namespace ObjectCloud.Javascript.SubProcess
         public int GenerateScopeId()
         {
             return Interlocked.Increment(ref IdCtr);
+        }
+
+        /// <summary>
+        /// Returns the types that have static functions to assist with the given FileHandler based on its type 
+        /// </summary>
+        /// <param name="fileContainer">
+        /// A <see cref="IFileContainer"/>
+        /// </param>
+        /// <returns>
+        /// A <see cref="IEnumerable"/>
+        /// </returns>
+        private static IEnumerable<Type> GetTypesThatHaveJavascriptFunctions(string fileType)
+        {
+            yield return typeof(JavascriptFunctions);
+
+            if ("database" == fileType)
+                yield return typeof(JavascriptDatabaseFunctions);
+        }
+
+        /// <summary>
+        /// Load static methods that are passed into the Javascript environment as-is
+        /// </summary>
+        /// <param name="fileType"></param>
+        /// <returns></returns>
+        public static Dictionary<string, MethodInfo> GetFunctionsForFileType(string fileType)
+        {
+            Dictionary<string, MethodInfo> functionsInScope = new Dictionary<string, MethodInfo>();
+            foreach (Type javascriptFunctionsType in GetTypesThatHaveJavascriptFunctions(fileType))
+                foreach (MethodInfo method in javascriptFunctionsType.GetMethods(BindingFlags.Static | BindingFlags.Public))
+                    functionsInScope[method.Name] = method;
+
+            return functionsInScope;
+        }
+
+        public IScopeWrapper GenerateScopeWrapper(
+            Dictionary<string, object> metadata,
+            IEnumerable scriptsAndIDsToBuildScope,
+            IFileContainer fileContainer)
+        {
+            SubProcess subProcess = GetSubProcess();
+
+            // Prepare to load /API/AJAX_serverside.js
+            IFileContainer ajaxDriver = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(
+                "/API/AJAX_serverside.js");
+
+            int scriptID = CompiledJavascriptManager.GetScriptID(
+                "/API/AJAX_serverside.js",
+                ajaxDriver.LastModified.Ticks.ToString(),
+                ajaxDriver.CastFileHandler<ITextHandler>().ReadAll(),
+                subProcess);
+
+            ArrayList modifiedScriptsAndIDsToBuildScope = new ArrayList();
+            modifiedScriptsAndIDsToBuildScope.Add(scriptID);
+            foreach (object scriptOrId in scriptsAndIDsToBuildScope)
+                modifiedScriptsAndIDsToBuildScope.Add(scriptOrId);
+
+            ScopeInfo scopeInfo = new ScopeInfo(
+                DateTime.MinValue, GetFunctionsForFileType(fileContainer.TypeId), modifiedScriptsAndIDsToBuildScope);
+
+            EvalScopeResults evalScopeResults;
+            ScopeWrapper toReturn = new ScopeWrapper(
+                FileHandlerFactoryLocator,
+                subProcess,
+                scopeInfo,
+                fileContainer,
+                CompiledJavascriptManager,
+                GenerateScopeId(),
+                metadata,
+                out evalScopeResults);
+
+            if (null != evalScopeResults)
+                if (null != evalScopeResults.Results)
+                    evalScopeResults.Results.RemoveAt(0);
+
+            return toReturn;
         }
     }
 }

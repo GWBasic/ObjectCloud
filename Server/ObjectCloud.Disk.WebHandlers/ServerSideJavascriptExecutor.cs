@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
+using Common.Logging;
+
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Javascript;
 using ObjectCloud.Interfaces.Security;
@@ -20,6 +22,8 @@ namespace ObjectCloud.Disk.WebHandlers
     /// </summary>
     public class ServerSideJavascriptExecutor : WebHandler<IFileHandler>
     {
+        ILog log = LogManager.GetLogger<ServerSideJavascriptExecutor>();
+
         /// <summary>
         /// Runs server-side javascript
         /// </summary>
@@ -39,38 +43,36 @@ namespace ObjectCloud.Disk.WebHandlers
             string[] brokenAtTags = script.Split(new string[] {"<?"}, StringSplitOptions.None);
 
             int ctr;
-            string toReturn;
+            StringBuilder toReturn;
 
             if (0 == script.IndexOf("<?"))
             {
                 ctr = 0;
-                toReturn = "";
+                toReturn = new StringBuilder("");
             }
             else
             {
                 ctr = 1;
-                toReturn = brokenAtTags[0];
+                toReturn = new StringBuilder(brokenAtTags[0]);
             }
 
-            ISubProcess subProcess = FileHandlerFactoryLocator.SubProcessFactory.GetSubProcess();
-            bool createScope = true;
+            // This is for compatibility with older scripts that use the "scope" convention
+            Dictionary<string, object> metadata = new Dictionary<string, object>();
+            metadata["scope"] = new Dictionary<string, object>();
 
-            int scopeId = FileHandlerFactoryLocator.SubProcessFactory.GenerateScopeId();
-            try
+            using (IScopeWrapper scopeWrapper = FileHandlerFactoryLocator.SubProcessFactory.GenerateScopeWrapper(
+                metadata,
+                new object[0],
+                FileContainer))
             {
                 for (; ctr < brokenAtTags.Length; ctr++)
-                    toReturn += RunBlock(brokenAtTags[ctr], subProcess, scopeId, ref createScope);
-                    createScope = false;
-            }
-            finally
-            {
-                subProcess.DisposeScope(scopeId, Thread.CurrentThread.ManagedThreadId);
+                    toReturn.Append(RunBlock(filename, webConnection, brokenAtTags[ctr], scopeWrapper));
             }
 
-            return WebResults.FromString(Status._200_OK, toReturn);
+            return WebResults.FromString(Status._200_OK, toReturn.ToString());
         }
 
-        private string RunBlock(string toRun, ISubProcess subProcess, int scopeId, ref bool createScope)
+        private string RunBlock(string filename, IWebConnection webConnection, string toRun, IScopeWrapper scopeWrapper)
         {
             if (0 == toRun.IndexOf(" Scripts("))
               return "<? " + toRun;
@@ -82,49 +84,31 @@ namespace ObjectCloud.Disk.WebHandlers
               return "<? " + toRun;
 
             string endString = scriptAndPostString[1];
-            IEnumerable scripts;
-            if (createScope)
-            {
-                scripts = new object[]
-                {
-                    "var scope = {};",
-                    scriptAndPostString[0]
-                };
 
-                createScope = false;
-            }
-            else
-                scripts = new object[]
-                {
-                    scriptAndPostString[0]
-                };
-
-            EvalScopeResults results;
+            object[] results;
             try
             {
-                results = subProcess.EvalScope(
-                    scopeId,
-                    Thread.CurrentThread.ManagedThreadId,
-                    null,
-                    scripts,
-                    null,
-                    false);
+                results = scopeWrapper.EvalScope(webConnection, new string[] { scriptAndPostString[0] });
             }
             catch (JavascriptException je)
             {
+                log.ErrorFormat("An error occured in server-side javascript {0}", je, filename);
                 return je.Message + endString;
             }
-            catch (Exception)
+            catch (Exception e)
             {
-              return "An error occurred inside of ObjectCloud.  For more information, see the system logs "+ endString;
+                log.ErrorFormat("An error occured in server-side javascript {0}", e, filename);
+                return "An error occurred inside of ObjectCloud.  For more information, see the system logs " + endString;
             }
 
             // If the result isn't an array, make it an array.  All elements in the array will be iterated over
             IEnumerable toIterate;
-            if (results.Results[0] is IEnumerable)
-                toIterate = (IEnumerable)results.Results[0];
+            if (results[0] is string)
+                toIterate = new object[] { results[0] };
+            else if (results[0] is IEnumerable)
+                toIterate = (IEnumerable)results[0];
             else
-                toIterate = new object[] {results.Results[0]};
+                toIterate = new object[] {results[0]};
 
             StringBuilder toReturn = new StringBuilder();
 

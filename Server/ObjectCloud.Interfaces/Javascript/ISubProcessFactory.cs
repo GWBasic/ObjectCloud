@@ -3,7 +3,9 @@
 // For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 
 using ObjectCloud.Interfaces.Disk;
@@ -28,5 +30,17 @@ namespace ObjectCloud.Interfaces.Javascript
         /// </summary>
         /// <returns></returns>
         int GenerateScopeId();
+
+        /// <summary>
+        /// Generates a scope wrapper
+        /// </summary>
+        /// <param name="metadata"></param>
+        /// <param name="scriptsAndIDsToBuildScope"></param>
+        /// <param name="fileContainer"></param>
+        /// <returns></returns>
+        IScopeWrapper GenerateScopeWrapper(
+            Dictionary<string, object> metadata,
+            IEnumerable scriptsAndIDsToBuildScope,
+            IFileContainer fileContainer);
     }
 }

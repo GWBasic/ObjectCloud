@@ -3,11 +3,13 @@
 // For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 
 using ObjectCloud.Interfaces.Disk;
+using ObjectCloud.Interfaces.Javascript;
 
 namespace ObjectCloud.Javascript.SubProcess
 {
@@ -16,22 +18,15 @@ namespace ObjectCloud.Javascript.SubProcess
     /// </summary>
     public class ScopeInfo
     {
-        public ScopeInfo(IFileContainer javascriptContainer, DateTime javascriptLastModified, Dictionary<string, MethodInfo> functionsInScope, IEnumerable<int> scriptIDsToBuildScope)
+        public ScopeInfo(
+            DateTime javascriptLastModified,
+            Dictionary<string, MethodInfo> functionsInScope,
+            IEnumerable scriptsAndIDsToBuildScope)
         {
-            _JavascriptContainer = javascriptContainer;
             _JavascriptLastModified = javascriptLastModified;
             _FunctionsInScope = functionsInScope;
-            _ScriptIDsToBuildScope = scriptIDsToBuildScope;
+            _ScriptsAndIDsToBuildScope = scriptsAndIDsToBuildScope;
         }
-
-        /// <summary>
-        /// The file container that has the Javascript used in the sub-process
-        /// </summary>
-        public IFileContainer JavascriptContainer
-        {
-            get { return _JavascriptContainer; }
-        }
-        private readonly IFileContainer _JavascriptContainer;
 
         /// <summary>
         /// When the javascript used in this process was last modified.  If the javascript was modified, then the process will be killed
@@ -54,10 +49,10 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <summary>
         /// The script IDs needed to construct the scope
         /// </summary>
-        public IEnumerable<int> ScriptIDsToBuildScope
+        public IEnumerable ScriptsAndIDsToBuildScope
         {
-            get { return _ScriptIDsToBuildScope; }
+            get { return _ScriptsAndIDsToBuildScope; }
         }
-        private readonly IEnumerable<int> _ScriptIDsToBuildScope;
+        private readonly IEnumerable _ScriptsAndIDsToBuildScope;
     }
 }

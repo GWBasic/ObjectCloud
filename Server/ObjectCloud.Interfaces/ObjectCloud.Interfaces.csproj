@@ -88,6 +88,7 @@
     <Compile Include="Disk\UnsupportedFileHandlerFactory.cs" />
     <Compile Include="Javascript\IExecutionEnvironment.cs" />
     <Compile Include="Javascript\IExecutionEnvironmentFactory.cs" />
+    <Compile Include="Javascript\IScopeWrapper.cs" />
     <Compile Include="Javascript\ISubProcess.cs" />
     <Compile Include="Javascript\ISubProcessFactory.cs" />
     <Compile Include="Javascript\JavascriptException.cs" />

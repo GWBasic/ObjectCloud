@@ -12,7 +12,7 @@ namespace ObjectCloud.Interfaces.Javascript
     /// <summary>
     /// The results of calling EvalScope
     /// </summary>
-    public struct EvalScopeResults
+    public class EvalScopeResults
     {
         /// <summary>
         /// The call's results
