@@ -1,5 +1,6 @@
 package com.objectcloud.javascriptprocess;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -30,6 +31,13 @@ public class IOPump {
 		} catch (Throwable t) {
 			
 			System.err.println(serializeGeneralException(t));
+			FileWriter outFile;
+
+			try {
+				outFile = new FileWriter("JavascriptProcessCrashReport.txt");
+				outFile.write(serializeGeneralException(t));
+				outFile.close();
+			} catch (IOException e) { }
 		}
 
 		System.exit(0);
@@ -129,6 +137,13 @@ public class IOPump {
 				outputStreamWriter.flush();
 			}
 		} catch (IOException e) {
+			
+			try {
+				FileWriter outFile = new FileWriter("JavascriptProcessCrashReport.txt");
+				outFile.write(serializeGeneralException(t));
+				outFile.close();
+			} catch (IOException ie) { }
+
 			System.exit(0);
 		}
 	}
@@ -153,7 +168,17 @@ public class IOPump {
 		
 			errorToSend.put("StackTrace", stackTraceBuilder.toString());
 		} catch (JSONException e) {
-			// This should never happen, but if there is an error building the exception message, just kill the process
+
+			try {
+				FileWriter outFile = new FileWriter("JavascriptProcessCrashReport.txt");
+				outFile.write(e.getMessage());
+
+				for (StackTraceElement ste : e.getStackTrace())
+					outFile.write("\n" + ste.toString());
+				
+				outFile.close();
+			} catch (IOException ie) { }
+
 			System.exit(1);
 		}
 
