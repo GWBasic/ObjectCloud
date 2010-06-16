@@ -394,7 +394,16 @@ namespace ObjectCloud.Disk.Implementation
 
             // Create an executor for .ssjs files that runs much faster then eval
             if (!systemDirectory.IsFilePresent("ServerSideJavascriptExecutor"))
+            {
                 systemDirectory.CreateFile("ServerSideJavascriptExecutor", "ssjsexecutor", null);
+                systemDirectory.SetPermission(
+                    null,
+                    "ServerSideJavascriptExecutor",
+                    FileHandlerFactoryLocator.UserFactory.Everybody.Id,
+                    FilePermissionEnum.Read,
+                    false,
+                    false);
+            }
 
             IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
             string groupFileName = FileHandlerFactoryLocator.UserFactory.Administrators.Name.ToLower() + ".group";
