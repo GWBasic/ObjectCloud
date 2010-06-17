@@ -850,6 +850,64 @@ namespace ObjectCloud.Javascript.SubProcess
 			throw new ObjectDisposedException("The sub processes has exited");
         }
 
+		/*
+	// Alternate version of WaitForResponse that has less locking, not sure if this is causing problems or not
+		/// <summary>
+		/// The most recent command returned from the sub process
+		/// </summary>
+		Dictionary<string, object> InCommand = null;
+		
+		/// <summary>
+		/// The thread that has a result waiting for it
+		/// </summary>
+		int InCommandThreadId;
+		
+		/// <summary>
+		/// Syncronizes the sub process's output stream and returns the appropriate response
+		/// </summary>
+		/// <returns></returns>
+		private Dictionary<string, object> WaitForResponse()
+		{
+			int threadID = Thread.CurrentThread.ManagedThreadId;
+			
+			do
+			{
+				// If there is a waiting result and it's for this thread, return it
+				if (null != InCommand)
+					if (threadID == InCommandThreadId)
+					{
+						Dictionary<string, object> toReturn = InCommand;
+						InCommand = null;
+						return toReturn;
+					}
+				
+				// Only 1 thread can read from the sub process at a time
+				// all threads spin while waiting for a response
+				if (null == InCommand)
+					lock (RespondKey)
+						if (null == InCommand)
+						{
+							// else, if there isn't a waiting response that came in on another thread, and if there aren't waiting responses, wait for a response
+							if (Process.StandardOutput.EndOfStream || Process.HasExited)
+								throw new JavascriptException("The sub process has exited");
+					
+							string inCommandString = _Process.StandardOutput.ReadLine();
+							
+							if (null == inCommandString)
+								log.Warn("Null recieved from sub process");
+							else
+							{
+								InCommand = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
+								InCommandThreadId = Convert.ToInt32(InCommand["ThreadID"]);
+							}
+						}
+				else
+					Thread.Sleep(0);
+				
+			} while (true);
+		} 
+		*/
+		
         /// <summary>
         /// Represents an undefined value
         /// </summary>

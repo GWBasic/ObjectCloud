@@ -60,7 +60,7 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <summary>
         /// The scope wrapper
         /// </summary>
-        ScopeWrapper ScopeWrapper;
+        internal readonly ScopeWrapper ScopeWrapper;
         
         /// <summary>
         /// The FileHandlerFactoryLocator
