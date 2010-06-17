@@ -516,9 +516,16 @@ public class ScopeWrapper {
 						monitorObjectsByThreadID.put(threadID, monitorObject);
 					}
 
-					synchronized(monitorObject) {
-						monitorObject.wait();
-					}
+					boolean ready;
+					do {
+						synchronized(monitorObject) {
+							monitorObject.wait(250);
+						}
+					
+						synchronized (inCommandByThreadID) {
+							ready = inCommandByThreadID.containsKey(threadID);
+						}
+					} while (!ready);
 
 				} finally {
 					synchronized(monitorObjectsByThreadID) {
@@ -527,9 +534,12 @@ public class ScopeWrapper {
 				}
 
 				// pull inCommand out of a map and then re-call handle, unless a response is returned
-				JSONObject inCommand = inCommandByThreadID.get(threadID);
-				inCommandByThreadID.remove(threadID);
-
+				JSONObject inCommand;
+				synchronized (inCommandByThreadID) {
+					inCommand = inCommandByThreadID.get(threadID);
+					inCommandByThreadID.remove(threadID);
+				}
+				
 				// If the command is a response to the function call, return the data, else, handle the command
 				if (inCommand.getString("Command").equals("RespondCallParentFunction")) {
 
