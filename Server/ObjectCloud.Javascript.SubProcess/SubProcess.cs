@@ -640,15 +640,11 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <returns></returns>
         private Dictionary<string, object> SendCommandAndHandleResponse(object command)
         {
-            // Send the command
-            using (TimedLock.Lock(SendKey))
-                JSONSender.Write(command);
-
             Dictionary<string, object> inCommand;
 
             // If the thread waits, spin up a timer kill the process in case it runs too long
             using (new Timer(HandleSubProcessTimeout, null, SubProcessFactory.CompileTimeout, 0))
-                inCommand = WaitForResponse();
+                inCommand = SendCommandAndWaitForResponse(command);
 
             Dictionary<string, object> dataToReturn = (Dictionary<string, object>)inCommand["Data"];
 
@@ -676,10 +672,6 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <returns></returns>
         private Dictionary<string, object> SendCommandAndHandleResponse(object command, int scopeId)
         {
-            // Send the command
-            using (TimedLock.Lock(SendKey))
-                JSONSender.Write(command);
-
             if (null == TrackedObjects)
                 TrackedObjects = new Dictionary<int, object>();
 
@@ -693,7 +685,7 @@ namespace ObjectCloud.Javascript.SubProcess
 
                     // If the thread waits, spin up a timer kill the process in case it runs too long
                     using (new Timer(HandleSubProcessTimeout, null, SubProcessFactory.ExecuteTimeout, 0))
-                        inCommand = WaitForResponse();
+                        inCommand = SendCommandAndWaitForResponse(command);
 
                     Dictionary<string, object> dataToReturn = (Dictionary<string, object>)inCommand["Data"];
 
@@ -785,8 +777,9 @@ namespace ObjectCloud.Javascript.SubProcess
                             outData["Exception"] = jsoned;
                         }
 
-                        using (TimedLock.Lock(SendKey))
-                            JSONSender.Write(outCommand);
+                        //using (TimedLock.Lock(SendKey))
+                            //JSONSender.Write(outCommand);
+                        command = outCommand;
                     }
                     else
                     {
@@ -863,7 +856,7 @@ namespace ObjectCloud.Javascript.SubProcess
             }
         }
 
-        /// <summary>
+        /*// <summary>
         /// Provides syncronization when waiting for a response
         /// </summary>
         private object RespondKey = new object();
@@ -876,15 +869,37 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <summary>
         /// The thread that has a result waiting for it 
         /// </summary>
-        int InCommandThreadId;
+        int InCommandThreadId;*/
 
         /// <summary>
         /// Syncronizes the sub process's output stream and returns the appropriate response
         /// </summary>
         /// <returns></returns>
-        private Dictionary<string, object> WaitForResponse()
+        private Dictionary<string, object> SendCommandAndWaitForResponse(object command)
         {
-            int threadID = Thread.CurrentThread.ManagedThreadId;
+            // Send the command
+            using (TimedLock.Lock(SendKey))
+            {
+                JSONSender.Write(command);
+
+                string inCommandString;
+                do
+                    inCommandString = _Process.StandardOutput.ReadLine();
+                while (null == inCommandString);
+
+                Dictionary<string, object> toReturn = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
+
+                // If the sub process had a recoverable error, just push it up the stack
+                if (toReturn.ContainsKey("StackTrace"))
+                {
+                    LogSubProcessError(toReturn);
+                    throw new JavascriptException(toReturn["Message"].ToString());
+                }
+
+                return toReturn;
+            }
+
+            /*int threadID = Thread.CurrentThread.ManagedThreadId;
 
             do
             {
@@ -931,7 +946,7 @@ namespace ObjectCloud.Javascript.SubProcess
                 else
                     Thread.Sleep(0);
 
-            } while (true);
+            } while (true);*/
         }
 
         /// <summary>

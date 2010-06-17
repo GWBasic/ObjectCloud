@@ -29,7 +29,7 @@ namespace ObjectCloud.Javascript.SubProcess
             get { return _NumSubProcesses; }
             set { _NumSubProcesses = value; }
         }
-        private int _NumSubProcesses = 2;
+        private int _NumSubProcesses = Environment.ProcessorCount;
 
         /// <summary>
         /// The amount of time in milliseconds that must elapse before the sub process is killed when compiling
