@@ -877,7 +877,10 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <returns></returns>
         private Dictionary<string, object> SendCommandAndWaitForResponse(object command)
         {
+			//DateTime start = DateTime.UtcNow;
+			
             // Send the command
+			Dictionary<string, object> toReturn;
             using (TimedLock.Lock(SendKey))
             {
                 JSONSender.Write(command);
@@ -887,7 +890,7 @@ namespace ObjectCloud.Javascript.SubProcess
                     inCommandString = _Process.StandardOutput.ReadLine();
                 while (null == inCommandString);
 
-                Dictionary<string, object> toReturn = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
+                toReturn = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
 
                 // If the sub process had a recoverable error, just push it up the stack
                 if (toReturn.ContainsKey("StackTrace"))
@@ -895,9 +898,18 @@ namespace ObjectCloud.Javascript.SubProcess
                     LogSubProcessError(toReturn);
                     throw new JavascriptException(toReturn["Message"].ToString());
                 }
-
-                return toReturn;
             }
+			
+			/*if (log.IsDebugEnabled)
+			{
+				TimeSpan callTime = DateTime.UtcNow - start;
+				log.Debug("Time to call into Javascript (ms): " + callTime.TotalMilliseconds);
+				
+				if (callTime.TotalMilliseconds > 15)
+					log.Debug(JsonWriter.Serialize(command));
+			}*/
+			
+            return toReturn;
 
             /*int threadID = Thread.CurrentThread.ManagedThreadId;
 
