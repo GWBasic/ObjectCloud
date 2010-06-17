@@ -1,11 +1,16 @@
 package com.objectcloud.javascriptprocess;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Date;
+
 
 
 // Assists in logging timing issues
 public class Logger {
 	
-	/*static {
+	static {
 		Date now = new Date();
 		filename = (new Long(now.getTime())).toString() + ".log";
 	}
@@ -35,5 +40,5 @@ public class Logger {
 		} catch (IOException e) {
 		}
 
-	}*/
+	}
 }

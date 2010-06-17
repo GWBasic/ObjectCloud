@@ -2,7 +2,6 @@ package com.objectcloud.javascriptprocess;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,27 +12,18 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONString;
+import org.mozilla.javascript.Callable;
 import org.mozilla.javascript.ClassShutter;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.EcmaError;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.JavaScriptException;
-import org.mozilla.javascript.Script;
+import org.mozilla.javascript.NativeFunction;
 import org.mozilla.javascript.Scriptable;
-import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.Undefined;
 
 public class ScopeWrapper {
 	
-	/*public ScopeWrapper(Context context, IOPump ioPump, OutputStreamWriter outputStreamWriter, Scriptable childScope, int scopeID) {
-	
-	this.ioPump = ioPump;
-	this.outputStreamWriter = outputStreamWriter;
-	this.scopeID = new Integer(scopeID);
-	this.scope = childScope;
-    jsonStringifyFunction = (Function)context.evaluateString(childScope, "JSON.stringify", "<cmd>", 1, null);
-}*/
-
 	public ScopeWrapper(IOPump ioPump, OutputStreamWriter outputStreamWriter, int scopeID, ParentScope parentScope) {
 	
 		this.ioPump = ioPump;
@@ -42,36 +32,26 @@ public class ScopeWrapper {
 		this.parentScope = parentScope;
 	}
 
-	IOPump ioPump;
-	OutputStreamWriter outputStreamWriter;
+	private final IOPump ioPump;
+	private final OutputStreamWriter outputStreamWriter;
 	Scriptable scope;
-	Integer scopeID;
+	private final Integer scopeID;
 	Function jsonStringifyFunction;
-	Map<Object, Object> monitorObjectsByThreadID = new HashMap<Object, Object>();
-	Map<Object, JSONObject> inCommandByThreadID = new HashMap<Object, JSONObject>();
-	Map<Object, Function> callbacks = new HashMap<Object, Function>();
-	Map<Object, Object> cachedObjects = new HashMap<Object, Object>();
-	ParentScope parentScope;
+	Function jsonParseFunction;
+	private final Map<Object, Object> monitorObjectsByThreadID = new HashMap<Object, Object>();
+	private final Map<Object, JSONObject> inCommandByThreadID = new HashMap<Object, JSONObject>();
+	private final Map<Object, Function> callbacks = new HashMap<Object, Function>();
+	private final Map<Object, Object> cachedObjects = new HashMap<Object, Object>();
+	private final ParentScope parentScope;
+	private static final CompiledJavascriptTracker compiledJavascriptTracker = CompiledJavascriptTracker.getInstance();
 	
 	static Random random = new Random();
 	
-	// Pairing of ThreadID and ScopeWrapper
-	private class ScopeWrapperAndThreadID {
-		
-		public ScopeWrapperAndThreadID(Object threadID, ScopeWrapper scopeWrapper) {
-			this.threadID = threadID;
-			this.scopeWrapper = scopeWrapper;
-		}
-		
-		public Object threadID;
-		public ScopeWrapper scopeWrapper;
-	}
-	
 	// All the current scope and thread ID mapped by their context
-	static final ThreadLocal<Stack<ScopeWrapperAndThreadID>> scopeWrapperAndThreadIDStack = new ThreadLocal<Stack<ScopeWrapperAndThreadID>>() {
+	static final ThreadLocal<Stack<Object>> threadIDStack = new ThreadLocal<Stack<Object>>() {
 		@Override
-		protected Stack<ScopeWrapperAndThreadID> initialValue() {
-			return new Stack<ScopeWrapperAndThreadID>();
+		protected Stack<Object> initialValue() {
+			return new Stack<Object>();
 		}
 	};
 	
@@ -122,7 +102,7 @@ public class ScopeWrapper {
 		        // For now these are being swallowed because they seem to occur if setting this twice
 		        } catch (SecurityException se) {}
 				
-				scopeWrapperAndThreadIDStack.get().push(new ScopeWrapperAndThreadID(threadID, this));
+				threadIDStack.get().push(threadID);
 
 				if (command.equals("CallFunctionInScope"))
 					callFunctionInScope(context, threadID, data);
@@ -148,7 +128,7 @@ public class ScopeWrapper {
 					System.err.println(JSONObject.quote(command + " is unsupported"));
 		
 			} finally {
-				scopeWrapperAndThreadIDStack.get().pop();
+				threadIDStack.get().pop();
 	            Context.exit();
 	        }
 		
@@ -171,8 +151,14 @@ public class ScopeWrapper {
 		scriptableAndResult = parentScope.createScope(context);
 		this.scope = scriptableAndResult.scope;
 	    jsonStringifyFunction = scriptableAndResult.jsonStringifyFunction;
-	    Function jsonParseFunction = scriptableAndResult.jsonParseFunction;
+	    jsonParseFunction = scriptableAndResult.jsonParseFunction;
 
+	    // Inject function callers
+		for (String functionName : parentScope.getFunctions())
+			scope.put(functionName, scope, new ParentProcessFunctionCaller(functionName));
+
+	    
+	    // Load properties
 		for (String key : data.keysIterable()) {
 			Object property = data.get(key);
 			
@@ -186,8 +172,8 @@ public class ScopeWrapper {
 	    Object result = null;
 		try {
 
-			for (Script script : parentScope.getCompiledScripts())
-				result = script.exec(context, scope);
+			for (NativeFunction script : parentScope.getCompiledScripts())
+				result = script.call(context, scope, scope, null);
 			
 		} catch (JavaScriptException je) {
 			returnResult("RespondCreateScope", context, threadID, je.getValue(), outData, "Exception");
@@ -224,8 +210,11 @@ public class ScopeWrapper {
             	JSONArray arguments = new JSONArray();
             	function.put("Arguments", arguments);
 
-            	String unbrokenArgs = context.evaluateString(scope, functionName + ".toSource();", "<cmd>", 1, null).toString();
-            	unbrokenArgs = unbrokenArgs.substring(unbrokenArgs.indexOf('(') + 1);
+            	//String unbrokenArgs = context.evaluateString(scope, functionName + ".toSource();", "<cmd>", 1, null).toString();
+				Function toSourceFunction = (Function)javascriptMethod.getPrototype().get("toSource", scope);
+				String unbrokenArgs = (String)toSourceFunction.call(context, javascriptMethod, javascriptMethod, new Object[] { javascriptMethod });
+
+				unbrokenArgs = unbrokenArgs.substring(unbrokenArgs.indexOf('(') + 1);
             	unbrokenArgs = unbrokenArgs.substring(0, unbrokenArgs.indexOf(')'));
 
             	if (unbrokenArgs.length() > 0) {
@@ -239,6 +228,31 @@ public class ScopeWrapper {
 
 		
 	    returnResult("RespondCreateScope", context, threadID, result, outData, "Result");
+	}
+
+	// Lets javascript call a function in the parent process
+	private class ParentProcessFunctionCaller implements Callable {
+
+		String functionName;
+
+		public ParentProcessFunctionCaller(String functionName) {
+			this.functionName = functionName;
+		}
+
+		@Override
+		public Object call(Context context, Scriptable scope, Scriptable thisObj, Object[] args) {
+
+			Object threadID = threadIDStack.get().peek();
+			
+			try {
+				return callFunctionInParentProcess(context, args, functionName, threadID);
+			} catch (JavaScriptException je) {
+				throw je;
+			} catch (Exception e) {
+				Context.throwAsScriptRuntimeEx(e);
+				throw new RuntimeException(e);
+			}
+		}
 	}
 	
 	private void callFunctionInScope(Context context, Object threadID, JSONObject data) throws Exception {
@@ -269,10 +283,24 @@ public class ScopeWrapper {
 		{
 			Object argument = arguments.get(ctr);
 			
+			/*Date start;
+			Date complete;
+			
+			start = new Date();
+			Context.javaToJS(context.evaluateString(scope, "(" + argument.toString() + ")", "<cmd>", 1, null), scope);
+			complete = new Date();
+			Logger.log("Time to decode via eval: " + new Long(complete.getTime() - start.getTime()).toString());
+			
+			start = new Date();
+			jsonParseFunction.call(context, scope, scope, new Object[] { argument.toString()} );
+			complete = new Date();
+			Logger.log("Time to decode via JSON.parse: " + new Long(complete.getTime() - start.getTime()).toString());*/
+			
 			if ((argument instanceof JSONArray) || (argument instanceof JSONObject))
 				arguments.set(
 					ctr,
-					Context.javaToJS(context.evaluateString(scope, "(" + argument.toString() + ")", "<cmd>", 1, null), scope));
+					jsonParseFunction.call(context, scope, scope, new Object[] { argument.toString()} ));
+					//Context.javaToJS(context.evaluateString(scope, "(" + argument.toString() + ")", "<cmd>", 1, null), scope));
 			else if (JSONObject.NULL == argument)
 				arguments.set(
 						ctr,
@@ -284,7 +312,7 @@ public class ScopeWrapper {
 			
 			returnResult(command, context, threadID, callResults, "Result");
 		} catch (JavaScriptException je) {
-			returnResult("RespondEvalScope", context, threadID, je.getValue(), "Exception");
+			returnResult("RespondCallFuncion", context, threadID, je.getValue(), "Exception");
 			return;
 		} catch (EcmaError ee) {
 			returnResult(command, context, threadID, ee.getMessage(), "Exception");
@@ -294,7 +322,7 @@ public class ScopeWrapper {
 			for (StackTraceElement ste : e.getStackTrace())
 				exceptionMessage.append("\n" + ste.toString());
 			
-			returnResult("RespondEvalScope", context, threadID, exceptionMessage.toString(), "Exception");
+			returnResult("RespondCallFunction", context, threadID, exceptionMessage.toString(), "Exception");
 			return;
         }
 	}
@@ -337,43 +365,9 @@ public class ScopeWrapper {
 		}
 	}
 	
-	public static Method getCallFunctionInParentProcessMethod() {
-		try {
-			return ScopeWrapper.class.getMethod("callFunctionInParentProcess", new Class[] { Context.class, Object[].class, Function.class, boolean.class });
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
 	// Calls a function in the parent process
-	public static Object callFunctionInParentProcess(Context context, Object[] args, Function ctorObj, boolean inNewExpr) throws Exception {
-		
-		//try {
-		ScopeWrapperAndThreadID scopeWrapperAndThreadID = scopeWrapperAndThreadIDStack.get().peek();
-			
-			/*if (null == scopeWrapperAndThreadID)
-				return "swat is null";
-			
-			if (null == scopeWrapperAndThreadID.scopeWrapper)
-				return "sw is null";*/
-			
-		return scopeWrapperAndThreadID.scopeWrapper.callFunctionInParentProcessInstance(context, args, scopeWrapperAndThreadID.threadID);
-		/*} catch (Exception e) {
-			
-			StringBuilder toReturn = new StringBuilder();
-			toReturn.append(e.getMessage() + "<br />");
-			
-			for (StackTraceElement ste : e.getStackTrace())
-				toReturn.append(ste.toString() + "<br />");
-			
-			return toReturn.toString();
-		}*/
-	}
-	
-	// Calls a function in the parent process
-	public Object callFunctionInParentProcessInstance(final Context context, Object[] args, Object threadID) throws Exception {
+	public Object callFunctionInParentProcess(final Context context, Object[] args, String functionName, Object threadID) throws Exception {
 
-		ScriptableObject arguments = (ScriptableObject)args[1];
 		JSONArray argumentsForJSON = new JSONArray();
 		
 		// Extract callbacks so that the parent process can identify them and use them
@@ -383,10 +377,9 @@ public class ScopeWrapper {
 		
 		try {
 			
-			for (Object argumentIndexObj : arguments.getIds()) {
-				
-				int argumentIndex = (Integer)argumentIndexObj;
-				Object argument = arguments.get(argumentIndex, scope);
+			for (int argumentIndex = 0; argumentIndex < args.length; argumentIndex++) {
+
+				Object argument = args[argumentIndex];
 				
 				if (Function.class.isInstance(argument)) {
 					
@@ -413,7 +406,7 @@ public class ScopeWrapper {
 			}
 			
 			JSONObject data = new JSONObject();
-			data.put("FunctionName", args[0]);
+			data.put("FunctionName", functionName);
 			data.put("Arguments", argumentsForJSON);
 			
 			sendCommand("CallParentFunction", threadID, data);
@@ -452,9 +445,11 @@ public class ScopeWrapper {
 						
 						// First, try throwing the exception in Javascript
 						context.evaluateString(scope, "throw " + dataFromParent.get("Exception").toString() + ";", "<cmd>", 1, null);
+						//Object toThrow = jsonParseFunction.call(context, scope, scope, new Object[] { dataFromParent.get("Exception").toString() });
+						//parentScope.getThrowFunction().call(context, scope, scope, new Object[] { toThrow });
 						
 						// if that didn't throw, then throw a meaner exception
-						throw new Exception(dataFromParent.get("Exception").toString());
+						throw new RuntimeException(dataFromParent.get("Exception").toString());
 					}
 					else if (dataFromParent.has("Result")) {
 						Object toReturn = dataFromParent.get("Result");
@@ -473,7 +468,9 @@ public class ScopeWrapper {
 						return toReturn;
 
 					} else if (dataFromParent.has("Eval")) {
-						Object toReturn = context.evaluateString(scope, dataFromParent.getString("Eval"), "<cmd>", 1, null);
+						//Object toReturn = context.evaluateString(scope, dataFromParent.getString("Eval"), "<cmd>", 1, null);
+						NativeFunction toCall = compiledJavascriptTracker.getGetOrCompileScript(dataFromParent.getString("Eval"));
+						Object toReturn = toCall.call(context, scope, scope, null);
 
 						if (dataFromParent.has("CacheID"))
 							cachedObjects.put(dataFromParent.get("CacheID"), toReturn);
@@ -489,7 +486,6 @@ public class ScopeWrapper {
 				handle(inCommand);
 	
 			} while (true);
-			
 		} finally {
 			// clean up old callbacks
 			// At some time there might be a way for the parent process to hold onto callbacks in the "heap"
