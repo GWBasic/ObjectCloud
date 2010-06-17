@@ -103,24 +103,5 @@ namespace ObjectCloud.Common
             foreach (object subToWrap in toWrap)
                 yield return string.Format("{0}{1}{2}", prefix, subToWrap.ToString(), postfix);
         }
-
-        /// <summary>
-        /// Quick-and-dirty way to convert a byte array to hex, see http://www.daveandrews.org/2009/09/10/convert-byte-array-to-hexidecimal-string-in-c/
-        /// </summary>
-        /// <param name="array"></param>
-        /// <returns></returns>
-        public static string ToHexString(byte[] array)
-        {
-            string vals = "0123456789ABCDEF";
-            StringBuilder result = new StringBuilder();
-
-            for (int i = 0; i < array.Length; i++)
-            {
-                result.Append(vals[array[i] >> 4]);
-                result.Append(vals[array[i] & 15]);
-            }
-
-            return result.ToString();
-        }
     }
 }

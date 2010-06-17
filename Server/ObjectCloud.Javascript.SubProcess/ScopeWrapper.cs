@@ -16,7 +16,6 @@ using JsonFx.Json;
 using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Disk;
-using ObjectCloud.Interfaces.Javascript;
 using ObjectCloud.Interfaces.Security;
 using ObjectCloud.Interfaces.WebServer;
 
@@ -25,29 +24,26 @@ namespace ObjectCloud.Javascript.SubProcess
     /// <summary>
     /// Wraps a Javascript scope on a per-user basis
     /// </summary>
-    public class ScopeWrapper : IDisposable, IScopeWrapper
+    public class ScopeWrapper : IDisposable
     {
         private static ILog log = LogManager.GetLogger<ScopeWrapper>();
 		
+		private static Wrapped<int> IdCtr = int.MinValue;
+
         public int ScopeId
         {
             get { return _ScopeId; }
         }
         private readonly int _ScopeId;
 
+        private ISubProcessFactory SubProcessFactory;
+        private IFileContainer JavascriptContainer;
+
         public SubProcess SubProcess
         {
             get { return _SubProcess; }
         }
-        ISubProcess IScopeWrapper.SubProcess
-        {
-            get { return _SubProcess; }
-        }
-        private readonly SubProcess _SubProcess = null;
-
-        private readonly ScopeInfo ScopeInfo;
-
-        private readonly CompiledJavascriptManager CompiledJavascriptManager;
+        private SubProcess _SubProcess = null;
 
         /// <summary>
         /// Pointers to cache IDs
@@ -91,34 +87,43 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <param name="webConnection"></param>
         /// <param name="javascript"></param>
         /// <param name="fileContainer"></param>
-        /// <param name="evalScopeResults">The results of running the scripts</param>
         public ScopeWrapper(
             FileHandlerFactoryLocator fileHandlerFactoryLocator,
-            SubProcess subProcess,
-            ScopeInfo scopeInfo,
-            IFileContainer fileContainer,
-            CompiledJavascriptManager compiledJavascriptManager,
-            int scopeId,
-            Dictionary<string, object> metadata,
-            out EvalScopeResults evalScopeResults)
+            IFileContainer javascriptContainer,
+            ISubProcessFactory subProcessFactory,
+            IFileContainer fileContainer)
         {
             _FileContainer = fileContainer;
-            _SubProcess = subProcess;
-            ScopeInfo = scopeInfo;
-            CompiledJavascriptManager = compiledJavascriptManager;
-            _ScopeId = scopeId;
+            SubProcessFactory = subProcessFactory;
+            JavascriptContainer = javascriptContainer;
+
+            using (TimedLock.Lock(IdCtr))
+            {
+                _ScopeId = IdCtr.Value;
+
+                if (int.MaxValue == IdCtr.Value)
+                    IdCtr.Value = int.MinValue;
+                else
+                    IdCtr.Value++;
+            }
+
             _FileHandlerFactoryLocator = fileHandlerFactoryLocator;
 
-            AddMetadata(metadata);
+            ConstructScope();
+        }
 
+        private void ConstructScope()
+        {
             log.Info("Constructing Javascript scope for " + FileContainer.FullPath);
 
             CacheIDsByKey = new Dictionary<object, object>();
 
+            _SubProcess = SubProcessFactory.GetOrCreateSubProcess(JavascriptContainer);
             _SubProcess.RegisterParentFunctionDelegate(ScopeId, CallParentFunction);
             FunctionCallers = new Dictionary<string, FunctionCaller>();
 
             ISession ownerSession = FileHandlerFactoryLocator.SessionManagerHandler.CreateSession();
+            SubProcess.CreateScopeResults data;
 
             try
             {
@@ -135,30 +140,14 @@ namespace ObjectCloud.Javascript.SubProcess
                     CallingFrom.Web,
                     WebMethod.GET);
 
-				try
-				{
-	                evalScopeResults = FunctionCaller.UseTemporaryCaller<EvalScopeResults>(
-	                    this, FileContainer, ownerWebConnection, delegate()
-	                    {
-	                        return _SubProcess.EvalScope(
-	                            ScopeId,
-	                            Thread.CurrentThread.ManagedThreadId,
-	                            metadata,
-                                scopeInfo.ScriptsAndIDsToBuildScope,
-                                scopeInfo.FunctionsInScope.Keys,
-                                true);
-	                    });
-				}
-				catch (JavascriptException je)
-				{
-					// If there is an exception creating the scope, log some important information and then re-throw
-					log.ErrorFormat(
-						"Exception in Javascript creating scope.\nObject: {0}",
-					    je,
-					    FileContainer.FullPath);
-					
-					throw;
-				}
+                data = FunctionCaller.UseTemporaryCaller<SubProcess.CreateScopeResults>(
+                    this, FileContainer, ownerWebConnection, delegate()
+                    {
+                        return _SubProcess.CreateScope(
+                            ScopeId,
+                            Thread.CurrentThread.ManagedThreadId,
+                            CreateMetadata());
+                    });
             }
             finally
             {
@@ -166,10 +155,10 @@ namespace ObjectCloud.Javascript.SubProcess
             }
 
             // Initialize each function caller
-            foreach (KeyValuePair<string, CreateScopeFunctionInfo> functionKVP in evalScopeResults.Functions)
+            foreach (KeyValuePair<string, SubProcess.CreateScopeFunctionInfo> functionKVP in data.Functions)
             {
                 string functionName = functionKVP.Key;
-                CreateScopeFunctionInfo functionInfo = functionKVP.Value;
+                SubProcess.CreateScopeFunctionInfo functionInfo = functionKVP.Value;
                 Dictionary<string, object> properties = functionInfo.Properties;
 
                 // ... and it's marked as webCallable, create a FunctionCaller
@@ -183,6 +172,10 @@ namespace ObjectCloud.Javascript.SubProcess
                         FunctionCallers[functionName] = functionCaller;
                 }
             }
+
+            // Get options
+            if (data.Result is Dictionary<string, object>)
+                ParseOptions((Dictionary<string, object>)data.Result);
         }
 
         ~ScopeWrapper()
@@ -208,11 +201,11 @@ namespace ObjectCloud.Javascript.SubProcess
         public void Dispose()
         {
             Disposed = true;
-
-            if (null != _SubProcess)
-                _SubProcess.DisposeScope(ScopeId, Thread.CurrentThread.ManagedThreadId);
-
-            GC.SuppressFinalize(this);
+			
+			if (null != _SubProcess)
+            		_SubProcess.DisposeScope(ScopeId, Thread.CurrentThread.ManagedThreadId);
+            
+			GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -220,8 +213,10 @@ namespace ObjectCloud.Javascript.SubProcess
         /// </summary>
         /// <param name="webConnection"></param>
         /// <param name="context"></param>
-        private void AddMetadata(Dictionary<string, object> metadata)
+        private Dictionary<string, object> CreateMetadata()
         {
+            Dictionary<string, object> toReturn = new Dictionary<string, object>();
+
             //Ability to know the following from within Javascript:  File name, file path, owner name, owner ID, connected user name, connected user id
             Dictionary<string, object> fileMetadata = new Dictionary<string, object>();
             fileMetadata["filename"] = FileContainer.Filename;
@@ -242,14 +237,16 @@ namespace ObjectCloud.Javascript.SubProcess
                 }
             }
 
-            metadata["fileMetadata"] = fileMetadata;
+            toReturn["fileMetadata"] = fileMetadata;
 
             Dictionary<string, object> hostMetadata = new Dictionary<string, object>();
             hostMetadata["host"] = FileHandlerFactoryLocator.HostnameAndPort;
             hostMetadata["justHost"] = FileHandlerFactoryLocator.Hostname;
             hostMetadata["port"] = FileHandlerFactoryLocator.WebServer.Port;
 
-            metadata["hostMetadata"] = hostMetadata;
+            toReturn["hostMetadata"] = hostMetadata;
+
+            return toReturn;
         }
 		
         /// <summary>
@@ -298,39 +295,29 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <exception cref="AbortedException">Thrown if the sub process aborted anormally.  Callers should recover from this error condition</exception>
         public object CallFunction(IWebConnection webConnection, string functionName, IEnumerable arguments)
         {
-			return CallFunction(webConnection, functionName, arguments, 0);
-		}
-		
-        private object CallFunction(IWebConnection webConnection, string functionName, IEnumerable arguments, int tryCtr)
-		{
-            try
-            {
-				// If the sub process crashed, try to reset the execution environment
-				if (!SubProcess.Alive & tryCtr < 3)
-				{
-					FileContainer.WebHandler.ResetExecutionEnvironment();
-					
-					IExecutionEnvironment executionEnvironment = FileContainer.WebHandler.GetOrCreateExecutionEnvironment();
-					if (executionEnvironment is ExecutionEnvironment)
-					{
-						ScopeWrapper replacement = ((ExecutionEnvironment)executionEnvironment).ScopeWrapper;
-						return replacement.CallFunction(webConnection, functionName, arguments, tryCtr + 1);
-					}
-				}
-			
-                return _SubProcess.CallFunctionInScope(ScopeId, Thread.CurrentThread.ManagedThreadId, functionName, arguments);
-            }
-			catch (JavascriptException je)
-			{
-				// If there is an exception creating the scope, log some important information and then re-throw
-				log.ErrorFormat(
-					"Exception in Javascript function.\nObject: {0}\nFunction: {1}",
-				    je,
-				    FileContainer.FullPath,
-			        functionName);
-				
-				throw;
-			}
+            int tryCtr = 0;
+
+            SubProcess subProcess = null;
+
+            while (true)
+                try
+                {
+                    subProcess = _SubProcess;
+                    return _SubProcess.CallFunctionInScope(ScopeId, Thread.CurrentThread.ManagedThreadId, functionName, arguments);
+                }
+                catch (SubProcess.AbortedException)
+                {
+                    // Allow a max of 3 tries
+                    if (tryCtr >= 3)
+                        throw;
+
+                    tryCtr++;
+
+                    if (subProcess == _SubProcess)
+                    using (TimedLock.Lock(subProcess))
+                        if (subProcess == _SubProcess)
+                            ConstructScope();
+                }
         }
 
         /// <summary>
@@ -355,7 +342,7 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             try
             {
-                MethodInfo toInvoke = ScopeInfo.FunctionsInScope[functionName];
+                MethodInfo toInvoke = SubProcess.FunctionsInScope[functionName];
                 ParameterInfo[] parameters = toInvoke.GetParameters();
 
                 object[] allArguments = new object[parameters.Length];
@@ -380,13 +367,39 @@ namespace ObjectCloud.Javascript.SubProcess
                         allArguments[argCtr] = parameterType.IsValueType ? Activator.CreateInstance(parameterType) : null;
                 }
 
-                return ScopeInfo.FunctionsInScope[functionName].Invoke(null, allArguments);
+                return SubProcess.FunctionsInScope[functionName].Invoke(null, allArguments);
             }
             catch (TargetInvocationException tie)
             {
                 throw tie.InnerException;
             }
         }
+
+        /// <summary>
+        /// Loads options from the javascript
+        /// </summary>
+        private void ParseOptions(Dictionary<string, object> options)
+        {
+            object blockWebMethods = null;
+            if (options.TryGetValue("BlockWebMethods", out blockWebMethods))
+                try
+                {
+                    _BlockWebMethods = Convert.ToBoolean(blockWebMethods);
+                }
+                catch (Exception e)
+                {
+                    log.Error("Error when parsing options.BlockWebMethods", e);
+                }
+        }
+
+        /// <summary>
+        /// Returns true if underlying web methods are blocked, false otherwise
+        /// </summary>
+        public bool BlockWebMethods
+        {
+            get { return _BlockWebMethods; }
+        }
+        private bool _BlockWebMethods = true;
 
         /// <summary>
         /// When the loaded libraries were last modified
@@ -444,6 +457,7 @@ namespace ObjectCloud.Javascript.SubProcess
             try
             {
                 textHandler = fileContainer.CastFileHandler<ITextHandler>();
+                LoadedLibrariesLastModified[toLoad] = fileContainer.LastModified;
             }
             catch (Exception e)
             {
@@ -451,36 +465,21 @@ namespace ObjectCloud.Javascript.SubProcess
                 return false;
             }
 
-            using (TimedLock.Lock(LoadedLibrariesLastModified))
-                LoadedLibrariesLastModified[toLoad] = fileContainer.LastModified;
-
-
             object cacheId;
             string cacheIdKey = "Use:::::::" + toLoad;
 
             // If the library is already loaded, then the return value is cached.
             if (GetCacheID(cacheIdKey, out cacheId))
             {
-                using (TimedLock.Lock(UseLastModified))
-                    if (fileContainer.LastModified == UseLastModified[toLoad])
-                        return new SubProcess.CachedObjectId(cacheId);
+                if (fileContainer.LastModified == UseLastModified[toLoad])
+                    return new SubProcess.CachedObjectId(cacheId);
             }
             else
                 cacheId = GenerateCacheID(cacheIdKey);
 
-            using (TimedLock.Lock(UseLastModified))
-                UseLastModified[toLoad] = fileContainer.LastModified;
-
-            string script = textHandler.ReadAll();
-
-            int scriptID = CompiledJavascriptManager.GetScriptID(
-                toLoad,
-                StringParser.GenerateMD5String(script),
-                script,
-                SubProcess);
-
-            return new SubProcess.ScriptToRun(
-                scriptID,
+            UseLastModified[toLoad] = fileContainer.LastModified;
+            return new SubProcess.StringToEval(
+                textHandler.ReadAll(),
                 cacheId);
         }
 
@@ -497,57 +496,25 @@ namespace ObjectCloud.Javascript.SubProcess
         public object Open(IWebConnection webConnection, string toOpen)
         {
             object cacheId;
-            string cacheIdKey = "Open-+-+-+-+" + toOpen + "____" + webConnection.Session.User.Identity;
+            string cacheIdKey = "Open-+-+-+-+" + toOpen;
 
             IFileContainer fileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(toOpen);
 
             // If the library is already loaded, then the return value is cached.
             if (GetCacheID(cacheIdKey, out cacheId))
             {
-                using (TimedLock.Lock(OpenLastModified))
-                    if (fileContainer.LastModified == OpenLastModified[toOpen])
-                        return new SubProcess.CachedObjectId(cacheId);
+                if (fileContainer.LastModified == OpenLastModified[toOpen])
+                    return new SubProcess.CachedObjectId(cacheId);
             }
             else
                 cacheId = GenerateCacheID(cacheIdKey);
 
-            string wrapper = '(' + fileContainer.WebHandler.GetJSW(webConnection, null, null, false).ResultsAsString + ')';
+            string wrapper = fileContainer.WebHandler.GetJSW(webConnection, null, null, false).ResultsAsString;
 
-            int scriptID = CompiledJavascriptManager.GetScriptID(
-                cacheIdKey,
-                StringParser.GenerateMD5String(wrapper),
-                wrapper,
-                SubProcess);
-
-            using (TimedLock.Lock(OpenLastModified))
-                OpenLastModified[toOpen] = fileContainer.LastModified;
-
-            return new SubProcess.ScriptToRun(
-                scriptID,
+            OpenLastModified[toOpen] = fileContainer.LastModified;
+            return new SubProcess.StringToEval(
+                "(" + wrapper + ")",
                 cacheId);
-        }
-
-        /// <summary>
-        /// Evaluates the given scripts
-        /// </summary>
-        /// <param name="scriptIDsAndScripts"></param>
-        /// <returns></returns>
-        public object[] EvalScope(IWebConnection webConnection, IEnumerable scriptIDsAndScripts)
-        {
-            return FunctionCaller.UseTemporaryCaller<object[]>(
-                this,
-                FileContainer,
-                webConnection,
-                delegate()
-                {
-                    return SubProcess.EvalScope(
-                            _ScopeId,
-                            Thread.CurrentThread.ManagedThreadId,
-                            null,
-                            scriptIDsAndScripts,
-                            null,
-                            false).Results.ToArray();
-                });
         }
     }
 }

@@ -52,7 +52,7 @@ namespace ObjectCloud.Disk.WebHandlers
                     if (null != toReturn)
                         return toReturn;
                     else
-                        allowLocalMethods = !executionEnvironment.BlockWebMethods;
+                        allowLocalMethods = !executionEnvironment.IsBlockWebMethodsEnabled(webConnection);
                 }
 
             string method = webConnection.GetArgumentOrException("Method");

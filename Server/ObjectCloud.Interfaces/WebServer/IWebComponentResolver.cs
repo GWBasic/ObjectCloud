@@ -47,10 +47,5 @@ namespace ObjectCloud.Interfaces.WebServer
         /// The actual name of the script
         /// </summary>
         public string ScriptName;
-
-        /// <summary>
-        /// The resulting script
-        /// </summary>
-        public string Script;
     }
 }

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <NameValuePairs>
+	<NameValuePair Name="View" Value="[Target]?Method=Run&amp;[Arguments], text/html" />
 	<NameValuePair Name="Edit" Value="/Shell/Editors/Weco.wchtml?FileName=[Target]" />
-	<NameValuePair Name="View" Value="/System/ServerSideJavascriptExecutor?Method=Run&amp;filename=[Target]&amp;[Arguments], text/html" />
 </NameValuePairs>

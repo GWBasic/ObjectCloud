@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -86,14 +86,8 @@
     <Compile Include="Disk\Plugin.cs" />
     <Compile Include="Disk\TooManyCometSessions.cs" />
     <Compile Include="Disk\UnsupportedFileHandlerFactory.cs" />
-    <Compile Include="Javascript\ICompiledJavascriptManager.cs" />
     <Compile Include="Javascript\IExecutionEnvironment.cs" />
     <Compile Include="Javascript\IExecutionEnvironmentFactory.cs" />
-    <Compile Include="Javascript\IScopeWrapper.cs" />
-    <Compile Include="Javascript\ISubProcess.cs" />
-    <Compile Include="Javascript\ISubProcessFactory.cs" />
-    <Compile Include="Javascript\JavascriptException.cs" />
-    <Compile Include="Javascript\SubProcess.cs" />
     <Compile Include="Security\CallingFrom.cs" />
     <Compile Include="Security\FilePermissionEnum.cs" />
     <Compile Include="Security\GroupType.cs" />

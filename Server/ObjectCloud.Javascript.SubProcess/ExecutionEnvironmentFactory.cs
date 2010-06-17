@@ -16,10 +16,10 @@ namespace ObjectCloud.Javascript.SubProcess
 {
     public class ExecutionEnvironmentFactory : IExecutionEnvironmentFactory
     {
-        private static ILog log = LogManager.GetLogger<ExecutionEnvironmentFactory>();
-
+		private static ILog log = LogManager.GetLogger<ExecutionEnvironmentFactory>();
+		
         public IExecutionEnvironment Create(
-            FileHandlerFactoryLocator fileHandlerFactoryLocator,
+            FileHandlerFactoryLocator fileHandlerFactoryLocator, 
             IFileContainer fileContainer,
             IFileContainer javascriptContainer)
         {
@@ -27,31 +27,29 @@ namespace ObjectCloud.Javascript.SubProcess
                 fileHandlerFactoryLocator, javascriptContainer, fileContainer, SubProcessFactory);
         }
 
-        public SubProcessFactory SubProcessFactory
+        public ISubProcessFactory SubProcessFactory
         {
             get { return _SubProcessFactory; }
             set { _SubProcessFactory = value; }
         }
-        private SubProcessFactory _SubProcessFactory;
+        private ISubProcessFactory _SubProcessFactory;
 
         public void Start(IEnumerable<IFileContainer> files)
         {
-            Enumerable<IFileContainer>.MultithreadedEach(
-                1,
-                files,
-                delegate(IFileContainer file)
-                {
-                    try
-                    {
-                        SubProcessFactory.CompiledJavascriptManager.GetScopeInfoForClass(
-                            file.CastFileHandler<ITextHandler>(),
-                            SubProcessFactory.GetSubProcess());
-                    }
-                    catch (Exception e)
-                    {
-                        log.Error("Error compiling Javascript for " + file.FullPath, e);
-                    }
-                });
+			Enumerable<IFileContainer>.MultithreadedEach(
+				1,
+			    files,
+			    delegate(IFileContainer file)
+			    {
+					try
+					{
+	                		SubProcessFactory.GetOrCreateSubProcess(file);
+					}
+					catch (Exception e)
+					{
+						log.Error("Error compiling Javascript for " + file.FullPath, e);
+					}
+				});
         }
     }
 }

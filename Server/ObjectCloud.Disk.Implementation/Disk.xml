@@ -89,7 +89,6 @@
     <property name="RootDirectoryCreator" ref="RootDirectoryCreator" />
     <property name="UserFactory" ref="UserFactory" />
     <property name="ExecutionEnvironmentFactory" ref="ExecutionEnvironmentFactory" />
-    <property name="SubProcessFactory" ref="SubProcessFactory" />
 
     <!-- FileHandlerFactories are loaded by reference -->
 
@@ -147,9 +146,6 @@
           <ref object="FileHandlerFactory" />
         </entry>
         <entry key="documentation">
-          <ref object="FileHandlerFactory" />
-        </entry>
-        <entry key="ssjsexecutor">
           <ref object="FileHandlerFactory" />
         </entry>
       </dictionary>
@@ -249,11 +245,7 @@
             <constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.DocumentationWebHandler, ObjectCloud.Disk.WebHandlers" />
           </object>
         </entry>
-        <entry key="ssjsexecutor">
-          <object type="System.Type" factory-method="GetType" id="serverSideJavascriptExecutor">
-            <constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.ServerSideJavascriptExecutor, ObjectCloud.Disk.WebHandlers" />
-          </object>
-        </entry>
+
       </dictionary>
     </property>
 

@@ -3,16 +3,13 @@
 // For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Text;
 using System.Threading;
 
 using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Disk;
-using ObjectCloud.Interfaces.Javascript;
 
 namespace ObjectCloud.Javascript.SubProcess
 {
@@ -21,210 +18,73 @@ namespace ObjectCloud.Javascript.SubProcess
     /// </summary>
     public class SubProcessFactory : ISubProcessFactory
     {
-        /// <summary>
-        /// The number of sub processes to create
-        /// </summary>
-        public int NumSubProcesses
-        {
-            get { return _NumSubProcesses; }
-            set { _NumSubProcesses = value; }
-        }
-        private int _NumSubProcesses = Environment.ProcessorCount;
-
-        /// <summary>
-        /// The amount of time in milliseconds that must elapse before the sub process is killed when compiling
-        /// </summary>
-        public int CompileTimeout
-        {
-            get { return _CompileTimeout; }
-            set { _CompileTimeout = value; }
-        }
-        private int _CompileTimeout = 60000;
-
-        /// <summary>
-        /// The amount of time in milliseconds that must elapse before the sub process is killed when executing
-        /// </summary>
-        public int ExecuteTimeout
-        {
-            get { return _ExecuteTimeout; }
-            set { _ExecuteTimeout = value; }
-        }
-        private int _ExecuteTimeout = 30000;
-
-        /// <summary>
-        /// All of the sub processes
-        /// </summary>
-        private Set<SubProcess> SubProcesses = new Set<SubProcess>();
-
         public FileHandlerFactoryLocator FileHandlerFactoryLocator
         {
             get { return _FileHandlerFactoryLocator; }
-            set 
-            {
-                _FileHandlerFactoryLocator = value;
-
-                _CompiledJavascriptManager = new CompiledJavascriptManager(value);
-
-                using (TimedLock.Lock(SubProcesses))
-                {
-                    foreach (SubProcess subProcess in SubProcesses)
-                        subProcess.Dispose();
-
-                    SubProcesses.Clear();
-
-                    for (int ctr = 0; ctr < NumSubProcesses; ctr++)
-                    {
-                        SubProcess subProcess = new SubProcess(this);
-                        SubProcesses.Add(subProcess);
-                        Queue.Enqueue(subProcess);
-                    }
-                }
-            }
+            set { _FileHandlerFactoryLocator = value; }
         }
         FileHandlerFactoryLocator _FileHandlerFactoryLocator;
 
-        public CompiledJavascriptManager CompiledJavascriptManager
-        {
-            get { return _CompiledJavascriptManager; }
-        }
-        ICompiledJavascriptManager ISubProcessFactory.CompiledJavascriptManager
-        {
-            get { return _CompiledJavascriptManager; }
-        }
-        private CompiledJavascriptManager _CompiledJavascriptManager;
-
-		/// <summary>
-		/// A queue of sub processes that is rotated through 
-		/// </summary>
-        private LockFreeQueue<SubProcess> Queue = new LockFreeQueue<SubProcess>();
-		
         /// <summary>
-        /// Returns a sub-process
+        /// All of the sub processes, indexed by the full path to their class
+        /// </summary>
+        private Dictionary<string, SubProcess> SubProcessesByClass = new Dictionary<string, SubProcess>();
+
+        /// <summary>
+        /// When the sub processes were last modified, used to kill a sub process when its class is modified
+        /// </summary>
+        private Dictionary<string, DateTime> ClassLastModified = new Dictionary<string, DateTime>();
+
+        /// <summary>
+        /// Returns the corresponding sub process for the given class.  Creates it if it isn't running, restarts if the class was modified
         /// </summary>
         /// <param name="javascriptContainer"></param>
         /// <returns></returns>
-        public SubProcess GetSubProcess()
+        public SubProcess GetOrCreateSubProcess(IFileContainer javascriptContainer)
         {
-            SubProcess toReturn;
-            while (!Queue.Dequeue(out toReturn))
-                Thread.Sleep(0);
+            SubProcess toReturn = null;
 
-            if (!toReturn.Alive)
+            using (TimedLock.Lock(javascriptContainer))
             {
-                SubProcess newSubProcess = new SubProcess(this);
-
-                using (TimedLock.Lock(SubProcesses))
+                using (TimedLock.Lock(SubProcessesByClass))
                 {
-                    SubProcesses.Remove(toReturn);
-                    toReturn = newSubProcess;
-                    SubProcesses.Add(toReturn);
-                }
-            }
-
-            Queue.Enqueue(toReturn);
-
-            return toReturn;
-        }
-
-        ISubProcess ISubProcessFactory.GetSubProcess()
-        {
-            return GetSubProcess();
-        }
-
-        ~SubProcessFactory()
-        {
-            try
-            {
-                foreach (SubProcess subProcess in SubProcesses)
-                    try
+                    if (SubProcessesByClass.TryGetValue(javascriptContainer.FullPath, out toReturn))
                     {
-                        subProcess.Dispose();
+                        DateTime classLastModified;
+                        if (ClassLastModified.TryGetValue(javascriptContainer.FullPath, out classLastModified))
+                            if (javascriptContainer.LastModified == classLastModified)
+                                if (toReturn.Alive)
+                                    return toReturn;
                     }
-                    catch { }
+
+                    if (null != toReturn)
+                        toReturn.Dispose();
+
+                    ClassLastModified[javascriptContainer.FullPath] = javascriptContainer.LastModified;
+                }
+
+                toReturn = new SubProcess(javascriptContainer, FileHandlerFactoryLocator);
+
+                using (TimedLock.Lock(SubProcessesByClass))
+                    SubProcessesByClass[javascriptContainer.FullPath] = toReturn;
+
+                return toReturn;
             }
-            catch { }
-        }
-
-        private int IdCtr = int.MinValue;
-
-        public int GenerateScopeId()
-        {
-            return Interlocked.Increment(ref IdCtr);
         }
 
         /// <summary>
-        /// Returns the types that have static functions to assist with the given FileHandler based on its type 
+        /// If the corresponding sub process is based on an outdated version of the class, disposes it
         /// </summary>
-        /// <param name="fileContainer">
-        /// A <see cref="IFileContainer"/>
-        /// </param>
-        /// <returns>
-        /// A <see cref="IEnumerable"/>
-        /// </returns>
-        private static IEnumerable<Type> GetTypesThatHaveJavascriptFunctions(string fileType)
+        /// <param name="javascriptContainer"></param>
+        public void DisposeSubProcessIfOutdated(IFileContainer javascriptContainer)
         {
-            yield return typeof(JavascriptFunctions);
-
-            if ("database" == fileType)
-                yield return typeof(JavascriptDatabaseFunctions);
-        }
-
-        /// <summary>
-        /// Load static methods that are passed into the Javascript environment as-is
-        /// </summary>
-        /// <param name="fileType"></param>
-        /// <returns></returns>
-        public static Dictionary<string, MethodInfo> GetFunctionsForFileType(string fileType)
-        {
-            Dictionary<string, MethodInfo> functionsInScope = new Dictionary<string, MethodInfo>();
-            foreach (Type javascriptFunctionsType in GetTypesThatHaveJavascriptFunctions(fileType))
-                foreach (MethodInfo method in javascriptFunctionsType.GetMethods(BindingFlags.Static | BindingFlags.Public))
-                    functionsInScope[method.Name] = method;
-
-            return functionsInScope;
-        }
-
-        public IScopeWrapper GenerateScopeWrapper(
-            Dictionary<string, object> metadata,
-            IEnumerable scriptsAndIDsToBuildScope,
-            IFileContainer fileContainer)
-        {
-            SubProcess subProcess = GetSubProcess();
-
-            // Prepare to load /API/AJAX_serverside.js
-            IFileContainer ajaxDriver = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(
-                "/API/AJAX_serverside.js");
-
-            int scriptID = CompiledJavascriptManager.GetScriptID(
-                "/API/AJAX_serverside.js",
-                ajaxDriver.LastModified.Ticks.ToString(),
-                ajaxDriver.CastFileHandler<ITextHandler>().ReadAll(),
-                subProcess);
-
-            ArrayList modifiedScriptsAndIDsToBuildScope = new ArrayList();
-            modifiedScriptsAndIDsToBuildScope.Add(scriptID);
-            foreach (object scriptOrId in scriptsAndIDsToBuildScope)
-                modifiedScriptsAndIDsToBuildScope.Add(scriptOrId);
-
-            ScopeInfo scopeInfo = new ScopeInfo(
-                DateTime.MinValue, GetFunctionsForFileType(fileContainer.TypeId), modifiedScriptsAndIDsToBuildScope);
-
-            EvalScopeResults evalScopeResults;
-            ScopeWrapper toReturn = new ScopeWrapper(
-                FileHandlerFactoryLocator,
-                subProcess,
-                scopeInfo,
-                fileContainer,
-                CompiledJavascriptManager,
-                GenerateScopeId(),
-                metadata,
-                out evalScopeResults);
-
-            if (null != evalScopeResults)
-                if (null != evalScopeResults.Results)
-                    evalScopeResults.Results.RemoveAt(0);
-
-            return toReturn;
+            using (TimedLock.Lock(SubProcessesByClass))
+                if (javascriptContainer.LastModified != ClassLastModified[javascriptContainer.FullPath])
+                {
+                    SubProcessesByClass[javascriptContainer.FullPath].Dispose();
+                    SubProcessesByClass.Remove(javascriptContainer.FullPath);
+                    ClassLastModified.Remove(javascriptContainer.FullPath);
+                }
         }
     }
 }

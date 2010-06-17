@@ -388,23 +388,6 @@ namespace ObjectCloud.Disk.Implementation
                     false);
             }
 
-            // Make sure there is a cache for pre-compiled Javascript
-            if (!systemDirectory.IsFilePresent("CompiledJavascriptCache"))
-                systemDirectory.CreateFile("CompiledJavascriptCache", "directory", null);
-
-            // Create an executor for .ssjs files that runs much faster then eval
-            if (!systemDirectory.IsFilePresent("ServerSideJavascriptExecutor"))
-            {
-                systemDirectory.CreateFile("ServerSideJavascriptExecutor", "ssjsexecutor", null);
-                systemDirectory.SetPermission(
-                    null,
-                    "ServerSideJavascriptExecutor",
-                    FileHandlerFactoryLocator.UserFactory.Everybody.Id,
-                    FilePermissionEnum.Read,
-                    false,
-                    false);
-            }
-
             IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
             string groupFileName = FileHandlerFactoryLocator.UserFactory.Administrators.Name.ToLower() + ".group";
             if (!usersDirectory.IsFilePresent(groupFileName))

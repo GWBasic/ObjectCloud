@@ -17,13 +17,12 @@ using JsonFx.Json;
 using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Disk;
-using ObjectCloud.Interfaces.Javascript;
 using ObjectCloud.Interfaces.Security;
 using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.Javascript.SubProcess
 {
-    public class SubProcess : System.Runtime.ConstrainedExecution.CriticalFinalizerObject, IDisposable, ISubProcess
+    public class SubProcess : System.Runtime.ConstrainedExecution.CriticalFinalizerObject, IDisposable
     {
         static ILog log = LogManager.GetLogger<SubProcess>();
 
@@ -90,11 +89,36 @@ namespace ObjectCloud.Javascript.SubProcess
             StartProcessKiller();
         }
 
-        private readonly SubProcessFactory SubProcessFactory;
+        private FileHandlerFactoryLocator FileHandlerFactoryLocator;
 
-        public SubProcess(SubProcessFactory subProcessFactory)
+        /// <summary>
+        /// The file container that has the Javascript used in the sub-process
+        /// </summary>
+        public IFileContainer JavascriptContainer
         {
-            SubProcessFactory = subProcessFactory;
+            get { return _JavascriptContainer; }
+        }
+        private readonly IFileContainer _JavascriptContainer;
+
+        /// <summary>
+        /// When the javascript used in this process was last modified.  If the javascript was modified, then the process will be killed
+        /// </summary>
+        public DateTime JavascriptLastModified
+        {
+            get { return _JavascriptLastModified; }
+        }
+        private readonly DateTime _JavascriptLastModified;
+
+        public Dictionary<string, MethodInfo> FunctionsInScope
+        {
+            get { return _FunctionsInScope; }
+        }
+        readonly Dictionary<string, MethodInfo> _FunctionsInScope = new Dictionary<string, MethodInfo>();
+
+        public SubProcess(IFileContainer javascriptContainer, FileHandlerFactoryLocator fileHandlerFactoryLocator)
+        {
+            FileHandlerFactoryLocator = fileHandlerFactoryLocator;
+            _JavascriptContainer = javascriptContainer;
 
             _Process = new Process();
             _Process.StartInfo = new ProcessStartInfo("java", "-cp ." + Path.DirectorySeparatorChar + "js.jar -jar JavascriptProcess.jar " + Process.GetCurrentProcess().Id.ToString());
@@ -105,13 +129,12 @@ namespace ObjectCloud.Javascript.SubProcess
             _Process.EnableRaisingEvents = true;
             _Process.Exited += new EventHandler(Process_Exited);
 
-            if (log.IsDebugEnabled)
-                log.Debug("Starting Javascript sub process");
+            log.Info("Starting sub process for " + javascriptContainer.FullPath);
 
             if (!Process.Start())
             {
                 Exception e = new JavascriptException("Could not start sub process");
-                log.Error("Error starting Javascript sub process");
+                log.Error("Error starting Javascript sub process for " + javascriptContainer.FullPath, e);
 
                 throw e;
             }
@@ -130,6 +153,132 @@ namespace ObjectCloud.Javascript.SubProcess
 
             using (TimedLock.Lock(SubProcesses))
                 SubProcesses.Add(_Process);
+
+            List<string> scriptsToEval = new List<string>();
+            List<string> requestedScripts = new List<string>(new string[] { "/API/AJAX_serverside.js", "/API/json2.js" });
+
+            _JavascriptLastModified = javascriptContainer.LastModified;
+            string fileType = null;
+            StringBuilder javascriptBuilder = new StringBuilder();
+            foreach (string line in javascriptContainer.CastFileHandler<ITextHandler>().ReadLines())
+            {
+                // find file type
+                if (line.Trim().StartsWith("// FileType:"))
+                    fileType = line.Substring(12).Trim();
+
+                // Find dependant scripts
+                else if (line.Trim().StartsWith("// Scripts:"))
+                    foreach (string script in line.Substring(11).Split(','))
+                        requestedScripts.Add(script.Trim());
+
+                else
+                    javascriptBuilder.AppendFormat("{0}\n", line);
+            }
+
+            string javascript = javascriptBuilder.ToString();
+
+            ISession ownerSession = fileHandlerFactoryLocator.SessionManagerHandler.CreateSession();
+
+            try
+            {
+                ownerSession.Login(javascriptContainer.Owner);
+
+                IWebConnection ownerWebConnection = new BlockingShellWebConnection(
+                    fileHandlerFactoryLocator.WebServer,
+                    ownerSession,
+                    javascriptContainer.FullPath,
+                    null,
+                    null,
+                    new CookiesFromBrowser(),
+                    CallingFrom.Web,
+                    WebMethod.GET);
+
+                IEnumerable<ScriptAndMD5> dependantScriptsAndMD5s = fileHandlerFactoryLocator.WebServer.WebComponentResolver.DetermineDependantScripts(
+                    requestedScripts,
+                    ownerWebConnection);
+
+                // Load static methods that are passed into the Javascript environment as-is
+                foreach (Type javascriptFunctionsType in GetTypesThatHaveJavascriptFunctions(fileType))
+                    foreach (MethodInfo method in javascriptFunctionsType.GetMethods(BindingFlags.Static | BindingFlags.Public))
+                        _FunctionsInScope[method.Name] = method;
+
+                // Load all dependant scripts
+                foreach (ScriptAndMD5 dependantScript in dependantScriptsAndMD5s)
+                    scriptsToEval.Add(ownerWebConnection.ShellTo(dependantScript.ScriptName).ResultsAsString);
+
+                // Construct Javascript to shell to the "base" webHandler
+                Set<Type> webHandlerTypes = new Set<Type>(fileHandlerFactoryLocator.WebHandlerPlugins);
+                if (null != fileType)
+                    webHandlerTypes.Add(fileHandlerFactoryLocator.WebHandlerClasses[fileType]);
+
+                string baseWrapper = GetJavascriptWrapperForBase("base", webHandlerTypes);
+
+                scriptsToEval.Add(baseWrapper);
+                scriptsToEval.Add(javascript + "\nif (this.options) options; else null;");
+
+                Dictionary<string, object> command = new Dictionary<string, object>();
+                command["Scripts"] = scriptsToEval;
+                command["Functions"] = _FunctionsInScope.Keys;
+
+                // Send the command
+                using (TimedLock.Lock(SendKey))
+                    JSONSender.Write(command);
+
+                string inCommandString = _Process.StandardOutput.ReadLine();
+                Dictionary<string, object> inCommand = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
+
+                object exception;
+                if (inCommand.TryGetValue("Exception", out exception))
+                    throw new JavascriptException("Exception compiling Javascript for " + JavascriptContainer.FullPath + ": " + exception.ToString());
+            }
+            finally
+            {
+                fileHandlerFactoryLocator.SessionManagerHandler.EndSession(ownerSession.SessionId);
+            }
+        }
+
+        /// <summary>
+        /// Returns the types that have static functions to assist with the given FileHandler based on its type 
+        /// </summary>
+        /// <param name="fileContainer">
+        /// A <see cref="IFileContainer"/>
+        /// </param>
+        /// <returns>
+        /// A <see cref="IEnumerable"/>
+        /// </returns>
+        private static IEnumerable<Type> GetTypesThatHaveJavascriptFunctions(string fileType)
+        {
+            yield return typeof(JavascriptFunctions);
+
+            if ("database" == fileType)
+                yield return typeof(JavascriptDatabaseFunctions);
+        }
+
+        /// <summary>
+        /// Used internally for server-side Javascript
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="assignToVariable"></param>
+        /// <returns></returns>
+        public string GetJavascriptWrapperForBase(string assignToVariable, Set<Type> webHandlerTypes)
+        {
+            List<string> javascriptMethods =
+                FileHandlerFactoryLocator.WebServer.JavascriptWebAccessCodeGenerator.GenerateWrapper(webHandlerTypes);
+
+            string javascriptToReturn = StringGenerator.GenerateSeperatedList(javascriptMethods, ",\n");
+
+            // Replace some key constants
+            javascriptToReturn = javascriptToReturn.Replace("{0}", "' + fileMetadata.fullpath + '");
+            javascriptToReturn = javascriptToReturn.Replace("{1}", "' + fileMetadata.filename + '");
+
+            javascriptToReturn = javascriptToReturn.Replace("{4}", "true");
+
+            // Enclose the functions with { .... }
+            javascriptToReturn = "{\n" + javascriptToReturn + "\n}";
+
+            javascriptToReturn = string.Format("var {0} = {1};", assignToVariable, javascriptToReturn);
+
+            return javascriptToReturn;
         }
 
         /// <summary>
@@ -155,17 +304,17 @@ namespace ObjectCloud.Javascript.SubProcess
 
         void Process_Exited(object sender, EventArgs e)
         {
-            if (!Disposed)
-                Aborted = true;
-
-			try
+            try
             {
                 ((Process)sender).Exited -= new EventHandler(Process_Exited);
                 using (TimedLock.Lock(SubProcesses))
                     SubProcesses.Remove(((Process)sender));
 
                 if (!Disposed)
+                {
                     Dispose();
+                    Aborted = true;
+                }
             }
             catch (Exception ex)
             {
@@ -184,38 +333,24 @@ namespace ObjectCloud.Javascript.SubProcess
         /// </param>
         void Process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
-            Dictionary<string, object> subProcessError;
+            string error = e.Data;
 
-            try
-            {
-                subProcessError = JsonReader.Deserialize<Dictionary<string, object>>(e.Data);
-            }
-            catch
-            {
-                log.Error("Javascript sub process error: " + e.Data);
-                return;
-            }
+            if (null != error)
+                try
+                {
+                    // Try deserializing as if it's a string encoded in JSON.  This is so that many-line strings can be transmitted
+                    try
+                    {
+                        error = JsonReader.Deserialize<string>(error);
+                    }
+                    catch { }
 
-            LogSubProcessError(subProcessError);
-        }
-
-        /// <summary>
-        /// Assists in logging a sub process error
-        /// </summary>
-        /// <param name="subProcessError"></param>
-        private static void LogSubProcessError(Dictionary<string, object> subProcessError)
-        {
-            StringBuilder errorStringBuilder = new StringBuilder("Javascript sub process error");
-
-            object message;
-            if (subProcessError.TryGetValue("Message", out message))
-                errorStringBuilder.Append("\nMessage: " + message.ToString());
-
-            object stackTrace;
-            if (subProcessError.TryGetValue("StackTrace", out stackTrace))
-                errorStringBuilder.Append("\nStack Trace: " + stackTrace.ToString());
-
-            log.Error(errorStringBuilder.ToString());
+                    log.Error("Javascript sub process error: " + JavascriptContainer.FullPath + error);
+                }
+                catch (Exception ex)
+                {
+                    log.Error("Error reading from Javascript sub process: " + JavascriptContainer.FullPath, ex);
+                }
         }
 
         /// <summary>
@@ -250,129 +385,35 @@ namespace ObjectCloud.Javascript.SubProcess
         }
 
         /// <summary>
-        /// ScriptIDs that are already loaded
+        /// The results of calling EvalScope
         /// </summary>
-        private Set<int> LoadedScriptIDs = new Set<int>();
-
-        /// <summary>
-        /// ScriptIDs that currently are being loaded and thus another user must block
-        /// </summary>
-        private Dictionary<int, object> LoadingScriptIDs = new Dictionary<int, object>();
-
-        /// <summary>
-        /// Compiles the script
-        /// </summary>
-        /// <param name="threadID"></param>
-        /// <param name="script"></param>
-        /// <param name="scriptID"></param>
-        /// <returns>An object that can be used to re-load the script, or null if another thread happened to compile at the same time</returns>
-        public object Compile(object threadID, string script, int scriptID)
+        public struct CreateScopeResults
         {
-            CheckIfAbortedOrDisposed();
+            /// <summary>
+            /// The call's result
+            /// </summary>
+            public object Result;
 
-            object loadingMonitor;
-            if (BlockWhileAnotherThreadIsLoading(scriptID, out loadingMonitor))
-                return null;
-
-            try
-            {
-                Dictionary<string, object> data = new Dictionary<string, object>();
-                data["Script"] = script;
-                data["ScriptID"] = scriptID;
-
-                Dictionary<string, object> command = CreateCommand(threadID, "Compile", data);
-                Dictionary<string, object> dataToReturn = SendCommandAndHandleResponse(command);
-
-                using (TimedLock.Lock(LoadedScriptIDs))
-                    LoadedScriptIDs.Add(scriptID);
-
-                return dataToReturn["CompiledScript"];
-            }
-            finally
-            {
-                using (TimedLock.Lock(LoadingScriptIDs))
-                    LoadingScriptIDs.Remove(scriptID);
-
-                lock(loadingMonitor)
-                    Monitor.Pulse(loadingMonitor);
-            }
+            /// <summary>
+            /// The functions that are present in the scope
+            /// </summary>
+            public Dictionary<string, CreateScopeFunctionInfo> Functions;
         }
 
         /// <summary>
-        /// Blocks if another thread is loading or compiling the same scriptID, returns true if another thread loaded or compiled the same script ID
+        /// Information about a function
         /// </summary>
-        /// <param name="scriptID"></param>
-        /// <param name="loadingMonitor"></param>
-        /// <param name="otherThreadLoading"></param>
-        private bool BlockWhileAnotherThreadIsLoading(int scriptID, out object loadingMonitor)
+        public struct CreateScopeFunctionInfo
         {
-            bool otherThreadLoading;
+            /// <summary>
+            /// The function's properties
+            /// </summary>
+            public Dictionary<string, object> Properties;
 
-            using (TimedLock.Lock(LoadingScriptIDs))
-            {
-                otherThreadLoading = LoadingScriptIDs.TryGetValue(scriptID, out loadingMonitor);
-
-                if (!otherThreadLoading)
-                {
-                    loadingMonitor = new object();
-                    LoadingScriptIDs[scriptID] = loadingMonitor;
-                }
-            }
-
-            // If another thread is loading, monitor it, but put a timeout in case the other thread
-            // removed the token when we weren't looking
-            bool doneWaiting;
-            if (otherThreadLoading)
-                do
-                {
-                    lock (loadingMonitor)
-                        Monitor.Wait(loadingMonitor, 250);
-
-                    using (TimedLock.Lock(LoadedScriptIDs))
-                        doneWaiting = LoadedScriptIDs.Contains(scriptID);
-
-                } while (doneWaiting);
-
-            return otherThreadLoading;
-        }
-
-        /// <summary>
-        /// Loads a pre-compiled script from ID
-        /// </summary>
-        /// <param name="threadID"></param>
-        /// <param name="preCompiled"></param>
-        /// <param name="scriptID"></param>
-        public void LoadCompiled(object threadID, object preCompiled, int scriptID)
-        {
-            using (TimedLock.Lock(LoadedScriptIDs))
-                if (LoadedScriptIDs.Contains(scriptID))
-                    return;
-
-            object loadingMonitor;
-            if (BlockWhileAnotherThreadIsLoading(scriptID, out loadingMonitor))
-                return;
-
-            try
-            {
-                Dictionary<string, object> data = new Dictionary<string, object>();
-                data["CompiledScript"] = preCompiled;
-                data["ScriptID"] = scriptID;
-
-                Dictionary<string, object> command = CreateCommand(threadID, "LoadCompiled", data);
-                //Dictionary<string, object> dataToReturn = 
-                SendCommandAndHandleResponse(command);
-
-                using (TimedLock.Lock(LoadedScriptIDs))
-                    LoadedScriptIDs.Add(scriptID);
-            }
-            finally
-            {
-                using (TimedLock.Lock(LoadingScriptIDs))
-                    LoadingScriptIDs.Remove(scriptID);
-
-                lock (loadingMonitor)
-                    Monitor.Pulse(loadingMonitor);
-            }
+            /// <summary>
+            /// The function's arguments
+            /// </summary>
+            public IEnumerable<string> Arguments;
         }
 
         /// <summary>
@@ -382,65 +423,35 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <param name="threadID"></param>
         /// <param name="data">The data that is placed into the scope</param>
         /// <returns></returns>
-        public EvalScopeResults EvalScope(
-            int scopeId,
-            object threadID,
-            Dictionary<string, object> metadata,
-            IEnumerable scriptIDsAndScriptsEnum,
-            IEnumerable<string> functionsToAdd,
-            bool returnFunctions)
+        public CreateScopeResults CreateScope(int scopeId, object threadID, Dictionary<string, object> data)
         {
             CheckIfAbortedOrDisposed();
 
-            Dictionary<string, object> data = new Dictionary<string, object>();
-            if (null != metadata)
-                data["Data"] = metadata;
-
-            ArrayList scriptIDsAndScripts = new ArrayList();
-            foreach (object scriptOrID in scriptIDsAndScriptsEnum)
-                scriptIDsAndScripts.Add(scriptOrID);
-
-            data["Scripts"] = scriptIDsAndScripts;
-
-            if (null != functionsToAdd)
-                data["Functions"] = new List<string>(functionsToAdd);
-
-            if (returnFunctions)
-                data["ReturnFunctions"] = true;
-
-            Dictionary<string, object> command = CreateCommand(scopeId, threadID, "EvalScope", data);
+            Dictionary<string, object> command = CreateCommand(scopeId, threadID, "CreateScope", data);
 
             Dictionary<string, object> dataToReturn = SendCommandAndHandleResponse(command, scopeId);
 
-            EvalScopeResults toReturn = new EvalScopeResults();
+            CreateScopeResults toReturn = new CreateScopeResults();
+            toReturn.Result = dataToReturn["Result"];
 
-            List<object> results = new List<object>();
-            foreach (object result in (IEnumerable)dataToReturn["Results"])
-                results.Add(result);
+            object functionsObj = dataToReturn["Functions"];
+            Dictionary<string, CreateScopeFunctionInfo> functionsToReturn = new Dictionary<string, CreateScopeFunctionInfo>();
 
-            toReturn.Results = results;
-
-            if (returnFunctions)
+            foreach (KeyValuePair<string, object> functionKVP in (IEnumerable<KeyValuePair<string, object>>)functionsObj)
             {
-                object functionsObj = dataToReturn["Functions"];
-                Dictionary<string, CreateScopeFunctionInfo> functionsToReturn = new Dictionary<string, CreateScopeFunctionInfo>();
+                CreateScopeFunctionInfo functionInfo = new CreateScopeFunctionInfo();
+                Dictionary<string, object> value = (Dictionary<string, object>)functionKVP.Value;
 
-                foreach (KeyValuePair<string, object> functionKVP in (IEnumerable<KeyValuePair<string, object>>)functionsObj)
-                {
-                    CreateScopeFunctionInfo functionInfo = new CreateScopeFunctionInfo();
-                    Dictionary<string, object> value = (Dictionary<string, object>)functionKVP.Value;
+                functionInfo.Properties = (Dictionary<string, object>)value["Properties"];
 
-                    functionInfo.Properties = (Dictionary<string, object>)value["Properties"];
+                object arguments;
+                if (value.TryGetValue("Arguments", out arguments))
+                    functionInfo.Arguments = Enumerable<string>.Cast((IEnumerable)arguments);
 
-                    object arguments;
-                    if (value.TryGetValue("Arguments", out arguments))
-                        functionInfo.Arguments = Enumerable<string>.Cast((IEnumerable)arguments);
-
-                    functionsToReturn[functionKVP.Key] = functionInfo;
-                }
-
-                toReturn.Functions = functionsToReturn;
+                functionsToReturn[functionKVP.Key] = functionInfo;
             }
+
+            toReturn.Functions = functionsToReturn;
 
             return toReturn;
         }
@@ -450,11 +461,12 @@ namespace ObjectCloud.Javascript.SubProcess
         /// </summary>
         private void CheckIfAbortedOrDisposed()
         {
-            if (Aborted)
+            if (Aborted || (_JavascriptLastModified != _JavascriptContainer.LastModified))
                 throw new AbortedException();
 
             if (Disposed)
                 throw new ObjectDisposedException("This Javascript sub process is disposed and can no longer be used");
+
         }
 
         /// <summary>
@@ -559,37 +571,8 @@ namespace ObjectCloud.Javascript.SubProcess
 
             public object Call(IEnumerable<object> arguments)
             {
-                try
-                {
-                    return SubProcess.CallCallback(ScopeId, ThreadId, CallbackId, arguments);
-                }
-                catch (JavascriptException je)
-                {
-                    // If there is an exception creating the scope, log some important information and then re-throw
-                    log.ErrorFormat("Exception in Javascript calling callback", je);
-
-                    throw;
-                }
+                return SubProcess.CallCallback(ScopeId, ThreadId, CallbackId, arguments);
             }
-        }
-
-        /// <summary>
-        /// Helper to create a command
-        /// </summary>
-        /// <param name="scopeId"></param>
-        /// <param name="threadID"></param>
-        /// <param name="command"></param>
-        /// <param name="data"></param>
-        private static Dictionary<string, object> CreateCommand(
-            object threadID, string commandName, Dictionary<string, object> data)
-        {
-            Dictionary<string, object> command;
-            command = new Dictionary<string, object>();
-            command["ThreadID"] = threadID;
-            command["Command"] = commandName;
-            command["Data"] = data;
-
-            return command;
         }
 
         /// <summary>
@@ -625,53 +608,15 @@ namespace ObjectCloud.Javascript.SubProcess
         uint NumInJavascriptCalls = 0;
 
         /// <summary>
-        /// Helper callback for timers to kill timed out sub processes
-        /// </summary>
-        /// <param name="state"></param>
-        private void HandleSubProcessTimeout(object state)
-        {
-            log.Warn("Killing sub-process due to timeout");
-            Dispose();
-        }
-
-        /// <summary>
-        /// Helper to block a thread until the response comes back
-        /// </summary>
-        /// <returns></returns>
-        private Dictionary<string, object> SendCommandAndHandleResponse(object command)
-        {
-            Dictionary<string, object> inCommand;
-
-            // If the thread waits, spin up a timer kill the process in case it runs too long
-            using (new Timer(HandleSubProcessTimeout, null, SubProcessFactory.CompileTimeout, 0))
-                inCommand = SendCommandAndWaitForResponse(command);
-
-            Dictionary<string, object> dataToReturn = (Dictionary<string, object>)inCommand["Data"];
-
-            object exceptionFromJavascript;
-            if (dataToReturn.TryGetValue("Exception", out exceptionFromJavascript))
-            {
-                if (exceptionFromJavascript is Dictionary<string, object>)
-                {
-                    object parentObjectId;
-                    if (((Dictionary<string, object>)exceptionFromJavascript).TryGetValue("ParentObjectId", out parentObjectId))
-                        if (TrackedObjects.TryGetValue(Convert.ToInt32(parentObjectId), out exceptionFromJavascript))
-                            if (exceptionFromJavascript is Exception)
-                                throw (Exception)exceptionFromJavascript;
-                }
-
-                throw new JavascriptException(JsonWriter.Serialize(exceptionFromJavascript));
-            }
-
-            return dataToReturn;
-        }
-
-        /// <summary>
         /// Helper to block a thread until the response comes back
         /// </summary>
         /// <returns></returns>
         private Dictionary<string, object> SendCommandAndHandleResponse(object command, int scopeId)
         {
+            // Send the command
+            using (TimedLock.Lock(SendKey))
+                JSONSender.Write(command);
+
             if (null == TrackedObjects)
                 TrackedObjects = new Dictionary<int, object>();
 
@@ -682,10 +627,16 @@ namespace ObjectCloud.Javascript.SubProcess
                 do
                 {
                     Dictionary<string, object> inCommand;
-
+					
+					TimerCallback callback = delegate(object state)
+					{
+						log.Warn("Killing sub-process due to timeout: " + JavascriptContainer.FullPath);
+						Dispose();
+					};
+                    
                     // If the thread waits, spin up a timer kill the process in case it runs too long
-                    using (new Timer(HandleSubProcessTimeout, null, SubProcessFactory.ExecuteTimeout, 0))
-                        inCommand = SendCommandAndWaitForResponse(command);
+                    using (new Timer(callback, null, 10000, 0))
+                        inCommand = WaitForResponse();
 
                     Dictionary<string, object> dataToReturn = (Dictionary<string, object>)inCommand["Data"];
 
@@ -730,14 +681,6 @@ namespace ObjectCloud.Javascript.SubProcess
                                 if (null != stringToEval.CacheId)
                                     outData["CacheID"] = stringToEval.CacheId;
                             }
-                            else if (parentFunctionDataToReturn is ScriptToRun)
-                            {
-                                ScriptToRun scriptToRun = (ScriptToRun)parentFunctionDataToReturn;
-                                outData["Eval"] = scriptToRun.ScriptID;
-
-                                if (null != scriptToRun.CacheId)
-                                    outData["CacheID"] = scriptToRun.CacheId;
-                            }
 
                             else if (parentFunctionDataToReturn is CachedObjectId)
                                 outData["CacheID"] = ((CachedObjectId)parentFunctionDataToReturn).CacheId;
@@ -777,9 +720,8 @@ namespace ObjectCloud.Javascript.SubProcess
                             outData["Exception"] = jsoned;
                         }
 
-                        //using (TimedLock.Lock(SendKey))
-                            //JSONSender.Write(outCommand);
-                        command = outCommand;
+                        using (TimedLock.Lock(SendKey))
+                            JSONSender.Write(outCommand);
                     }
                     else
                     {
@@ -795,10 +737,7 @@ namespace ObjectCloud.Javascript.SubProcess
                                             throw (Exception)exceptionFromJavascript;
                             }
 
-                            if (exceptionFromJavascript is string)
-                                throw new JavascriptException((string)exceptionFromJavascript);
-                            else
-                                throw new JavascriptException(JsonWriter.Serialize(exceptionFromJavascript));
+                            throw new JavascriptException(JsonWriter.Serialize(exceptionFromJavascript));
                         }
 
                         object result;
@@ -810,33 +749,6 @@ namespace ObjectCloud.Javascript.SubProcess
                                 if (((Dictionary<string, object>)result).TryGetValue("ParentObjectId", out parentObjectId))
                                     if (TrackedObjects.TryGetValue(Convert.ToInt32(parentObjectId), out result))
                                         dataToReturn["Result"] = result;
-                            }
-                        }
-                        else if (dataToReturn.TryGetValue("Results", out result))
-                        {
-                            if (result is IEnumerable)
-                            {
-                                List<object> newResults = new List<object>();
-
-                                foreach (object subResult in (IEnumerable)result)
-                                    if (subResult is Dictionary<string, object>)
-                                    {
-                                        object parentObjectId;
-                                        if (((Dictionary<string, object>)subResult).TryGetValue("ParentObjectId", out parentObjectId))
-                                        {
-                                            object tracked;
-                                            if (TrackedObjects.TryGetValue(Convert.ToInt32(parentObjectId), out tracked))
-                                                dataToReturn["Result"] = tracked;
-                                            else
-                                                newResults.Add(subResult);
-                                        }
-                                        else
-                                            newResults.Add(subResult);
-                                    }
-                                    else
-                                        newResults.Add(subResult);
-
-                                dataToReturn["Results"] = newResults;
                             }
                         }
                         else
@@ -856,109 +768,100 @@ namespace ObjectCloud.Javascript.SubProcess
             }
         }
 
-        /*// <summary>
+        /// <summary>
         /// Provides syncronization when waiting for a response
         /// </summary>
         private object RespondKey = new object();
 
         /// <summary>
-        /// The most recent command returned from the sub process 
+        /// Place to stuff the SubProcess's response
         /// </summary>
-        Dictionary<string, object> InCommand = null;
-
-        /// <summary>
-        /// The thread that has a result waiting for it 
-        /// </summary>
-        int InCommandThreadId;*/
+        Dictionary<object, Dictionary<string, object>> InCommandsByThreadId = new Dictionary<object, Dictionary<string, object>>();
 
         /// <summary>
         /// Syncronizes the sub process's output stream and returns the appropriate response
         /// </summary>
         /// <returns></returns>
-        private Dictionary<string, object> SendCommandAndWaitForResponse(object command)
+        private Dictionary<string, object> WaitForResponse()
         {
-			//DateTime start = DateTime.UtcNow;
-			
-            // Send the command
-			Dictionary<string, object> toReturn;
-            using (TimedLock.Lock(SendKey))
-            {
-                JSONSender.Write(command);
-
-                string inCommandString;
-                do
-                    inCommandString = _Process.StandardOutput.ReadLine();
-                while (null == inCommandString);
-
-                toReturn = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
-
-                // If the sub process had a recoverable error, just push it up the stack
-                if (toReturn.ContainsKey("StackTrace"))
-                {
-                    LogSubProcessError(toReturn);
-                    throw new JavascriptException(toReturn["Message"].ToString());
-                }
-            }
-			
-			/*if (log.IsDebugEnabled)
-			{
-				TimeSpan callTime = DateTime.UtcNow - start;
-				log.Debug("Time to call into Javascript (ms): " + callTime.TotalMilliseconds);
-				
-				if (callTime.TotalMilliseconds > 15)
-					log.Debug(JsonWriter.Serialize(command));
-			}*/
-			
-            return toReturn;
-
-            /*int threadID = Thread.CurrentThread.ManagedThreadId;
+            object threadID = Thread.CurrentThread.ManagedThreadId;
+            Dictionary<string, object> inCommand = null;
 
             do
             {
-                // If there is a waiting result and it's for this thread, return it
-                if (null != InCommand)
-                    if (threadID == InCommandThreadId)
+                // If there's a response waiting, return it
+                lock (InCommandsByThreadId)
+                {
+                    if (InCommandsByThreadId.TryGetValue(threadID, out inCommand))
                     {
-                        Dictionary<string, object> toReturn = InCommand;
-                        InCommand = null;
+                        InCommandsByThreadId.Remove(threadID);
+                        return inCommand;
+                    }
+                }
 
-                        // If the sub process had a recoverable error, just push it up the stack
-                        if (toReturn.ContainsKey("StackTrace"))
+                lock (RespondKey)
+                {
+                    bool checkForOutput;
+
+                    // (double-check in case something changed while waiting for the lock...)
+                    // If there's a response waiting, return it
+                    lock (InCommandsByThreadId)
+                    {
+                        if (InCommandsByThreadId.TryGetValue(threadID, out inCommand))
                         {
-                            LogSubProcessError(toReturn);
-                            throw new JavascriptException(toReturn["Message"].ToString());
+                            InCommandsByThreadId.Remove(threadID);
+                            return inCommand;
                         }
 
-                        return toReturn;
+                        checkForOutput = InCommandsByThreadId.Count == 0;
                     }
 
-                // Only 1 thread can read from the sub process at a time
-                // all threads spin while waiting for a response
-                if (null == InCommand)
-                {
-                    lock (RespondKey)
-                        if (null == InCommand)
-                        {
-                            // else, if there isn't a waiting response that came in on another thread, and if there aren't waiting responses, wait for a response
-                            //if (Process.StandardOutput.EndOfStream || Process.HasExited)
-                            if (Process.HasExited)
-                                throw new JavascriptException("The sub process has exited");
+                    // else, if there isn't a waiting response that came in on another thread, and if there aren't waiting responses, wait for a response
+                    if (Process.StandardOutput.EndOfStream || Process.HasExited)
+                        throw new JavascriptException("The sub process has exited");
 
-                            string inCommandString = _Process.StandardOutput.ReadLine();
+                    // Only wait for output if there are no pending responses.  If there are pending responses, let the waiting threads fight until they all get the responses
+                    if (checkForOutput)
+                    {
+                        string inCommandString = _Process.StandardOutput.ReadLine();
 
-                            if (null == inCommandString)
-                                log.Warn("Null recieved from sub process");
-                            else
-                            {
-                                InCommand = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
-                                InCommandThreadId = Convert.ToInt32(InCommand["ThreadID"]);
-                            }
-                        }
+                        if (null == inCommandString)
+                            log.Warn("Null recieved from sub process");
+
+                        inCommand = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
+
+                        object commandThreadID = inCommand["ThreadID"];
+
+                        // If this is the command for this thread, return it
+                        if (commandThreadID == threadID)
+                            return inCommand;
+
+                        // else, stuff it into the dictionary of results
+                        lock (InCommandsByThreadId)
+                            InCommandsByThreadId[commandThreadID] = inCommand;
+                    }
                 }
-                else
-                    Thread.Sleep(0);
 
-            } while (true);*/
+                // Make sure that a context switch occurs after the lock is released
+                Thread.Sleep(0);
+
+            } while (!_Process.HasExited);
+			
+			throw new ObjectDisposedException("The sub processes has exited");
+        }
+
+        /// <summary>
+        /// Represents an undefined value
+        /// </summary>
+        public class Undefined
+        {
+            private Undefined() { }
+
+            public static Undefined Value
+            {
+                get { return _Instance; }
+            }
+            private static readonly Undefined _Instance = new Undefined();
         }
 
         /// <summary>
@@ -983,36 +886,6 @@ namespace ObjectCloud.Javascript.SubProcess
                 get { return _ToEval; }
             }
             private readonly string _ToEval;
-
-            public object CacheId
-            {
-                get { return _CacheId; }
-            }
-            private readonly object _CacheId;
-        }
-
-        /// <summary>
-        /// Indicates to the caller that the returned value comes from a script to run in the scope
-        /// </summary>
-        public struct ScriptToRun
-        {
-            public ScriptToRun(int scriptID)
-            {
-                _ScriptID = scriptID;
-                _CacheId = null;
-            }
-
-            public ScriptToRun(int scriptID, object cacheId)
-            {
-                _ScriptID = scriptID;
-                _CacheId = cacheId;
-            }
-
-            public int ScriptID
-            {
-                get { return _ScriptID; }
-            }
-            private readonly int _ScriptID;
 
             public object CacheId
             {
@@ -1069,18 +942,18 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             try
             {
-                if (!_Process.HasExited)
-                {
-                    DateTime start = (DateTime)state;
-
-                    if (DateTime.UtcNow - start > TimeSpan.FromSeconds(0.25))
-                        _Process.Kill();
-                    else
-                    {
-                        Thread.Sleep(25);
-                        ThreadPool.QueueUserWorkItem(KillSubprocess, start);
-                    }
-                }
+				if (!_Process.HasExited)
+				{
+	                DateTime start = (DateTime)state;
+	
+	                if (DateTime.UtcNow - start > TimeSpan.FromSeconds(0.25))
+	                    _Process.Kill();
+	                else
+					{
+						Thread.Sleep(25);
+	                    ThreadPool.QueueUserWorkItem(KillSubprocess, start);
+					}
+				}
             }
             catch { }
         }
@@ -1097,10 +970,18 @@ namespace ObjectCloud.Javascript.SubProcess
                 try
                 {
                     if (!_Process.HasExited)
-                        _Process.Kill();
+	                    _Process.Kill();
                 }
                 catch { }
             }
         }
     }
+
+    /// <summary>
+    /// Delegate for calling parent functions
+    /// </summary>
+    /// <param name="functionName"></param>
+    /// <param name="arguments"></param>
+    /// <returns></returns>
+    public delegate object CallParentFunctionDelegate(string functionName, object threadId, object[] arguments);
 }

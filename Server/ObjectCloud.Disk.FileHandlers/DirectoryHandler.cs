@@ -1028,14 +1028,6 @@ namespace ObjectCloud.Disk.FileHandlers
                                 SetPermission(null, filename, userOrGroupId, level, inherit, sendNotifications);
                             }
                 }
-
-            // Delete old files
-            string deleteListPath = Path.GetFullPath(localDiskPath + Path.DirectorySeparatorChar + "____deletelist.txt");
-
-            if (File.Exists(deleteListPath))
-                foreach (string toDelete in File.ReadAllLines(deleteListPath))
-                    if (IsFilePresent(toDelete))
-                        DeleteFile(null, toDelete);
         }
 
         public override string Title

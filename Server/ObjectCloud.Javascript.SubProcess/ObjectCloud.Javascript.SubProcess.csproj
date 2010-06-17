@@ -15,7 +15,6 @@
     <OldToolsVersion>2.0</OldToolsVersion>
     <UpgradeBackupLocation />
     <TargetFrameworkProfile />
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -28,6 +27,7 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -61,16 +61,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
-    <Compile Include="CompiledJavascriptManager.cs" />
     <Compile Include="ExecutionEnvironment.cs" />
     <Compile Include="ExecutionEnvironmentFactory.cs" />
     <Compile Include="FunctionCallContext.cs" />
     <Compile Include="FunctionCaller.cs" />
+    <Compile Include="ISubProcessFactory.cs" />
     <Compile Include="JavascriptDatabaseFunctions.cs" />
     <Compile Include="JavascriptFunctions.cs" />
-    <Compile Include="ScopeInfo.cs" />
     <Compile Include="ScopeWrapper.cs" />
     <Compile Include="SubProcess.cs" />
+    <Compile Include="JavascriptException.cs" />
     <Compile Include="SubProcessFactory.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
