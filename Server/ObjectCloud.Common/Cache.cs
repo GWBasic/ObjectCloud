@@ -192,9 +192,14 @@ namespace ObjectCloud.Common
             Lock.EnterWriteLock();
             try
             {
-                foreach (TValue value in Values)
-                    if (value is IDisposable)
-                        ((IDisposable)value).Dispose();
+                foreach (CacheHandle ch in new LinkedList<CacheHandle>(Dictionary.Values))
+                {
+                    TValue value = ch.WeakValue;
+
+                    if (null != value)
+                        if (value is IDisposable)
+                            ((IDisposable)value).Dispose();
+                }
 
                 Dictionary.Clear();
             }
