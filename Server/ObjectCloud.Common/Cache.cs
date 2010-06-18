@@ -581,8 +581,41 @@ namespace ObjectCloud.Common
                     NumObjectsToDequeue = numObjectsToDequeue;
 
                     // If the garbage collector has run, clean up dead weak references
-                    while (LastCleanCollectionCount != GC.CollectionCount(GC.MaxGeneration))
-                        MonitorHandlesForGC();
+		            try
+        		    		{
+	                    	if (LastCleanCollectionCount != GC.CollectionCount(GC.MaxGeneration))
+						{
+							// If a cache handle is no longer in memory, it means that a cache was most likely collected
+							// The entire queue of cache handles should be examined
+							for (int ctr = 0; ctr < CachedReferences.Count; ctr++)
+							{
+							    WeakReference toCheck = CachedReferences.Dequeue();
+							    if (toCheck.IsAlive)
+							        CachedReferences.Enqueue(toCheck);
+							}
+							
+							// Next, look at all of the cache handles that are pending GC.  If their cached value is collected, then
+							// remove the handle completely from memory
+							LockFreeQueue<WeakReference> oldHandlesPendingGC = HandlesPendingGC;
+							HandlesPendingGC = new LockFreeQueue<WeakReference>();
+							
+							WeakReference cacheHandleWR;
+							while (oldHandlesPendingGC.Dequeue(out cacheHandleWR))
+							{
+							    ICacheHandle cacheHandle = (ICacheHandle)cacheHandleWR.Target;
+							
+							    if (null != cacheHandle)
+							        if (!cacheHandle.RemoveIfNotAlive())
+							            HandlesPendingGC.Enqueue(cacheHandleWR);
+							}
+
+							LastCleanCollectionCount = GC.CollectionCount(GC.MaxGeneration);
+						}
+					}
+					catch (Exception e)
+					{
+					    log.Error("Error cleaning out old handles", e);
+					}
                 }
 	            catch (Exception e)
     		        {
@@ -610,46 +643,6 @@ namespace ObjectCloud.Common
         /// All of the handles that are waiting for a GC
         /// </summary>
         private static LockFreeQueue<WeakReference> HandlesPendingGC = new LockFreeQueue<WeakReference>();
-
-        /// <summary>
-        /// Monitors all of the handles to see if they've been GCed, if so, they are removed
-        /// </summary>
-        /// <param name="state"></param>
-        private static void MonitorHandlesForGC()
-        {
-            try
-            {
-                LastCleanCollectionCount = GC.CollectionCount(GC.MaxGeneration);
-
-                // If a cache handle is no longer in memory, it means that a cache was most likely collected
-                // The entire queue of cache handles should be examined
-                for (int ctr = 0; ctr < CachedReferences.Count; ctr++)
-                {
-                    WeakReference toCheck = CachedReferences.Dequeue();
-                    if (toCheck.IsAlive)
-                        CachedReferences.Enqueue(toCheck);
-                }
-
-                // Next, look at all of the cache handles that are pending GC.  If their cached value is collected, then
-                // remove the handle completely from memory
-                LockFreeQueue<WeakReference> oldHandlesPendingGC = HandlesPendingGC;
-                HandlesPendingGC = new LockFreeQueue<WeakReference>();
-
-                WeakReference cacheHandleWR;
-                while (oldHandlesPendingGC.Dequeue(out cacheHandleWR))
-                {
-                    ICacheHandle cacheHandle = (ICacheHandle)cacheHandleWR.Target;
-
-                    if (null != cacheHandle)
-                        if (!cacheHandle.RemoveIfNotAlive())
-                            HandlesPendingGC.Enqueue(cacheHandleWR);
-                }
-            }
-            catch (Exception e)
-            {
-                log.Error("Error cleaning out old handles", e);
-            }
-        }
     }
 
     /// <summary>
