@@ -3,6 +3,6 @@
    "Minor":0,
    "State":"alpha",
    "Stable":true,
-   "Release":"3-1",
-   "Joke":"A high thread count is only desirable in a fancy hotel room"
+   "Release":"3-2",
+   "Joke":"Interlocking the cache queue for a speedy compilation of Javascript bytecode"
 }
