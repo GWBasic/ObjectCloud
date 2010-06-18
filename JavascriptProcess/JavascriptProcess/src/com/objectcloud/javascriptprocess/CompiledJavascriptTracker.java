@@ -1,5 +1,9 @@
 package com.objectcloud.javascriptprocess;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.HashMap;
 
 import org.mozilla.javascript.CompilerEnvirons;
@@ -35,16 +39,53 @@ public class CompiledJavascriptTracker {
 	private NativeFunction compile(String script) throws Exception {
 		
         Object[] classFiles;
+        Class<?> nativeFunctionClass;
         
         long hashCode = script.hashCode();
         hashCode = hashCode - Integer.MIN_VALUE;
         
-   		classFiles = classCompiler.compileToClassFiles(script, "<cmd>", 0, "com.objectcloud.javascript.generated_" + new Long(hashCode).toString());
+        String className = "com.objectcloud.javascript.generated_" + new Long(hashCode).toString();
         
-    	// Load all of the generated classes from Rhino's weirdo return format
-    	Class<?> nativeFunctionClass = classLoader.loadClass((byte[])classFiles[1]);
-        for (int ctr = 3; ctr < classFiles.length; ctr = ctr + 2) {
-        	classLoader.loadClass((byte[])classFiles[3]);
+        String compiledFileName = className + ".compiledJS"; 
+        
+        // First, try loading pre-compiled classes from disk
+        try {
+			FileInputStream fin = new FileInputStream(compiledFileName);
+			ObjectInputStream ois = new ObjectInputStream(fin);
+			
+			try {
+				classFiles = (Object[])ois.readObject();
+			} finally {
+				ois.close();
+			}
+	        
+	    	// Load all of the generated classes from Rhino's weirdo return format
+	    	nativeFunctionClass = classLoader.loadClass((byte[])classFiles[1]);
+	        for (int ctr = 3; ctr < classFiles.length; ctr = ctr + 2) {
+	        	classLoader.loadClass((byte[])classFiles[3]);
+	        }
+        }
+        catch (Exception e)
+        {
+       		classFiles = classCompiler.compileToClassFiles(script, "<cmd>", 0, className);
+
+       		// Try serializing the compiled classes
+       		try {
+    			FileOutputStream fout = new FileOutputStream(compiledFileName);
+    			ObjectOutputStream oos = new ObjectOutputStream(fout);
+    			
+    			try {
+    				oos.writeObject(classFiles);
+    			} finally {
+    				oos.close();
+    			}
+       		} catch (Exception ex) { } // exceptions are ignored
+            
+        	// Load all of the generated classes from Rhino's weirdo return format
+        	nativeFunctionClass = classLoader.loadClass((byte[])classFiles[1]);
+            for (int ctr = 3; ctr < classFiles.length; ctr = ctr + 2) {
+            	classLoader.loadClass((byte[])classFiles[3]);
+            }
         }
         
         return (NativeFunction)nativeFunctionClass.getConstructor().newInstance();
