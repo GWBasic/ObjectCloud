@@ -452,11 +452,6 @@ namespace ObjectCloud.Common
         }
 
         /// <summary>
-        /// Single thread for cleaning the cache
-        /// </summary>
-        private static DelegateQueue DelegateQueue = new DelegateQueue();
-
-        /// <summary>
         /// The current process
         /// </summary>
         static private Process MyProcess = Process.GetCurrentProcess();
