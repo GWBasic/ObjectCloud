@@ -62,6 +62,8 @@ namespace ObjectCloud.Common
         private readonly Dictionary<TKey, CacheHandle> Dictionary =
             new Dictionary<TKey, CacheHandle>();
 
+        private ReaderWriterLockSlim Lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+
         protected readonly CreateForCache<TKey, TValue, TConstructorArg> _CreateForCache;
 
         public Cache(CreateForCache<TKey, TValue, TConstructorArg> createForCache)
@@ -88,16 +90,36 @@ namespace ObjectCloud.Common
         /// <returns></returns>
         private CacheHandle GetCacheHandle(TKey key)
         {
-            // Get or create the cache handle
-            CacheHandle cacheHandle;
-            using (TimedLock.Lock(Dictionary))
+            Lock.EnterReadLock();
+            try
+            {
+                CacheHandle cacheHandle;
+                using (TimedLock.Lock(Dictionary))
+                    if (Dictionary.TryGetValue(key, out cacheHandle))
+                        return cacheHandle;
+            }
+            finally
+            {
+                Lock.ExitReadLock();
+            }
+
+            Lock.EnterWriteLock();
+            try
+            {
+                // Get or create the cache handle
+                CacheHandle cacheHandle;
                 if (!Dictionary.TryGetValue(key, out cacheHandle))
                 {
                     cacheHandle = new CacheHandle(this, key);
                     Dictionary[key] = cacheHandle;
                 }
 
-            return cacheHandle;
+                return cacheHandle;
+            }
+            finally
+            {
+                Lock.ExitWriteLock();
+            }
         }
 
         /// <summary>
@@ -136,7 +158,9 @@ namespace ObjectCloud.Common
         {
             // Get cache handle if it exists
             CacheHandle cacheHandle;
-            using (TimedLock.Lock(Dictionary))
+
+            Lock.EnterWriteLock();
+            try
             {
                 if (Dictionary.TryGetValue(key, out cacheHandle))
                     Dictionary.Remove(key);
@@ -152,6 +176,10 @@ namespace ObjectCloud.Common
                 if (cached is IDisposable)
                     ((IDisposable)cached).Dispose();
             }
+            finally
+            {
+                Lock.ExitWriteLock();
+            }
 
             return true;
         }
@@ -161,13 +189,18 @@ namespace ObjectCloud.Common
         /// </summary>
         public void Clear()
         {
-            using (TimedLock.Lock(Dictionary))
+            Lock.EnterWriteLock();
+            try
             {
                 foreach (TValue value in Values)
                     if (value is IDisposable)
                         ((IDisposable)value).Dispose();
 
                 Dictionary.Clear();
+            }
+            finally
+            {
+                Lock.ExitWriteLock();
             }
         }
 
@@ -178,10 +211,17 @@ namespace ObjectCloud.Common
         {
             get
             {
-                List<CacheHandle> toEnumerate;
+                LinkedList<CacheHandle> toEnumerate;
 
-                using (TimedLock.Lock(Dictionary))
-                    toEnumerate = new List<CacheHandle>(Dictionary.Values);
+                Lock.EnterReadLock();
+                try
+                {
+                    toEnumerate = new LinkedList<CacheHandle>(Dictionary.Values);
+                }
+                finally
+                {
+                    Lock.ExitReadLock();
+                }
 
                 foreach (CacheHandle cacheHandle in toEnumerate)
                 {
@@ -237,16 +277,23 @@ namespace ObjectCloud.Common
             /// <summary>
             /// Helper to help the cache get rid of stale CacheHandles, returns false if the object is no longer cached and completely collected
             /// </summary>
+            /// <returns>True if the object should be removed from HandlesPendingGC</returns>
             public bool RemoveIfNotAlive()
             {
-                using (TimedLock.Lock(this))
-                    if (NumAccesses > 0)
-                        return true;
+                if (NumAccesses > 0)
+                    return true;
 
                 if (!WeakReference.IsAlive)
                 {
-                    using (TimedLock.Lock(ParentCache.Dictionary))
+                    ParentCache.Lock.EnterWriteLock();
+                    try
+                    {
                         ParentCache.Dictionary.Remove(Key);
+                    }
+                    finally
+                    {
+                        ParentCache.Lock.ExitWriteLock();
+                    }
 
                     return true;
                 }
