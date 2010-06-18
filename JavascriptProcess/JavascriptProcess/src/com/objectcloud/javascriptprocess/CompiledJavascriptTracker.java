@@ -36,10 +36,10 @@ public class CompiledJavascriptTracker {
 		
         Object[] classFiles;
         
-    	// TODO:  Not sure if this needs to be synched
-    	synchronized (classCompiler) {
-    		classFiles = classCompiler.compileToClassFiles(script, "<cmd>", 0, "com.objectcloud.javascript.generated_" + new Integer(script.hashCode()).toString());
-    	}
+        long hashCode = script.hashCode();
+        hashCode = hashCode - Integer.MIN_VALUE;
+        
+   		classFiles = classCompiler.compileToClassFiles(script, "<cmd>", 0, "com.objectcloud.javascript.generated_" + new Long(hashCode).toString());
         
     	// Load all of the generated classes from Rhino's weirdo return format
     	Class<?> nativeFunctionClass = classLoader.loadClass((byte[])classFiles[1]);
@@ -52,6 +52,9 @@ public class CompiledJavascriptTracker {
 
 	private final HashMap<String, NativeFunction> scripts = new HashMap<String, NativeFunction>(); 
 	
+	// Only lets one thread compile at a time
+	private final Object CompileKey = new Object();
+	
 	public NativeFunction getGetOrCompileScript(String script) throws Exception {
 		
 		synchronized (scripts) {
@@ -59,15 +62,20 @@ public class CompiledJavascriptTracker {
 				return scripts.get(script);
 		}
 		
-		NativeFunction toReturn = compile(script);
+		synchronized (CompileKey) {
+
+			synchronized (scripts) {
+				if (scripts.containsKey(script))
+					return scripts.get(script);
+			}
+			
+			NativeFunction toReturn = compile(script);
 		
-		synchronized (scripts) {
-			if (scripts.containsKey(script))
-				return scripts.get(script);
-			else
+			synchronized (scripts) {
 				scripts.put(script, toReturn);
+			}
+
+			return toReturn;
 		}
-		
-		return toReturn;
 	}
 }

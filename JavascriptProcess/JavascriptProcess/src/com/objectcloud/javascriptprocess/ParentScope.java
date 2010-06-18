@@ -8,6 +8,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONString;
+import org.mozilla.javascript.Callable;
 import org.mozilla.javascript.ClassShutter;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
@@ -51,6 +52,9 @@ public class ParentScope {
 	        } catch (SecurityException se) {}
 
             scope = context.initStandardObjects();
+            
+            // Load custom version of eval
+            scope.put("eval", scope, new EvalCallable());
 
             // Load JSON methods
             Json2 json2 = new Json2();
@@ -103,6 +107,34 @@ public class ParentScope {
 		} finally {
             Context.exit();
         }
+	}
+	
+	private final static CompiledJavascriptTracker compiledJavascriptTracker = CompiledJavascriptTracker.getInstance();
+	
+	private class EvalCallable implements Callable {
+
+		@Override
+		public Object call(Context context, Scriptable scope, Scriptable thisObj, Object[] args) {
+			
+			String script = args[0].toString();
+			
+			if (script.length() < 15)
+				return context.evaluateString(scope, args[0].toString(), "<cmd>", 0, null);
+			else {
+				NativeFunction nativeFunction;
+				
+				try {
+					nativeFunction = compiledJavascriptTracker.getGetOrCompileScript(script);
+				} catch (RuntimeException re) {
+					throw re;
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+				
+				return nativeFunction.call(context, scope, thisObj, null);
+			}
+		}
+		
 	}
 	
 	/* // Uncomment to test stderr
