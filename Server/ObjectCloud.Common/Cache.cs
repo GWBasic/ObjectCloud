@@ -257,16 +257,14 @@ namespace ObjectCloud.Common
             /// <summary>
             /// The number of times this object has been accessed, minus the times the object was removed from the access queue.  When this is zero, the cache will no longer reference the object
             /// </summary>
-            uint NumAccesses = 0;
+            int NumAccesses = 0;
 
             /// <summary>
             /// Increments the number of accesses to this object, thus helping fix its place in RAM
             /// </summary>
             public void IncrementAccesses()
             {
-                using (TimedLock.Lock(this))
-                    NumAccesses++;
-
+                Interlocked.Increment(ref NumAccesses);
                 Cache.MonitorCacheHandle(this);
             }
 
@@ -276,15 +274,10 @@ namespace ObjectCloud.Common
             /// <returns>True if the cache handle is no longer holding a strong reference</returns>
             public bool DecrementAccesses()
             {
-                using (TimedLock.Lock(this))
+                if (0 == Interlocked.Decrement(ref NumAccesses))
                 {
-                    NumAccesses--;
-
-                    if (NumAccesses <= 0)
-                    {
-                        Value = null;
-                        return true;
-                    }
+                    Value = null;
+                    return true;
                 }
 
                 return false;
@@ -308,20 +301,21 @@ namespace ObjectCloud.Common
             /// </summary>
             internal TValue GetValue(TConstructorArg constructorArg)
             {
+                // If the value is still alive, increment counter without a lock, make sure the value stays alive, and return it
+                TValue value = (TValue)WeakReference.Target;
+                if (null != Value)
+                {
+                    IncrementAccesses();
+                    Value = value;
+                    return value;
+                }
+
                 using (TimedLock.Lock(this))
                 {
-                    // If the value is known to be in the cache
-                    if (NumAccesses > 0)
-                    {
-                        IncrementAccesses();
-                        return Value;
-                    }
+                    // A context switch could construct the value in another thread
+                    value = (TValue)WeakReference.Target;
 
-                    // The value isn't in the cache, but if it's still in memory due to the weak reference, re-use it, else re-construct it
-
-                    Value = (TValue)WeakReference.Target;
-
-                    if (null == Value)
+                    if (null == value)
                     {
                         Value = ParentCache._CreateForCache(Key, constructorArg);
                         WeakReference.Target = Value;
@@ -406,17 +400,37 @@ namespace ObjectCloud.Common
         /// <summary>
         /// The absolute maximum cache references allowed
         /// </summary>
-        public static int MaxCacheReferences
+        public static long MaxCacheReferences
         {
             get { return Cache._MaxCacheReferences; }
             set { Cache._MaxCacheReferences = value; }
         }
-        private static int _MaxCacheReferences = int.MaxValue;
+        private static long _MaxCacheReferences = long.MaxValue;
+
+        /// <summary>
+        /// The number of times that the cache is used prior to when RAM and garbage collections are inspected
+        /// </summary>
+        public static int CacheHitsPerInspection
+        {
+            get { return Cache._CacheHitsPerInspection; }
+            set { Cache._CacheHitsPerInspection = value; }
+        }
+        private static int _CacheHitsPerInspection = 20000;
+
+        /// <summary>
+        /// Counter that is maintained to count cache hits.  When 0 == CacheHitsPerInspection mod CacheHitCount, then memory use is inspected
+        /// </summary>
+        private static int CacheHitCount = int.MinValue;
+
+        /// <summary>
+        /// The number of objects to dequeue every time there is a cache hit
+        /// </summary>
+        public static uint NumObjectsToDequeue = 0;
 
         /// <summary>
         /// A queue of all of the cached objects.  Weak references are used in case a cache instance removes an item, or in case a cache instance is de-referenced.
         /// </summary>
-        private static Queue<WeakReference> CachedReferences = new Queue<WeakReference>();
+        private static LockFreeQueue_WithCount<WeakReference> CachedReferences = new LockFreeQueue_WithCount<WeakReference>();
 
         /// <summary>
         /// Adds the cache handle to the set of monitored cache handles in a non-blocking way
@@ -424,11 +438,17 @@ namespace ObjectCloud.Common
         /// <param name="toMonitor"></param>
         internal static void MonitorCacheHandle(ICacheHandle toMonitor)
         {
-            DelegateQueue.QueueUserWorkItem(delegate(object state)
-            {
-                DoCacheQueue((ICacheHandle)state);
-            },
-            toMonitor);
+            CachedReferences.Enqueue(new WeakReference(toMonitor));
+
+            WeakReference wr;
+            for (uint ctr = 0; ctr < NumObjectsToDequeue; ctr++)
+                // Don't clean if we haven't reached the minimum
+                if (CachedReferences.Count > MinCacheReferences)
+                    if (CachedReferences.Dequeue(out wr))
+                        Decrement(wr);
+
+            if (0 == Interlocked.Increment(ref CacheHitCount) % CacheHitsPerInspection)
+                ThreadPool.QueueUserWorkItem(DoCacheQueue);
         }
 
         /// <summary>
@@ -450,7 +470,7 @@ namespace ObjectCloud.Common
         /// Adds a cache handle to the queue, and removes any references if memory use is getting high
         /// </summary>
         /// <param name="cacheHandle"></param>
-        private static void DoCacheQueue(ICacheHandle cacheHandle)
+        private static void DoCacheQueue(object state)
         {
             // TODO:  So, this really should be a doubly-linked list that always moves itself to the head once it's referenced.
             // It should somehow use weak references to the containing Cache object so it isn't kept alive.  The Cache object's finalizer could
@@ -460,41 +480,40 @@ namespace ObjectCloud.Common
 
             try
             {
-                CachedReferences.Enqueue(new WeakReference(cacheHandle));
-
-                // Get rid of any excess cahced references
-                while (CachedReferences.Count > MaxCacheReferences)
-                    Decrement(CachedReferences.Dequeue());
-
-                double maxWorkingSet = PercentOfMaxWorkingSet * (Convert.ToDouble(MyProcess.MaxWorkingSet.ToInt64()) / 0.001024);
-
-                long maxMemory = null != MaxMemory ? MaxMemory.Value : Convert.ToInt64(maxWorkingSet);
-
-                long processMemorySize = GC.GetTotalMemory(false);
-
-                // If too much memory is used, force a GC to get a better estimate
-                if (processMemorySize >= maxMemory)
+                using (TimedLock.Lock(CachedReferences))
                 {
-                    processMemorySize = GC.GetTotalMemory(true);
+                    // Get rid of any excess cahced references
+                    WeakReference wr;
+                    while (CachedReferences.Count > MaxCacheReferences)
+                        if (CachedReferences.Dequeue(out wr))
+                            Decrement(wr);
 
-                    log.WarnFormat("Dumping Cache:\tProcess Memory: {0}\n\tMax Memory: {1}\n\tMax Working Set: {2}",
-                        processMemorySize, maxMemory, MyProcess.MaxWorkingSet);
+                    double maxWorkingSet = PercentOfMaxWorkingSet * (Convert.ToDouble(MyProcess.MaxWorkingSet.ToInt64()) / 0.001024);
 
+                    long maxMemory = null != MaxMemory ? MaxMemory.Value : Convert.ToInt64(maxWorkingSet);
+
+                    long processMemorySize = GC.GetTotalMemory(false);
+
+                    // If too much memory is used, force a GC to get a better estimate
                     if (processMemorySize >= maxMemory)
                     {
-                        while (CachedReferences.Count > MaxCacheReferences)
-                            Decrement(CachedReferences.Dequeue());
+                        processMemorySize = GC.GetTotalMemory(true);
 
-                        return;
+                        log.WarnFormat("Dumping Cache:\tProcess Memory: {0}\n\tMax Memory: {1}\n\tMax Working Set: {2}",
+                            processMemorySize, maxMemory, MyProcess.MaxWorkingSet);
+
+                        if (processMemorySize >= maxMemory)
+                            while (CachedReferences.Count > MinCacheReferences)
+                                if (CachedReferences.Dequeue(out wr))
+                                    Decrement(wr);
                     }
-                }
 
-                IEnumerable<long> memorySizeLimits;
+                    IEnumerable<long> memorySizeLimits;
 
-                if (null != MemorySizeLimits)
-                    memorySizeLimits = MemorySizeLimits;
-                else
-                    memorySizeLimits = new long[]
+                    if (null != MemorySizeLimits)
+                        memorySizeLimits = MemorySizeLimits;
+                    else
+                        memorySizeLimits = new long[]
                     {
                         Convert.ToInt64(maxWorkingSet * 0.6),
                         Convert.ToInt64(maxWorkingSet * 0.8),
@@ -503,16 +522,17 @@ namespace ObjectCloud.Common
                         Convert.ToInt64(maxWorkingSet * 0.95)
                     };
 
-                foreach (long memoryLevel in memorySizeLimits)
-                    if (processMemorySize >= memoryLevel)
+                    uint numObjectsToDequeue = 0;
+                    foreach (long memoryLevel in memorySizeLimits)
+                        if (processMemorySize >= memoryLevel)
+                            numObjectsToDequeue++;
 
-                        // Don't clean if we haven't reached the minimum
-                        if (CachedReferences.Count > MinCacheReferences)
-                            Decrement(CachedReferences.Dequeue());
+                    NumObjectsToDequeue = numObjectsToDequeue;
 
-                // If the garbage collector has run, clean up dead weak references
-                while (LastCleanCollectionCount != GC.CollectionCount(GC.MaxGeneration))
-                    MonitorHandlesForGC();
+                    // If the garbage collector has run, clean up dead weak references
+                    while (LastCleanCollectionCount != GC.CollectionCount(GC.MaxGeneration))
+                        MonitorHandlesForGC();
+                }
             }
             catch (Exception e)
             {
@@ -528,20 +548,14 @@ namespace ObjectCloud.Common
         {
             ICacheHandle cacheHandle = (ICacheHandle)cacheHandleWR;
 
-            if (null != cacheHandle)
-            {
-                if (cacheHandle.DecrementAccesses())
-                    HandlesPendingGC.Add(new WeakReference(cacheHandle));
-            }
-            else
-                // If a cache handle has been garbage collected, clean out all dead weak references
-                MonitorHandlesForGC();
+            if (cacheHandle.DecrementAccesses())
+                HandlesPendingGC.Enqueue(new WeakReference(cacheHandle));
         }
 
         /// <summary>
         /// All of the handles that are waiting for a GC
         /// </summary>
-        private static Set<WeakReference> HandlesPendingGC = new Set<WeakReference>();
+        private static LockFreeQueue<WeakReference> HandlesPendingGC = new LockFreeQueue<WeakReference>();
 
         /// <summary>
         /// Monitors all of the handles to see if they've been GCed, if so, they are removed
@@ -562,19 +576,19 @@ namespace ObjectCloud.Common
                         CachedReferences.Enqueue(toCheck);
                 }
 
-                IEnumerable<WeakReference> toEnumerate = new LinkedList<WeakReference>(HandlesPendingGC);
+                // Next, look at all of the cache handles that are pending GC.  If their cached value is collected, then
+                // remove the handle completely from memory
+                LockFreeQueue<WeakReference> oldHandlesPendingGC = HandlesPendingGC;
+                HandlesPendingGC = new LockFreeQueue<WeakReference>();
 
-                foreach (WeakReference cacheHandleWR in toEnumerate)
+                WeakReference cacheHandleWR;
+                while (oldHandlesPendingGC.Dequeue(out cacheHandleWR))
                 {
                     ICacheHandle cacheHandle = (ICacheHandle)cacheHandleWR.Target;
 
                     if (null != cacheHandle)
-                    {
-                        if (cacheHandle.RemoveIfNotAlive())
-                            HandlesPendingGC.Remove(cacheHandleWR);
-                    }
-                    else
-                        HandlesPendingGC.Remove(cacheHandleWR);
+                        if (!cacheHandle.RemoveIfNotAlive())
+                            HandlesPendingGC.Enqueue(cacheHandleWR);
                 }
             }
             catch (Exception e)

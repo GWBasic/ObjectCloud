@@ -184,7 +184,7 @@ namespace ObjectCloud.Interfaces.WebServer
         /// <summary>
         /// The maximum number of references to hold in the cache
         /// </summary>
-        int CacheRAMMaxReferences { get; set; }
+        long CacheRAMMaxReferences { get; set; }
 
         /// <summary>
         /// The exception that terminated the web server

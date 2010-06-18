@@ -411,7 +411,7 @@ namespace ObjectCloud.Interfaces.WebServer
             }
         }
 
-        public int CacheRAMMaxReferences
+        public long CacheRAMMaxReferences
         {
             get
             {

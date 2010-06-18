@@ -129,14 +129,7 @@ namespace ObjectCloud.Common.Threading
         public override void Enqueue(T item)
         {
             base.Enqueue(item);
-
-            long count;
-            long oldCount;
-            do
-            {
-                oldCount = _Count;
-                count = oldCount + 1;
-            } while (oldCount != Interlocked.CompareExchange(ref _Count, count, oldCount));
+            Interlocked.Increment(ref _Count);
         }
 
         public override bool Dequeue(out T item)
@@ -144,15 +137,7 @@ namespace ObjectCloud.Common.Threading
             bool dequeued = base.Dequeue(out item);
 
             if (dequeued)
-            {
-                long count;
-                long oldCount;
-                do
-                {
-                    oldCount = _Count;
-                    count = oldCount - 1;
-                } while (oldCount != Interlocked.CompareExchange(ref _Count, count, oldCount));
-            }
+                Interlocked.Decrement(ref _Count);
 
             return dequeued;
         }
