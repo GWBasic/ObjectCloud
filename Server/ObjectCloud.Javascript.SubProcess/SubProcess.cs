@@ -850,8 +850,8 @@ namespace ObjectCloud.Javascript.SubProcess
 			throw new ObjectDisposedException("The sub processes has exited");
         }
 
-		/*
-	// Alternate version of WaitForResponse that has less locking, not sure if this is causing problems or not
+			/*
+			 * Alternet version of WaitForResponse
 		/// <summary>
 		/// The most recent command returned from the sub process
 		/// </summary>
@@ -861,6 +861,11 @@ namespace ObjectCloud.Javascript.SubProcess
 		/// The thread that has a result waiting for it
 		/// </summary>
 		int InCommandThreadId;
+		
+		/// <summary>
+		/// Used to block and unblock all threads that are waiting for a response 
+		/// </summary>
+		object WaitForResponsePulser = new object();
 		
 		/// <summary>
 		/// Syncronizes the sub process's output stream and returns the appropriate response
@@ -882,31 +887,54 @@ namespace ObjectCloud.Javascript.SubProcess
 					}
 				
 				// Only 1 thread can read from the sub process at a time
-				// all threads spin while waiting for a response
-				if (null == InCommand)
-					lock (RespondKey)
-						if (null == InCommand)
+				
+				if (Monitor.TryEnter(RespondKey))
+					try
+					{
+						if (Process.StandardOutput.EndOfStream || Process.HasExited)
+							throw new JavascriptException("The sub process has exited");
+				
+						string inCommandString = _Process.StandardOutput.ReadLine();
+						
+						if (null == inCommandString)
+							log.Warn("Null recieved from sub process");
+						else
 						{
-							// else, if there isn't a waiting response that came in on another thread, and if there aren't waiting responses, wait for a response
-							if (Process.StandardOutput.EndOfStream || Process.HasExited)
-								throw new JavascriptException("The sub process has exited");
-					
-							string inCommandString = _Process.StandardOutput.ReadLine();
-							
-							if (null == inCommandString)
-								log.Warn("Null recieved from sub process");
-							else
+							// Spin while another thread hasn't picked up its result
+							DateTime killTime = DateTime.UtcNow.AddSeconds(30);
+							while (null != InCommand)
 							{
-								InCommand = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
-								InCommandThreadId = Convert.ToInt32(InCommand["ThreadID"]);
+								if (DateTime.UtcNow > killTime)
+								{
+									// If this thread spins for more then 30 seconds waiting for another thread to pick up its result,
+									// then the server is borked.  This should never happen
+									log.FatalFormat("Thread {0} has a pending result from Javascript, but it didn't pick it up!!!", InCommandThreadId);
+									
+									Thread.Sleep(1000);
+									System.Environment.Exit(-1);
+								}
+							
+								Thread.Sleep(0);
 							}
+						
+							InCommand = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
+							InCommandThreadId = Convert.ToInt32(InCommand["ThreadID"]);
+
+							lock (WaitForResponsePulser)
+								Monitor.PulseAll(WaitForResponsePulser);
 						}
+					}
+					finally
+					{
+						Monitor.Exit(RespondKey);
+					}
 				else
-					Thread.Sleep(0);
+					lock (WaitForResponsePulser)
+						if (null == InCommand)
+							Monitor.Wait(WaitForResponsePulser, 250);
 				
 			} while (true);
-		} 
-		*/
+		} */
 		
         /// <summary>
         /// Represents an undefined value
