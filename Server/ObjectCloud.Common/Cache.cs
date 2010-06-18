@@ -500,7 +500,7 @@ namespace ObjectCloud.Common
                         Decrement(wr);
 
             if (0 == Interlocked.Increment(ref CacheHitCount) % CacheHitsPerInspection)
-                ThreadPool.QueueUserWorkItem(DoCacheQueue);
+                ThreadPool.QueueUserWorkItem(CleanupCache);
         }
 
         /// <summary>
@@ -513,11 +513,15 @@ namespace ObjectCloud.Common
         /// </summary>
         private static int LastCleanCollectionCount = GC.CollectionCount(GC.MaxGeneration);
 
+		/// <summary>
+		/// Synchronizes CleanupCache 
+		/// </summary>
+		private static object CleanupCacheKey = new object();
+		
         /// <summary>
         /// Adds a cache handle to the queue, and removes any references if memory use is getting high
         /// </summary>
-        /// <param name="cacheHandle"></param>
-        private static void DoCacheQueue(object state)
+        private static void CleanupCache(object state)
         {
             // TODO:  So, this really should be a doubly-linked list that always moves itself to the head once it's referenced.
             // It should somehow use weak references to the containing Cache object so it isn't kept alive.  The Cache object's finalizer could
@@ -525,10 +529,10 @@ namespace ObjectCloud.Common
             // Likewise, when switching to doubly-linked-lists, the system should be less likely to de-reference an object when
             // moving within the doubly-linked list; as opposed to creating a new reference.
 
-            try
-            {
-                using (TimedLock.Lock(CachedReferences))
-                {
+			// Only let one thread perform cleanup at a time, and don't let blocked iterations sit around
+			if (Monitor.TryEnter(CleanupCacheKey))
+	            try
+    		        {
                     // Get rid of any excess cahced references
                     WeakReference wr;
                     while (CachedReferences.Count > MaxCacheReferences)
@@ -580,11 +584,14 @@ namespace ObjectCloud.Common
                     while (LastCleanCollectionCount != GC.CollectionCount(GC.MaxGeneration))
                         MonitorHandlesForGC();
                 }
-            }
-            catch (Exception e)
-            {
-                log.Error("Error in the RAM cache!!!", e);
-            }
+	            catch (Exception e)
+    		        {
+            		    log.Error("Error in the RAM cache!!!", e);
+            		}
+				finally
+				{
+					Monitor.Exit(CleanupCacheKey);
+				}
         }
 
         /// <summary>
