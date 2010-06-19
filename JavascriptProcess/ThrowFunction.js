@@ -1,4 +1,7 @@
-return new function(toThrow)
+try
 {
-   throw toThrow;
-};
+   toThrow = JSON.parse(toThrow);
+}
+catch (exception) {}
+
+throw toThrow;

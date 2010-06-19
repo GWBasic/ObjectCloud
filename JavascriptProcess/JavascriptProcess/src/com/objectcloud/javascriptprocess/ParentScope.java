@@ -103,7 +103,7 @@ public class ParentScope {
 			
 			// This makes the parent scope sealed and immutable
 			scope.sealObject();
-
+			
 		} finally {
             Context.exit();
         }
@@ -195,7 +195,12 @@ public class ParentScope {
 		return functions;
 	}
 
-	/*public Function getThrowFunction() {
-		return throwFunction;
-	}*/
+	// Creates an empty scope
+	public Scriptable createDummyScope(Context context) {
+		Scriptable dummyScope = context.newObject(scope);
+		dummyScope.setPrototype(scope);
+		dummyScope.setParentScope(null);
+		
+		return dummyScope;
+	}
 }

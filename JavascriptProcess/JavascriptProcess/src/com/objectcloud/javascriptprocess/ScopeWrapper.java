@@ -44,6 +44,7 @@ public class ScopeWrapper {
 	private final Map<Object, Object> cachedObjects = new HashMap<Object, Object>();
 	private final ParentScope parentScope;
 	private static final CompiledJavascriptTracker compiledJavascriptTracker = CompiledJavascriptTracker.getInstance();
+	private static final ThrowFunction throwFunction = new ThrowFunction();
 	
 	static Random random = new Random();
 	
@@ -443,10 +444,10 @@ public class ScopeWrapper {
 					
 					if (dataFromParent.has("Exception")) {
 						
-						// First, try throwing the exception in Javascript
-						context.evaluateString(scope, "throw " + dataFromParent.get("Exception").toString() + ";", "<cmd>", 1, null);
-						//Object toThrow = jsonParseFunction.call(context, scope, scope, new Object[] { dataFromParent.get("Exception").toString() });
-						//parentScope.getThrowFunction().call(context, scope, scope, new Object[] { toThrow });
+						// Try to throw the exception in Javascript
+						Scriptable exceptionScope = parentScope.createDummyScope(context);
+						exceptionScope.put("toThrow", exceptionScope, dataFromParent.get("Exception").toString());
+						throwFunction.call(context, exceptionScope, exceptionScope, null);
 						
 						// if that didn't throw, then throw a meaner exception
 						throw new RuntimeException(dataFromParent.get("Exception").toString());
