@@ -893,6 +893,8 @@ namespace ObjectCloud.Disk.WebHandlers
 
             using (TimedLock.Lock(ActiveCometTransports))
                 ActiveCometTransports[id] = toReturn;
+			
+			session.RegisterCometTransport(toReturn.CometTransport);
 
             toReturn.LastUsed = DateTime.UtcNow;
 

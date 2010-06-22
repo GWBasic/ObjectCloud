@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -86,5 +86,16 @@ namespace ObjectCloud.Interfaces.Security
         {
             throw new SecurityException("TouchedFilesForUrl not supported in a shell session");
         }
+
+		void ISession.RegisterCometTransport (ObjectCloud.Interfaces.WebServer.ICometTransport cometTransport)
+        {
+        }
+        
+        int ISession.MaxCometTransports
+		{
+        		get { return _MaxCometTransports; }
+			set { _MaxCometTransports = value; }
+        }
+        int _MaxCometTransports = int.MaxValue;
     }
 }

@@ -12,6 +12,7 @@ using ObjectCloud.Common.Threading;
 using ObjectCloud.DataAccess.SessionManager;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
+using ObjectCloud.Interfaces.WebServer;
 
 using ISession = ObjectCloud.Interfaces.Security.ISession;
 
@@ -159,5 +160,32 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             return SessionId.GetHashCode();
         }
+
+		/// <summary>
+		/// All of the running comet transports 
+		/// </summary>
+		private LockFreeQueue_WithCount<ICometTransport> RunningCometTransports = new LockFreeQueue_WithCount<ICometTransport>();
+		
+		public void RegisterCometTransport (ICometTransport cometTransport)
+        {
+			RunningCometTransports.Enqueue(cometTransport);
+			
+			if (RunningCometTransports.Count > MaxCometTransports)
+			{
+				ICometTransport toDispose;
+				if (RunningCometTransports.Dequeue(out toDispose))
+				{
+					toDispose.Dispose();
+					toDispose.GetDataToSend();
+				}
+			}
+        }
+        
+        public int MaxCometTransports
+		{
+        		get { return _MaxCometTransports; }
+			set { _MaxCometTransports = value; }
+        }
+        int _MaxCometTransports = 3;
     }
 }
