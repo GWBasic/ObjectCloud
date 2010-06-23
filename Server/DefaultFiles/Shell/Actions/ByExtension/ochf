@@ -1,0 +1,5 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<NameValuePairs>
+	<NameValuePair Name="View" Value="/System/TemplateEngine?Method=Evaluate&amp;filename=[Target]&amp;[Arguments], text/xml" />
+	<NameValuePair Name="Edit" Value="/Shell/Editors/Weco.wchtml?FileName=[Target]" />
+</NameValuePairs>

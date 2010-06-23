@@ -148,6 +148,9 @@
         <entry key="documentation">
           <ref object="FileHandlerFactory" />
         </entry>
+        <entry key="templateengine">
+          <ref object="FileHandlerFactory" />
+        </entry>
       </dictionary>
     </property>
 
@@ -243,6 +246,11 @@
         <entry key="documentation">
           <object type="System.Type" factory-method="GetType" id="documentationWebHandlerType">
             <constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.DocumentationWebHandler, ObjectCloud.Disk.WebHandlers" />
+          </object>
+        </entry>
+        <entry key="templateengine">
+          <object type="System.Type" factory-method="GetType" id="templateengineType">
+            <constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.TemplateEngine, ObjectCloud.Disk.WebHandlers" />
           </object>
         </entry>
 

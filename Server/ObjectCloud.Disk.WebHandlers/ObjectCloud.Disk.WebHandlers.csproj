@@ -51,6 +51,7 @@
     <Compile Include="ImageWebHandler.cs" />
     <Compile Include="NameValuePairsWebHandler.cs" />
     <Compile Include="SessionManagerWebHandler.cs" />
+    <Compile Include="TemplateEngine.cs" />
     <Compile Include="TextWebHandler.cs" />
     <Compile Include="UserManagerWebHandler.cs" />
     <Compile Include="UserWebHandler.cs" />

@@ -388,6 +388,22 @@ namespace ObjectCloud.Disk.Implementation
                     false);
             }
 
+            if (!systemDirectory.IsFilePresent("TemplateEngine"))
+            {
+                systemDirectory.CreateFile(
+                    "TemplateEngine",
+                    "templateengine",
+                    FileHandlerFactoryLocator.UserFactory.RootUser.Id);
+
+                systemDirectory.SetPermission(
+                    null,
+                    "TemplateEngine",
+                    FileHandlerFactoryLocator.UserFactory.Everybody.Id,
+                    FilePermissionEnum.Read,
+                    true,
+                    false);
+            }
+
             IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
             string groupFileName = FileHandlerFactoryLocator.UserFactory.Administrators.Name.ToLower() + ".group";
             if (!usersDirectory.IsFilePresent(groupFileName))
