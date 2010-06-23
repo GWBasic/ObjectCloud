@@ -164,28 +164,26 @@ namespace ObjectCloud.Disk.FileHandlers
 		/// <summary>
 		/// All of the running comet transports 
 		/// </summary>
-		private LockFreeQueue_WithCount<ICometTransport> RunningCometTransports = new LockFreeQueue_WithCount<ICometTransport>();
+		private LockFreeQueue_WithCount<WeakReference> RunningCometTransports = new LockFreeQueue_WithCount<WeakReference>();
 		
 		public void RegisterCometTransport (ICometTransport cometTransport)
         {
-			RunningCometTransports.Enqueue(cometTransport);
+			RunningCometTransports.Enqueue(new WeakReference(cometTransport));
 			
-			if (RunningCometTransports.Count > MaxCometTransports)
+			if (RunningCometTransports.Count > SessionManagerHandler.MaxCometTransports)
 			{
-				ICometTransport toDispose;
-				if (RunningCometTransports.Dequeue(out toDispose))
+				WeakReference wr;
+				if (RunningCometTransports.Dequeue(out wr))
 				{
-					toDispose.Dispose();
-					toDispose.GetDataToSend();
+					ICometTransport toDispose = (ICometTransport)wr.Target;
+					
+					if (null != toDispose)
+					{
+						toDispose.Dispose();
+						toDispose.GetDataToSend();
+					}
 				}
 			}
         }
-        
-        public int MaxCometTransports
-		{
-        		get { return _MaxCometTransports; }
-			set { _MaxCometTransports = value; }
-        }
-        int _MaxCometTransports = 3;
     }
 }

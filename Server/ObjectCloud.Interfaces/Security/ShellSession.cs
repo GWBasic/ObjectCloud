@@ -91,7 +91,7 @@ namespace ObjectCloud.Interfaces.Security
         {
         }
         
-        int ISession.MaxCometTransports
+        public int MaxCometTransports
 		{
         		get { return _MaxCometTransports; }
 			set { _MaxCometTransports = value; }

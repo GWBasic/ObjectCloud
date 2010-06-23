@@ -70,10 +70,5 @@ namespace ObjectCloud.Interfaces.Security
 		/// A <see cref="ICometTransport"/>
 		/// </param>
 		void RegisterCometTransport(ICometTransport cometTransport);
-		
-		/// <summary>
-		/// The maximum comet transports allowed until old ones get killed 
-		/// </summary>
-		int MaxCometTransports {get; set; }
     }
 }

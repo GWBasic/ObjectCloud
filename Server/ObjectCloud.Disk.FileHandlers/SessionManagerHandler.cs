@@ -119,5 +119,12 @@ namespace ObjectCloud.Disk.FileHandlers
 
             base.Dispose();
         }
+        
+        public int MaxCometTransports
+		{
+        	get { return _MaxCometTransports; }
+			set { _MaxCometTransports = value; }
+        }
+        int _MaxCometTransports = 3;
     }
 }

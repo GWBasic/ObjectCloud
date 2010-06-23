@@ -40,5 +40,10 @@ namespace ObjectCloud.Interfaces.Disk
         /// Removes old sessions.  This is normally called every hour or so automatically
         /// </summary>
         void CleanOldSessions();
+		
+		/// <summary>
+		/// The maximum comet transports allowed until old ones get killed 
+		/// </summary>
+		int MaxCometTransports {get; set; }
     }
 }
