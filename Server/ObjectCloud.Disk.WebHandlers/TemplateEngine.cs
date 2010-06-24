@@ -32,7 +32,15 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.Primitive, FilePermissionEnum.Read)]
         public IWebResults Evaluate(IWebConnection webConnection, string filename)
         {
-            return WebResults.FromString(Status._200_OK, EvaluateToString(webConnection.GetParameters, filename));
+            EvaluateToString(
+                webConnection.GetParameters, 
+                filename, 
+                delegate(string results)
+                {
+                    webConnection.SendResults(WebResults.FromString(Status._200_OK, results));
+                });
+
+            return null;
         }
 
         /// <summary>
@@ -40,9 +48,10 @@ namespace ObjectCloud.Disk.WebHandlers
         /// </summary>
         /// <param name="getParameters"></param>
         /// <param name="filename"></param>
+        /// <param name="resultsCallback"></param>
         /// <returns></returns>
         [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.Primitive, FilePermissionEnum.Read)]
-        public string EvaluateToString(IDictionary<string, string> getParameters, string filename)
+        public void EvaluateToString(IDictionary<string, string> getParameters, string filename, GenericArgument<string> resultsCallback)
         {
             IFileContainer templateFileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(filename);
             IFileHandler templateFileHandler = templateFileContainer.FileHandler;
@@ -105,7 +114,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 }
             }
 
-            return templateDocument.OuterXml; //.w .ToString();
+            resultsCallback(templateDocument.OuterXml);
         }
 
         /// <summary>
