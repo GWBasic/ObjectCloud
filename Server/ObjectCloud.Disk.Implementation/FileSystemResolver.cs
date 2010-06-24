@@ -438,5 +438,28 @@ namespace ObjectCloud.Disk.Implementation
 		/// Occurs after the file system stops 
 		/// </summary>
 		public event EventHandler<IFileSystemResolver, EventArgs> Stopped;
+
+        /// <summary>
+        /// TODO:  This is hideously incomplete
+        /// </summary>
+        /// <param name="currentPath"></param>
+        /// <param name="toResolve"></param>
+        /// <returns></returns>
+        public string GetAbsolutePath(string currentPath, string toResolve)
+        {
+            if (toResolve.StartsWith("/"))
+                return toResolve;
+
+            if (currentPath.EndsWith("/"))
+                currentPath = currentPath.Substring(0, currentPath.Length - 1);
+
+            while (toResolve.StartsWith("../"))
+            {
+                toResolve = toResolve.Substring(3);
+                currentPath = currentPath.Substring(0, currentPath.LastIndexOf('/') - 1);
+            }
+
+            return string.Format("{0}/{1}", currentPath, toResolve);
+        }
     }
 }

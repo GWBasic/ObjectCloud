@@ -57,18 +57,55 @@ namespace ObjectCloud.Disk.WebHandlers
             templateDocument.LoadXml(templateContents);
 
             // While the first node isn't HTML, keep loading header/footers
-            /*XmlNode firstChild = templateDocument.FirstChild;
-            while ("html" != firstChild.Name)
+            while ("html" != templateDocument.FirstChild.LocalName)
             {
+                XmlNode firstChild = templateDocument.FirstChild;
                 string headerFooter = "/DefaultTemplate/headerfooter.ochf";
 
-                if (("componentdef" == firstChild.Name) && (TemplateNamespace == firstChild.NamespaceURI))
+                XmlNodeList nodesToInsert;
+                if (("componentdef" == firstChild.LocalName) && (TemplateNamespace == firstChild.NamespaceURI))
                 {
-                    firstChild.Attributes.
-                }
-            }*/
+                    XmlAttribute headerFooterAttribue = firstChild.Attributes["headerfooter"];
+                    if (null != headerFooterAttribue)
+                        headerFooter = FileHandlerFactoryLocator.FileSystemResolver.GetAbsolutePath(
+                            templateFileContainer.ParentDirectoryHandler.FileContainer.FullPath,
+                            headerFooterAttribue.Value);
 
-            return templateContents;
+                    nodesToInsert = firstChild.ChildNodes;
+                }
+                else
+                    nodesToInsert = templateDocument.ChildNodes;
+
+                IFileContainer headerFooterContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(headerFooter);
+                if (!(headerFooterContainer.FileHandler is ITextHandler))
+                    throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, headerFooter + " must be a text file"));
+
+                templateContents = ReplaceGetParameters(getParameters, ((ITextHandler)headerFooterContainer.FileHandler).ReadAll());
+
+                templateDocument = new XmlDocument();
+                templateDocument.LoadXml(templateContents);
+
+                // find oc:component tag
+                XmlNodeList componentTags = templateDocument.GetElementsByTagName("component", TemplateNamespace);
+                for (int ctr = 0; ctr < componentTags.Count; ctr++)
+                {
+                    XmlNode componentNode = componentTags[ctr];
+
+                    if ((null == componentNode.Attributes["url"]) && (null == componentNode.Attributes["src"]))
+                    {
+                        // replace this node with the document
+                        foreach (XmlNode nodeToInsert in nodesToInsert)
+                        {
+                            XmlNode newNodeToInsert = templateDocument.ImportNode(nodeToInsert, true);
+                            componentNode.ParentNode.InsertAfter(newNodeToInsert, componentNode);
+                        }
+
+                        componentNode.ParentNode.RemoveChild(componentNode);
+                    }
+                }
+            }
+
+            return templateDocument.OuterXml; //.w .ToString();
         }
 
         /// <summary>

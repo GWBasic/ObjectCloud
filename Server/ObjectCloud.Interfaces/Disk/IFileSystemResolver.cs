@@ -137,6 +137,14 @@ namespace ObjectCloud.Interfaces.Disk
 		/// </param>
 		/// <exception cref="BadFileName">Thrown if the filename contains invalid characters</exception>
 		void VerifyNoForbiddenChars(string filename);
+
+        /// <summary>
+        /// Returns the abolute path of the given filename
+        /// </summary>
+        /// <param name="currentPath">The current path</param>
+        /// <param name="toResolve">The file to get the absolute path of</param>
+        /// <returns></returns>
+        string GetAbsolutePath(string currentPath, string toResolve);
     }
 
     /// <summary>
