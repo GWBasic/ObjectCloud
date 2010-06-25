@@ -134,6 +134,9 @@ namespace ObjectCloud
                                 fileContainer = fileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Classes");
                                 fileContainer.FileHandler.Dump(fileSystemDestination + Path.DirectorySeparatorChar + "Classes", fileHandlerFactoryLocator.UserManagerHandler.Root.Id);
 
+                                fileContainer = fileHandlerFactoryLocator.FileSystemResolver.ResolveFile("DefaultTemplate");
+                                fileContainer.FileHandler.Dump(fileSystemDestination + Path.DirectorySeparatorChar + "DefaultTemplate", fileHandlerFactoryLocator.UserManagerHandler.Root.Id);
+
                                 // This shouldn't be backed up
                                 //fileContainer = fileHandlerFactoryLocator.FileSystemResolver.ResolveFile("index.page");
                                 //fileContainer.FileHandler.Dump(fileSystemDestination + Path.DirectorySeparatorChar + "index.page", fileHandlerFactoryLocator.UserManagerHandler.Root.Id);

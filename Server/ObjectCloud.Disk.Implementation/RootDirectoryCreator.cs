@@ -185,6 +185,21 @@ namespace ObjectCloud.Disk.Implementation
                 true,
                 false);
 
+            // Create DefaultTemplate directory
+            rootDirectoryHandler.RestoreFile(
+                "DefaultTemplate",
+                "directory",
+                "." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "DefaultTemplate",
+                rootUser.Id);
+
+            rootDirectoryHandler.SetPermission(
+                null,
+                "DefaultTemplate",
+                everybody.Id,
+                FilePermissionEnum.Read,
+                true,
+                false);
+
             // Create index.wchtml
             rootDirectoryHandler.RestoreFile(
                 "index.page",
@@ -292,6 +307,24 @@ namespace ObjectCloud.Disk.Implementation
 
             dir = rootDirectoryHandler.OpenFile("Classes").FileHandler;
             dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Classes", false);
+
+            if (!rootDirectoryHandler.IsFilePresent("DefaultTemplate"))
+            {
+                rootDirectoryHandler.CreateFile(
+                    "DefaultTemplate",
+                    "directory",
+                    null);
+
+                rootDirectoryHandler.SetPermission(
+                    null,
+                    "DefaultTemplate",
+                    FileHandlerFactoryLocator.UserFactory.Everybody.Id,
+                    FilePermissionEnum.Read,
+                    true,
+                    false);
+            }
+            dir = rootDirectoryHandler.OpenFile("DefaultTemplate").FileHandler;
+            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "DefaultTemplate", false);
 
             // Do not syncronize the index file; this is for the user to update.  It's just a web component anyway
             //IFileHandler indexFile = rootDirectoryHandler.OpenFile("index.page").FileHandler;

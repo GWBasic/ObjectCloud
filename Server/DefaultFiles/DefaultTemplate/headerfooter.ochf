@@ -1,0 +1,8 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
+   <head>
+      <oc:title>ObjectCloud</oc:title>
+   </head>
+   <body>
+      <oc:component />
+   </body>
+</html>
