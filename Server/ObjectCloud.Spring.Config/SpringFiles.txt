@@ -3,3 +3,4 @@ Factories.xml
 Disk.xml
 Javascript.xml
 WebServer.xml
+TemplateConditions.xml

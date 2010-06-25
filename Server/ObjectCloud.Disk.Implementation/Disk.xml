@@ -92,7 +92,7 @@
 
     <!-- FileHandlerFactories are loaded by reference -->
 
-    <property name="fileHandlerFactories">
+    <property name="FileHandlerFactories">
       <dictionary key-type="String" value-type="ObjectCloud.Interfaces.Disk.IFileHandlerFactory, ObjectCloud.Interfaces">
         <entry key="directory">
           <ref object="DirectoryHandlerFactory" />
@@ -258,5 +258,6 @@
     </property>
 
     <property name="FileSystem" ref="FileSystem" />
+    <property name="TemplateHandlerLocator" ref="TemplateHandlerLocator" />
   </object>
 </objects>

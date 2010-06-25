@@ -227,5 +227,15 @@ namespace ObjectCloud.Interfaces.Disk
             set { _Plugins = value; }
         }
         private List<Plugin> _Plugins = new List<Plugin>();
+
+        /// <summary>
+        /// Provides information about templates
+        /// </summary>
+        public TemplateHandlerLocator TemplateHandlerLocator
+        {
+            get { return _TemplateHandlerLocator; }
+            set { _TemplateHandlerLocator = value; }
+        }
+        private TemplateHandlerLocator _TemplateHandlerLocator;
     }
 }

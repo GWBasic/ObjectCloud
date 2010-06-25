@@ -51,6 +51,17 @@
     <Compile Include="ImageWebHandler.cs" />
     <Compile Include="NameValuePairsWebHandler.cs" />
     <Compile Include="SessionManagerWebHandler.cs" />
+    <Compile Include="TemplateConditions\Can.cs" />
+    <Compile Include="TemplateConditions\CanAdminister.cs" />
+    <Compile Include="TemplateConditions\CanBase.cs" />
+    <Compile Include="TemplateConditions\CanPermission.cs" />
+    <Compile Include="TemplateConditions\CanRead.cs" />
+    <Compile Include="TemplateConditions\CanWrite.cs" />
+    <Compile Include="TemplateConditions\Else.cs" />
+    <Compile Include="TemplateConditions\IsAdministrator.cs" />
+    <Compile Include="TemplateConditions\IsLocal.cs" />
+    <Compile Include="TemplateConditions\IsLoggedIn.cs" />
+    <Compile Include="TemplateConditions\IsOpenID.cs" />
     <Compile Include="TemplateEngine.cs" />
     <Compile Include="TextWebHandler.cs" />
     <Compile Include="UserManagerWebHandler.cs" />
@@ -90,5 +101,11 @@
       <Name>ObjectCloud.ORM.DataAccess.SQLite</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="TemplateConditions.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

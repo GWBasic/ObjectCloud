@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Security;
 using System.Text;
+using System.Threading;
 using System.Xml;
 
 using Common.Logging;
@@ -106,54 +107,127 @@ namespace ObjectCloud.Disk.WebHandlers
             string filename,
             GenericArgument<string> resultsCallback)
         {
-            IFileContainer templateFileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(filename);
+            XmlDocument templateDocument = null;
 
-            webConnection.TouchedFiles.Add(templateFileContainer);
-
-            XmlDocument templateDocument = ResolveHeaderFooter(webConnection, getParameters, templateFileContainer);
-
-            CWDTracker cwdTracker = new CWDTracker();
-            cwdTracker.SetCWD(templateDocument, templateFileContainer.ParentDirectoryHandler.FileContainer.FullPath);
-            cwdTracker.SetCWD(templateDocument.ChildNodes, templateFileContainer.ParentDirectoryHandler.FileContainer.FullPath);
-
-            bool continueResolvingComponentsAndConditionals;
-
-            do
+            Thread myThread = Thread.CurrentThread;
+            TimerCallback timerCallback = delegate(object state)
             {
-                continueResolvingComponentsAndConditionals = false;
+                myThread.Abort();
+            };
 
-                XmlNodeList conditionalNodes = templateDocument.GetElementsByTagName("if", TemplateNamespace);
-                if (conditionalNodes.Count > 0)
+            using (new Timer(timerCallback, null, 15000, 15000))
+                try
                 {
-                    continueResolvingComponentsAndConditionals = true;
+                    IFileContainer templateFileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(filename);
 
-                    // TODO:  These should be evaluated
-                    for (int ctr = 0; ctr < conditionalNodes.Count; ctr++)
+                    webConnection.TouchedFiles.Add(templateFileContainer);
+
+                    templateDocument = ResolveHeaderFooter(webConnection, getParameters, templateFileContainer);
+
+                    CWDTracker cwdTracker = new CWDTracker();
+                    cwdTracker.SetCWD(templateDocument, templateFileContainer.ParentDirectoryHandler.FileContainer.FullPath);
+                    cwdTracker.SetCWD(templateDocument.ChildNodes, templateFileContainer.ParentDirectoryHandler.FileContainer.FullPath);
+
+                    bool continueResolvingComponentsAndConditionals;
+
+                    do
                     {
-                        XmlNode conditionalNode = conditionalNodes[ctr];
-                        conditionalNode.ParentNode.RemoveChild(conditionalNode);
-                    }
-                }
+                        continueResolvingComponentsAndConditionals = false;
 
-                XmlNodeList componentNodes = templateDocument.GetElementsByTagName("component", TemplateNamespace);
-                if (componentNodes.Count > 0)
+                        XmlNodeList conditionalNodes = templateDocument.GetElementsByTagName("if", TemplateNamespace);
+                        if (conditionalNodes.Count > 0)
+                        {
+                            continueResolvingComponentsAndConditionals = true;
+
+                            // TODO:  These should be evaluated
+                            for (int ctr = 0; ctr < conditionalNodes.Count; ctr++)
+                                HandleConditional(webConnection, getParameters, cwdTracker, conditionalNodes[ctr]);
+                        }
+
+                        XmlNodeList componentNodes = templateDocument.GetElementsByTagName("component", TemplateNamespace);
+                        if (componentNodes.Count > 0)
+                        {
+                            continueResolvingComponentsAndConditionals = true;
+
+                            // TODO:  These should be evaluated
+                            for (int ctr = 0; ctr < componentNodes.Count; ctr++)
+                                LoadComponent(webConnection, getParameters, cwdTracker, componentNodes[ctr]);
+
+                        }
+                    } while (continueResolvingComponentsAndConditionals);
+                }
+                catch (ThreadAbortException tae)
                 {
-                    continueResolvingComponentsAndConditionals = true;
+                    log.Warn("Timeout rendering a template", tae);
 
-                    // TODO:  These should be evaluated
-                    for (int ctr = 0; ctr < componentNodes.Count; ctr++)
-                    {
-                        XmlNode componentNode = componentNodes[ctr];
-
-                        // TODO:  Handle permissions issues
-
-                        LoadComponent(webConnection, getParameters, cwdTracker, componentNode);
-                    }
+                    if (null == templateDocument)
+                        webConnection.SendResults(
+                            WebResults.FromString(Status._500_Internal_Server_Error, "Timeout"));
+                    else
+                        Thread.ResetAbort();
                 }
-            } while (continueResolvingComponentsAndConditionals);
 
             resultsCallback(templateDocument.OuterXml);
         }
+
+
+        private void HandleConditional(
+            IWebConnection webConnection,
+            IDictionary<string, string> getParameters,
+            CWDTracker cwdTracker,
+            XmlNode conditionalNode)
+        {
+            Dictionary<string, ITemplateConditionHandler> templateConditionHandlers = FileHandlerFactoryLocator.TemplateHandlerLocator.TemplateConditionHandlers;
+
+            XmlNode current = conditionalNode.FirstChild;
+            bool conditionMet = false;
+
+            // Note:  Looping continues after the condition is met to ensure that all nodes are in the correct namespace
+            while (null != current)
+            {
+                // Make sure the namespace is proper
+                if (current.NamespaceURI != TemplateNamespace)
+                    conditionalNode.ParentNode.InsertBefore(
+                        GenerateWarningNode(conditionalNode.OwnerDocument, "All nodes within an <if> must be of " + TemplateNamespace + " namespace: " + current.OuterXml),
+                        conditionalNode);
+
+                else
+                {
+                    // Make sure the node is supported
+                    ITemplateConditionHandler templateConditionHandler;
+                    if (!templateConditionHandlers.TryGetValue(current.LocalName, out templateConditionHandler))
+                        conditionalNode.ParentNode.InsertBefore(
+                            GenerateWarningNode(conditionalNode.OwnerDocument, "There is no condition handler for " + current.LocalName + ": " + current.OuterXml),
+                            conditionalNode);
+
+                    if (!conditionMet)
+                        try
+                        {
+                            if (templateConditionHandler.IsConditionMet(webConnection, current, cwdTracker.GetCWD(current)))
+                            {
+                                conditionMet = true;
+
+                                foreach (XmlNode xmlNode in current.ChildNodes)
+                                    conditionalNode.ParentNode.InsertBefore(xmlNode, conditionalNode);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            log.Error("Unhandled error for condition tag " + current.LocalName + ": " + current.OuterXml, e);
+
+                            conditionalNode.ParentNode.InsertBefore(
+                                GenerateWarningNode(conditionalNode.OwnerDocument, "An unhandled error occured processing: " + current.OuterXml),
+                                conditionalNode);
+                        }
+                }
+
+                current = current.NextSibling;
+            }
+
+
+            conditionalNode.ParentNode.RemoveChild(conditionalNode);
+        }
+
 
         private void LoadComponent(
             IWebConnection webConnection,
@@ -269,8 +343,6 @@ namespace ObjectCloud.Disk.WebHandlers
                         resultNode = GenerateWarningNode(componentNode.OwnerDocument, "https component nodes aren't supported due to certificate complexities");
                     else if (url.StartsWith("http://"))
                     {
-                        //resultNode = GenerateWarningNode(componentNode.OwnerDocument, "https component nodes aren't supported due to certificate complexities");
-
                         HttpResponseHandler httpResponse = webConnection.Session.HttpWebClient.Get(url);
 
                         if ("text/xml" == httpResponse.ContentType)
@@ -317,9 +389,15 @@ namespace ObjectCloud.Disk.WebHandlers
             }
         }
 
-        private static XmlNode GenerateWarningNode(XmlDocument parentDocument, string message)
+        /// <summary>
+        /// Assists in generating a warning node
+        /// </summary>
+        /// <param name="ownerDocument"></param>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public static XmlNode GenerateWarningNode(XmlDocument ownerDocument, string message)
         {
-            XmlNode toReturn = parentDocument.CreateNode(XmlNodeType.Element, "div", parentDocument.DocumentElement.NamespaceURI);
+            XmlNode toReturn = ownerDocument.CreateNode(XmlNodeType.Element, "div", ownerDocument.DocumentElement.NamespaceURI);
             toReturn.InnerText = message;
 
             SetErrorClass(toReturn);

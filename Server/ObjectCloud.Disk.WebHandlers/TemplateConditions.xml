@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<objects xmlns="http://www.springframework.net"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.net, http://www.springframework.net/xsd/spring-objects-1.1.xsd">
+
+  <object id="TemplateHandlerLocator" type="ObjectCloud.Interfaces.WebServer.TemplateHandlerLocator">
+    <property name="TemplateConditionHandlers">
+      <dictionary key-type="String" value-type="ObjectCloud.Interfaces.WebServer.ITemplateConditionHandler">
+        <entry key="else">
+          <object id="TemplateConditionHandlers_else" type="ObjectCloud.Disk.WebHandlers.TemplateConditions.Else" />
+        </entry>
+        <entry key="can">
+          <object id="TemplateConditionHandlers_can" type="ObjectCloud.Disk.WebHandlers.TemplateConditions.Can" />
+        </entry>
+        <entry key="canread">
+          <object id="TemplateConditionHandlers_canread" type="ObjectCloud.Disk.WebHandlers.TemplateConditions.CanRead" />
+        </entry>
+        <entry key="canwrite">
+          <object id="TemplateConditionHandlers_canwrite" type="ObjectCloud.Disk.WebHandlers.TemplateConditions.CanWrite" />
+        </entry>
+        <entry key="canadminister">
+          <object id="TemplateConditionHandlers_canadminister" type="ObjectCloud.Disk.WebHandlers.TemplateConditions.CanAdminister" />
+        </entry>
+        <entry key="isadministrator">
+          <object id="TemplateConditionHandlers_isadministrator" type="ObjectCloud.Disk.WebHandlers.TemplateConditions.IsAdministrator" />
+        </entry>
+        <entry key="isloggedin">
+          <object id="TemplateConditionHandlers_isloggedin" type="ObjectCloud.Disk.WebHandlers.TemplateConditions.IsLoggedIn" />
+        </entry>
+        <entry key="isopenid">
+          <object id="TemplateConditionHandlers_isopenid" type="ObjectCloud.Disk.WebHandlers.TemplateConditions.IsOpenID" />
+        </entry>
+        <entry key="islocal">
+          <object id="TemplateConditionHandlers_islocal" type="ObjectCloud.Disk.WebHandlers.TemplateConditions.IsLocal" />
+        </entry>
+      </dictionary>
+    </property>
+  </object>
+  
+</objects>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -113,6 +113,7 @@
     <Compile Include="WebServer\IChannelEventWebAdaptor.cs" />
     <Compile Include="WebServer\ICometTransport.cs" />
     <Compile Include="WebServer\IQueuingReliableCometTransport.cs" />
+    <Compile Include="WebServer\ITemplateConditionHandler.cs" />
     <Compile Include="WebServer\IWebAccessCodeGenerator.cs" />
     <Compile Include="WebServer\IWebConnectionContent.cs" />
     <Compile Include="WebServer\IHasWebResults.cs" />
@@ -132,6 +133,7 @@
     <Compile Include="WebServer\ResultsAlreadySent.cs" />
     <Compile Include="WebServer\Status.cs" />
     <Compile Include="Security\WebCallableAttribute.cs" />
+    <Compile Include="WebServer\TemplateHandlerLocator.cs" />
     <Compile Include="WebServer\WebCallingConvention.cs" />
     <Compile Include="WebServer\WebDelegate.cs" />
     <Compile Include="WebServer\WebHandlerPlugin.cs" />
