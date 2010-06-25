@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml;
+using System.Threading;
 
 using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
@@ -185,5 +186,17 @@ namespace ObjectCloud.Disk.FileHandlers
 				}
 			}
         }
+
+        public HttpWebClient HttpWebClient
+        {
+            get
+            {
+                if (null == _HttpWebClient)
+                    Interlocked.CompareExchange<HttpWebClient>(ref _HttpWebClient, new HttpWebClient(), null);
+
+                return _HttpWebClient; 
+            }
+        }
+        private HttpWebClient _HttpWebClient = null;
     }
 }

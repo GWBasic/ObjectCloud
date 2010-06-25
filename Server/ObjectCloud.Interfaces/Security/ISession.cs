@@ -70,5 +70,10 @@ namespace ObjectCloud.Interfaces.Security
 		/// A <see cref="ICometTransport"/>
 		/// </param>
 		void RegisterCometTransport(ICometTransport cometTransport);
+
+        /// <summary>
+        /// A client for making HTTP requests that persists cookies
+        /// </summary>
+        HttpWebClient HttpWebClient { get; }
     }
 }

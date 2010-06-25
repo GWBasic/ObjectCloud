@@ -40,10 +40,9 @@ namespace ObjectCloud.Common
         /// <typeparam name="TValue"></typeparam>
         /// <param name="values"></param>
         /// <returns></returns>
-        public static TDictionary Create<TDictionary, TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> values)
-            where TDictionary : IDictionary<TKey, TValue>, new()
+        public static Dictionary<TKey, TValue> Create<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> values)
         {
-            TDictionary toReturn = new TDictionary();
+            Dictionary<TKey, TValue> toReturn = new Dictionary<TKey, TValue>();
 
             foreach (KeyValuePair<TKey, TValue> value in values)
                 toReturn[value.Key] = value.Value;
