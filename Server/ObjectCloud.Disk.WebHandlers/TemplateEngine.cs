@@ -26,7 +26,15 @@ namespace ObjectCloud.Disk.WebHandlers
     {
         private static ILog log = LogManager.GetLogger<TemplateEngine>();
 
+        /// <summary>
+        /// ObjectCloud's templating xml namespace
+        /// </summary>
         private const string TemplateNamespace = "objectcloud_templating";
+
+        /// <summary>
+        /// A temporary namespace for tagging nodes; all nodes and attributes of this namespace will be removed prior to returning a document
+        /// </summary>
+        private const string TaggingNamespace = "objectcloud_templating_GHDTTGXDNHT";
 
         /// <summary>
         /// Evaluates the named template
@@ -56,28 +64,21 @@ namespace ObjectCloud.Disk.WebHandlers
         /// </summary>
         private class CWDTracker
         {
-            Dictionary<XmlNode, string> CWDs = new Dictionary<XmlNode, string>();
-
             public string GetCWD(XmlNode xmlNode)
             {
-                string toReturn;
-
-                while (!CWDs.TryGetValue(xmlNode, out toReturn))
+                while (null != xmlNode)
                 {
-                    try
-                    {
-                        xmlNode = xmlNode.ParentNode;
-                    }
-                    catch (Exception e)
-                    {
-                        throw new KeyNotFoundException("Can not find CWD: " + xmlNode.OuterXml, e);
-                    }
+                    XmlAttribute cwdAttribute = xmlNode.Attributes.GetNamedItem(
+                        "cwd",
+                        TaggingNamespace) as XmlAttribute;
 
-                    if (null == xmlNode)
-                        throw new KeyNotFoundException("Can not find CWD: " + xmlNode.OuterXml);
+                    if (null != cwdAttribute)
+                        return cwdAttribute.Value;
+
+                    xmlNode = xmlNode.ParentNode;
                 }
 
-                return toReturn;
+                throw new KeyNotFoundException("Can not find CWD: " + xmlNode.OuterXml);
             }
 
             public void SetCWD(XmlNodeList xmlNodeList, string cwd)
@@ -88,7 +89,17 @@ namespace ObjectCloud.Disk.WebHandlers
 
             public void SetCWD(XmlNode xmlNode, string cwd)
             {
-                CWDs[xmlNode] = cwd;
+                // Really, the CWD can only be set on XmlElements
+                // But sometimes, an XmlText can come in, when that happens, set the cwd on its children
+
+                if (xmlNode is XmlElement)
+                {
+                    XmlAttribute xmlAttribute = xmlNode.OwnerDocument.CreateAttribute("cwd", TaggingNamespace);
+                    xmlAttribute.Value = cwd;
+                    xmlNode.Attributes.Append(xmlAttribute);
+                }
+                else if (xmlNode is XmlText)
+                    SetCWD(xmlNode.ChildNodes, cwd);
             }
         }
 
@@ -112,6 +123,20 @@ namespace ObjectCloud.Disk.WebHandlers
             Thread myThread = Thread.CurrentThread;
             TimerCallback timerCallback = delegate(object state)
             {
+#if DEBUG
+                // If the program is in the debugger, play a few tricks to not abort while stepping through
+                if (System.Diagnostics.Debugger.IsAttached)
+                {
+                    DateTime start = DateTime.UtcNow;
+
+                    for (int ctr = 0; ctr < 10; ctr++)
+                        Thread.Sleep(10);
+
+                    if (start.AddSeconds(1) < DateTime.UtcNow)
+                        return;
+                }
+#endif
+
                 myThread.Abort();
             };
 
@@ -122,11 +147,10 @@ namespace ObjectCloud.Disk.WebHandlers
 
                     webConnection.TouchedFiles.Add(templateFileContainer);
 
-                    templateDocument = ResolveHeaderFooter(webConnection, getParameters, templateFileContainer);
-
                     CWDTracker cwdTracker = new CWDTracker();
-                    cwdTracker.SetCWD(templateDocument, templateFileContainer.ParentDirectoryHandler.FileContainer.FullPath);
-                    cwdTracker.SetCWD(templateDocument.ChildNodes, templateFileContainer.ParentDirectoryHandler.FileContainer.FullPath);
+                    templateDocument = ResolveHeaderFooter(webConnection, getParameters, templateFileContainer, cwdTracker);
+
+                    //cwdTracker.SetCWD(templateDocument, templateFileContainer.ParentDirectoryHandler.FileContainer.FullPath);
 
                     bool continueResolvingComponentsAndConditionals;
 
@@ -167,6 +191,26 @@ namespace ObjectCloud.Disk.WebHandlers
                         Thread.ResetAbort();
                 }
 
+            // Remove all tagging nodes and attributes
+            // TODO:  This should be XPath; it might be faster
+            // TODO:  Disable when in "debug" mode so the developer can see "tagging" nodes and attributes
+            LinkedList<XmlNode> nodesToRemove = new LinkedList<XmlNode>();
+            LinkedList<XmlNode> attributesToRemove = new LinkedList<XmlNode>();
+            foreach (XmlNode xmlNode in XmlHelper.IterateAllElements(templateDocument))
+            {
+                if (xmlNode.NamespaceURI == TaggingNamespace)
+                    nodesToRemove.AddLast(xmlNode);
+
+                if (null != xmlNode.Attributes)
+                    foreach (XmlAttribute xmlAttribute in xmlNode.Attributes)
+                        if (xmlAttribute.NamespaceURI == TaggingNamespace)
+                            attributesToRemove.AddLast(xmlAttribute);
+            }
+            foreach (XmlNode xmlNode in nodesToRemove)
+                xmlNode.ParentNode.RemoveChild(xmlNode);
+            foreach (XmlAttribute xmlAttribute in attributesToRemove)
+                xmlAttribute.OwnerElement.Attributes.Remove(xmlAttribute);
+            
             resultsCallback(templateDocument.OuterXml);
         }
 
@@ -424,8 +468,13 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="getParameters"></param>
         /// <param name="templateFileContainer"></param>
         /// <param name="webConnection"></param>
+        /// <param name="cwdTracker"></param>
         /// <returns></returns>
-        private XmlDocument ResolveHeaderFooter(IWebConnection webConnection, IDictionary<string, string> getParameters, IFileContainer templateFileContainer)
+        private XmlDocument ResolveHeaderFooter(
+            IWebConnection webConnection,
+            IDictionary<string, string> getParameters,
+            IFileContainer templateFileContainer,
+            CWDTracker cwdTracker)
         {
             IFileHandler templateFileHandler = templateFileContainer.FileHandler;
 
@@ -458,10 +507,14 @@ namespace ObjectCloud.Disk.WebHandlers
                 else
                     nodesToInsert = templateDocument.ChildNodes;
 
+                cwdTracker.SetCWD(nodesToInsert, templateFileContainer.ParentDirectoryHandler.FileContainer.FullPath);
+
+                templateFileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(headerFooter);
+
                 templateDocument = LoadXmlDocumentAndReplaceGetParameters(
                     webConnection,
                     getParameters,
-                    headerFooter);
+                    templateFileContainer);
 
                 // find oc:component tag
                 XmlNodeList componentTags = templateDocument.GetElementsByTagName("component", TemplateNamespace);
@@ -473,10 +526,13 @@ namespace ObjectCloud.Disk.WebHandlers
                         ReplaceNode(componentNode, nodesToInsert);
                 }
             }
+
+            cwdTracker.SetCWD(templateDocument.ChildNodes, templateFileContainer.ParentDirectoryHandler.FileContainer.FullPath);
+
             return templateDocument;
         }
 
-        /// <summary>
+        /*// <summary>
         /// Loads an XmlDocument from the filecontainer, replacing GET parameters and verifying permissions
         /// </summary>
         /// <param name="webConnection"></param>
@@ -490,7 +546,7 @@ namespace ObjectCloud.Disk.WebHandlers
         {
             IFileContainer fileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(fileName);
             return LoadXmlDocumentAndReplaceGetParameters(webConnection, getParameters, fileContainer);
-        }
+        }*/
 
         /// <summary>
         /// Loads an XmlDocument from the filecontainer, replacing GET parameters and verifying permissions
