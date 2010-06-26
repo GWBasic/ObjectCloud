@@ -10,6 +10,7 @@ using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
+using ObjectCloud.Interfaces.Templating;
 using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.Disk.WebHandlers.TemplateConditions

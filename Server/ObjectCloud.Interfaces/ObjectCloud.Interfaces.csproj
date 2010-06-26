@@ -106,6 +106,8 @@
     <Compile Include="Security\IUser.cs" />
     <Compile Include="Security\IUserOrGroup.cs" />
     <Compile Include="Security\ShellSession.cs" />
+    <Compile Include="Templating\ITemplateConditionHandler.cs" />
+    <Compile Include="Templating\TemplateHandlerLocator.cs" />
     <Compile Include="WebServer\BlockingShellWebConnection.cs" />
     <Compile Include="Security\ChannelEndpointMinimumPermissionAttribute.cs" />
     <Compile Include="WebServer\CookieToSet.cs" />
@@ -113,7 +115,6 @@
     <Compile Include="WebServer\IChannelEventWebAdaptor.cs" />
     <Compile Include="WebServer\ICometTransport.cs" />
     <Compile Include="WebServer\IQueuingReliableCometTransport.cs" />
-    <Compile Include="WebServer\ITemplateConditionHandler.cs" />
     <Compile Include="WebServer\IWebAccessCodeGenerator.cs" />
     <Compile Include="WebServer\IWebConnectionContent.cs" />
     <Compile Include="WebServer\IHasWebResults.cs" />
@@ -133,7 +134,6 @@
     <Compile Include="WebServer\ResultsAlreadySent.cs" />
     <Compile Include="WebServer\Status.cs" />
     <Compile Include="Security\WebCallableAttribute.cs" />
-    <Compile Include="WebServer\TemplateHandlerLocator.cs" />
     <Compile Include="WebServer\WebCallingConvention.cs" />
     <Compile Include="WebServer\WebDelegate.cs" />
     <Compile Include="WebServer\WebHandlerPlugin.cs" />

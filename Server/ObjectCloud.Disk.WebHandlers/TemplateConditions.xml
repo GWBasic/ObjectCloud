@@ -4,9 +4,9 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.net, http://www.springframework.net/xsd/spring-objects-1.1.xsd">
 
-  <object id="TemplateHandlerLocator" type="ObjectCloud.Interfaces.WebServer.TemplateHandlerLocator">
+  <object id="TemplateHandlerLocator" type="ObjectCloud.Interfaces.Templating.TemplateHandlerLocator">
     <property name="TemplateConditionHandlers">
-      <dictionary key-type="String" value-type="ObjectCloud.Interfaces.WebServer.ITemplateConditionHandler">
+      <dictionary key-type="String" value-type="ObjectCloud.Interfaces.Templating.ITemplateConditionHandler">
         <entry key="else">
           <object id="TemplateConditionHandlers_else" type="ObjectCloud.Disk.WebHandlers.TemplateConditions.Else" />
         </entry>

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 
 using ObjectCloud.Interfaces.Javascript;
 using ObjectCloud.Interfaces.Security;
+using ObjectCloud.Interfaces.Templating;
 using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.Interfaces.Disk

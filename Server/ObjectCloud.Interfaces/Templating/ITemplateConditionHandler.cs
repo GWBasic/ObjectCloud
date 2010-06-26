@@ -8,8 +8,9 @@ using System.Text;
 using System.Xml;
 
 using ObjectCloud.Common;
+using ObjectCloud.Interfaces.WebServer;
 
-namespace ObjectCloud.Interfaces.WebServer
+namespace ObjectCloud.Interfaces.Templating
 {
     /// <summary>
     /// Interface for handling a template condition

@@ -16,6 +16,7 @@ using Common.Logging;
 using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
+using ObjectCloud.Interfaces.Templating;
 using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.Disk.WebHandlers

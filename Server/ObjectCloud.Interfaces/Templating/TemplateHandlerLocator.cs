@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ObjectCloud.Interfaces.WebServer
+namespace ObjectCloud.Interfaces.Templating
 {
     /// <summary>
     /// Assists in locating information about templates
