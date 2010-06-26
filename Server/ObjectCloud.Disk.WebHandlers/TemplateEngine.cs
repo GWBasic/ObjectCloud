@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Security;
 using System.Text;
@@ -49,9 +50,9 @@ namespace ObjectCloud.Disk.WebHandlers
                 webConnection,
                 webConnection.GetParameters, 
                 filename, 
-                delegate(string results)
+                delegate(Stream results)
                 {
-                    IWebResults toReturn = WebResults.FromString(Status._200_OK, results);
+                    IWebResults toReturn = WebResults.FromStream(Status._200_OK, results);
                     toReturn.ContentType = "text/xml";
                     webConnection.SendResults(toReturn);
                 });
@@ -116,7 +117,7 @@ namespace ObjectCloud.Disk.WebHandlers
             IWebConnection webConnection,
             IDictionary<string, string> getParameters,
             string filename,
-            GenericArgument<string> resultsCallback)
+            GenericArgument<Stream> resultsCallback)
         {
             XmlDocument templateDocument = null;
 
@@ -150,35 +151,26 @@ namespace ObjectCloud.Disk.WebHandlers
                     CWDTracker cwdTracker = new CWDTracker();
                     templateDocument = ResolveHeaderFooter(webConnection, getParameters, templateFileContainer, cwdTracker);
 
-                    //cwdTracker.SetCWD(templateDocument, templateFileContainer.ParentDirectoryHandler.FileContainer.FullPath);
+                    LinkedList<string> scripts = new LinkedList<string>();
+                    LinkedList<string> cssFiles = new LinkedList<string>();
+                    SortedDictionary<double, LinkedList<XmlNode>> headerNodes = new SortedDictionary<double, LinkedList<XmlNode>>();
 
-                    bool continueResolvingComponentsAndConditionals;
-
+                    // Keep resolving oc:if, oc:component, oc:script, and oc:css tags while they're loaded
+                    bool continueResolving;
                     do
                     {
-                        continueResolvingComponentsAndConditionals = false;
+                        continueResolving = ResolveComponentsAndConditionals(webConnection, getParameters, templateDocument, cwdTracker);
+                        continueResolving = continueResolving | ResolveScriptsAndCSSInsertHead(
+                            webConnection, getParameters, templateDocument, cwdTracker, scripts, cssFiles, headerNodes);
+                    } while (continueResolving);
 
-                        XmlNodeList conditionalNodes = templateDocument.GetElementsByTagName("if", TemplateNamespace);
-                        if (conditionalNodes.Count > 0)
-                        {
-                            continueResolvingComponentsAndConditionals = true;
+                    XmlNode headNode = GetHeadNode(templateDocument);
 
-                            // TODO:  These should be evaluated
-                            for (int ctr = 0; ctr < conditionalNodes.Count; ctr++)
-                                HandleConditional(webConnection, getParameters, cwdTracker, conditionalNodes[ctr]);
-                        }
+                    // Add script and css tags to the header
+                    GenerateScriptAndCssTags(templateDocument, scripts, cssFiles, headNode);
 
-                        XmlNodeList componentNodes = templateDocument.GetElementsByTagName("component", TemplateNamespace);
-                        if (componentNodes.Count > 0)
-                        {
-                            continueResolvingComponentsAndConditionals = true;
-
-                            // TODO:  These should be evaluated
-                            for (int ctr = 0; ctr < componentNodes.Count; ctr++)
-                                LoadComponent(webConnection, getParameters, cwdTracker, componentNodes[ctr]);
-
-                        }
-                    } while (continueResolvingComponentsAndConditionals);
+                    // Add <oc:inserthead> tags to the header
+                    GenerateHeadTags(templateDocument, headerNodes, headNode);
                 }
                 catch (ThreadAbortException tae)
                 {
@@ -211,9 +203,284 @@ namespace ObjectCloud.Disk.WebHandlers
             foreach (XmlAttribute xmlAttribute in attributesToRemove)
                 xmlAttribute.OwnerElement.Attributes.Remove(xmlAttribute);
             
-            resultsCallback(templateDocument.OuterXml);
+            XmlWriterSettings xmlWriterSettings = new XmlWriterSettings();
+            xmlWriterSettings.CloseOutput = true;
+            xmlWriterSettings.ConformanceLevel = ConformanceLevel.Document;
+            xmlWriterSettings.Encoding = Encoding.UTF8;
+
+            if (webConnection.CookiesFromBrowser.ContainsKey("developer_prettyprintXML"))
+            {
+                xmlWriterSettings.Indent = true;
+                xmlWriterSettings.IndentChars = "\t";
+                xmlWriterSettings.NewLineHandling = NewLineHandling.Replace;
+                xmlWriterSettings.NewLineOnAttributes = true;
+                xmlWriterSettings.NewLineChars = "\n";
+            }
+            else
+                xmlWriterSettings.NewLineHandling = NewLineHandling.None;
+
+            MemoryStream stream = new MemoryStream();
+            XmlWriter xmlWriter = XmlWriter.Create(stream, xmlWriterSettings);
+            templateDocument.Save(xmlWriter);
+
+            stream.Seek(0, SeekOrigin.Begin);
+
+            resultsCallback(stream);
         }
 
+        private static XmlNode GetHeadNode(XmlDocument templateDocument)
+        {
+            XmlNodeList headNodeList = templateDocument.GetElementsByTagName("head");
+            if (headNodeList.Count != 1)
+                throw new WebResultsOverrideException(WebResults.FromString(Status._500_Internal_Server_Error, "Generated document does not have a <head>:\n" + templateDocument.OuterXml));
+
+            XmlNode headNode = headNodeList[0];
+            return headNode;
+        }
+
+        private static void GenerateScriptAndCssTags(XmlDocument templateDocument, LinkedList<string> scripts, LinkedList<string> cssFiles, XmlNode headNode)
+        {
+            Set<string> addedScripts = new Set<string>();
+            foreach (string script in scripts)
+                if (!addedScripts.Contains(script))
+                {
+                    XmlNode scriptNode = templateDocument.CreateElement("script", headNode.NamespaceURI);
+
+                    XmlAttribute srcAttribute = templateDocument.CreateAttribute("src");
+                    srcAttribute.Value = script;
+
+                    // type="text/javascript"
+                    XmlAttribute typeAttribute = templateDocument.CreateAttribute("type");
+                    typeAttribute.Value = "text/javascript";
+
+                    scriptNode.Attributes.Append(srcAttribute);
+                    scriptNode.Attributes.Append(typeAttribute);
+
+                    headNode.AppendChild(scriptNode);
+
+                    addedScripts.Add(script);
+                }
+
+            Set<string> addedCssFiles = new Set<string>();
+            foreach (string cssFile in cssFiles)
+                if (!addedCssFiles.Contains(cssFile))
+                {
+                    XmlNode cssNode = templateDocument.CreateElement("link", headNode.NamespaceURI);
+
+                    // <link rel="stylesheet" type="text/css" media="screen, projection" href="//a.fsdn.com/sd/core-tidied.css?T_2_5_0_299" > 
+
+                    XmlAttribute srcAttribute = templateDocument.CreateAttribute("href");
+                    srcAttribute.Value = cssFile;
+
+                    XmlAttribute typeAttribute = templateDocument.CreateAttribute("type");
+                    typeAttribute.Value = "text/css";
+
+                    XmlAttribute relAttribute = templateDocument.CreateAttribute("rel");
+                    relAttribute.Value = "stylesheet";
+
+                    cssNode.Attributes.Append(srcAttribute);
+                    cssNode.Attributes.Append(typeAttribute);
+                    cssNode.Attributes.Append(relAttribute);
+
+                    headNode.AppendChild(cssNode);
+
+                    addedCssFiles.Add(cssFile);
+                }
+        }
+
+        private static void GenerateHeadTags(XmlDocument templateDocument, SortedDictionary<double, LinkedList<XmlNode>> headerNodes, XmlNode headNode)
+        {
+            foreach (double loc in headerNodes.Keys)
+                if (loc < 0)
+                    foreach (XmlNode xmlNode in headerNodes[loc])
+                        headNode.PrependChild(xmlNode);
+                else
+                    foreach (XmlNode xmlNode in headerNodes[loc])
+                        headNode.InsertAfter(xmlNode, headNode.LastChild);
+
+            // handle oc:title, if present
+            // TODO:  Use XPATH
+            XmlNodeList ocTitleNodes = headNode.OwnerDocument.GetElementsByTagName("title", TemplateNamespace);
+
+            if (ocTitleNodes.Count > 1)
+                for (int ctr = 1; ctr < ocTitleNodes.Count; ctr++)
+                {
+                    XmlNode ocTitleNode = ocTitleNodes[ctr];
+                    ocTitleNode.ParentNode.RemoveChild(ocTitleNode);
+                }
+
+            if (ocTitleNodes.Count > 0)
+            {
+                XmlNode ocTitleNode = ocTitleNodes[0];
+
+                bool titleNodePresent = false;
+                foreach (XmlNode titleNode in headNode.OwnerDocument.GetElementsByTagName("title", headNode.NamespaceURI))
+                    if (titleNode.ParentNode == ocTitleNode.ParentNode)
+                        titleNodePresent = true;
+
+                if (!titleNodePresent)
+                {
+                    XmlNode titleNode = headNode.OwnerDocument.CreateElement("title", headNode.NamespaceURI);
+
+                    foreach (XmlNode subNode in ocTitleNode.ChildNodes)
+                        titleNode.AppendChild(subNode);
+
+                    foreach (XmlAttribute attribute in ocTitleNode.Attributes)
+                        titleNode.Attributes.Append(attribute);
+
+                    ocTitleNode.ParentNode.InsertAfter(titleNode, ocTitleNode);
+                }
+
+                ocTitleNode.ParentNode.RemoveChild(ocTitleNode);
+            }
+        }
+
+        /// <summary>
+        /// Handles oc:if and oc:component tags
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="getParameters"></param>
+        /// <param name="templateDocument"></param>
+        /// <param name="cwdTracker"></param>
+        private bool ResolveComponentsAndConditionals(IWebConnection webConnection, IDictionary<string, string> getParameters, XmlDocument templateDocument, CWDTracker cwdTracker)
+        {
+            bool continueResolvingComponentsAndConditionals;
+            bool handledTags = false;
+
+            do
+            {
+                continueResolvingComponentsAndConditionals = false;
+
+                XmlNodeList conditionalNodes = templateDocument.GetElementsByTagName("if", TemplateNamespace);
+                if (conditionalNodes.Count > 0)
+                {
+                    continueResolvingComponentsAndConditionals = true;
+                    handledTags = true;
+
+                    // TODO:  These should be evaluated
+                    for (int ctr = 0; ctr < conditionalNodes.Count; ctr++)
+                        HandleConditional(webConnection, getParameters, cwdTracker, conditionalNodes[ctr]);
+                }
+
+                XmlNodeList componentNodes = templateDocument.GetElementsByTagName("component", TemplateNamespace);
+                if (componentNodes.Count > 0)
+                {
+                    continueResolvingComponentsAndConditionals = true;
+                    handledTags = true;
+
+                    // TODO:  These should be evaluated
+                    for (int ctr = 0; ctr < componentNodes.Count; ctr++)
+                        LoadComponent(webConnection, getParameters, cwdTracker, componentNodes[ctr]);
+
+                }
+            } while (continueResolvingComponentsAndConditionals);
+
+            return handledTags;
+        }
+
+        /// <summary>
+        /// Handles oc:if and oc:component tags
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="getParameters"></param>
+        /// <param name="templateDocument"></param>
+        /// <param name="cwdTracker"></param>
+        /// <param name="cssFiles"></param>
+        /// <param name="scripts"></param>
+        /// <param name="headerNodes"></param>
+        private bool ResolveScriptsAndCSSInsertHead(
+            IWebConnection webConnection, 
+            IDictionary<string, string> getParameters, 
+            XmlDocument templateDocument, 
+            CWDTracker cwdTracker,
+            LinkedList<string> scripts,
+            LinkedList<string> cssFiles,
+            SortedDictionary<double, LinkedList<XmlNode>> headerNodes)
+        {
+            LinkedList<XmlNode> toRemove = new LinkedList<XmlNode>();
+
+            // TODO:  Another situation where XPATH would be better...
+
+            foreach (XmlNode xmlNode in XmlHelper.IterateAllElements(templateDocument))
+                if (xmlNode.NamespaceURI == TemplateNamespace)
+                {
+                    if (xmlNode.LocalName == "script")
+                    {
+                        XmlAttribute srcAttribute = xmlNode.Attributes["src"];
+
+                        if (null != srcAttribute)
+                            scripts.AddLast(FileHandlerFactoryLocator.FileSystemResolver.GetAbsolutePath(
+                                cwdTracker.GetCWD(xmlNode),
+                                srcAttribute.Value));
+
+                        toRemove.AddLast(xmlNode);
+                    }
+                    else if (xmlNode.LocalName == "open")
+                    {
+                        XmlAttribute filenameAttribute = xmlNode.Attributes["filename"];
+                        XmlAttribute varnameAttribute = xmlNode.Attributes["varname"];
+
+                        if ((null != filenameAttribute) && (null != varnameAttribute))
+                            scripts.AddLast(string.Format(
+                                "{0}?Method=GetJSW&assignToVariable={1}",
+                                FileHandlerFactoryLocator.FileSystemResolver.GetAbsolutePath(cwdTracker.GetCWD(xmlNode), filenameAttribute.Value),
+                                varnameAttribute.Value));
+
+                        toRemove.AddLast(xmlNode);
+                    }
+                    else if (xmlNode.LocalName == "css")
+                    {
+                        XmlAttribute srcAttribute = xmlNode.Attributes["src"];
+
+                        if (null != srcAttribute)
+                            cssFiles.AddLast(FileHandlerFactoryLocator.FileSystemResolver.GetAbsolutePath(
+                                cwdTracker.GetCWD(xmlNode),
+                                srcAttribute.Value));
+
+                        toRemove.AddLast(xmlNode);
+                    }
+                    else if (xmlNode.LocalName == "inserthead")
+                    {
+                        // Try reading loc, default to 0
+
+                        XmlAttribute locAttribute = xmlNode.Attributes["loc"];
+                        double loc;
+
+                        if (null != locAttribute)
+                        {
+                            if (!double.TryParse(locAttribute.Value, out loc))
+                                loc = 0;
+                        }
+                        else
+                            loc = 0;
+
+                        LinkedList<XmlNode> insertNodes;
+                        if (!headerNodes.TryGetValue(loc, out insertNodes))
+                        {
+                            insertNodes = new LinkedList<XmlNode>();
+                            headerNodes[loc] = insertNodes;
+                        }
+
+                        foreach (XmlNode headNode in xmlNode.ChildNodes)
+                            if (loc < 0)
+                                insertNodes.AddFirst(headNode);
+                            else
+                                insertNodes.AddLast(headNode);
+
+                        toRemove.AddLast(xmlNode);
+                    }
+                }
+
+            if (toRemove.Count > 0)
+            {
+                foreach (XmlNode xmlNode in toRemove)
+                    xmlNode.ParentNode.RemoveChild(xmlNode);
+
+                return true;
+            }
+
+            return false;
+        }
 
         private void HandleConditional(
             IWebConnection webConnection,
@@ -267,7 +534,6 @@ namespace ObjectCloud.Disk.WebHandlers
 
                 current = current.NextSibling;
             }
-
 
             conditionalNode.ParentNode.RemoveChild(conditionalNode);
         }
@@ -441,7 +707,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <returns></returns>
         public static XmlNode GenerateWarningNode(XmlDocument ownerDocument, string message)
         {
-            XmlNode toReturn = ownerDocument.CreateNode(XmlNodeType.Element, "div", ownerDocument.DocumentElement.NamespaceURI);
+            XmlNode toReturn = ownerDocument.CreateNode(XmlNodeType.Element, "pre", ownerDocument.DocumentElement.NamespaceURI);
             toReturn.InnerText = message;
 
             SetErrorClass(toReturn);
@@ -476,7 +742,9 @@ namespace ObjectCloud.Disk.WebHandlers
             IFileContainer templateFileContainer,
             CWDTracker cwdTracker)
         {
-            IFileHandler templateFileHandler = templateFileContainer.FileHandler;
+            XmlDocument templateDocument = LoadXmlDocumentAndReplaceGetParameters(webConnection, getParameters, templateFileContainer);
+
+            /*IFileHandler templateFileHandler = templateFileContainer.FileHandler;
 
             if (!(templateFileHandler is ITextHandler))
                 throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, templateFileContainer.FullPath + " must be a text file"));
@@ -485,7 +753,18 @@ namespace ObjectCloud.Disk.WebHandlers
             templateContents = ReplaceGetParameters(getParameters, templateContents);
 
             XmlDocument templateDocument = new XmlDocument();
-            templateDocument.LoadXml(templateContents);
+
+            try
+            {
+                templateDocument.LoadXml(templateContents);
+            }
+            catch (XmlException xmlException)
+            {
+                // If the current user is the owner or an administrator; display an informative error
+
+                // For everyone else, just let the error bubble up
+                throw;
+            }*/
 
             // While the first node isn't HTML, keep loading header/footers
             while ("html" != templateDocument.FirstChild.LocalName)
@@ -532,22 +811,6 @@ namespace ObjectCloud.Disk.WebHandlers
             return templateDocument;
         }
 
-        /*// <summary>
-        /// Loads an XmlDocument from the filecontainer, replacing GET parameters and verifying permissions
-        /// </summary>
-        /// <param name="webConnection"></param>
-        /// <param name="getParameters"></param>
-        /// <param name="fileName"></param>
-        /// <returns></returns>
-        private XmlDocument LoadXmlDocumentAndReplaceGetParameters(
-            IWebConnection webConnection,
-            IDictionary<string, string> getParameters,
-            string fileName)
-        {
-            IFileContainer fileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(fileName);
-            return LoadXmlDocumentAndReplaceGetParameters(webConnection, getParameters, fileContainer);
-        }*/
-
         /// <summary>
         /// Loads an XmlDocument from the filecontainer, replacing GET parameters and verifying permissions
         /// </summary>
@@ -570,7 +833,25 @@ namespace ObjectCloud.Disk.WebHandlers
                 throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, fileContainer.FullPath + " must be a text file"));
 
             XmlDocument xmlDocument = new XmlDocument();
-            xmlDocument.LoadXml(ReplaceGetParameters(getParameters, ((ITextHandler)fileContainer.FileHandler).ReadAll()));
+            string xml = ((ITextHandler)fileContainer.FileHandler).ReadAll();
+
+            try
+            {
+                xmlDocument.LoadXml(ReplaceGetParameters(getParameters, xml));
+            }
+            catch (XmlException xmlException)
+            {
+                // Double-check read permission (in case later edits allow non-readers to still use a template with a named permission
+                if (null == fileContainer.LoadPermission(webConnection.Session.User.Id))
+                    throw;
+
+                // Everyone else can see a nice descriptive error
+                StringBuilder errorBuilder = new StringBuilder(string.Format("An error occured while loading {0}\n", fileContainer.FullPath));
+                errorBuilder.AppendFormat("{0}\n\n\nFrom:\n{1}", xmlException.Message, xml);
+
+                throw new WebResultsOverrideException(WebResults.FromString(Status._500_Internal_Server_Error, errorBuilder.ToString()));
+            }
+
 
             return xmlDocument;
         }

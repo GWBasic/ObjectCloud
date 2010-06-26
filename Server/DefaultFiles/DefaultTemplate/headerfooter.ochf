@@ -3,6 +3,7 @@
       <oc:title>ObjectCloud</oc:title>
    </head>
    <body>
+      <a href="/Shell/Developer.oc">Developer Controls</a>
       <oc:component />
    </body>
 </html>

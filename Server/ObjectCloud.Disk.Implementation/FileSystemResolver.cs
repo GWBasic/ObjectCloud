@@ -447,6 +447,11 @@ namespace ObjectCloud.Disk.Implementation
         /// <returns></returns>
         public string GetAbsolutePath(string currentPath, string toResolve)
         {
+            if (toResolve.StartsWith("http://"))
+                return toResolve;
+            if (toResolve.StartsWith("https://"))
+                return toResolve;
+
             if (toResolve.StartsWith("/"))
                 return toResolve;
 
