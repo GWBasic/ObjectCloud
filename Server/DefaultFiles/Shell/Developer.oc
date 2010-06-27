@@ -22,17 +22,17 @@
              disableMinimizeJavascript.change(function()
                 {
                    if ($("#disableMinimizeJavascript").is(':checked'))
-                      $.cookie("developer_disableMinimizeJavascript", true, { expires: 99999 });
+                      $.cookie("developer_disableMinimizeJavascript", true, { path: '/', expires: 99999 });
                    else
-                      $.cookie("developer_disableMinimizeJavascript", null);
+                      $.cookie("developer_disableMinimizeJavascript", null, { path: '/'});
                 });
 
              prettyprintXML.change(function()
                 {
                    if ($("#prettyprintXML").is(':checked'))
-                      $.cookie("developer_prettyprintXML", true, { expires: 99999 });
+                      $.cookie("developer_prettyprintXML", true, { path: '/', expires: 99999 });
                    else
-                      $.cookie("developer_prettyprintXML", null);
+                      $.cookie("developer_prettyprintXML", null, { path: '/'});
                 });
           });
       </script>

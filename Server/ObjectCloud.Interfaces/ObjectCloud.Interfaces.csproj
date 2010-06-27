@@ -107,6 +107,7 @@
     <Compile Include="Security\IUserOrGroup.cs" />
     <Compile Include="Security\ShellSession.cs" />
     <Compile Include="Templating\ITemplateConditionHandler.cs" />
+    <Compile Include="Templating\ITemplatePostProcessor.cs" />
     <Compile Include="Templating\TemplateHandlerLocator.cs" />
     <Compile Include="WebServer\BlockingShellWebConnection.cs" />
     <Compile Include="Security\ChannelEndpointMinimumPermissionAttribute.cs" />

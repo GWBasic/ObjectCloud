@@ -31,12 +31,17 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <summary>
         /// ObjectCloud's templating xml namespace
         /// </summary>
-        private const string TemplateNamespace = "objectcloud_templating";
+        public const string TemplateNamespace = "objectcloud_templating";
 
         /// <summary>
         /// A temporary namespace for tagging nodes; all nodes and attributes of this namespace will be removed prior to returning a document
         /// </summary>
-        private const string TaggingNamespace = "objectcloud_templating_GHDTTGXDNHT";
+        public const string TaggingNamespace = "objectcloud_templating_GHDTTGXDNHT";
+
+        /// <summary>
+        /// Cookie name for enabling XML debugging
+        /// </summary>
+        public const string XMLDebugModeCookie = "developer_prettyprintXML";
 
         /// <summary>
         /// Evaluates the named template
@@ -184,7 +189,7 @@ namespace ObjectCloud.Disk.WebHandlers
                         Thread.ResetAbort();
                 }
 
-            // Remove all tagging nodes and attributes
+            /*/ Remove all tagging nodes and attributes
             // TODO:  This should be XPath; it might be faster
             // TODO:  Disable when in "debug" mode so the developer can see "tagging" nodes and attributes
             LinkedList<XmlNode> nodesToRemove = new LinkedList<XmlNode>();
@@ -202,14 +207,34 @@ namespace ObjectCloud.Disk.WebHandlers
             foreach (XmlNode xmlNode in nodesToRemove)
                 xmlNode.ParentNode.RemoveChild(xmlNode);
             foreach (XmlAttribute xmlAttribute in attributesToRemove)
-                xmlAttribute.OwnerElement.Attributes.Remove(xmlAttribute);
-            
+                xmlAttribute.OwnerElement.Attributes.Remove(xmlAttribute);*/
+
+            // Run document post-processors
+            LinkedList<ElementProcessorFunction> elementProcessorFunctions = new LinkedList<ElementProcessorFunction>();
+            foreach (ITemplatePostProcessor templatePostProcessor in
+                FileHandlerFactoryLocator.TemplateHandlerLocator.TemplatePostProcessors)
+            {
+                foreach (ElementProcessorFunction elementProcessorFunction in
+                    templatePostProcessor.GetTemplatePostProcessors(webConnection, templateDocument).ElementProcessorFunctions)
+                {
+                    elementProcessorFunctions.AddLast(elementProcessorFunction);
+                }
+            }
+
+            LinkedList<XmlNode> elements = new LinkedList<XmlNode>();
+            foreach (XmlNode element in XmlHelper.IterateAllElements(templateDocument))
+                elements.AddLast(element);
+
+            foreach (XmlNode element in elements)
+                foreach (ElementProcessorFunction elementProcessorFunction in elementProcessorFunctions)
+                    elementProcessorFunction(webConnection, element);
+
             XmlWriterSettings xmlWriterSettings = new XmlWriterSettings();
             xmlWriterSettings.CloseOutput = true;
             xmlWriterSettings.ConformanceLevel = ConformanceLevel.Document;
             xmlWriterSettings.Encoding = Encoding.UTF8;
 
-            if (webConnection.CookiesFromBrowser.ContainsKey("developer_prettyprintXML"))
+            if (webConnection.CookiesFromBrowser.ContainsKey(XMLDebugModeCookie))
             {
                 xmlWriterSettings.Indent = true;
                 xmlWriterSettings.IndentChars = "\t";

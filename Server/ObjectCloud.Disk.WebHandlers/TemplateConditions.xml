@@ -5,6 +5,7 @@
 	xsi:schemaLocation="http://www.springframework.net, http://www.springframework.net/xsd/spring-objects-1.1.xsd">
 
   <object id="TemplateHandlerLocator" type="ObjectCloud.Interfaces.Templating.TemplateHandlerLocator">
+    
     <property name="TemplateConditionHandlers">
       <dictionary key-type="String" value-type="ObjectCloud.Interfaces.Templating.ITemplateConditionHandler">
         <entry key="else">
@@ -35,6 +36,12 @@
           <object id="TemplateConditionHandlers_islocal" type="ObjectCloud.Disk.WebHandlers.TemplateConditions.IsLocal" />
         </entry>
       </dictionary>
+    </property>
+
+    <property name="TemplatePostProcessors">
+      <list element-type="ObjectCloud.Interfaces.Templating.ITemplatePostProcessor">
+        <object id="TemplateDebugInformationRemover" type="ObjectCloud.Disk.WebHandlers.Template.DebugInformationRemover" />
+      </list>
     </property>
   </object>
   

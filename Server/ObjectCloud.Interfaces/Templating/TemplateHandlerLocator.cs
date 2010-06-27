@@ -22,5 +22,15 @@ namespace ObjectCloud.Interfaces.Templating
             set { _TemplateConditionHandlers = value; }
         }
         private Dictionary<string, ITemplateConditionHandler> _TemplateConditionHandlers;
+
+        /// <summary>
+        /// All of the template post processors
+        /// </summary>
+        public List<ITemplatePostProcessor> TemplatePostProcessors
+        {
+            get { return _TemplatePostProcessors; }
+            set { _TemplatePostProcessors = value; }
+        }
+        private List<ITemplatePostProcessor> _TemplatePostProcessors;
     }
 }
