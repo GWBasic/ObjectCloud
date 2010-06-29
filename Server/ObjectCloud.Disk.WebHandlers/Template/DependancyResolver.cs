@@ -26,7 +26,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
     /// </summary>
     class DependancyResolver : ITemplateProcessor
     {
-        static ILog log = LogManager.GetLogger<ComponentAndConditionalsResolver>();
+        //static ILog log = LogManager.GetLogger<ComponentAndConditionalsResolver>();
 
         void ITemplateProcessor.Handle(ITemplateParsingState templateParsingState)
         {

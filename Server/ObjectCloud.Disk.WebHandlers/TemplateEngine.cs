@@ -249,7 +249,6 @@ namespace ObjectCloud.Disk.WebHandlers
 
         private static void GenerateHeadTags(ITemplateParsingState templateParsingState, XmlNode headNode)
         {
-            XmlDocument templateDocument = templateParsingState.TemplateDocument;
             SortedDictionary<double, LinkedList<XmlNode>> headerNodes = templateParsingState.HeaderNodes;
 
             foreach (double loc in headerNodes.Keys)
