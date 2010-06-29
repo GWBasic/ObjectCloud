@@ -136,15 +136,92 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     }
 
                     object templateInput = jsonReader.Deserialize();
-
-                    if (templateInput is object[])
-                    {}
-                    else if (templateInput is Dictionary<string, object>)
-                    {}
-                    else
-                    {
-                    }
+                    DoTemplate(templateParsingState, element, templateContainer, templateInput);
                 }
+        }
+
+        private void DoTemplate(ITemplateParsingState templateParsingState, XmlNode element, IFileContainer templateContainer, object templateInput)
+        {
+            if (templateInput is object[])
+            {
+                foreach (object o in (object[])templateInput)
+                {
+                    XmlNode clonedElement = element.CloneNode(true);
+                    element.ParentNode.InsertBefore(clonedElement, element);
+
+                    DoTemplate(templateParsingState, clonedElement, templateContainer, o);
+                }
+
+                element.ParentNode.RemoveChild(element);
+            }
+            else if (templateInput is Dictionary<string, object>)
+            {
+                Dictionary<string, string> getParameters = new Dictionary<string, string>();
+                Flatten(getParameters, "", templateInput);
+
+                templateParsingState.LoadXmlDocumentAndReplaceGetParameters(getParameters, templateContainer);
+            }
+
+            else
+            {
+                Dictionary<string, string> getParameters = new Dictionary<string, string>();
+                getParameters["Value"] = JsonWriter.Serialize(templateInput);
+
+                templateParsingState.LoadXmlDocumentAndReplaceGetParameters(getParameters, templateContainer);
+            }
+        }
+
+        /// <summary>
+        /// Flattens a JSON object for use with a template
+        /// </summary>
+        /// <param name="getParameters"></param>
+        /// <param name="prefix"></param>
+        /// <param name="templateInput"></param>
+        private void Flatten(Dictionary<string, string> getParameters, string prefix, object templateInput)
+        {
+            if (templateInput is object[])
+            {
+                // Keep a "naked" one just in case, but only do naked if we're not too deep in a tree
+                if (prefix.Length < 15)
+                    getParameters[prefix] = JsonWriter.Serialize(templateInput);
+
+                object[] objects = (object[])templateInput;
+
+                for (int ctr = 0; ctr < objects.Length; ctr++)
+                    Flatten(getParameters, string.Format("{0}.{1}", prefix, ctr.ToString()), objects[ctr]);
+            }
+            else if (templateInput is Dictionary<string, object>)
+            {
+                // Keep a "naked" one just in case, but only do naked if we're not too deep in a tree
+                if (prefix.Length < 15)
+                    getParameters[prefix] = JsonWriter.Serialize(templateInput);
+
+                foreach (KeyValuePair<string, object> kvp in (Dictionary<string, object>)templateInput)
+                    Flatten(getParameters, string.Format("{0}.{1}", prefix, kvp.Key), templateInput);
+            }
+
+            else if (templateInput is string)
+                getParameters[prefix] = templateInput.ToString();
+
+            else if (templateInput is double)
+                getParameters[prefix] = ((double)templateInput).ToString("R");
+
+            else if (templateInput is DateTime)
+            {
+                DateTime dateTime = (DateTime)templateInput;
+
+                getParameters[prefix + ".Ugly"] = string.Format("{0}, {1}", dateTime.ToShortDateString(), dateTime.ToShortTimeString());
+                getParameters[prefix + ".ForJS"] = JsonWriter.Serialize(dateTime);
+                getParameters[prefix] = (DateTime.UtcNow - dateTime).TotalDays.ToString() + " days ago";
+                /*getParameters[prefix + ".Time"] = dateTime.ToShortTimeString();
+                getParameters[prefix + ".Date"] = dateTime.ToShortDateString();
+                getParameters[prefix + ".Ticks"] = dateTime.Ticks.ToString();*/
+
+                // todo:  add a span tag with special class and write a jquery script to format them nicely
+            }
+
+            else
+                getParameters[prefix] = JsonWriter.Serialize(templateInput);
         }
     }
 }
