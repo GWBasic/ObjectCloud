@@ -77,7 +77,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                             {
                                 conditionMet = true;
 
-                                foreach (XmlNode xmlNode in current.ChildNodes)
+                                foreach (XmlNode xmlNode in Enumerable<XmlNode>.FastCopy(Enumerable<XmlNode>.Filter(current.ChildNodes)))
                                     conditionalNode.ParentNode.InsertBefore(xmlNode, conditionalNode);
                             }
                         }

@@ -179,9 +179,16 @@ namespace ObjectCloud.Disk.WebHandlers
                     }
                 }
 
-            // Copy all elements into an immutable list and run document post-processors
-            foreach (XmlElement element in Enumerable<XmlElement>.FastCopy(XmlHelper.IterateAllElements(templateDocument)))
-                templateParsingState.OnPostProcessElement(getParameters, element);
+            // Copy all elements into an immutable list, run document post-processors, and remove comments
+            bool removeComments = !webConnection.CookiesFromBrowser.ContainsKey(TemplatingConstants.XMLDebugModeCookie);
+
+            foreach (XmlNode xmlNode in Enumerable<XmlNode>.FastCopy(XmlHelper.IterateAllElementsAndComments(templateDocument)))
+            {
+                if (xmlNode is XmlElement)
+                    templateParsingState.OnPostProcessElement(getParameters, (XmlElement)xmlNode);
+                else if (removeComments)
+                    xmlNode.ParentNode.RemoveChild(xmlNode);
+            }
 
             XmlWriterSettings xmlWriterSettings = new XmlWriterSettings();
             xmlWriterSettings.CloseOutput = true;

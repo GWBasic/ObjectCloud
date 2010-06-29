@@ -32,6 +32,25 @@ namespace ObjectCloud.Common
         }
 
         /// <summary>
+        /// Helps iterate through all elements and comments in an XmlNode, recursively going through all child elements.
+        /// </summary>
+        /// <param name="xmlNode"></param>
+        /// <returns></returns>
+        public static IEnumerable<XmlNode> IterateAllElementsAndComments(XmlNode xmlNode)
+        {
+            foreach (XmlNode childNode in xmlNode.ChildNodes)
+                if (childNode is XmlElement)
+                {
+                    foreach (XmlNode subChildNode in IterateAllElementsAndComments(childNode))
+                        yield return subChildNode;
+
+                    yield return childNode;
+                }
+                else if (childNode is XmlComment)
+                    yield return childNode;
+        }
+
+        /// <summary>
         /// Removes the node from its parent node
         /// </summary>
         /// <param name="xmlNode"></param>

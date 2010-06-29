@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Xml;
 
+using Common.Logging;
+
 using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Templating;
@@ -16,6 +18,8 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 {
     internal class TemplateParsingState : ITemplateParsingState
     {
+        private ILog log = LogManager.GetLogger<TemplateParsingState>();
+
         internal TemplateParsingState(IWebConnection webConnection, XmlDocument templateDocument)
         {
             _TemplateDocument = templateDocument;
@@ -92,8 +96,16 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 }
 
             // If the script can't be loaded as a text file, then its request needs to be simulated
-            string shelledScript = WebConnection.ShellTo(script).ResultsAsString;
-            AddDependancies(shelledScript);
+            try
+            {
+                string shelledScript = WebConnection.ShellTo(script).ResultsAsString;
+                AddDependancies(shelledScript);
+            }
+            catch (Exception ex)
+            {
+                // Exceptions are swallowed in case there is a problem loading the script
+                log.Warn("Error loading dependancies for " + script, ex);
+            }
 
             _Scripts.AddLast(script);
             ScriptsSet.Add(script);

@@ -51,8 +51,18 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
                             if (!templateParsingState.WebConnection.CookiesFromBrowser.ContainsKey(TemplatingConstants.JavascriptDebugModeCookie))
                                 srcAttribute.Value = HTTPStringFunctions.AppendGetParameter(srcAttribute.Value, "EncodeFor", "JavaScript");
+                            else if ((!srcAttribute.Value.StartsWith("http://")) && (!srcAttribute.Value.StartsWith("https://")))
+                            {
+                                // If Javascript debug mode is on, verify that the script exists
 
-                            // minimize!!! & EncodeFor=JavaScript
+                                string fileName = srcAttribute.Value.Split(new char[] {'?'}, 2)[0];
+
+                                if (!templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.IsFilePresent(fileName))
+                                {
+                                    element.InnerText = "alert('" + (srcAttribute.Value + " doesn't exist: " + element.OuterXml).Replace("'", "\\'") + "');";
+                                    element.Attributes.Remove(srcAttribute);
+                                }
+                            }
                         }
                     }
                     else
