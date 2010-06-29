@@ -368,7 +368,7 @@ namespace ObjectCloud.Javascript.SubProcess
                 if (minimumPermission > usersPermission)
                     if (!FileContainer.HasNamedPermissions(webConnection.Session.User.Id, NamedPermissions))
                         // Enforce the permission
-                        return WebResults.FromStatus(Status._401_Unauthorized);
+                        return WebResults.From(Status._401_Unauthorized);
 
                 object[] parsedArguments = new object[ArgnameToIndex.Count];
 
@@ -401,7 +401,7 @@ namespace ObjectCloud.Javascript.SubProcess
                     if (WebReturnConvention == WebReturnConvention.JavaScriptObject || WebReturnConvention == WebReturnConvention.JSON)
                         return WebResults.ToJson(null);
                     else
-                        return WebResults.FromStatus(Status._200_OK);
+                        return WebResults.From(Status._200_OK);
                 }
 
                 else if (callResults is IWebResults)
@@ -411,7 +411,7 @@ namespace ObjectCloud.Javascript.SubProcess
                 {
                     double callResultAsDouble = ((double)callResults);
 
-                    toReturn = WebResults.FromString(Status._200_OK, callResultAsDouble.ToString("R"));
+                    toReturn = WebResults.From(Status._200_OK, callResultAsDouble.ToString("R"));
                     toReturn.ContentType = "text/plain";
                     return toReturn;
                 }
@@ -420,7 +420,7 @@ namespace ObjectCloud.Javascript.SubProcess
                 {
                     int callResultAsInt = ((int)callResults);
 
-                    toReturn = WebResults.FromString(Status._200_OK, callResultAsInt.ToString("R"));
+                    toReturn = WebResults.From(Status._200_OK, callResultAsInt.ToString("R"));
                     toReturn.ContentType = "text/plain";
                     return toReturn;
                 }
@@ -429,14 +429,14 @@ namespace ObjectCloud.Javascript.SubProcess
                 {
                     bool callResultAsBool = (bool)callResults;
 
-                    toReturn = WebResults.FromString(Status._200_OK, callResultAsBool ? "true" : " false");
+                    toReturn = WebResults.From(Status._200_OK, callResultAsBool ? "true" : " false");
                     toReturn.ContentType = "text/plain";
                     return toReturn;
                 }
 
                 else if (callResults is string)
                 {
-                    toReturn = WebResults.FromString(Status._200_OK, callResults.ToString());
+                    toReturn = WebResults.From(Status._200_OK, callResults.ToString());
                     toReturn.ContentType = "text/plain";
                     return toReturn;
                 }

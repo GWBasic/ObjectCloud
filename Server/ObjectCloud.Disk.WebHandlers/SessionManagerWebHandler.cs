@@ -29,7 +29,7 @@ namespace ObjectCloud.Disk.WebHandlers
         {
             webConnection.Session.KeepAlive = KeepAlive;
 
-            return WebResults.FromString(Status._202_Accepted, "KeepAlive set to " + KeepAlive.ToString(CultureInfo.InvariantCulture));
+            return WebResults.From(Status._202_Accepted, "KeepAlive set to " + KeepAlive.ToString(CultureInfo.InvariantCulture));
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             webConnection.Session.MaxAge = maxAgeTimespan;
 
-            return WebResults.FromString(Status._202_Accepted, "MaxAge set to " + maxAgeTimespan.ToString());
+            return WebResults.From(Status._202_Accepted, "MaxAge set to " + maxAgeTimespan.ToString());
         }
     }
 }

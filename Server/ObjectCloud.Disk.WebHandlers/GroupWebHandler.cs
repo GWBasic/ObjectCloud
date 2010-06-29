@@ -81,11 +81,11 @@ namespace ObjectCloud.Disk.WebHandlers
         {
             // Only let people join if the group is public
             if (Group.Type != GroupType.Public)
-                throw new WebResultsOverrideException(WebResults.FromString(
+                throw new WebResultsOverrideException(WebResults.From(
                     Status._403_Forbidden, "This group is not public.  Contact the owner to join."));
 
             if (FileHandlerFactoryLocator.UserFactory.AnonymousUser == webConnection.Session.User)
-                throw new WebResultsOverrideException(WebResults.FromString(
+                throw new WebResultsOverrideException(WebResults.From(
                     Status._403_Forbidden, "You must be logged in to join a group"));
 
             ID<IUserOrGroup, Guid> ownerId = 
@@ -113,7 +113,7 @@ namespace ObjectCloud.Disk.WebHandlers
         {
             // Only let people join if the group is public
             if (Group.Type != GroupType.Public)
-                throw new WebResultsOverrideException(WebResults.FromString(
+                throw new WebResultsOverrideException(WebResults.From(
                     Status._403_Forbidden, "This group is not public.  Contact the owner to leave."));
 
             ID<IUserOrGroup, Guid> ownerId =

@@ -67,7 +67,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             if (null == webConnection.PostParameters)
                 throw new WebResultsOverrideException(
-                    WebResults.FromString(Status._406_Not_Acceptable, "This method requires the urlencoded convention"));
+                    WebResults.From(Status._406_Not_Acceptable, "This method requires the urlencoded convention"));
 
             // Copy the get arguments, but remove Method and targetUrl
             Dictionary<string, string> postArguments = new Dictionary<string, string>(webConnection.PostParameters);

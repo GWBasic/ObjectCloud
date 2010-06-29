@@ -33,7 +33,7 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.GET, WebReturnConvention.Primitive)]
         public IWebResults GetName(IWebConnection webConnection)
         {
-            return WebResults.FromString(Status._200_OK, FileHandler.Name);
+            return WebResults.From(Status._200_OK, FileHandler.Name);
         }
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.GET, WebReturnConvention.Primitive)]
         public IWebResults GetOpenId(IWebConnection webConnection)
         {
-            return WebResults.FromString(Status._200_OK, FileHandler.Identity);
+            return WebResults.From(Status._200_OK, FileHandler.Identity);
         }
 
 		/// <summary>
@@ -101,7 +101,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             FileHandler.WriteAll(webConnection.Session.User, newPairs, false);
 
-            return WebResults.FromString(Status._202_Accepted, "Saved");
+            return WebResults.From(Status._202_Accepted, "Saved");
         }
 		
         /// <summary>
@@ -124,7 +124,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             FileHandler.WriteAll(webConnection.Session.User, newPairs, false);
 
-            return WebResults.FromString(Status._202_Accepted, "Saved");
+            return WebResults.From(Status._202_Accepted, "Saved");
         }
 		
 		/// <summary>
@@ -179,7 +179,7 @@ namespace ObjectCloud.Disk.WebHandlers
                             if (log.IsInfoEnabled)
                                 log.InfoFormat("OpenID validation for {0}: {1}", FileHandler.Name, associationHandleValid);
 
-                            return WebResults.FromString(Status._200_OK, "openid_mode:id_res\nis_valid:" + associationHandleValid.ToString().ToLower());
+                            return WebResults.From(Status._200_OK, "openid_mode:id_res\nis_valid:" + associationHandleValid.ToString().ToLower());
                         }
 
                     /*default:
@@ -219,12 +219,12 @@ namespace ObjectCloud.Disk.WebHandlers
             }
             catch (WrongPasswordException)
             {
-                return WebResults.FromString(Status._401_Unauthorized, "Wrong password");
+                return WebResults.From(Status._401_Unauthorized, "Wrong password");
             }
 
             FileHandlerFactoryLocator.UserManagerHandler.SetPassword(user.Id, NewPassword);
 
-            return WebResults.FromString(Status._202_Accepted, "Password changed");
+            return WebResults.From(Status._202_Accepted, "Password changed");
         }
 
         /// <summary>
@@ -242,7 +242,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             string senderToken = FileHandler.GetSenderToken(openId, forceRefresh.Value);
 
-            return WebResults.FromString(Status._200_OK, senderToken);
+            return WebResults.From(Status._200_OK, senderToken);
         }
 
         /// <summary>
@@ -257,11 +257,11 @@ namespace ObjectCloud.Disk.WebHandlers
             try
             {
                 FileHandler.EstablishTrust(sender, token);
-                return WebResults.FromStatus(Status._201_Created);
+                return WebResults.From(Status._201_Created);
             }
             catch (ParticleException.CouldNotEstablishTrust cnet)
             {
-                return WebResults.FromString(Status._401_Unauthorized, cnet.Message);
+                return WebResults.From(Status._401_Unauthorized, cnet.Message);
             }
         }
 
@@ -277,11 +277,11 @@ namespace ObjectCloud.Disk.WebHandlers
             try
             {
                 FileHandler.RespondTrust(token, senderToken);
-                return WebResults.FromStatus(Status._202_Accepted);
+                return WebResults.From(Status._202_Accepted);
             }
             catch (ParticleException.BadToken bt)
             {
-                return WebResults.FromString(Status._401_Unauthorized, bt.Message);
+                return WebResults.From(Status._401_Unauthorized, bt.Message);
             }
         }
 
@@ -330,11 +330,11 @@ namespace ObjectCloud.Disk.WebHandlers
             {
                 // TODO:  Deleted is not handled
                 FileHandler.SendNotification(openId, objectUrl, title, documentType, messageSummary, changeData, forceRefreshSenderToken.Value, forceRefreshEndpoints.Value, maxRetries.Value, transportErrorDelay.Value);
-                return WebResults.FromStatus(Status._202_Accepted);
+                return WebResults.From(Status._202_Accepted);
             }
             catch (ParticleException pe)
             {
-                return WebResults.FromString(Status._417_Expectation_Failed, pe.Message);
+                return WebResults.From(Status._417_Expectation_Failed, pe.Message);
             }
         }
 
@@ -359,7 +359,7 @@ namespace ObjectCloud.Disk.WebHandlers
             string changeData)
         {
             if (FileHandler == FileHandlerFactoryLocator.UserFactory.AnonymousUser.UserHandler)
-                throw new WebResultsOverrideException(WebResults.FromString(Status._401_Unauthorized, "The anonymous user can not recieve notifications"));
+                throw new WebResultsOverrideException(WebResults.From(Status._401_Unauthorized, "The anonymous user can not recieve notifications"));
 
             try
             {
@@ -371,11 +371,11 @@ namespace ObjectCloud.Disk.WebHandlers
                     messageSummary,
                     changeData);
 
-                return WebResults.FromStatus(Status._202_Accepted);
+                return WebResults.From(Status._202_Accepted);
             }
             catch (ParticleException.BadToken)
             {
-                return WebResults.FromString(Status._412_Precondition_Failed, "senderToken");
+                return WebResults.From(Status._412_Precondition_Failed, "senderToken");
             }
         }
 

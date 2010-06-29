@@ -41,10 +41,10 @@ namespace ObjectCloud.Javascript.SubProcess
             Status statusValue = (Status)statusInt;
 
             if (null == message)
-                return WebResults.FromStatus(statusValue);
+                return WebResults.From(statusValue);
             else
             {
-                IWebResults toReturn = WebResults.FromString(statusValue, message.ToString());
+                IWebResults toReturn = WebResults.From(statusValue, message.ToString());
                 toReturn.ContentType = "text/plain";
 
                 return toReturn;

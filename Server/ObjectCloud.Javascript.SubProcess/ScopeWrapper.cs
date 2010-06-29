@@ -425,7 +425,7 @@ namespace ObjectCloud.Javascript.SubProcess
             IDirectoryHandler parentDirectoryHandler = FileContainer.ParentDirectoryHandler;
 
             if (null == parentDirectoryHandler)
-                throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, "The root directory has no parent directory"));
+                throw new WebResultsOverrideException(WebResults.From(Status._400_Bad_Request, "The root directory has no parent directory"));
 
             IWebResults webResults = parentDirectoryHandler.FileContainer.WebHandler.GetJSW(webConnection, null, null, false);
             string webResultsAsString = webResults.ResultsAsString;

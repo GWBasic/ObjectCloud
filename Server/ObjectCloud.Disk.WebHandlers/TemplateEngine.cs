@@ -57,14 +57,14 @@ namespace ObjectCloud.Disk.WebHandlers
                         result = result.Split(new char[] { '>' }, 2)[1];
                         result = "<!DOCTYPE html>\n<html>" + result;
 
-                        IWebResults toReturn = WebResults.FromString(Status._200_OK, result);
+                        IWebResults toReturn = WebResults.From(Status._200_OK, result);
                         toReturn.ContentType = "text/html";
                         webConnection.SendResults(toReturn);
                     }
                     else
                     {
                         // Everyone else gets real XML
-                        IWebResults toReturn = WebResults.FromStream(Status._200_OK, results);
+                        IWebResults toReturn = WebResults.From(Status._200_OK, results);
                         toReturn.ContentType = "text/xml";
                         webConnection.SendResults(toReturn);
                     }
@@ -173,7 +173,7 @@ namespace ObjectCloud.Disk.WebHandlers
                     {
                         if (null == templateDocument)
                             webConnection.SendResults(
-                                WebResults.FromString(Status._500_Internal_Server_Error, "Timeout"));
+                                WebResults.From(Status._500_Internal_Server_Error, "Timeout"));
                         else
                             Thread.ResetAbort();
                     }
@@ -212,7 +212,7 @@ namespace ObjectCloud.Disk.WebHandlers
         {
             XmlNodeList headNodeList = templateDocument.GetElementsByTagName("head");
             if (headNodeList.Count != 1)
-                throw new WebResultsOverrideException(WebResults.FromString(Status._500_Internal_Server_Error, "Generated document does not have a <head>:\n" + templateDocument.OuterXml));
+                throw new WebResultsOverrideException(WebResults.From(Status._500_Internal_Server_Error, "Generated document does not have a <head>:\n" + templateDocument.OuterXml));
 
             XmlNode headNode = headNodeList[0];
             return headNode;

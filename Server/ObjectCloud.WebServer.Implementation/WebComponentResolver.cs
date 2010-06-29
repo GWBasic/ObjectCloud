@@ -86,7 +86,7 @@ namespace ObjectCloud.WebServer.Implementation
             catch (FileDoesNotExist fdne)
             {
                 throw new WebResultsOverrideException(
-                    WebResults.FromString(Status._404_Not_Found, fdne.Message));
+                    WebResults.From(Status._404_Not_Found, fdne.Message));
             }
             finally
             {

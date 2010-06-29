@@ -102,7 +102,7 @@ namespace ObjectCloud.Disk.WebHandlers
         {
             Type cSharpType = default(Type);
             if (!FileHandlerFactoryLocator.WebHandlerClasses.TryGetValue(objectType, out cSharpType))
-                throw new WebResultsOverrideException(WebResults.FromString(Status._404_Not_Found, objectType + " isn't a known object type"));
+                throw new WebResultsOverrideException(WebResults.From(Status._404_Not_Found, objectType + " isn't a known object type"));
 
             List<object> methodsForJSON = new List<object>();
 
@@ -208,7 +208,7 @@ namespace ObjectCloud.Disk.WebHandlers
         {
             Type cSharpType = default(Type);
             if (!FileHandlerFactoryLocator.WebHandlerClasses.TryGetValue(objectType, out cSharpType))
-                throw new WebResultsOverrideException(WebResults.FromString(Status._404_Not_Found, objectType + " isn't a known object type"));
+                throw new WebResultsOverrideException(WebResults.From(Status._404_Not_Found, objectType + " isn't a known object type"));
 
             Dictionary<string, object> toReturn = new Dictionary<string, object>();
             List<object> arguments = new List<object>();
@@ -223,7 +223,7 @@ namespace ObjectCloud.Disk.WebHandlers
             catch (Exception e)
             {
                 log.Error("Error getting calling convention", e);
-                throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, "Error getting calling conventions"));
+                throw new WebResultsOverrideException(WebResults.From(Status._400_Bad_Request, "Error getting calling conventions"));
             }
 
             do

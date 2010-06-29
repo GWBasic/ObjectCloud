@@ -274,7 +274,7 @@ namespace ObjectCloud.Disk.WebHandlers
 				}
 				catch
 				{
-					throw new WebResultsOverrideException(WebResults.FromString(
+					throw new WebResultsOverrideException(WebResults.From(
 						Status._400_Bad_Request, levelAndDays.Key + " is not a valid logging level"));
 				}
 				
@@ -283,7 +283,7 @@ namespace ObjectCloud.Disk.WebHandlers
 			
 			FileHandler.UpdateLoggingTimespans(toSet);
 			
-			return WebResults.FromStatus(Status._202_Accepted);
+			return WebResults.From(Status._202_Accepted);
 		}
 	}
 }

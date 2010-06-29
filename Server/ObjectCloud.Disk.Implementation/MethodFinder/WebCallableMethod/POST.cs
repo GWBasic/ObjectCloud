@@ -29,7 +29,7 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
             public override IWebResults CallMethod(IWebConnection webConnection, IWebHandlerPlugin webHandlerPlugin)
             {
                 if (null == webConnection.Content)
-                    return WebResults.FromString(Status._400_Bad_Request, "No data sent");
+                    return WebResults.From(Status._400_Bad_Request, "No data sent");
 
                 object toReturn;
 

@@ -41,7 +41,7 @@ namespace ObjectCloud.Disk.WebHandlers
                     // The text is encoded for HTML so it can be displayed unaltered
                     value = HTTPStringFunctions.EncodeForHTML(value);
 
-            return WebResults.FromString(Status._200_OK, value);
+            return WebResults.From(Status._200_OK, value);
         }
 
         /// <summary>
@@ -96,7 +96,7 @@ namespace ObjectCloud.Disk.WebHandlers
         {
             FileHandler.Set(webConnection.Session.User, Name, Value);
 
-            return WebResults.FromStatus(Status._202_Accepted);
+            return WebResults.From(Status._202_Accepted);
         }
 
         /// <summary>
@@ -110,7 +110,7 @@ namespace ObjectCloud.Disk.WebHandlers
         {
             FileHandler.Set(webConnection.Session.User, Name, null);
 
-            return WebResults.FromStatus(Status._202_Accepted);
+            return WebResults.From(Status._202_Accepted);
         }
 
         /// <summary>
@@ -129,7 +129,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             FileHandler.WriteAll(webConnection.Session.User, newPairs, true);
 
-            return WebResults.FromString(Status._202_Accepted, "Saved");
+            return WebResults.From(Status._202_Accepted, "Saved");
         }
 
         /// <summary>
@@ -147,7 +147,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             FileHandler.WriteAll(webConnection.Session.User, newPairs, true);
 
-            return WebResults.FromString(Status._202_Accepted, "Saved");
+            return WebResults.From(Status._202_Accepted, "Saved");
         }
     }
 }

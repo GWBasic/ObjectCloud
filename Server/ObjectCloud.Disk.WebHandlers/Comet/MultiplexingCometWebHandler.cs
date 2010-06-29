@@ -206,7 +206,7 @@ namespace ObjectCloud.Disk.WebHandlers.Comet
                                     catch (FileDoesNotExist)
                                     {
                                         log.Error("The requested channel does not exist: " + url);
-                                        throw new WebResultsOverrideException(WebResults.FromStatus(Status._404_Not_Found));
+                                        throw new WebResultsOverrideException(WebResults.From(Status._404_Not_Found));
                                     }
 
                                     ICometTransport cometTransport = fileContainer.WebHandler.ConstructCometTransport(
@@ -268,7 +268,7 @@ namespace ObjectCloud.Disk.WebHandlers.Comet
                 catch (Exception e)
                 {
                     throw new WebResultsOverrideException(
-                        WebResults.FromStatus(Status._400_Bad_Request), e);
+                        WebResults.From(Status._400_Bad_Request), e);
                 }
                 finally
                 {

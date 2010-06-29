@@ -279,10 +279,10 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
             // Verify permission
             if (null == fileContainer.LoadPermission(WebConnection.Session.User.Id))
-                throw new WebResultsOverrideException(WebResults.FromString(Status._401_Unauthorized, "You do not have permission to read " + fileContainer.FullPath));
+                throw new WebResultsOverrideException(WebResults.From(Status._401_Unauthorized, "You do not have permission to read " + fileContainer.FullPath));
 
             if (!(fileContainer.FileHandler is ITextHandler))
-                throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, fileContainer.FullPath + " must be a text file"));
+                throw new WebResultsOverrideException(WebResults.From(Status._400_Bad_Request, fileContainer.FullPath + " must be a text file"));
 
             XmlDocument xmlDocument = new XmlDocument();
             string xml = ((ITextHandler)fileContainer.FileHandler).ReadAll();
@@ -301,7 +301,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 StringBuilder errorBuilder = new StringBuilder(string.Format("An error occured while loading {0}\n", fileContainer.FullPath));
                 errorBuilder.AppendFormat("{0}\n\n\nFrom:\n{1}", xmlException.Message, xml);
 
-                throw new WebResultsOverrideException(WebResults.FromString(Status._500_Internal_Server_Error, errorBuilder.ToString()));
+                throw new WebResultsOverrideException(WebResults.From(Status._500_Internal_Server_Error, errorBuilder.ToString()));
             }
 
             return xmlDocument;

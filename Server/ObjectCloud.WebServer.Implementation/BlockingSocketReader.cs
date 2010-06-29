@@ -176,14 +176,14 @@ namespace ObjectCloud.WebServer.Implementation
                 if (BufferBytesRead >= WebServer.HeaderSize)
                 {
                     // The header is too long
-                    Close(WebResults.FromString(Status._414_Request_URI_Too_Long, "Max header length: " + WebServer.HeaderSize.ToString()));
+                    Close(WebResults.From(Status._414_Request_URI_Too_Long, "Max header length: " + WebServer.HeaderSize.ToString()));
                     return;
                 }
 
                 else if (ReadStartTime + WebServer.HeaderTimeout < DateTime.UtcNow)
                 {
                     // The sending header timed out
-                    Close(WebResults.FromString(Status._408_Request_Timeout, "Headers time out after: " + WebServer.HeaderTimeout.ToString()));
+                    Close(WebResults.From(Status._408_Request_Timeout, "Headers time out after: " + WebServer.HeaderTimeout.ToString()));
                     return;
                 }
 
@@ -237,7 +237,7 @@ namespace ObjectCloud.WebServer.Implementation
             catch (Exception e)
             {
                 log.Error("Exception occured while reading the header", e);
-                Close(WebResults.FromString(Status._500_Internal_Server_Error, "An unknown error occured"));
+                Close(WebResults.From(Status._500_Internal_Server_Error, "An unknown error occured"));
 
                 return;
             }
@@ -248,7 +248,7 @@ namespace ObjectCloud.WebServer.Implementation
 
                     if (WebConnection.Headers.ContainsKey("CONTENT-LENGTH"))
                     {
-                        Close(WebResults.FromString(Status._406_Not_Acceptable, "Content-Length can not be specified in the headers when performing a GET"));
+                        Close(WebResults.From(Status._406_Not_Acceptable, "Content-Length can not be specified in the headers when performing a GET"));
                         return;
                     }
 
@@ -287,7 +287,7 @@ namespace ObjectCloud.WebServer.Implementation
                 Content = new WebConnectionContent.OnDisk();
             else
             {
-                Close(WebResults.FromString(Status._413_Request_Entity_Too_Large, "Too much data, max size: " + WebServer.MaxContentSize.ToString()));
+                Close(WebResults.From(Status._413_Request_Entity_Too_Large, "Too much data, max size: " + WebServer.MaxContentSize.ToString()));
                 return;
             }
 
@@ -401,7 +401,7 @@ namespace ObjectCloud.WebServer.Implementation
 
                     WebConnectionIOState = WebConnectionIOState.Disconnected;
 
-                    WebConnection.SendResults(WebResults.FromString(Status._408_Request_Timeout, "Content times out after: " + WebServer.HeaderTimeout.ToString()));
+                    WebConnection.SendResults(WebResults.From(Status._408_Request_Timeout, "Content times out after: " + WebServer.HeaderTimeout.ToString()));
                     Socket.Close();
 
                     return;

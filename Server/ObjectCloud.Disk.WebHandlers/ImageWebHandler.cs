@@ -125,7 +125,7 @@ namespace ObjectCloud.Disk.WebHandlers
             if (FileHandler.TryGetCached(cacheKey, out resizedImageBytes))
             {
                 MemoryStream stream = new MemoryStream(resizedImageBytes, false);
-                toReturn = WebResults.FromStream(Status._200_OK, stream);
+                toReturn = WebResults.From(Status._200_OK, stream);
             }
             else
             {
@@ -161,7 +161,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 FileHandler.SetCached(cacheKey, resizedImageBytes);
 
                 ms.Seek(0, SeekOrigin.Begin);
-                toReturn = WebResults.FromStream(Status._200_OK, ms);
+                toReturn = WebResults.From(Status._200_OK, ms);
             }
 
             toReturn.ContentType = "image/jpeg";

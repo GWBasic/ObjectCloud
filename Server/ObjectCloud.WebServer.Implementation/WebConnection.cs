@@ -61,7 +61,7 @@ namespace ObjectCloud.WebServer.Implementation
             string[] headerLines = header.Split(new string[] { "\r\n" }, StringSplitOptions.None);
 
             if (headerLines.Length < 1)
-                throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, "No request!!!"));
+                throw new WebResultsOverrideException(WebResults.From(Status._400_Bad_Request, "No request!!!"));
 
             // Read request type and filename
             string requestTypeAndName = headerLines[0];
@@ -97,7 +97,7 @@ namespace ObjectCloud.WebServer.Implementation
                 string[] lineTypeAndParms = headerLines[lineCtr].Split(new char[] { ':' }, 2);
 
                 if (lineTypeAndParms.Length < 2)
-                    throw new WebResultsOverrideException(WebResults.FromString(Status._406_Not_Acceptable, "Bad header:\n" + headerLines[lineCtr]));
+                    throw new WebResultsOverrideException(WebResults.From(Status._406_Not_Acceptable, "Bad header:\n" + headerLines[lineCtr]));
 
                 _Headers[lineTypeAndParms[0].ToUpper()] = lineTypeAndParms[1].Trim();
             }
@@ -155,7 +155,7 @@ namespace ObjectCloud.WebServer.Implementation
 
                                 if (useCached)
                                 {
-                                    SendResults(WebResults.FromStatus(Status._304_Not_Modified));
+                                    SendResults(WebResults.From(Status._304_Not_Modified));
                                     return;
                                 }
                             }
@@ -195,7 +195,7 @@ namespace ObjectCloud.WebServer.Implementation
                     catch (Exception e)
                     {
                         log.Error("Exception occured while handling a web request", e);
-                        webResults = WebResults.FromString(Status._500_Internal_Server_Error, "An unhandled error occured");
+                        webResults = WebResults.From(Status._500_Internal_Server_Error, "An unhandled error occured");
                     }
 
                     if (log.IsDebugEnabled)
@@ -231,12 +231,12 @@ namespace ObjectCloud.WebServer.Implementation
                 catch (NotImplementedException ne)
                 {
                     log.Error("NotImplementedUnhandled exception while handling a web connection", ne);
-                    SendResults(WebResults.FromStatus(Status._501_Not_Implemented));
+                    SendResults(WebResults.From(Status._501_Not_Implemented));
                 }
                 catch (Exception e)
                 {
                     log.Error("Unhandled exception while handling a web connection", e);
-                    SendResults(WebResults.FromString(Status._500_Internal_Server_Error, "An unhandled error occured"));
+                    SendResults(WebResults.From(Status._500_Internal_Server_Error, "An unhandled error occured"));
                 }
             }
             finally

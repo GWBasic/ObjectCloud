@@ -31,7 +31,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             MemoryStream stream = new MemoryStream(contents, false);
 
-            return WebResults.FromStream(Status._200_OK, stream);
+            return WebResults.From(Status._200_OK, stream);
         }
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             string toReturn = Convert.ToBase64String(contents);
 
-            return WebResults.FromString(Status._200_OK, toReturn);
+            return WebResults.From(Status._200_OK, toReturn);
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace ObjectCloud.Disk.WebHandlers
         {
             FileHandler.WriteAll(contents);
 
-            return WebResults.FromString(Status._202_Accepted, "Saved");
+            return WebResults.From(Status._202_Accepted, "Saved");
         }
 
         /// <summary>
@@ -75,7 +75,7 @@ namespace ObjectCloud.Disk.WebHandlers
             byte[] contents = Convert.FromBase64String(base64);
             FileHandler.WriteAll(contents);
 
-            return WebResults.FromString(Status._202_Accepted, "Saved");
+            return WebResults.From(Status._202_Accepted, "Saved");
         }
 
         /// <summary>

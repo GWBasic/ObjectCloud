@@ -63,7 +63,7 @@ namespace ObjectCloud.Disk.WebHandlers
         private IWebResults RunStoredProc(IWebConnection webConnection, string procFile)
         {
             if (null == procFile)
-                return WebResults.FromString(Status._412_Precondition_Failed, "procFile is missing");
+                return WebResults.From(Status._412_Precondition_Failed, "procFile is missing");
 
             IFileContainer procContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(procFile);
 
@@ -96,7 +96,7 @@ namespace ObjectCloud.Disk.WebHandlers
             }
 
             if (!procHandler.Contains("Query"))
-                return WebResults.FromString(Status._412_Precondition_Failed, procFile + " does not have a Query");
+                return WebResults.From(Status._412_Precondition_Failed, procFile + " does not have a Query");
 
             string query = procHandler["Query"];
 
@@ -120,7 +120,7 @@ namespace ObjectCloud.Disk.WebHandlers
             IDatabaseHandler databaseHandler = DatabaseHandler;
 
             if (null == query)
-                return WebResults.FromString(Status._412_Precondition_Failed, "query is missing");
+                return WebResults.From(Status._412_Precondition_Failed, "query is missing");
 
             // Decode any parameters for the query
             // POST parameters have priority, if present
@@ -192,7 +192,7 @@ namespace ObjectCloud.Disk.WebHandlers
             catch (DbException dbException)
             {
                 throw new WebResultsOverrideException(
-                    WebResults.FromString(Status._400_Bad_Request, dbException.Message));
+                    WebResults.From(Status._400_Bad_Request, dbException.Message));
             }
 
             // By serializing to JSON outside of the using block, the database is blocked for less time!
@@ -231,7 +231,7 @@ namespace ObjectCloud.Disk.WebHandlers
         {
             DatabaseHandler.Version = version;
 
-            return WebResults.FromStatus(Status._202_Accepted);
+            return WebResults.From(Status._202_Accepted);
         }
 
         /// <summary>
@@ -243,7 +243,7 @@ namespace ObjectCloud.Disk.WebHandlers
             {
                 if (!(FileHandler is IDatabaseHandler))
                     throw new WebResultsOverrideException(
-                        WebResults.FromString(Status._412_Precondition_Failed, "The implementation of " + FileContainer.TypeId + " does not support database-style queries"));
+                        WebResults.From(Status._412_Precondition_Failed, "The implementation of " + FileContainer.TypeId + " does not support database-style queries"));
 
                 return (IDatabaseHandler)FileHandler;
             }

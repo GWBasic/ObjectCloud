@@ -81,13 +81,13 @@ namespace ObjectCloud.Disk.WebHandlers
                 // It's an error if both FileName and extension are null, or if both are set
                 if (((null == FileName) && (null == extension)) || ((null != FileName) && (null != extension)))
                     throw new WebResultsOverrideException(
-                        WebResults.FromString(Status._400_Bad_Request, "Either FileName or Extension must be specified"));
+                        WebResults.From(Status._400_Bad_Request, "Either FileName or Extension must be specified"));
 
                 else if (null == FileName)
                 {
                     if (extension.Length < 1)
                         throw new WebResultsOverrideException(
-                            WebResults.FromString(Status._400_Bad_Request, "The extension must be at least one character long"));
+                            WebResults.From(Status._400_Bad_Request, "The extension must be at least one character long"));
 
                     FileName = GenerateFilename(extension, fileNameSuggestion);
                 }
@@ -109,7 +109,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 {
                     FileType = DetermineFileType(extension);
                     if (null == FileType)
-                        throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, "FileType must be specified for files with extension ." + extension));
+                        throw new WebResultsOverrideException(WebResults.From(Status._400_Bad_Request, "FileType must be specified for files with extension ." + extension));
                 }
 
                 try
@@ -118,11 +118,11 @@ namespace ObjectCloud.Disk.WebHandlers
                 }
                 catch (DuplicateFile)
                 {
-                    throw new WebResultsOverrideException(WebResults.FromString(Status._409_Conflict, FileName + " already exists"));
+                    throw new WebResultsOverrideException(WebResults.From(Status._409_Conflict, FileName + " already exists"));
                 }
                 catch (BadFileName)
                 {
-                    throw new WebResultsOverrideException(WebResults.FromString(Status._409_Conflict, FileName + " is an invalid file name"));
+                    throw new WebResultsOverrideException(WebResults.From(Status._409_Conflict, FileName + " is an invalid file name"));
                 }
             }
         }
@@ -223,10 +223,10 @@ namespace ObjectCloud.Disk.WebHandlers
             catch (FileDoesNotExist)
             {
                 throw new WebResultsOverrideException(
-                    WebResults.FromString(Status._404_Not_Found, FileName + " does not exist"));
+                    WebResults.From(Status._404_Not_Found, FileName + " does not exist"));
             }
 
-            return WebResults.FromString(Status._202_Accepted, FileName + " deleted");
+            return WebResults.From(Status._202_Accepted, FileName + " deleted");
         }
 
         /// <summary>
@@ -247,12 +247,12 @@ namespace ObjectCloud.Disk.WebHandlers
             catch (FileDoesNotExist)
             {
                 throw new WebResultsOverrideException(
-                    WebResults.FromString(Status._404_Not_Found, FileName + " does not exist"));
+                    WebResults.From(Status._404_Not_Found, FileName + " does not exist"));
             }
             catch (WrongFileType wft)
             {
                 throw new WebResultsOverrideException(
-                    WebResults.FromString(Status._404_Not_Found, wft.Message));
+                    WebResults.From(Status._404_Not_Found, wft.Message));
             }
 			
 			FilePermissionEnum? permission = fileContainer.LoadPermission(webConnection.Session.User.Id);
@@ -263,13 +263,13 @@ namespace ObjectCloud.Disk.WebHandlers
 		
 		        string minified = JavaScriptMinifier.Instance.Minify(webResults.ResultsAsString);
 
-                IWebResults toReturn = WebResults.FromString(webResults.Status, minified);
+                IWebResults toReturn = WebResults.From(webResults.Status, minified);
                 toReturn.ContentType = webResults.ContentType;
 
                 return toReturn;
 			}
 			else
-				return WebResults.FromString(Status._401_Unauthorized, "Permission Denied");
+				return WebResults.From(Status._401_Unauthorized, "Permission Denied");
         }
 
         /// <summary>
@@ -352,7 +352,7 @@ namespace ObjectCloud.Disk.WebHandlers
             catch (FileDoesNotExist)
             {
                 throw new WebResultsOverrideException(
-                    WebResults.FromString(Status._404_Not_Found, FileName + " doesn't exist"));
+                    WebResults.From(Status._404_Not_Found, FileName + " doesn't exist"));
             }
 
             return file.WebHandler.SetPermission(webConnection, UserOrGroupId, UserOrGroup, FilePermission, Inherit, SendNotifications, null);
@@ -380,7 +380,7 @@ namespace ObjectCloud.Disk.WebHandlers
             catch (FileDoesNotExist)
             {
                 throw new WebResultsOverrideException(
-                    WebResults.FromString(Status._404_Not_Found, FileName + " doesn't exist"));
+                    WebResults.From(Status._404_Not_Found, FileName + " doesn't exist"));
             }
 
             return file.WebHandler.GetPermissions(webConnection);
@@ -403,9 +403,9 @@ namespace ObjectCloud.Disk.WebHandlers
 			FilePermissionEnum? permission = fileContainer.LoadPermission(webConnection.Session.User.Id);
 			
 			if (null != permission)
-				return WebResults.FromString(Status._200_OK, permission.ToString());
+				return WebResults.From(Status._200_OK, permission.ToString());
 			else
-				return WebResults.FromString(Status._200_OK, "None");
+				return WebResults.From(Status._200_OK, "None");
 		}
 
         /// <summary>
@@ -420,7 +420,7 @@ namespace ObjectCloud.Disk.WebHandlers
         {
             FileHandler.Rename(webConnection.Session.User, OldFileName, NewFileName);
 
-            return WebResults.FromString(Status._202_Accepted, "File Renamed");
+            return WebResults.From(Status._202_Accepted, "File Renamed");
         }
 
         /// <summary>
@@ -444,7 +444,7 @@ namespace ObjectCloud.Disk.WebHandlers
             }
             catch (FileDoesNotExist)
             {
-                throw new WebResultsOverrideException(WebResults.FromString(
+                throw new WebResultsOverrideException(WebResults.From(
                     Status._404_Not_Found, SourceFilename + " not found"));
             }
 
@@ -470,21 +470,21 @@ namespace ObjectCloud.Disk.WebHandlers
                     }
                     catch (DuplicateFile)
                     {
-                        throw new WebResultsOverrideException(WebResults.FromString(
+                        throw new WebResultsOverrideException(WebResults.From(
                             Status._404_Not_Found, DestinationFilename + " already exists"));
                     }
 					catch (BadFileName)
 					{
-		                return WebResults.FromString(Status._409_Conflict, DestinationFilename + " is an invalid file name");
+		                return WebResults.From(Status._409_Conflict, DestinationFilename + " is an invalid file name");
 					}
 
                     // Return a Javascript wrapper to assist in the caller knowing more about the created file
                     IFileContainer newFile = FileHandler.OpenFile(DestinationFilename);
                     IWebResults wrapperResults = newFile.WebHandler.GetJSW(webConnection, null, null, false);
-                    return WebResults.FromStream(Status._201_Created, wrapperResults.ResultsAsStream);
+                    return WebResults.From(Status._201_Created, wrapperResults.ResultsAsStream);
                 }
 
-            return WebResults.FromString(Status._401_Unauthorized, "Permission deined");
+            return WebResults.From(Status._401_Unauthorized, "Permission deined");
         }
 
         /// <summary>
@@ -497,13 +497,13 @@ namespace ObjectCloud.Disk.WebHandlers
         public IWebResults Upload(IWebConnection webConnection, MimeReader.Part File)
         {
             if (null == File)
-                return WebResults.FromString(Status._412_Precondition_Failed, "Expected MIME part File");
+                return WebResults.From(Status._412_Precondition_Failed, "Expected MIME part File");
 
             string filename;
             string fileFactoryType = GetFileFactoryTypeFromUpload(File, out filename);
 
             if (FileHandler.IsFilePresent(filename))
-                return WebResults.FromString(Status._409_Conflict, filename + " already exists");
+                return WebResults.From(Status._409_Conflict, filename + " already exists");
 
             string tempFile = Path.GetTempFileName();
             try
@@ -514,7 +514,7 @@ namespace ObjectCloud.Disk.WebHandlers
             }
             catch (BadFileName bfn)
             {
-                return WebResults.FromString(Status._403_Forbidden, bfn.Message);
+                return WebResults.From(Status._403_Forbidden, bfn.Message);
             }
             finally
             {
@@ -536,7 +536,7 @@ namespace ObjectCloud.Disk.WebHandlers
 			
             string results = "Filename: " + filename + "<br/><br/>FileTypeId: " + fileFactoryType + "<br />";
 
-            return WebResults.FromString(Status._201_Created, results);
+            return WebResults.From(Status._201_Created, results);
         }
 
         /// <summary>
@@ -613,11 +613,11 @@ namespace ObjectCloud.Disk.WebHandlers
                 if (IndexFile.Length > 0)
                 {
                     FileHandler.IndexFile = IndexFile;
-                    return WebResults.FromString(Status._202_Accepted, "Index file is now: " + FileHandler.IndexFile);
+                    return WebResults.From(Status._202_Accepted, "Index file is now: " + FileHandler.IndexFile);
                 }
 
             FileHandler.IndexFile = null;
-            return WebResults.FromString(Status._202_Accepted, "Index file disabled");
+            return WebResults.From(Status._202_Accepted, "Index file disabled");
         }
 
         /// <summary>
@@ -629,9 +629,9 @@ namespace ObjectCloud.Disk.WebHandlers
         public IWebResults GetIndexFile(IWebConnection webConnection)
         {
             if (null != FileHandler.IndexFile)
-                return WebResults.FromString(Status._200_OK, FileHandler.IndexFile);
+                return WebResults.From(Status._200_OK, FileHandler.IndexFile);
             else
-                return WebResults.FromString(Status._200_OK, "No index file");
+                return WebResults.From(Status._200_OK, "No index file");
         }
 
         /// <summary>

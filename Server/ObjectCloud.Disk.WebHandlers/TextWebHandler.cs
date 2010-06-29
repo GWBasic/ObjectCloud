@@ -57,7 +57,7 @@ namespace ObjectCloud.Disk.WebHandlers
                         {
                             log.Error("Error when minimizing JavaScript", e);
 
-                            return WebResults.FromString(Status._500_Internal_Server_Error, "Error when minimizing JavaScript: " + e.Message);
+                            return WebResults.From(Status._500_Internal_Server_Error, "Error when minimizing JavaScript: " + e.Message);
                         }
 
                         break;
@@ -72,7 +72,7 @@ namespace ObjectCloud.Disk.WebHandlers
                     contents = contents.Substring(0, maxLength);
             }
 
-            return WebResults.FromString(Status._200_OK, contents);
+            return WebResults.From(Status._200_OK, contents);
         }
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             contents = webConnection.ResolveWebComponents(contents);
 
-            return WebResults.FromString(Status._200_OK, contents);
+            return WebResults.From(Status._200_OK, contents);
         }
 
         /// <summary>
@@ -103,7 +103,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             contents = webConnection.ResolveWebComponents(contents);
 
-            return WebResults.FromString(Status._200_OK, contents);
+            return WebResults.From(Status._200_OK, contents);
         }
 
         /// <summary>
@@ -117,7 +117,7 @@ namespace ObjectCloud.Disk.WebHandlers
         {
             FileHandler.WriteAll(webConnection.Session.User, text);
 
-            return WebResults.FromString(Status._202_Accepted, "Saved");
+            return WebResults.From(Status._202_Accepted, "Saved");
         }
 
         /// <summary>
@@ -131,7 +131,7 @@ namespace ObjectCloud.Disk.WebHandlers
         {
             FileHandler.Append(webConnection.Session.User, text);
 
-            return WebResults.FromString(Status._202_Accepted, "Appended");
+            return WebResults.From(Status._202_Accepted, "Appended");
         }
 
         /// <summary>
@@ -145,7 +145,7 @@ namespace ObjectCloud.Disk.WebHandlers
         {
             FileHandler.WriteAll(webConnection.Session.User, text);
 
-            return WebResults.FromString(Status._202_Accepted, "Saved");
+            return WebResults.From(Status._202_Accepted, "Saved");
         }
 
         /// <summary>

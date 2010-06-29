@@ -30,7 +30,7 @@ namespace ObjectCloud.Interfaces.WebServer
             // Prevent stack overflow.  TODO, make the maximum generation configurable
             if (generation > 250)
                 throw new WebResultsOverrideException(
-                    WebResults.FromString(Status._500_Internal_Server_Error, "Stack overflow, too many levels of shells"));
+                    WebResults.From(Status._500_Internal_Server_Error, "Stack overflow, too many levels of shells"));
 
             _Generation = generation;
         }
@@ -152,7 +152,7 @@ namespace ObjectCloud.Interfaces.WebServer
             if (!_GetParameters.ContainsKey(argumentName))
             {
                 throw new WebResultsOverrideException(
-                    WebResults.FromString(Status._449_Retry_With, argumentName + " is missing"),
+                    WebResults.From(Status._449_Retry_With, argumentName + " is missing"),
                     argumentName + " is missing");
             }
 
@@ -172,7 +172,7 @@ namespace ObjectCloud.Interfaces.WebServer
 
 
             throw new WebResultsOverrideException(
-                WebResults.FromString(Status._449_Retry_With, argumentName + " is missing"),
+                WebResults.From(Status._449_Retry_With, argumentName + " is missing"),
                 argumentName + " is missing");
         }
 
@@ -186,7 +186,7 @@ namespace ObjectCloud.Interfaces.WebServer
             if (!CookiesFromBrowser.ContainsKey(cookieName))
             {
                 throw new WebResultsOverrideException(
-                    WebResults.FromString(Status._449_Retry_With, "Cookie " + cookieName + " is missing"),
+                    WebResults.From(Status._449_Retry_With, "Cookie " + cookieName + " is missing"),
                     "Cookie " + cookieName + " is missing");
             }
 
@@ -211,7 +211,7 @@ namespace ObjectCloud.Interfaces.WebServer
                 return CookiesFromBrowser[argumentName];
 
             throw new WebResultsOverrideException(
-                WebResults.FromString(Status._449_Retry_With, argumentName + " is missing"),
+                WebResults.From(Status._449_Retry_With, argumentName + " is missing"),
                 argumentName + " is missing");
         }
 
@@ -361,19 +361,19 @@ namespace ObjectCloud.Interfaces.WebServer
             {
                 log.Error(e);
 
-                return WebResults.FromString(Status._400_Bad_Request, e.Message);
+                return WebResults.From(Status._400_Bad_Request, e.Message);
             }
             catch (NotImplementedException e)
             {
                 log.Error("Hit some unimplemented functionality...", e);
 
-                return WebResults.FromStatus(Status._501_Not_Implemented);
+                return WebResults.From(Status._501_Not_Implemented);
             }
             catch (StackOverflowException e)
             {
                 log.Error(e);
 
-                return WebResults.FromStatus(Status._500_Internal_Server_Error);
+                return WebResults.From(Status._500_Internal_Server_Error);
             }
             catch (Exception e)
             {
@@ -382,7 +382,7 @@ namespace ObjectCloud.Interfaces.WebServer
                 if (e is IHasWebResults)
                     return ((IHasWebResults)e).WebResults;
                 else
-                    return WebResults.FromString(Status._500_Internal_Server_Error, "An unhandled error occured");
+                    return WebResults.From(Status._500_Internal_Server_Error, "An unhandled error occured");
             }
         }
 
@@ -440,7 +440,7 @@ namespace ObjectCloud.Interfaces.WebServer
                             // Errors when shelling to the permission denied page are logged and swallowed.
                             // The system defaults to a simple message in this case
                             log.Error("Error when shelling to /Shell/UserManagers/Login.wchtml for a login form", e);
-                            return WebResults.FromString(Status._401_Unauthorized, "Permission Denied");
+                            return WebResults.From(Status._401_Unauthorized, "Permission Denied");
                         }
             }
 
@@ -463,7 +463,7 @@ namespace ObjectCloud.Interfaces.WebServer
             catch (FileDoesNotExist)
             {
                 throw new WebResultsOverrideException(
-                    WebResults.FromString(Status._404_Not_Found, requestedFile + " does not exist"),
+                    WebResults.From(Status._404_Not_Found, requestedFile + " does not exist"),
                     requestedFile + " does not exist");
             }
 
@@ -554,7 +554,7 @@ namespace ObjectCloud.Interfaces.WebServer
                             // Errors when shelling to the permission denied page are logged and swallowed.
                             // The system defaults to a simple message in this case
                             log.Error("Error when shelling to /Shell/UserManagers/PermissionDenied.wchtml for a permission denied message", e);
-                            return WebResults.FromString(Status._401_Unauthorized, "Permission Denied");
+                            return WebResults.From(Status._401_Unauthorized, "Permission Denied");
                         }
                     }
                 }
@@ -593,13 +593,13 @@ namespace ObjectCloud.Interfaces.WebServer
             }
             catch (FileDoesNotExist)
             {
-                return WebResults.FromString(Status._500_Internal_Server_Error, "ObjectCloud is not configured to handle files of type " + extension);
+                return WebResults.From(Status._500_Internal_Server_Error, "ObjectCloud is not configured to handle files of type " + extension);
             }
 
             INameValuePairsHandler shellFileHandler = shellFileContainer.CastFileHandler<INameValuePairsHandler>();
 
             if (!shellFileHandler.Contains(action))
-                return WebResults.FromString(Status._500_Internal_Server_Error, "ObjectCloud does not support the action \"" + action + "\" for files of type \"" + extension + "\"");
+                return WebResults.From(Status._500_Internal_Server_Error, "ObjectCloud does not support the action \"" + action + "\" for files of type \"" + extension + "\"");
 
             string actionInstructions = shellFileHandler[action];
 
@@ -642,7 +642,7 @@ namespace ObjectCloud.Interfaces.WebServer
             if (null != mimeOverride)
             {
                 if (null == toReturn)
-                    throw new WebResultsOverrideException(WebResults.FromString(Status._500_Internal_Server_Error, "Can not override mime type when calling asyncronous web methods"));
+                    throw new WebResultsOverrideException(WebResults.From(Status._500_Internal_Server_Error, "Can not override mime type when calling asyncronous web methods"));
 
                 toReturn.ContentType = mimeOverride;
             }
@@ -687,7 +687,7 @@ namespace ObjectCloud.Interfaces.WebServer
                 if (splitAtCloseBrace.Length != 2)
                 {
                     throw new WebResultsOverrideException(
-                        WebResults.FromString(Status._400_Bad_Request, "Invalid URL"),
+                        WebResults.From(Status._400_Bad_Request, "Invalid URL"),
                         "Invalid URL");
                 }
 
@@ -699,7 +699,7 @@ namespace ObjectCloud.Interfaces.WebServer
                 catch (Exception e)
                 {
                     throw new WebResultsOverrideException(
-                        WebResults.FromString(Status._400_Bad_Request, "Invalid variable: " + splitAtOpenBrace[0]),
+                        WebResults.From(Status._400_Bad_Request, "Invalid variable: " + splitAtOpenBrace[0]),
                         "Invalid variable: " + splitAtOpenBrace[0],
                         e);
                 }
@@ -707,7 +707,7 @@ namespace ObjectCloud.Interfaces.WebServer
                 if (null == resolvedValue)
                 {
                     throw new WebResultsOverrideException(
-                        WebResults.FromString(Status._400_Bad_Request, "Invalid variable: " + splitAtOpenBrace[0]),
+                        WebResults.From(Status._400_Bad_Request, "Invalid variable: " + splitAtOpenBrace[0]),
                         "Invalid variable: " + splitAtOpenBrace[0]);
                 }
 

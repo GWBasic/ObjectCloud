@@ -72,12 +72,12 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
                         hasPermission = FileContainer.HasNamedPermissions(userId, WebCallableMethod.NamedPermissions);
 
                     if (!hasPermission)
-                        return WebResults.FromString(Status._401_Unauthorized, "Permission Denied for method " + WebCallableMethod.MethodInfo.Name);
+                        return WebResults.From(Status._401_Unauthorized, "Permission Denied for method " + WebCallableMethod.MethodInfo.Name);
                 }
 
             if (null != WebCallableMethod.WebMethod)
                 if (WebCallableMethod.WebMethod.Value != webConnection.Method)
-                    return WebResults.FromString(Status._405_Method_Not_Allowed, "Allowed method: " + WebCallableMethod.WebMethod.Value.ToString());
+                    return WebResults.From(Status._405_Method_Not_Allowed, "Allowed method: " + WebCallableMethod.WebMethod.Value.ToString());
 
             toReturn = WebCallableMethod.CallMethod(webConnection, WebHandlerPlugin);
 

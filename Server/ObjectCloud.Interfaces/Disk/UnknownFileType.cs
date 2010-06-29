@@ -18,7 +18,7 @@ namespace ObjectCloud.Interfaces.Disk
 
         public IWebResults WebResults
         {
-            get { return ObjectCloud.Interfaces.WebServer.WebResults.FromString(Status._400_Bad_Request, Message); }
+            get { return ObjectCloud.Interfaces.WebServer.WebResults.From(Status._400_Bad_Request, Message); }
         }
     }
 }

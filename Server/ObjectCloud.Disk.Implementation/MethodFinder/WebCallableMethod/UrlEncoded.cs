@@ -90,13 +90,13 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
                     }
                     catch (JsonDeserializationException jde)
                     {
-                        throw new WebResultsOverrideException(WebResults.FromString(
+                        throw new WebResultsOverrideException(WebResults.From(
                             Status._400_Bad_Request,
                             "Error parsing " + parameter.Key + ", Bad JSON: " + jde.Message));
                     }
                     catch
                     {
-                        throw new WebResultsOverrideException(WebResults.FromString(
+                        throw new WebResultsOverrideException(WebResults.From(
                             Status._400_Bad_Request,
                             "Error parsing " + parameter.Key));
                     }

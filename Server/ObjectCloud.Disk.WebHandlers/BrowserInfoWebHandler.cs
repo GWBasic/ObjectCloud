@@ -25,9 +25,9 @@ namespace ObjectCloud.Disk.WebHandlers
             if (webConnection.Headers.TryGetValue("USER-AGENT", out userAgent))
                 if (userAgent.Contains("MSIE"))
                     if (!userAgent.Contains("chromeframe"))
-                        return WebResults.FromString(Status._200_OK, "true");
+                        return WebResults.From(Status._200_OK, "true");
 
-            return WebResults.FromString(Status._200_OK, "false");
+            return WebResults.From(Status._200_OK, "false");
         }
     }
 }

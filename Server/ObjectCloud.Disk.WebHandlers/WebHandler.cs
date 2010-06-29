@@ -66,7 +66,7 @@ namespace ObjectCloud.Disk.WebHandlers
             }
 
             // Throw an exception if no method is found
-            throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, "method \"" + method + "\" does not exist"));
+            throw new WebResultsOverrideException(WebResults.From(Status._400_Bad_Request, "method \"" + method + "\" does not exist"));
         }
 
         /// <summary>
@@ -241,12 +241,12 @@ namespace ObjectCloud.Disk.WebHandlers
                 {
                     log.Error("Error when minimizing JavaScript", e);
 
-                    return WebResults.FromString(Status._500_Internal_Server_Error, "Error when minimizing JavaScript: " + e.Message);
+                    return WebResults.From(Status._500_Internal_Server_Error, "Error when minimizing JavaScript: " + e.Message);
                 }
             }
 
 
-            IWebResults toReturn = WebResults.FromString(
+            IWebResults toReturn = WebResults.From(
                 Status._200_OK,
                 javascriptToReturn);
 
@@ -263,7 +263,7 @@ namespace ObjectCloud.Disk.WebHandlers
         public IWebResults GetServersideJavascriptErrors(IWebConnection webConnection)
         {
             IExecutionEnvironment executionEnvironment = GetOrCreateExecutionEnvironment();
-            return WebResults.FromString(Status._200_OK, executionEnvironment.ExecutionEnvironmentErrors != null ? executionEnvironment.ExecutionEnvironmentErrors : "no errors");
+            return WebResults.From(Status._200_OK, executionEnvironment.ExecutionEnvironmentErrors != null ? executionEnvironment.ExecutionEnvironmentErrors : "no errors");
         }
 
         /// <summary>
@@ -291,7 +291,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 }
                 catch (UnknownUser)
                 {
-                    return WebResults.FromString(Status._406_Not_Acceptable, UserOrGroup + " does not exist");
+                    return WebResults.From(Status._406_Not_Acceptable, UserOrGroup + " does not exist");
                 }
 
             FilePermissionEnum? level = null;
@@ -325,12 +325,12 @@ namespace ObjectCloud.Disk.WebHandlers
 	                        userOrGroupId,
 	                        inherit);
 				
-                return WebResults.FromString(Status._202_Accepted, "Permission set to " + level.ToString());
+                return WebResults.From(Status._202_Accepted, "Permission set to " + level.ToString());
             }
             else
             {
                 FileHandler.FileContainer.ParentDirectoryHandler.RemovePermission(FileHandler.FileContainer.Filename, userOrGroupId);
-                return WebResults.FromString(Status._202_Accepted, "Permission removed");
+                return WebResults.From(Status._202_Accepted, "Permission removed");
             }
         }
 
@@ -345,9 +345,9 @@ namespace ObjectCloud.Disk.WebHandlers
             FilePermissionEnum? permission = FileContainer.LoadPermission(webConnection.Session.User.Id);
 
             if (null != permission)
-                return WebResults.FromString(Status._200_OK, permission.ToString());
+                return WebResults.From(Status._200_OK, permission.ToString());
             else
-                return WebResults.FromString(Status._200_OK, "");
+                return WebResults.From(Status._200_OK, "");
         }
 
         /// <summary>
@@ -449,7 +449,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 userOrGroup.Id,
                 inherit);
 
-            return WebResults.FromStatus(Status._202_Accepted);
+            return WebResults.From(Status._202_Accepted);
         }
 
         /// <summary>
@@ -475,7 +475,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 namedPermission,
                 userOrGroup.Id);
 
-            return WebResults.FromStatus(Status._202_Accepted);
+            return WebResults.From(Status._202_Accepted);
         }
 
         /// <summary>
@@ -513,7 +513,7 @@ namespace ObjectCloud.Disk.WebHandlers
         public IWebResults HasNamedPermission(IWebConnection webConnection, string namedPermission)
         {
             if (null == FileContainer.ParentDirectoryHandler)
-                throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, "Permissions do not apply to the root directory"));
+                throw new WebResultsOverrideException(WebResults.From(Status._400_Bad_Request, "Permissions do not apply to the root directory"));
 
             bool hasPermission = FileContainer.ParentDirectoryHandler.HasNamedPermissions(
                 FileContainer.FileId, new string[] { namedPermission }, webConnection.Session.User.Id);
@@ -535,7 +535,7 @@ namespace ObjectCloud.Disk.WebHandlers
         {
             FileHandler.Vacuum();
 
-            return WebResults.FromStatus(Status._200_OK);
+            return WebResults.From(Status._200_OK);
         }
 
         #region Common bus methods
@@ -616,7 +616,7 @@ namespace ObjectCloud.Disk.WebHandlers
             object fromClient = JsonReader.Deserialize(incoming);
 
             PostBus(webConnection.Session.User, fromClient, "Read");
-            return WebResults.FromStatus(Status._202_Accepted);
+            return WebResults.From(Status._202_Accepted);
         }
 
         /// <summary>
@@ -631,7 +631,7 @@ namespace ObjectCloud.Disk.WebHandlers
             object fromClient = JsonReader.Deserialize(incoming);
 
             PostBus(webConnection.Session.User, fromClient, "Write");
-            return WebResults.FromStatus(Status._202_Accepted);
+            return WebResults.From(Status._202_Accepted);
         }
 
         /// <summary>
@@ -646,7 +646,7 @@ namespace ObjectCloud.Disk.WebHandlers
             object fromClient = JsonReader.Deserialize(incoming);
 
             PostBus(webConnection.Session.User, fromClient, "Administer");
-            return WebResults.FromStatus(Status._202_Accepted);
+            return WebResults.From(Status._202_Accepted);
         }
 
         /// <summary>
@@ -712,7 +712,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             object transportIdObject = null;
             if (!fromClient.TryGetValue("tid", out transportIdObject))
-                return WebResults.FromString(Status._400_Bad_Request, "Transport id (tid) missing.");
+                return WebResults.From(Status._400_Bad_Request, "Transport id (tid) missing.");
 
             long transportId = default(long);
             try
@@ -722,12 +722,12 @@ namespace ObjectCloud.Disk.WebHandlers
             catch
             {
                 log.Error("Invalid transport ID: " + transportIdObject.ToString());
-                return WebResults.FromString(Status._400_Bad_Request, "Transport id is invalid.  It must be an integer");
+                return WebResults.From(Status._400_Bad_Request, "Transport id is invalid.  It must be an integer");
             }
 
             object timeoutObject = null;
             if (!fromClient.TryGetValue("lp", out timeoutObject))
-                return WebResults.FromString(Status._400_Bad_Request, "Long poll (lp) missing.");
+                return WebResults.From(Status._400_Bad_Request, "Long poll (lp) missing.");
 
             double timeoutDouble = default(double);
             try
@@ -737,7 +737,7 @@ namespace ObjectCloud.Disk.WebHandlers
             catch
             {
                 log.Error("Invalid long poll: " + transportIdObject.ToString());
-                return WebResults.FromString(Status._400_Bad_Request, "Long-poll is invalid.  It must be an number");
+                return WebResults.From(Status._400_Bad_Request, "Long-poll is invalid.  It must be an number");
             }
 
             TimeSpan longPoll = TimeSpan.FromMilliseconds(timeoutDouble);
@@ -767,7 +767,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             // if long-poll is disabled, return NOW without a long-poll
             if (0 == longPoll.TotalMilliseconds)
-                webConnection.SendResults(WebResults.FromStatus(Status._200_OK));
+                webConnection.SendResults(WebResults.From(Status._200_OK));
 
             // If any pending data was returned on an old long poll, or there's no pending data, go to long-poll mode and wait for data
             MulticastEventWithTimeout<ICometTransport, EventArgs<TimeSpan>>.Listener listener =
@@ -797,7 +797,7 @@ namespace ObjectCloud.Disk.WebHandlers
                     if (null != data)
                         webConnection.SendResults(WebResults.ToJson(data));
                     else
-                        webConnection.SendResults(WebResults.FromStatus(Status._200_OK));
+                        webConnection.SendResults(WebResults.From(Status._200_OK));
                 });
 
             cometTransport.StartSend.AddListener(listener);
@@ -886,7 +886,7 @@ namespace ObjectCloud.Disk.WebHandlers
             CometSessionId id = new CometSessionId(session.SessionId, transportId);
 
             if (ActiveCometTransports.ContainsKey(id))
-                throw new WebResultsOverrideException(WebResults.FromStatus(Status._409_Conflict));
+                throw new WebResultsOverrideException(WebResults.From(Status._409_Conflict));
 
             CometSessionTracker toReturn = new CometSessionTracker();
             toReturn.CometTransport = ConstructCometTransport(session, getArguments, transportId);
@@ -973,7 +973,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 if (ChannelEndpointPropertiesAndPermissionsByType[myType].TryGetValue(channelEndpointName, out propertyAndPermission))
                 {
                     if (FileContainer.LoadPermission(session.User.Id) < propertyAndPermission.MinimumPermission)
-                        throw new WebResultsOverrideException(WebResults.FromString(Status._401_Unauthorized, "Permission denied"));
+                        throw new WebResultsOverrideException(WebResults.From(Status._401_Unauthorized, "Permission denied"));
 
                     QueuingReliableCometTransport toReturn =
                         new QueuingReliableCometTransport(FileContainer.FullPath + "?ChannelEndpoint=" + channelEndpointName, session);
@@ -985,7 +985,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 }
             }
 
-            throw new WebResultsOverrideException(WebResults.FromStatus(Status._404_Not_Found));
+            throw new WebResultsOverrideException(WebResults.From(Status._404_Not_Found));
         }
 
         /// <summary>
@@ -1010,7 +1010,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             CometSessionTracker toReturn = default(CometSessionTracker);
             if (!ActiveCometTransports.TryGetValue(id, out toReturn))
-                throw new WebResultsOverrideException(WebResults.FromStatus(Status._410_Gone));
+                throw new WebResultsOverrideException(WebResults.From(Status._410_Gone));
 
             toReturn.LastUsed = DateTime.UtcNow;
 
@@ -1068,7 +1068,7 @@ namespace ObjectCloud.Disk.WebHandlers
         public IWebResults AddRelatedFile(IWebConnection webConnection, string filename, string relationship)
         {
             if (null == FileContainer.ParentDirectoryHandler)
-                throw new WebResultsOverrideException(WebResults.FromString(Status._406_Not_Acceptable, "The root directory can not have relationships"));
+                throw new WebResultsOverrideException(WebResults.From(Status._406_Not_Acceptable, "The root directory can not have relationships"));
 
             // Get the full path if it's not present
             if (!filename.StartsWith("/"))
@@ -1085,13 +1085,13 @@ namespace ObjectCloud.Disk.WebHandlers
             }
             catch (FileDoesNotExist)
             {
-                throw new WebResultsOverrideException(WebResults.FromString(Status._404_Not_Found, filename + " does not exist"));
+                throw new WebResultsOverrideException(WebResults.From(Status._404_Not_Found, filename + " does not exist"));
             }
 
             FileContainer.ParentDirectoryHandler.AddRelationship(
                 FileContainer, relatedContainer, relationship);
 
-            return WebResults.FromStatus(Status._202_Accepted);
+            return WebResults.From(Status._202_Accepted);
         }
 
         /// <summary>
@@ -1105,7 +1105,7 @@ namespace ObjectCloud.Disk.WebHandlers
         public IWebResults DeleteRelatedFile(IWebConnection webConnection, string filename, string relationship)
         {
             if (null == FileContainer.ParentDirectoryHandler)
-                throw new WebResultsOverrideException(WebResults.FromString(Status._406_Not_Acceptable, "The root directory can not have relationships"));
+                throw new WebResultsOverrideException(WebResults.From(Status._406_Not_Acceptable, "The root directory can not have relationships"));
 
             // Get the full path if it's not present
             if (!filename.StartsWith("/"))
@@ -1118,13 +1118,13 @@ namespace ObjectCloud.Disk.WebHandlers
             }
             catch (FileDoesNotExist)
             {
-                throw new WebResultsOverrideException(WebResults.FromString(Status._404_Not_Found, filename + " does not exist"));
+                throw new WebResultsOverrideException(WebResults.From(Status._404_Not_Found, filename + " does not exist"));
             }
 
             FileContainer.ParentDirectoryHandler.DeleteRelationship(
                 FileContainer, relatedContainer, relationship);
 
-            return WebResults.FromStatus(Status._202_Accepted);
+            return WebResults.From(Status._202_Accepted);
         }
 
         /// <summary>
@@ -1161,7 +1161,7 @@ namespace ObjectCloud.Disk.WebHandlers
                         relationshipsAsList.Add(relationshipObj.ToString());
                 else
                     throw new WebResultsOverrideException(
-                        WebResults.FromString(Status._406_Not_Acceptable, relationships + " is invalid, must be either a JSON string or JSON array"));
+                        WebResults.From(Status._406_Not_Acceptable, relationships + " is invalid, must be either a JSON string or JSON array"));
             }
 
             List<string> extensionsAsList = null;
@@ -1179,7 +1179,7 @@ namespace ObjectCloud.Disk.WebHandlers
                         extensionsAsList.Add(extensionObj.ToString());
                 else
                     throw new WebResultsOverrideException(
-                        WebResults.FromString(Status._406_Not_Acceptable, extensions + " is invalid, must be either a JSON string or JSON array"));
+                        WebResults.From(Status._406_Not_Acceptable, extensions + " is invalid, must be either a JSON string or JSON array"));
             }
 
             // Run the query
@@ -1261,7 +1261,7 @@ namespace ObjectCloud.Disk.WebHandlers
         public IWebResults Chown(IWebConnection webConnection, Guid? newOwnerId)
         {
             if (null == FileContainer.ParentDirectoryHandler)
-                throw new WebResultsOverrideException(WebResults.FromString(Status._406_Not_Acceptable, "The root directory can not have ownership"));
+                throw new WebResultsOverrideException(WebResults.From(Status._406_Not_Acceptable, "The root directory can not have ownership"));
 
             ID<IUserOrGroup, Guid>? ownerId = null;
             if (null != newOwnerId)
@@ -1270,7 +1270,7 @@ namespace ObjectCloud.Disk.WebHandlers
             FileContainer.ParentDirectoryHandler.Chown(
                 webConnection.Session.User, FileContainer.FileId, ownerId);
 
-            return WebResults.FromStatus(Status._202_Accepted);
+            return WebResults.From(Status._202_Accepted);
         }
 
         /// <summary>

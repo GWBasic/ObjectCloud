@@ -41,15 +41,15 @@ namespace ObjectCloud.Disk.WebHandlers
                 webConnection.Session.Login(user);
 
                 // success
-                return WebResults.FromString(Status._202_Accepted, user.Name + " logged in");
+                return WebResults.From(Status._202_Accepted, user.Name + " logged in");
             }
             catch (WrongPasswordException)
             {
-                return WebResults.FromString(Status._401_Unauthorized, "Bad Password");
+                return WebResults.From(Status._401_Unauthorized, "Bad Password");
             }
             catch (UnknownUser)
             {
-                return WebResults.FromString(Status._404_Not_Found, "Unknown user");
+                return WebResults.From(Status._404_Not_Found, "Unknown user");
             }
         }
 
@@ -64,7 +64,7 @@ namespace ObjectCloud.Disk.WebHandlers
             FileHandlerFactoryLocator.SessionManagerHandler.EndSession(webConnection.Session.SessionId);
             webConnection.Session = FileHandlerFactoryLocator.SessionManagerHandler.CreateSession();
 
-            return WebResults.FromString(Status._202_Accepted, "logged out");
+            return WebResults.From(Status._202_Accepted, "logged out");
         }
 
         /// <summary>
@@ -89,11 +89,11 @@ namespace ObjectCloud.Disk.WebHandlers
 				if (assignSession)
                 	webConnection.Session.Login(user);
 
-                return WebResults.FromString(Status._201_Created, user.Name + " created");
+                return WebResults.From(Status._201_Created, user.Name + " created");
             }
             catch (UserAlreadyExistsException)
             {
-                return WebResults.FromString(Status._409_Conflict, "Duplicate user");
+                return WebResults.From(Status._409_Conflict, "Duplicate user");
             }
         }
 
@@ -111,21 +111,21 @@ namespace ObjectCloud.Disk.WebHandlers
             // TODO:  If it's a personal group, uniqueify the name.  Personal groups shouldn't have global names
 
             if (!webConnection.Session.User.Local)
-                throw new WebResultsOverrideException(WebResults.FromString(Status._401_Unauthorized, "Sorry, only local users can create groups"));
+                throw new WebResultsOverrideException(WebResults.From(Status._401_Unauthorized, "Sorry, only local users can create groups"));
 
             if (webConnection.Session.User.Id == FileHandlerFactoryLocator.UserFactory.AnonymousUser.Id)
-                throw new WebResultsOverrideException(WebResults.FromString(Status._403_Forbidden, "You must be logged in to create a group"));
+                throw new WebResultsOverrideException(WebResults.From(Status._403_Forbidden, "You must be logged in to create a group"));
 
             GroupType groupType;
             if (!Enum<GroupType>.TryParse(grouptype, out groupType))
-                throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, grouptype + " is not a valid group type"));
+                throw new WebResultsOverrideException(WebResults.From(Status._400_Bad_Request, grouptype + " is not a valid group type"));
 
             // Write permission is needed to add non-personal groups
             if (groupType > GroupType.Personal)
                 if ((FileContainer.LoadPermission(webConnection.Session.User.Id) < FilePermissionEnum.Write)
                     && (!FileContainer.HasNamedPermissions(webConnection.Session.User.Id, "CreateGroup")))
                 {
-                    throw new WebResultsOverrideException(WebResults.FromString(
+                    throw new WebResultsOverrideException(WebResults.From(
                         Status._401_Unauthorized, "You must have write or \"CreateGroup\" permission to /Users/UserDB create non-personal groups"));
                 }
 
@@ -141,16 +141,16 @@ namespace ObjectCloud.Disk.WebHandlers
                             webConnection.Session.User.Id))
                             user = FileHandler.GetUser(username);
                         else
-                            return WebResults.FromString(Status._401_Unauthorized, "You do not have permission to create groups owned by other people");
+                            return WebResults.From(Status._401_Unauthorized, "You do not have permission to create groups owned by other people");
                     }
 				
 				IGroup group = FileHandler.CreateGroup(groupname, user.Id, groupType);
 
-                return WebResults.FromString(Status._201_Created, group.Name + " created");
+                return WebResults.From(Status._201_Created, group.Name + " created");
             }
             catch (UserAlreadyExistsException)
             {
-                return WebResults.FromString(Status._409_Conflict, "Duplicate group");
+                return WebResults.From(Status._409_Conflict, "Duplicate group");
             }
         }
 		
@@ -180,11 +180,11 @@ namespace ObjectCloud.Disk.WebHandlers
                 }
                 catch (UnknownUser)
                 {
-                    throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, "Group does not exist"));
+                    throw new WebResultsOverrideException(WebResults.From(Status._400_Bad_Request, "Group does not exist"));
                 }
 
 				if (!(groupObj is IGroup))
-					throw new WebResultsOverrideException(WebResults.FromString(Status._400_Bad_Request, "Specified object is a user"));
+					throw new WebResultsOverrideException(WebResults.From(Status._400_Bad_Request, "Specified object is a user"));
 				
 				IGroup group = (IGroup)groupObj;
 
@@ -192,10 +192,10 @@ namespace ObjectCloud.Disk.WebHandlers
                 FilePermissionEnum? permissionToGroupEditor = FileContainer.LoadPermission(webConnection.Session.User.Id);
                 if (null == group.OwnerId)
                     if (FilePermissionEnum.Administer != permissionToGroupEditor)
-                        throw new WebResultsOverrideException(WebResults.FromString(Status._403_Forbidden, "You do not have permission to delete groups"));
+                        throw new WebResultsOverrideException(WebResults.From(Status._403_Forbidden, "You do not have permission to delete groups"));
                 else if (group.OwnerId.Value != webConnection.Session.User.Id)
                     if (FilePermissionEnum.Administer != permissionToGroupEditor)
-                        throw new WebResultsOverrideException(WebResults.FromString(Status._403_Forbidden, "You do not have permission to delete groups"));
+                        throw new WebResultsOverrideException(WebResults.From(Status._403_Forbidden, "You do not have permission to delete groups"));
 
 				
 				// Determine if the user has permission to delete this group
@@ -208,15 +208,15 @@ namespace ObjectCloud.Disk.WebHandlers
 					userHasPermission = true;
 				
 				if (!userHasPermission)
-					return WebResults.FromString(Status._401_Unauthorized, "You do not have permission to delete this group");
+					return WebResults.From(Status._401_Unauthorized, "You do not have permission to delete this group");
 				
 				FileHandler.DeleteGroup(group.Name);
 				
-				return WebResults.FromString(Status._200_OK, group.Name + " deleted");
+				return WebResults.From(Status._200_OK, group.Name + " deleted");
 	        }
             catch (UnknownUser)
             {
-				return WebResults.FromString(Status._400_Bad_Request, groupname + " does not exist");
+				return WebResults.From(Status._400_Bad_Request, groupname + " does not exist");
             }
         }
 
@@ -242,7 +242,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 userHasPermission = true;
 
             if (!userHasPermission)
-                return WebResults.FromString(Status._401_Unauthorized, "You do not have permission to view this group");
+                return WebResults.From(Status._401_Unauthorized, "You do not have permission to view this group");
 
             return WebResults.ToJson(CreateJSONDictionary(group));
         }
@@ -270,7 +270,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 userHasPermission = true;
 
             if (!userHasPermission)
-                return WebResults.FromString(Status._401_Unauthorized, "You do not have permission to view this group");
+                return WebResults.From(Status._401_Unauthorized, "You do not have permission to view this group");
 
             return WebResults.ToJson(CreateJSONDictionary(groupAndAlias));
         }
@@ -297,7 +297,7 @@ namespace ObjectCloud.Disk.WebHandlers
             }
             else
                 throw new WebResultsOverrideException(
-                    WebResults.FromString(Status._400_Bad_Request, "groupname or groupid must be provided"));
+                    WebResults.From(Status._400_Bad_Request, "groupname or groupid must be provided"));
 		}
 		
 		/// <summary>
@@ -322,7 +322,7 @@ namespace ObjectCloud.Disk.WebHandlers
 			}
             else
                 throw new WebResultsOverrideException(
-                    WebResults.FromString(Status._400_Bad_Request, "username or userid missing"));
+                    WebResults.From(Status._400_Bad_Request, "username or userid missing"));
         }
 
         /// <summary>
@@ -334,7 +334,7 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.GET, WebReturnConvention.Primitive, FilePermissionEnum.Read)]
         public IWebResults GetUsername(IWebConnection webConnection)
         {
-            return WebResults.FromString(Status._200_OK, webConnection.Session.User.Name);
+            return WebResults.From(Status._200_OK, webConnection.Session.User.Name);
         }
 
         /// <summary>
@@ -345,7 +345,7 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.GET, WebReturnConvention.Primitive, FilePermissionEnum.Read)]
         public IWebResults GetIdentity(IWebConnection webConnection)
         {
-            return WebResults.FromString(Status._200_OK, webConnection.Session.User.Identity);
+            return WebResults.From(Status._200_OK, webConnection.Session.User.Identity);
         }
 
         /// <summary>
@@ -371,9 +371,9 @@ namespace ObjectCloud.Disk.WebHandlers
             catch (UnknownUser)
             {
                 if (null != username)
-                    throw new WebResultsOverrideException(WebResults.FromString(Status._404_Not_Found, username + " doesn't exist"));
+                    throw new WebResultsOverrideException(WebResults.From(Status._404_Not_Found, username + " doesn't exist"));
                 else
-                    throw new WebResultsOverrideException(WebResults.FromString(Status._404_Not_Found, "user doesn't exist"));
+                    throw new WebResultsOverrideException(WebResults.From(Status._404_Not_Found, "user doesn't exist"));
             }
 			
 			// Determine if the user has permission to administer this group
@@ -386,11 +386,11 @@ namespace ObjectCloud.Disk.WebHandlers
 				userHasPermission = true;
 			
 			if (!userHasPermission)
-				return WebResults.FromString(Status._401_Unauthorized, "You do not have permission to add users to this group");
+				return WebResults.From(Status._401_Unauthorized, "You do not have permission to add users to this group");
 
 			FileHandler.AddUserToGroup(user.Id, group.Id);
 			
-			return WebResults.FromString(Status._200_OK, user.Name + " added to " + group.Name);
+			return WebResults.From(Status._200_OK, user.Name + " added to " + group.Name);
 		}
 
         /// <summary>
@@ -418,11 +418,11 @@ namespace ObjectCloud.Disk.WebHandlers
 				userHasPermission = true;
 			
 			if (!userHasPermission)
-				return WebResults.FromString(Status._401_Unauthorized, "You do not have permission to add users to this group");
+				return WebResults.From(Status._401_Unauthorized, "You do not have permission to add users to this group");
 
 			FileHandler.RemoveUserFromGroup(user.Id, group.Id);
 			
-			return WebResults.FromString(Status._200_OK, user.Name + " removed from " + group.Name);
+			return WebResults.From(Status._200_OK, user.Name + " removed from " + group.Name);
 		}
 		
         /// <summary>
@@ -447,7 +447,7 @@ namespace ObjectCloud.Disk.WebHandlers
 				userHasPermission = true;
 			
 			if (!userHasPermission)
-				return WebResults.FromString(Status._401_Unauthorized, "You do not have permission to view the groups that this user is a member of");
+				return WebResults.From(Status._401_Unauthorized, "You do not have permission to view the groups that this user is a member of");
 			
 			IEnumerable<IGroupAndAlias> groups = FileHandler.GetGroupsThatUserIsIn(user.Id);
 			return ReturnAsJSON(groups);
@@ -464,7 +464,7 @@ namespace ObjectCloud.Disk.WebHandlers
         public IWebResults SetGroupAlias(IWebConnection webConnection, Guid groupId, string alias)
         {
             if (webConnection.Session.User == FileHandlerFactoryLocator.UserFactory.AnonymousUser)
-                throw new WebResultsOverrideException(WebResults.FromString(Status._403_Forbidden, "You must be logged in to set an alias"));
+                throw new WebResultsOverrideException(WebResults.From(Status._403_Forbidden, "You must be logged in to set an alias"));
 
             if (0 == alias.Length)
                 alias = null;
@@ -475,10 +475,10 @@ namespace ObjectCloud.Disk.WebHandlers
             }
             catch (SecurityException)
             {
-                throw new WebResultsOverrideException(WebResults.FromString(Status._403_Forbidden, "Permission Denied"));
+                throw new WebResultsOverrideException(WebResults.From(Status._403_Forbidden, "Permission Denied"));
             }
 
-            return WebResults.FromStatus(Status._202_Accepted);
+            return WebResults.From(Status._202_Accepted);
         }
 
         /// <summary>
@@ -503,7 +503,7 @@ namespace ObjectCloud.Disk.WebHandlers
 				userHasPermission = true;
 			
 			if (!userHasPermission)
-				return WebResults.FromString(Status._401_Unauthorized, "You do not have permission to view the users in a group");
+				return WebResults.From(Status._401_Unauthorized, "You do not have permission to view the users in a group");
 			
 			IEnumerable<IUser> users = FileHandler.GetUsersInGroup(group.Id);
 			return ReturnAsJSON(users);
@@ -727,7 +727,7 @@ namespace ObjectCloud.Disk.WebHandlers
 				return WebResults.Redirect(requestUri);
 			else
 			{
-				return WebResults.FromString(
+				return WebResults.From(
 					Status._417_Expectation_Failed,
 				    "Error when logging in with OpenID: \"" + openIdIdentity + ":\" " + openIdClient.ErrorState.ToString());
 			}
@@ -748,12 +748,12 @@ namespace ObjectCloud.Disk.WebHandlers
 			
 			if (null == openIdUser)
 				throw new WebResultsOverrideException(
-					WebResults.FromString(Status._417_Expectation_Failed, "Could not get an OpenIdUser"));
+					WebResults.From(Status._417_Expectation_Failed, "Could not get an OpenIdUser"));
 			
 			bool validResponse = openIdClient.ValidateResponse();
 			if (!validResponse)
 				throw new WebResultsOverrideException(
-					WebResults.FromString(Status._401_Unauthorized, "Invalid response"));
+					WebResults.From(Status._401_Unauthorized, "Invalid response"));
 			
 			string identity = webConnection.EitherArgumentOrException("openid.identity");
 
@@ -766,15 +766,15 @@ namespace ObjectCloud.Disk.WebHandlers
                 if (webConnection.GetParameters.ContainsKey("redirect"))
                     return WebResults.Redirect(webConnection.GetParameters["redirect"]);
                 else
-                    return WebResults.FromString(Status._202_Accepted, user.Name + " logged in");
+                    return WebResults.From(Status._202_Accepted, user.Name + " logged in");
             }
             catch (WrongPasswordException)
             {
-                return WebResults.FromString(Status._401_Unauthorized, "Bad Password");
+                return WebResults.From(Status._401_Unauthorized, "Bad Password");
             }
             catch (UnknownUser)
             {
-                return WebResults.FromString(Status._404_Not_Found, "Unknown user");
+                return WebResults.From(Status._404_Not_Found, "Unknown user");
             }
 		}
 
@@ -790,7 +790,7 @@ namespace ObjectCloud.Disk.WebHandlers
 			
 			// Make sure the user isn't trying to authenticate against the anonymous user
 			if (FileHandlerFactoryLocator.UserFactory.AnonymousUser.Identity == requestedIdentity)
-		        return WebResults.FromString(Status._403_Forbidden, "I'm not that stupid, you can't use the anonymous user as an OpenID identity.");
+		        return WebResults.From(Status._403_Forbidden, "I'm not that stupid, you can't use the anonymous user as an OpenID identity.");
 			
 			IUser user;
 			
@@ -803,7 +803,7 @@ namespace ObjectCloud.Disk.WebHandlers
 				
 				// Make sure the identiy is in a valid form
 				if (!(requestedIdentity.StartsWith(openIdPrefix)) && requestedIdentity.EndsWith(".user"))
-			        return WebResults.FromString(Status._400_Bad_Request, requestedIdentity + "is not a valid identity");
+			        return WebResults.From(Status._400_Bad_Request, requestedIdentity + "is not a valid identity");
 				
 				string nameDotUser = requestedIdentity.Substring(openIdPrefix.Length);
 				string name = nameDotUser.Substring(0, nameDotUser.LastIndexOf('.'));
@@ -821,11 +821,11 @@ namespace ObjectCloud.Disk.WebHandlers
 	            }
 	            catch (WrongPasswordException)
 	            {
-	                return WebResults.FromString(Status._401_Unauthorized, "Bad Password");
+	                return WebResults.From(Status._401_Unauthorized, "Bad Password");
 	            }
 	            catch (UnknownUser)
 	            {
-	                return WebResults.FromString(Status._404_Not_Found, "Unknown user");
+	                return WebResults.From(Status._404_Not_Found, "Unknown user");
 	            }
 			}
 			else
@@ -850,7 +850,7 @@ namespace ObjectCloud.Disk.WebHandlers
 				}
 				default:
 				{
-			        return WebResults.FromString(Status._501_Not_Implemented, "openid.mode " + openIdMode + " Not Implemented");
+			        return WebResults.From(Status._501_Not_Implemented, "openid.mode " + openIdMode + " Not Implemented");
 				}
 			}
 		}

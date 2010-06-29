@@ -22,17 +22,17 @@ namespace ObjectCloud.Interfaces.WebServer
             _Status = status;
         }
 
-        public static IWebResults FromString(Status status, string text)
+        public static IWebResults From(Status status, string text)
         {
             return new StringWebResults(status, text);
         }
 
-        public static IWebResults FromStream(Status status, Stream stream)
+        public static IWebResults From(Status status, Stream stream)
         {
             return new StreamWebResults(status, stream);
         }
 
-        public static IWebResults FromStatus(Status status)
+        public static IWebResults From(Status status)
         {
             return new StringWebResults(status, "");
         }
@@ -72,7 +72,7 @@ namespace ObjectCloud.Interfaces.WebServer
         /// </returns>
         public static IWebResults Redirect(string url)
         {
-            IWebResults toReturn = FromString(
+            IWebResults toReturn = From(
                 Status._303_See_Other,
                 "<html><head><title>Redirect</title></head><body><a href=\"" + url + "\">click here</a></body></html>");
 
