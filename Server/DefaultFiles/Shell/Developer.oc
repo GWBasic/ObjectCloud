@@ -6,7 +6,6 @@
       <title>ObjectCloud Developer Controls</title>
       <script>
          $(document).ready(function(){
-
              var disableMinimizeJavascript = $("#disableMinimizeJavascript");
              var prettyprintXML = $("#prettyprintXML");
 
