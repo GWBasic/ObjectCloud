@@ -304,6 +304,28 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 throw new WebResultsOverrideException(WebResults.From(Status._500_Internal_Server_Error, errorBuilder.ToString()));
             }
 
+            if (WebConnection.CookiesFromBrowser.ContainsKey(TemplatingConstants.XMLDebugModeCookie))
+            {
+                StringBuilder commentBuilder = new StringBuilder("\n\nDEBUG INFO\n");
+
+                SortedDictionary<string, string> sortedGetParameters = new SortedDictionary<string, string>(getParameters);
+
+                foreach (KeyValuePair<string, string> getArgument in sortedGetParameters)
+                    commentBuilder.AppendFormat("\t{0}: {1}\n", getArgument.Key, getArgument.Value);
+
+                commentBuilder.Append("\n\n");
+
+                XmlComment comment = xmlDocument.CreateComment(commentBuilder.ToString());
+
+                XmlNode firstChild = xmlDocument.FirstChild;
+                if ((firstChild.LocalName == "componentdef") && (firstChild.NamespaceURI == TemplatingConstants.TemplateNamespace))
+                    firstChild.InsertBefore(comment, firstChild.FirstChild);
+                else if ("html" != xmlDocument.FirstChild.LocalName)
+                    xmlDocument.InsertBefore(comment, firstChild);
+                else
+                    firstChild.InsertBefore(comment, firstChild.FirstChild);
+            }
+
             return xmlDocument;
         }
 
@@ -357,6 +379,30 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 }
             }
 
+            /*if (WebConnection.CookiesFromBrowser.ContainsKey(TemplatingConstants.XMLDebugModeCookie))
+            {
+                StringBuilder commentBuilder = new StringBuilder("\n\nDEBUG INFO\n");
+
+                SortedDictionary<string, string> sortedGetParameters = new SortedDictionary<string, string>(getParameters);
+
+                foreach (KeyValuePair<string, string> getArgument in sortedGetParameters)
+                    commentBuilder.AppendFormat("\t{0}: {1}\n", getArgument.Key, getArgument.Value);
+
+                commentBuilder.Append("\n\n");
+
+                XmlDocument toAddDebugInfo = new XmlDocument();
+                toAddDebugInfo.LoadXml(getArgumentsResolvedBuilder.ToString());
+                XmlComment comment = toAddDebugInfo.CreateComment(commentBuilder.ToString());
+
+                XmlNode firstChild = toAddDebugInfo.FirstChild;
+                if ((firstChild.LocalName == "componentdef") && (firstChild.NamespaceURI == TemplatingConstants.TemplateNamespace))
+                    firstChild.InsertBefore(comment, firstChild.FirstChild);
+                else
+                    toAddDebugInfo.InsertBefore(comment, toAddDebugInfo.FirstChild);
+
+                return toAddDebugInfo.OuterXml;
+            }
+            else*/
             return getArgumentsResolvedBuilder.ToString();
         }
     }

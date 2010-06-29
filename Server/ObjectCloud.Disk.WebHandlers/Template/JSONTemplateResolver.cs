@@ -48,7 +48,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                         // Remove empty components and generate warning
                         templateParsingState.ReplaceNodes(
                             element,
-                            templateParsingState.GenerateWarningNode("Both src and url must be specified: " + element.OuterXml));
+                            templateParsingState.GenerateWarningNode("Both oc:src and oc:url must be specified: " + element.OuterXml));
 
                         return;
                     }
@@ -101,7 +101,6 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                         else if (url.StartsWith("http://"))
                         {
                             HttpResponseHandler httpResponse = templateParsingState.WebConnection.Session.HttpWebClient.Get(url);
-
                             jsonReader = httpResponse.AsJsonReader();
                         }
                         else
@@ -154,20 +153,26 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
                 element.ParentNode.RemoveChild(element);
             }
-            else if (templateInput is Dictionary<string, object>)
-            {
-                Dictionary<string, string> getParameters = new Dictionary<string, string>();
-                Flatten(getParameters, "", templateInput);
-
-                templateParsingState.LoadXmlDocumentAndReplaceGetParameters(getParameters, templateContainer);
-            }
-
             else
             {
                 Dictionary<string, string> getParameters = new Dictionary<string, string>();
-                getParameters["Value"] = JsonWriter.Serialize(templateInput);
 
-                templateParsingState.LoadXmlDocumentAndReplaceGetParameters(getParameters, templateContainer);
+                if (templateInput is Dictionary<string, object>)
+                    Flatten(getParameters, "", templateInput);
+                else
+                    getParameters["Value"] = JsonWriter.Serialize(templateInput);
+
+                XmlDocument newDocument = templateParsingState.LoadXmlDocumentAndReplaceGetParameters(getParameters, templateContainer);
+
+                XmlNode firstChild = newDocument.FirstChild;
+                XmlNodeList replacementNodes;
+                if ((firstChild.LocalName == "componentdef") && (firstChild.NamespaceURI == TemplatingConstants.TemplateNamespace))
+                    replacementNodes = firstChild.ChildNodes;
+                else
+                    replacementNodes = newDocument.ChildNodes;
+
+                templateParsingState.SetCWD(replacementNodes, templateContainer.ParentDirectoryHandler.FileContainer.FullPath);
+                templateParsingState.ReplaceNodes(element, replacementNodes);
             }
         }
 
@@ -188,7 +193,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 object[] objects = (object[])templateInput;
 
                 for (int ctr = 0; ctr < objects.Length; ctr++)
-                    Flatten(getParameters, string.Format("{0}.{1}", prefix, ctr.ToString()), objects[ctr]);
+                    Flatten(getParameters, string.Format("{0}[{1}]", prefix, ctr.ToString()), objects[ctr]);
             }
             else if (templateInput is Dictionary<string, object>)
             {
@@ -197,7 +202,10 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     getParameters[prefix] = JsonWriter.Serialize(templateInput);
 
                 foreach (KeyValuePair<string, object> kvp in (Dictionary<string, object>)templateInput)
-                    Flatten(getParameters, string.Format("{0}.{1}", prefix, kvp.Key), templateInput);
+                    if (kvp.Value is Dictionary<string, object>)
+                        Flatten(getParameters, string.Format("{0}{1}.", prefix, kvp.Key), kvp.Value);
+                    else
+                        Flatten(getParameters, string.Format("{0}{1}", prefix, kvp.Key), kvp.Value);
             }
 
             else if (templateInput is string)
@@ -225,167 +233,3 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         }
     }
 }
-/*
-
-
-
-
-                    templateParsingState.ReplaceNodes(element, resultNode);
-
-
-
-
-
-
-
-
-
-
-
-
-
-                        templateString
-
-
-                        // handle GET parameters
-                        // First, handle oc:getpassthrough
-                        IDictionary<string, string> myGetParameters;
-                        XmlAttribute getpassthroughAttribute = (XmlAttribute)element.Attributes.GetNamedItem("getpassthough", TemplatingConstants.TemplateNamespace);
-                        if (null == getpassthroughAttribute)
-                            myGetParameters = DictionaryFunctions.Create<string, string>(getParameters);
-                        else
-                        {
-                            if ("false" == getpassthroughAttribute.Value)
-                                myGetParameters = new Dictionary<string, string>();
-                            else
-                                myGetParameters = DictionaryFunctions.Create<string, string>(getParameters);
-                        }
-
-                        // Next, pull out get parameters from the tag
-                        foreach (XmlAttribute attribute in element.Attributes)
-                            if ("" == attribute.NamespaceURI)
-                                myGetParameters[attribute.LocalName] = attribute.Value;
-
-                        string fileName = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.GetAbsolutePath(
-                            templateParsingState.GetCWD(element),
-                            srcAttribute.Value);
-
-                        IFileContainer fileContainer = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(fileName);
-                        templateParsingState.WebConnection.TouchedFiles.Add(fileContainer);
-
-                        // If the user doesn't have permission for the component and the component has something to use instead, use it
-                        if (null == fileContainer.LoadPermission(templateParsingState.WebConnection.Session.User.Id) && element.HasChildNodes)
-                        {
-                            XmlNode replacement = element.OwnerDocument.CreateElement("div");
-
-                            foreach (XmlNode errorNode in element.ChildNodes)
-                                replacement.AppendChild(errorNode);
-
-                            element.ParentNode.InsertAfter(replacement, element);
-                            element.ParentNode.RemoveChild(element);
-                        }
-                        else
-                        {
-                            // If the user has permission, resolve the component and deal with default errors
-
-                            XmlDocument componentDocument;
-
-                            // TODO:  GET Parameters
-
-                            try
-                            {
-                                componentDocument = templateParsingState.LoadXmlDocumentAndReplaceGetParameters(
-                                    myGetParameters,
-                                    fileContainer);
-
-                                XmlNode firstChild = componentDocument.FirstChild;
-                                XmlNodeList replacementNodes;
-                                if ((firstChild.LocalName == "componentdef") && (firstChild.NamespaceURI == TemplatingConstants.TemplateNamespace))
-                                    replacementNodes = firstChild.ChildNodes;
-                                else
-                                    replacementNodes = componentDocument.ChildNodes;
-
-                                templateParsingState.SetCWD(replacementNodes, fileContainer.ParentDirectoryHandler.FileContainer.FullPath);
-                                templateParsingState.ReplaceNodes(element, replacementNodes);
-                            }
-                            catch (WebResultsOverrideException wroe)
-                            {
-                                templateParsingState.ReplaceNodes(
-                                    element,
-                                    templateParsingState.GenerateWarningNode(wroe.WebResults.ResultsAsString));
-                            }
-                            catch (Exception e)
-                            {
-                                log.Error("An error occured when loading a component", e);
-
-                                templateParsingState.ReplaceNodes(
-                                    element,
-                                    templateParsingState.GenerateWarningNode("An unhandled error occured.  See the system logs for more information"));
-                            }
-                        }
-                    }
-
-                    else if (null != urlAttribute)
-                    {
-                        XmlNode resultNode;
-                        string url = urlAttribute.Value;
-
-                        foreach (XmlAttribute attribute in element.Attributes)
-                            if ("" == attribute.NamespaceURI)
-                                url = HTTPStringFunctions.AppendGetParameter(url, attribute.LocalName, attribute.Value);
-
-                        try
-                        {
-                            if (url.StartsWith("https://"))
-                                resultNode = templateParsingState.GenerateWarningNode("https component nodes aren't supported due to certificate complexities");
-                            else if (url.StartsWith("http://"))
-                            {
-                                HttpResponseHandler httpResponse = templateParsingState.WebConnection.Session.HttpWebClient.Get(url);
-
-                                if ("text/xml" == httpResponse.ContentType)
-                                {
-                                    XmlDocument resultDocument = new XmlDocument();
-                                    resultDocument.Load(httpResponse.AsString());
-                                    resultNode = resultDocument;
-                                }
-                                else
-                                    resultNode = element.OwnerDocument.CreateTextNode(httpResponse.AsString());
-                            }
-                            else
-                                try
-                                {
-                                    ShellWebConnection shellWebConnection = new BlockingShellWebConnection(
-                                        url,
-                                        templateParsingState.WebConnection,
-                                        null,
-                                        templateParsingState.WebConnection.CookiesFromBrowser);
-
-                                    IWebResults shellResults = shellWebConnection.GenerateResultsForClient();
-
-                                    if ("text/xml" == shellResults.ContentType)
-                                    {
-                                        XmlDocument resultDocument = new XmlDocument();
-                                        resultDocument.Load(shellResults.ResultsAsStream);
-                                        resultNode = resultDocument;
-                                    }
-                                    else
-                                        resultNode = element.OwnerDocument.CreateTextNode(shellResults.ResultsAsString);
-                                }
-                                catch (WebResultsOverrideException wroe)
-                                {
-                                    resultNode = templateParsingState.GenerateWarningNode(wroe.WebResults.ResultsAsString);
-                                }
-                        }
-                        catch (Exception e)
-                        {
-                            log.Error("An error occured when loading a component", e);
-                            resultNode = templateParsingState.GenerateWarningNode("An unhandled error occured.  See the system logs for more information");
-                        }
-
-                        templateParsingState.ReplaceNodes(element, resultNode);
-                    }
-                }
-        }
-    }
-}
-                    */

@@ -113,7 +113,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             else if ((null != srcAttribute) && (null != urlAttribute))
                 templateParsingState.ReplaceNodes(
                     componentNode,
-                    templateParsingState.GenerateWarningNode("Either src or url can be specified; you can not choose both: " + componentNode.OuterXml));
+                    templateParsingState.GenerateWarningNode("Either oc:src or oc:url can be specified; you can not choose both: " + componentNode.OuterXml));
 
             else if (null != srcAttribute)
             {
@@ -234,6 +234,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
                             if ("text/xml" == shellResults.ContentType)
                             {
+                                // TODO:  this probably won't work
                                 XmlDocument resultDocument = new XmlDocument();
                                 resultDocument.Load(shellResults.ResultsAsStream);
                                 resultNode = resultDocument;
