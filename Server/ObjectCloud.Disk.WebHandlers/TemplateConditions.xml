@@ -44,6 +44,7 @@
         <object id="DependancyResolver" type="ObjectCloud.Disk.WebHandlers.Template.DependancyResolver" />
         <object id="AggressiveCachingEnabler" type="ObjectCloud.Disk.WebHandlers.Template.AggressiveCachingEnabler" />
         <object id="TemplateDebugInformationRemover" type="ObjectCloud.Disk.WebHandlers.Template.DebugInformationRemover" />
+        <object id="JSONTemplateResolver" type="ObjectCloud.Disk.WebHandlers.Template.JSONTemplateResolver" />
       </list>
     </property>
   </object>

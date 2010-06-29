@@ -113,7 +113,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             else if ((null != srcAttribute) && (null != urlAttribute))
                 templateParsingState.ReplaceNodes(
                     componentNode,
-                    templateParsingState.GenerateWarningNode("Either src or div can be specified; you can not choose both: " + componentNode.OuterXml));
+                    templateParsingState.GenerateWarningNode("Either src or url can be specified; you can not choose both: " + componentNode.OuterXml));
 
             else if (null != srcAttribute)
             {

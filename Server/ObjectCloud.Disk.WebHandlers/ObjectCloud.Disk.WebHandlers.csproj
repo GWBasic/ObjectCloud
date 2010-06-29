@@ -67,6 +67,7 @@
     <Compile Include="Template\ComponentAndConditionalsResolver.cs" />
     <Compile Include="Template\DebugInformationRemover.cs" />
     <Compile Include="Template\DependancyResolver.cs" />
+    <Compile Include="Template\JSONTemplateResolver.cs" />
     <Compile Include="Template\TemplateParsingState.cs" />
     <Compile Include="TextWebHandler.cs" />
     <Compile Include="UserManagerWebHandler.cs" />
