@@ -41,14 +41,14 @@
 
    <p>This page contains some knobs, switches, and dails to assist while developing with ObjectCloud.  These controls are stored in persistant cookies and only apply to this session.</p>
 
-   <h2>Disable Automatic Javascript Minimization</h2>
+   <h2>Javascript Debug Mode</h2>
 
-   <p>By default, ObjectCloud attempts to minimize as much Javascript as possible.  When this is checked, ObjectCloud will not minimize Javascript.  Currently, only applies to Javascript served through the ObjectCloud template system.</p>
+   <p>By default, ObjectCloud attempts to minimize as much Javascript as possible.  When this is checked, ObjectCloud will not minimize Javascript and attempt to warn you when you reference scripts that don't exist.  Currently, only applies to Javascript served through the ObjectCloud template system.</p>
    <input type="checkbox" id="disableMinimizeJavascript" /> Disable minimizing Javascript
 
-   <h2>Enable XML Pretty Printing</h2>
+   <h2>XML Debug Mode</h2>
 
-   <p>By default, html5/xml that ObjectCloud generates is condensed.  When this is checked, ObjectCloud will pretty-print htm5/xml.  Currently, only applies to xml served through the ObjectCloud template system.</p>
+   <p>By default, html5/xml that ObjectCloud generates is condensed and all comments omitted.  When this is checked, ObjectCloud will pretty-print htm5/xml and preserve comments.  Currently, only applies to xml served through the ObjectCloud template system.</p>
    <input type="checkbox" id="prettyprintXML" /> Enable Pretty-Print XML
 
 </oc:componentdef>
