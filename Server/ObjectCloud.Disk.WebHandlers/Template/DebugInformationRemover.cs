@@ -24,32 +24,17 @@ namespace ObjectCloud.Disk.WebHandlers.Template
     /// <summary>
     /// Removes debug information from documents
     /// </summary>
-    public class DebugInformationRemover : ITemplatePostProcessor
+    class DebugInformationRemover : ITemplateProcessor
     {
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="webConnection"></param>
-        /// <param name="template"></param>
-        /// <returns></returns>
-        public TemplatePostProcessors GetTemplatePostProcessors(IWebConnection webConnection, XmlDocument template)
+        void ITemplateProcessor.Handle(ITemplateParsingState templateParsingState)
         {
-            TemplatePostProcessors templatePostProcessors = new TemplatePostProcessors();
-
-            if (webConnection.CookiesFromBrowser.ContainsKey(TemplateEngine.XMLDebugModeCookie))
-                templatePostProcessors.ElementProcessorFunctions = new ElementProcessorFunction[0];
-            else
-                templatePostProcessors.ElementProcessorFunctions = new ElementProcessorFunction[]
-                {
-                    RemoveIfInternalData
-                };
-
-            return templatePostProcessors;
+            if (!templateParsingState.WebConnection.CookiesFromBrowser.ContainsKey(TemplatingConstants.XMLDebugModeCookie))
+                templateParsingState.PostProcessElement += RemoveIfInternalData;
         }
 
-        private void RemoveIfInternalData(IWebConnection webConnection, XmlNode element)
+        private void RemoveIfInternalData(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlNode element)
         {
-            if (element.NamespaceURI == TemplateEngine.TaggingNamespace)
+            if (element.NamespaceURI == TemplatingConstants.TaggingNamespace)
                 element.ParentNode.RemoveChild(element);
 
             if (null != element.Attributes)
@@ -57,7 +42,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 LinkedList<XmlAttribute> attributesToRemove = new LinkedList<XmlAttribute>();
 
                 foreach (XmlAttribute xmlAttribute in element.Attributes)
-                    if (xmlAttribute.NamespaceURI == TemplateEngine.TaggingNamespace)
+                    if (xmlAttribute.NamespaceURI == TemplatingConstants.TaggingNamespace)
                         attributesToRemove.AddLast(xmlAttribute);
 
                 foreach (XmlAttribute xmlAttribute in attributesToRemove)

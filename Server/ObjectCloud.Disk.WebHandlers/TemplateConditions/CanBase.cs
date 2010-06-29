@@ -28,37 +28,37 @@ namespace ObjectCloud.Disk.WebHandlers.TemplateConditions
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="webConnection"></param>
+        /// <param name="templateParsingState"></param>
         /// <param name="me"></param>
-        /// <param name="currentWorkingDirectory"></param>
         /// <returns></returns>
-        protected IFileContainer GetFileContainer(IWebConnection webConnection, System.Xml.XmlNode me, string currentWorkingDirectory)
+        protected IFileContainer GetFileContainer(ITemplateParsingState templateParsingState, System.Xml.XmlNode me)
         {
+            string currentWorkingDirectory = templateParsingState.GetCWD(me);
             XmlAttribute filenameAttribute = me.Attributes["filename"];
 
             if (null == filenameAttribute)
             {
                 me.ParentNode.ParentNode.InsertBefore(
-                    TemplateEngine.GenerateWarningNode(me.OwnerDocument, "filename not specified: " + me.OuterXml),
+                    templateParsingState.GenerateWarningNode("filename not specified: " + me.OuterXml),
                     me.ParentNode.ParentNode);
 
                 return null;
             }
 
-            string filename = webConnection.WebServer.FileHandlerFactoryLocator.FileSystemResolver.GetAbsolutePath(
+            string filename = templateParsingState.WebConnection.WebServer.FileHandlerFactoryLocator.FileSystemResolver.GetAbsolutePath(
                 currentWorkingDirectory,
                 filenameAttribute.Value);
 
             try
             {
-                return webConnection.WebServer.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(filename);
+                return templateParsingState.WebConnection.WebServer.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(filename);
             }
             catch (FileNotFoundException fnfe)
             {
                 log.Warn("Attempted to get permission for a non-existant file: " + filenameAttribute.Value, fnfe);
 
                 me.ParentNode.ParentNode.InsertBefore(
-                    TemplateEngine.GenerateWarningNode(me.OwnerDocument, "File doesn't exist: " + me.OuterXml),
+                    templateParsingState.GenerateWarningNode("File doesn't exist: " + me.OuterXml),
                     me.ParentNode.ParentNode);
 
                 return null;

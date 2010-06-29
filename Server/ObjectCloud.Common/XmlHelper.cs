@@ -19,15 +19,25 @@ namespace ObjectCloud.Common
         /// </summary>
         /// <param name="xmlNode"></param>
         /// <returns></returns>
-        public static IEnumerable<XmlNode> IterateAllElements(XmlNode xmlNode)
+        public static IEnumerable<XmlElement> IterateAllElements(XmlNode xmlNode)
         {
             foreach (XmlNode childNode in xmlNode.ChildNodes)
-            {
-                foreach (XmlNode subChildNode in IterateAllElements(childNode))
-                    yield return subChildNode;
+                if (childNode is XmlElement)
+                {
+                    foreach (XmlElement subChildNode in IterateAllElements(childNode))
+                        yield return subChildNode;
 
-                yield return childNode;
-            }
+                    yield return (XmlElement)childNode;
+                }
+        }
+
+        /// <summary>
+        /// Removes the node from its parent node
+        /// </summary>
+        /// <param name="xmlNode"></param>
+        public static void RemoveFromParent(XmlNode xmlNode)
+        {
+            xmlNode.ParentNode.RemoveChild(xmlNode);
         }
     }
 }

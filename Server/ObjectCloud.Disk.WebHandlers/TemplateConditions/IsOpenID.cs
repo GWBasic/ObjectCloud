@@ -23,13 +23,12 @@ namespace ObjectCloud.Disk.WebHandlers.TemplateConditions
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="webConnection"></param>
+        /// <param name="templateParsingState"></param>
         /// <param name="me"></param>
-        /// <param name="currentWorkingDirectory"></param>
         /// <returns></returns>
-        public bool IsConditionMet(IWebConnection webConnection, System.Xml.XmlNode me, string currentWorkingDirectory)
+        public bool IsConditionMet(ITemplateParsingState templateParsingState, System.Xml.XmlNode me)
         {
-            return !webConnection.Session.User.Local;
+            return !templateParsingState.WebConnection.Session.User.Local;
         }
     }
 }

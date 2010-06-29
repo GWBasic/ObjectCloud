@@ -227,23 +227,23 @@ namespace ObjectCloud.Disk.WebHandlers
             javascriptToReturn = "// Scripts: /API/AJAX.js, /API/json2.js\n" + javascriptToReturn;
 
             if (EncodeFor == "JavaScript")
-                if (FileHandlerFactoryLocator.WebServer.MinimizeJavascript)
+            //if (FileHandlerFactoryLocator.WebServer.MinimizeJavascript)
+            {
+                // The text will be "minimized" javascript to save space
+
+                JavaScriptMinifier javaScriptMinifier = new JavaScriptMinifier();
+
+                try
                 {
-                    // The text will be "minimized" javascript to save space
-
-                    JavaScriptMinifier javaScriptMinifier = new JavaScriptMinifier();
-
-                    try
-                    {
-                        javascriptToReturn = javaScriptMinifier.Minify(javascriptToReturn);
-                    }
-                    catch (Exception e)
-                    {
-                        log.Error("Error when minimizing JavaScript", e);
-
-                        return WebResults.FromString(Status._500_Internal_Server_Error, "Error when minimizing JavaScript: " + e.Message);
-                    }
+                    javascriptToReturn = javaScriptMinifier.Minify(javascriptToReturn);
                 }
+                catch (Exception e)
+                {
+                    log.Error("Error when minimizing JavaScript", e);
+
+                    return WebResults.FromString(Status._500_Internal_Server_Error, "Error when minimizing JavaScript: " + e.Message);
+                }
+            }
 
 
             IWebResults toReturn = WebResults.FromString(

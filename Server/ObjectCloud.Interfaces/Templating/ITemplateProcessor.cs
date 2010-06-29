@@ -13,16 +13,14 @@ using ObjectCloud.Interfaces.WebServer;
 namespace ObjectCloud.Interfaces.Templating
 {
     /// <summary>
-    /// Interface for handling a template condition
+    /// Plugin for template post processors
     /// </summary>
-    public interface ITemplateConditionHandler
+    public interface ITemplateProcessor
     {
         /// <summary>
-        /// Returns true if the condition is met
+        /// Allows the template processor to register event handlers so that it can manipulate the template into a complete document
         /// </summary>
-        /// <param name="webConnection"></param>
-        /// <param name="me"></param>
-        /// <returns></returns>
-        bool IsConditionMet(ITemplateParsingState TemplateParsingState, XmlNode me);
+        /// <param name="templateParsingState"></param>
+        void Handle(ITemplateParsingState templateParsingState);
     }
 }

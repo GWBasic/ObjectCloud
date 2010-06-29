@@ -34,18 +34,17 @@ namespace ObjectCloud.Disk.WebHandlers.TemplateConditions
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="webConnection"></param>
+        /// <param name="templateParsingState"></param>
         /// <param name="me"></param>
-        /// <param name="currentWorkingDirectory"></param>
         /// <returns></returns>
-        public bool IsConditionMet(IWebConnection webConnection, System.Xml.XmlNode me, string currentWorkingDirectory)
+        public bool IsConditionMet(ITemplateParsingState templateParsingState, System.Xml.XmlNode me)
         {
-            IFileContainer fileContainer = GetFileContainer(webConnection, me, currentWorkingDirectory);
+            IFileContainer fileContainer = GetFileContainer(templateParsingState, me);
 
             if (null == fileContainer)
                 return false;
 
-            return MinimumPermission >= fileContainer.LoadPermission(webConnection.Session.User.Id);
+            return MinimumPermission >= fileContainer.LoadPermission(templateParsingState.WebConnection.Session.User.Id);
         }
     }
 }

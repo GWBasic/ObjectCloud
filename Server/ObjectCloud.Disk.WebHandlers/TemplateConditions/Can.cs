@@ -26,13 +26,12 @@ namespace ObjectCloud.Disk.WebHandlers.TemplateConditions
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="webConnection"></param>
+        /// <param name="templateParsingState"></param>
         /// <param name="me"></param>
-        /// <param name="currentWorkingDirectory"></param>
         /// <returns></returns>
-        public bool IsConditionMet(IWebConnection webConnection, XmlNode me, string currentWorkingDirectory)
+        public bool IsConditionMet(ITemplateParsingState templateParsingState, XmlNode me)
         {
-            IFileContainer fileContainer = GetFileContainer(webConnection, me, currentWorkingDirectory);
+            IFileContainer fileContainer = GetFileContainer(templateParsingState, me);
 
             if (null == fileContainer)
                 return false;
@@ -42,19 +41,19 @@ namespace ObjectCloud.Disk.WebHandlers.TemplateConditions
             if (null == namedPermissionAttribute)
             {
                 me.ParentNode.ParentNode.InsertBefore(
-                    TemplateEngine.GenerateWarningNode(me.OwnerDocument, "namedpermission not specified: " + me.OuterXml),
+                    templateParsingState.GenerateWarningNode("namedpermission not specified: " + me.OuterXml),
                     me.ParentNode.ParentNode);
 
                 return false;
             }
 
             // Always return true for administrators
-            if (webConnection.WebServer.FileHandlerFactoryLocator.UserManagerHandler.IsUserInGroup(
-                webConnection.Session.User.Id,
-                webConnection.WebServer.FileHandlerFactoryLocator.UserFactory.Administrators.Id))
+            if (templateParsingState.WebConnection.WebServer.FileHandlerFactoryLocator.UserManagerHandler.IsUserInGroup(
+                templateParsingState.WebConnection.Session.User.Id,
+                templateParsingState.WebConnection.WebServer.FileHandlerFactoryLocator.UserFactory.Administrators.Id))
                 return true;
 
-            return fileContainer.HasNamedPermissions(webConnection.Session.User.Id, namedPermissionAttribute.Value);
+            return fileContainer.HasNamedPermissions(templateParsingState.WebConnection.Session.User.Id, namedPermissionAttribute.Value);
         }
     }
 }

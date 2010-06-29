@@ -63,7 +63,11 @@
     <Compile Include="TemplateConditions\IsLoggedIn.cs" />
     <Compile Include="TemplateConditions\IsOpenID.cs" />
     <Compile Include="TemplateEngine.cs" />
+    <Compile Include="Template\AggressiveCachingEnabler.cs" />
+    <Compile Include="Template\ComponentAndConditionalsResolver.cs" />
     <Compile Include="Template\DebugInformationRemover.cs" />
+    <Compile Include="Template\DependancyResolver.cs" />
+    <Compile Include="Template\TemplateParsingState.cs" />
     <Compile Include="TextWebHandler.cs" />
     <Compile Include="UserManagerWebHandler.cs" />
     <Compile Include="UserWebHandler.cs" />

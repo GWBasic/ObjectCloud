@@ -38,8 +38,11 @@
       </dictionary>
     </property>
 
-    <property name="TemplatePostProcessors">
-      <list element-type="ObjectCloud.Interfaces.Templating.ITemplatePostProcessor">
+    <property name="TemplateProcessors">
+      <list element-type="ObjectCloud.Interfaces.Templating.ITemplateProcessor">
+        <object id="ComponentAndConditionalsResolver" type="ObjectCloud.Disk.WebHandlers.Template.ComponentAndConditionalsResolver" />
+        <object id="DependancyResolver" type="ObjectCloud.Disk.WebHandlers.Template.DependancyResolver" />
+        <object id="AggressiveCachingEnabler" type="ObjectCloud.Disk.WebHandlers.Template.AggressiveCachingEnabler" />
         <object id="TemplateDebugInformationRemover" type="ObjectCloud.Disk.WebHandlers.Template.DebugInformationRemover" />
       </list>
     </property>

@@ -26,11 +26,11 @@ namespace ObjectCloud.Interfaces.Templating
         /// <summary>
         /// All of the template post processors
         /// </summary>
-        public List<ITemplatePostProcessor> TemplatePostProcessors
+        public List<ITemplateProcessor> TemplateProcessors
         {
-            get { return _TemplatePostProcessors; }
-            set { _TemplatePostProcessors = value; }
+            get { return _TemplateProcessors; }
+            set { _TemplateProcessors = value; }
         }
-        private List<ITemplatePostProcessor> _TemplatePostProcessors;
+        private List<ITemplateProcessor> _TemplateProcessors;
     }
 }

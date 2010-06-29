@@ -36,6 +36,18 @@ namespace ObjectCloud.Common
             foreach (object o in toCast)
                 yield return (T)o;
         }
+
+        /// <summary>
+        /// Only returns items in the enumeration that are the specified type
+        /// </summary>
+        /// <param name="toCast"></param>
+        /// <returns></returns>
+        public static IEnumerable<T> Filter(IEnumerable toFilter)
+        {
+            foreach (object o in toFilter)
+                if (o is T)
+                    yield return (T)o;
+        }
 		
 		/// <summary>
 		/// Enumerates over all of the members of a collection in a multithreaded manner 
@@ -145,6 +157,117 @@ namespace ObjectCloud.Common
 			
 			return exceptions;
 		}
+
+        /// <summary>
+        /// Copies an IEnumerable
+        /// </summary>
+        /// <param name="toCopy"></param>
+        /// <returns></returns>
+        public static IEnumerable<T> FastCopy(IEnumerable<T> toCopy)
+        {
+            SingleLinkNode<T> head = null;
+
+            using (IEnumerator<T> enumerator = toCopy.GetEnumerator())
+            {
+                SingleLinkNode<T> current = null;
+
+                if (enumerator.MoveNext())
+                {
+                    head = new SingleLinkNode<T>();
+                    head.Item = enumerator.Current;
+                    current = head;
+
+                    while (enumerator.MoveNext())
+                    {
+                        current.Next = new SingleLinkNode<T>();
+                        current = current.Next;
+                        current.Item = enumerator.Current;
+                    }
+
+                    current.Next = null;
+                }
+            }
+
+            return new SingleLinkNodeEnumerable(head);
+        }
+
+        private class SingleLinkNodeEnumerable : IEnumerable<T>
+        {
+            SingleLinkNode<T> Head;
+
+            internal SingleLinkNodeEnumerable(SingleLinkNode<T> head)
+            {
+                Head = head;
+            }
+
+            IEnumerator<T> IEnumerable<T>.GetEnumerator()
+            {
+                return new SingleLinkNodeEnumerator(Head);
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return new SingleLinkNodeEnumerator(Head);
+            }
+        }
+
+        private class SingleLinkNodeEnumerator : IEnumerator<T>
+        {
+            bool Started = false;
+            SingleLinkNode<T> Current;
+            SingleLinkNode<T> Head;
+
+            internal SingleLinkNodeEnumerator(SingleLinkNode<T> head)
+            {
+                Current = head;
+                Head = head;
+            }
+
+            T IEnumerator<T>.Current
+            {
+                get 
+                {
+                    if (null == Current)
+                        throw new InvalidOperationException("The enumerator is positioned before the first element of the collection or after the last element.");
+
+                    return Current.Item;
+                }
+            }
+
+            void IDisposable.Dispose() {}
+
+            object IEnumerator.Current
+            {
+                get
+                {
+                    if (null == Current)
+                        throw new InvalidOperationException("The enumerator is positioned before the first element of the collection or after the last element.");
+
+                    return Current.Item;
+                }
+            }
+
+            bool IEnumerator.MoveNext()
+            {
+                if (null == Current)
+                    return false;
+                else
+                {
+                    if (Started)
+                        Current = Current.Next;
+                    else
+                        Started = true;
+                }
+
+                return Current != null;
+            }
+
+            void IEnumerator.Reset()
+            {
+                Started = false;
+                Current = Head;
+            }
+        }
     }
 
     public static class Enumerable

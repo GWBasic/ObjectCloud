@@ -126,10 +126,10 @@ namespace ObjectCloud.Interfaces.WebServer
         /// </summary>
         bool RedirectIfRequestedHostIsDifferent { get; set; }
 
-        /// <summary>
+        /*// <summary>
         /// Set to false to disable minimizing Javascript.  Defaults to true
         /// </summary>
-        bool MinimizeJavascript { get; set; }
+        bool MinimizeJavascript { get; set; }*/
 
         /// <summary>
         /// The size of the header to buffer when reading headers.  Any headers sent that are longer then this buffer size will be aborted.

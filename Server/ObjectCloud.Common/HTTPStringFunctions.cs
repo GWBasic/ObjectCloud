@@ -54,6 +54,43 @@ namespace ObjectCloud.Common
         }
 
         /// <summary>
+        /// Returns a URI with a get parameter added, using XHTML's &amp; convention for &
+        /// </summary>
+        /// <param name="URI"></param>
+        /// <param name="name"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static string AppendXHTMLGetParameter(string URI, string name, string value)
+        {
+            name = EncodeRequestParametersForBrowser(name);
+            value = EncodeRequestParametersForBrowser(value);
+
+            if ((URI.Contains(string.Format("{0}=", name)))
+                && (URI.Contains("?")))
+            {
+                string[] urlAndParms = URI.Split(new char[] { '?' });
+
+                // Request already contains name
+                RequestParameters rp = new RequestParameters(urlAndParms[1]);
+
+                rp[name] = value;
+
+                StringBuilder toReturn = new StringBuilder(urlAndParms[0]);
+                toReturn.Append("?");
+
+                foreach (string prevName in rp.Keys)
+                    toReturn.AppendFormat("{0}={1}&amp;", prevName, rp[prevName]);
+
+                toReturn.Remove(toReturn.Length - 1, 1);
+                return toReturn.ToString();
+            }
+            if (URI.Contains("?"))
+                return string.Format("{0}&amp;{1}={2}", URI, name, value);
+            else
+                return string.Format("{0}?{1}={2}", URI, name, value);
+        }
+
+        /// <summary>
         /// Decodes request parameters from browser
         /// </summary>
         /// <param name="toDecode"></param>

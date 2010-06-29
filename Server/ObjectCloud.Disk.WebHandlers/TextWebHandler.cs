@@ -45,22 +45,19 @@ namespace ObjectCloud.Disk.WebHandlers
                     }
                 case ("JavaScript"):
                     {
-                        if (FileHandlerFactoryLocator.WebServer.MinimizeJavascript)
+                        // The text will be "minimized" javascript to save space
+
+                        JavaScriptMinifier javaScriptMinifier = new JavaScriptMinifier();
+
+                        try
                         {
-                            // The text will be "minimized" javascript to save space
+                            contents = javaScriptMinifier.Minify(contents);
+                        }
+                        catch (Exception e)
+                        {
+                            log.Error("Error when minimizing JavaScript", e);
 
-                            JavaScriptMinifier javaScriptMinifier = new JavaScriptMinifier();
-
-                            try
-                            {
-                                contents = javaScriptMinifier.Minify(contents);
-                            }
-                            catch (Exception e)
-                            {
-                                log.Error("Error when minimizing JavaScript", e);
-
-                                return WebResults.FromString(Status._500_Internal_Server_Error, "Error when minimizing JavaScript: " + e.Message);
-                            }
+                            return WebResults.FromString(Status._500_Internal_Server_Error, "Error when minimizing JavaScript: " + e.Message);
                         }
 
                         break;
