@@ -215,7 +215,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
                 scriptNode.Attributes.Append(srcAttribute);
                 scriptNode.Attributes.Append(typeAttribute);
-                scriptNode.InnerText = " ";
+                scriptNode.InnerText = "";
 
                 headNode.AppendChild(scriptNode);
             }

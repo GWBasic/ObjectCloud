@@ -29,7 +29,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
     {
         void ITemplateProcessor.Handle(ITemplateParsingState templateParsingState)
         {
-            //templateParsingState.PostProcessElement += PostProcessElement;
+            templateParsingState.PostProcessElement += PostProcessElement;
         }
 
         void PostProcessElement(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
@@ -37,7 +37,11 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             if (element.NamespaceURI == templateParsingState.TemplateDocument.DocumentElement.NamespaceURI)
                 if (element.LocalName == "script")
                 {
-                    if (element.ChildNodes.Count == 0)
+                    // Don't allow empty <script /> tags
+                    if (null == element.InnerText)
+                        element.InnerText = "";
+
+                    if (element.InnerText.Length == 0)
                     {
                         XmlAttribute srcAttribute = element.Attributes["src"];
 
