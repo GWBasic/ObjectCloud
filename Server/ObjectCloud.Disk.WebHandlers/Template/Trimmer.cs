@@ -35,7 +35,53 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         void PostProcessElement(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
         {
             if (element.LocalName == "trim" && element.NamespaceURI == TemplatingConstants.TemplateNamespace)
-            { }
+            {
+                XmlAttribute maxtagsAttribute = element.Attributes["maxtags"];
+                XmlAttribute maxlengthAttribute = element.Attributes["maxlength"];
+
+                ulong maxtags = ulong.MaxValue;
+                if (null != maxtagsAttribute)
+                    ulong.TryParse(maxtagsAttribute.Value, out maxtags);
+
+                ulong maxlength = ulong.MaxValue;
+                if (null != maxlengthAttribute)
+                    ulong.TryParse(maxlengthAttribute.Value, out maxlength);
+
+                ulong numTags = 0;
+                ulong length = 0;
+                
+                bool trimming = false;
+                foreach (XmlNode xmlNode in Enumerable<XmlNode>.FastCopy(XmlHelper.IterateAll<XmlNode>(element)))
+                {
+                    if (trimming)
+                        xmlNode.ParentNode.RemoveChild(xmlNode);
+                    else if (!(xmlNode is XmlComment))
+                    {
+                        numTags++;
+
+                        if (numTags > maxtags)
+                        {
+                            xmlNode.ParentNode.RemoveChild(xmlNode);
+                            trimming = true;
+                        }
+                        else if (xmlNode is XmlText)
+                        {
+                            XmlText xmlText = (XmlText)xmlNode;
+                            ulong textLength = Convert.ToUInt64(xmlText.InnerText.Length);
+
+                            if (length + textLength > maxlength)
+                            {
+                                xmlText.InnerText = xmlText.InnerText.Substring(0, Convert.ToInt32(maxlength - length));
+                                trimming = true;
+                            }
+                            else
+                                length += textLength;
+                        }
+                    }
+                }
+
+                templateParsingState.ReplaceNodes(element, element.ChildNodes);
+            }
         }
     }
 }

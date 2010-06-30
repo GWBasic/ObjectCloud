@@ -45,6 +45,7 @@
         <object id="AggressiveCachingEnabler" type="ObjectCloud.Disk.WebHandlers.Template.AggressiveCachingEnabler" />
         <object id="TemplateDebugInformationRemover" type="ObjectCloud.Disk.WebHandlers.Template.DebugInformationRemover" />
         <object id="JSONTemplateResolver" type="ObjectCloud.Disk.WebHandlers.Template.JSONTemplateResolver" />
+        <object id="Trimmer" type="ObjectCloud.Disk.WebHandlers.Template.Trimmer" />
       </list>
     </property>
   </object>

@@ -21,13 +21,24 @@ namespace ObjectCloud.Common
         /// <returns></returns>
         public static IEnumerable<XmlElement> IterateAllElements(XmlNode xmlNode)
         {
+            return IterateAll<XmlElement>(xmlNode);
+        }
+
+        /// <summary>
+        /// Helps iterate through all elements in an XmlNode, recursively going through all child elements.
+        /// </summary>
+        /// <param name="xmlNode"></param>
+        /// <returns></returns>
+        public static IEnumerable<T> IterateAll<T>(XmlNode xmlNode)
+            where T : XmlNode
+        {
             foreach (XmlNode childNode in xmlNode.ChildNodes)
-                if (childNode is XmlElement)
+                if (childNode is T)
                 {
-                    foreach (XmlElement subChildNode in IterateAllElements(childNode))
+                    foreach (T subChildNode in IterateAll<T>(childNode))
                         yield return subChildNode;
 
-                    yield return (XmlElement)childNode;
+                    yield return (T)childNode;
                 }
         }
 

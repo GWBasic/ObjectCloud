@@ -69,6 +69,7 @@
     <Compile Include="Template\DependancyResolver.cs" />
     <Compile Include="Template\JSONTemplateResolver.cs" />
     <Compile Include="Template\TemplateParsingState.cs" />
+    <Compile Include="Template\Trimmer.cs" />
     <Compile Include="TextWebHandler.cs" />
     <Compile Include="UserManagerWebHandler.cs" />
     <Compile Include="UserWebHandler.cs" />
