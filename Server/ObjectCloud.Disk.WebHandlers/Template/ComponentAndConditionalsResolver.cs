@@ -40,6 +40,8 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     HandleConditional(templateParsingState, getParameters, element);
                 else if (element.LocalName == "component")
                     LoadComponent(templateParsingState, getParameters, element);
+                else if (element.LocalName == "snipit")
+                    LoadSnipit(templateParsingState, getParameters, element);
         }
 
         private void HandleConditional(
@@ -96,7 +98,6 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
             conditionalNode.ParentNode.RemoveChild(conditionalNode);
         }
-
 
         private void LoadComponent(
             ITemplateParsingState templateParsingState,
@@ -254,6 +255,76 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 }
 
                 templateParsingState.ReplaceNodes(componentNode, resultNode);
+            }
+        }
+
+        private void LoadSnipit(
+            ITemplateParsingState templateParsingState,
+            IDictionary<string, string> getParameters,
+            XmlNode snipitNode)
+        {
+            XmlAttribute srcAttribute = (XmlAttribute)snipitNode.Attributes.GetNamedItem("src", TemplatingConstants.TemplateNamespace);
+
+            if (null == srcAttribute)
+                templateParsingState.ReplaceNodes(
+                    snipitNode,
+                    templateParsingState.GenerateWarningNode("Either oc:src must be specified: " + snipitNode.OuterXml));
+
+            else
+            {
+                string fileName = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.GetAbsolutePath(
+                    templateParsingState.GetCWD(snipitNode),
+                    srcAttribute.Value);
+
+                IFileContainer fileContainer = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(fileName);
+                templateParsingState.WebConnection.TouchedFiles.Add(fileContainer);
+
+                // If the user doesn't have permission for the component and the component has something to use instead, use it
+                if (null == fileContainer.LoadPermission(templateParsingState.WebConnection.Session.User.Id) && snipitNode.HasChildNodes)
+                {
+                    XmlNode replacement = snipitNode.OwnerDocument.CreateElement("div");
+
+                    foreach (XmlNode errorNode in snipitNode.ChildNodes)
+                        replacement.AppendChild(errorNode);
+
+                    snipitNode.ParentNode.InsertAfter(replacement, snipitNode);
+                    snipitNode.ParentNode.RemoveChild(snipitNode);
+                }
+                else
+                {
+                    // If the user has permission, resolve the component and deal with default errors
+
+                    XmlDocument snipitDocument = new XmlDocument();
+
+                    // TODO:  GET Parameters
+
+                    try
+                    {
+                        snipitDocument.LoadXml(string.Format(
+                            "<div xmlns=\"{0}\" xmlns:oc=\"{1}\">{2}</div>",
+                            templateParsingState.TemplateDocument.FirstChild.NamespaceURI,
+                            TemplatingConstants.TemplateNamespace,
+                            fileContainer.CastFileHandler<ITextHandler>().ReadAll()));
+
+                        XmlNodeList replacementNodes = snipitDocument.FirstChild.ChildNodes;
+                        templateParsingState.SetCWD(replacementNodes, fileContainer.ParentDirectoryHandler.FileContainer.FullPath);
+                        templateParsingState.ReplaceNodes(snipitNode, replacementNodes);
+                    }
+                    catch (WebResultsOverrideException wroe)
+                    {
+                        templateParsingState.ReplaceNodes(
+                            snipitNode,
+                            templateParsingState.GenerateWarningNode(wroe.WebResults.ResultsAsString));
+                    }
+                    catch (Exception e)
+                    {
+                        log.Error("An error occured when loading a component", e);
+
+                        templateParsingState.ReplaceNodes(
+                            snipitNode,
+                            templateParsingState.GenerateWarningNode("An unhandled error occured.  See the system logs for more information"));
+                    }
+                }
             }
         }
     }

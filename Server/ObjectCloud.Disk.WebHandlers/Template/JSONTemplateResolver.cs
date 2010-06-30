@@ -59,6 +59,9 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                         string src = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.GetAbsolutePath(
                             templateParsingState.GetCWD(element), srcAttribute.Value);
                         templateContainer = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(src);
+
+                        templateParsingState.WebConnection.TouchedFiles.Add(templateContainer);
+
                     }
                     catch (FileDoesNotExist fdne)
                     {
@@ -101,7 +104,18 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                         else if (url.StartsWith("http://"))
                         {
                             HttpResponseHandler httpResponse = templateParsingState.WebConnection.Session.HttpWebClient.Get(url);
-                            jsonReader = httpResponse.AsJsonReader();
+
+                            int statusCode = (int)httpResponse.StatusCode;
+                            if ((statusCode >= 200) && (statusCode < 300))
+                                jsonReader = httpResponse.AsJsonReader();
+                            else
+                            {
+                                templateParsingState.ReplaceNodes(
+                                    element,
+                                    templateParsingState.GenerateWarningNode(httpResponse.AsString()));
+
+                                return;
+                            }
                         }
                         else
                             try
@@ -113,7 +127,18 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                                     templateParsingState.WebConnection.CookiesFromBrowser);
 
                                 IWebResults shellResults = shellWebConnection.GenerateResultsForClient();
-                                jsonReader = new JsonReader(shellResults.ResultsAsStream);
+
+                                int statusCode = (int)shellResults.Status;
+                                if ((statusCode >= 200) && (statusCode < 300))
+                                    jsonReader = new JsonReader(shellResults.ResultsAsStream);
+                                else
+                                {
+                                    templateParsingState.ReplaceNodes(
+                                        element,
+                                        templateParsingState.GenerateWarningNode(shellResults.ResultsAsString));
+
+                                    return;
+                                }
                             }
                             catch (WebResultsOverrideException wroe)
                             {

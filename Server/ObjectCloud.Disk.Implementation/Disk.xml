@@ -15,7 +15,7 @@
 
   <object id="FileSystemResolver" type="ObjectCloud.Disk.Implementation.FileSystemResolver, ObjectCloud.Disk.Implementation">
     <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
-    <property name="FilenameForbiddenCharacters" value="[]/=%*?!@#$^&amp;()" />
+    <property name="FilenameForbiddenCharacters" value="[]/=%*?!@#$^&amp;()," />
   </object>
 
   <!-- This creates the root directory if it is missing.  At some point, this wil be moved into some form of an installer -->

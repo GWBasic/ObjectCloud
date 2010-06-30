@@ -78,9 +78,15 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     AddBrowserCache(templateParsingState, element.Attributes["src"]);
         }
 
+        private enum BrowserCacheEnum
+        {
+            Date, MD5, Disable
+        }
+
         private void AddBrowserCache(ITemplateParsingState templateParsingState, XmlAttribute attribute)
         {
             string attributeValue = attribute.InnerText;
+            XmlElement xmlElement = attribute.OwnerElement;
 
             if (null == attribute)
                 return;
@@ -89,7 +95,22 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             if (attributeValue.StartsWith("https://"))
                 return;
 
-            if (attributeValue.Contains("?"))
+            BrowserCacheEnum browserCache = BrowserCacheEnum.Disable;
+            string browserCacheValue = xmlElement.GetAttribute("browsercache", TemplatingConstants.TemplateNamespace);
+            if (browserCacheValue.Length > 0)
+            {
+                if ("date" == browserCacheValue)
+                    browserCache = BrowserCacheEnum.Date;
+                else if ("md5" == browserCacheValue)
+                    browserCache = BrowserCacheEnum.MD5;
+            }
+            else
+                if (attributeValue.Contains("?"))
+                    browserCache = BrowserCacheEnum.MD5;
+                else
+                    browserCache = BrowserCacheEnum.Date;
+
+            if (BrowserCacheEnum.MD5 == browserCache)
             {
                 // Don't add a dupe cache key
                 if (attributeValue.Contains("?BrowserCache=") || attributeValue.Contains("&BrowserCache="))
@@ -119,7 +140,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     'h' + Convert.ToBase64String(scriptHash));
 
             }
-            else
+            else if (BrowserCacheEnum.Date == browserCache)
             {
                 if (templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.IsFilePresent(attributeValue))
                 {

@@ -38,39 +38,37 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.Primitive, FilePermissionEnum.Read)]
         public IWebResults Evaluate(IWebConnection webConnection, string filename)
         {
-            EvaluateToString(
+            Stream results = EvaluateToStream(
                 webConnection,
                 webConnection.GetParameters, 
-                filename, 
-                delegate(Stream results)
-                {
-                    // Hack to work around a bug in Mozilla handling xhtml
-                    // What's going on is that I'm using a horrible hack to remove all namespaces from the <html> tag and turn this into an SGML-HTML document instead of xml-html
-                    if (webConnection.Headers["USER-AGENT"].Contains(" Firefox/"))
-                    {
-                        // <?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" 
+                filename);
 
-                        StreamReader sr = new StreamReader(results);
-                        string result = sr.ReadToEnd();
-                        //result = result.Replace("<?xml version=\"1.0\" encoding=\"utf-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:oc=\"objectcloud_templating\">", "<!DOCTYPE html>\n<html>");
-                        result = result.Replace("<?xml version=\"1.0\" encoding=\"utf-8\"?><html", "");
-                        result = result.Split(new char[] { '>' }, 2)[1];
-                        result = "<!DOCTYPE html>\n<html>" + result;
+            IWebResults toReturn;
 
-                        IWebResults toReturn = WebResults.From(Status._200_OK, result);
-                        toReturn.ContentType = "text/html";
-                        webConnection.SendResults(toReturn);
-                    }
-                    else
-                    {
-                        // Everyone else gets real XML
-                        IWebResults toReturn = WebResults.From(Status._200_OK, results);
-                        toReturn.ContentType = "text/xml";
-                        webConnection.SendResults(toReturn);
-                    }
-                });
+            // Hack to work around a bug in Mozilla handling xhtml
+            // What's going on is that I'm using a horrible hack to remove all namespaces from the <html> tag and turn this into an SGML-HTML document instead of xml-html
+            if (webConnection.Headers["USER-AGENT"].Contains(" Firefox/"))
+            {
+                // <?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" 
 
-            return null;
+                StreamReader sr = new StreamReader(results);
+                string result = sr.ReadToEnd();
+                //result = result.Replace("<?xml version=\"1.0\" encoding=\"utf-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:oc=\"objectcloud_templating\">", "<!DOCTYPE html>\n<html>");
+                result = result.Replace("<?xml version=\"1.0\" encoding=\"utf-8\"?><html", "");
+                result = result.Split(new char[] { '>' }, 2)[1];
+                result = "<!DOCTYPE html>\n<html>" + result;
+
+                toReturn = WebResults.From(Status._200_OK, result);
+                toReturn.ContentType = "text/html";
+            }
+            else
+            {
+                // Everyone else gets real XML
+                toReturn = WebResults.From(Status._200_OK, results);
+                toReturn.ContentType = "text/xml";
+            }
+
+            return toReturn;
         }
 
         /// <summary>
@@ -79,14 +77,12 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="webConnection"></param>
         /// <param name="getParameters"></param>
         /// <param name="filename"></param>
-        /// <param name="resultsCallback"></param>
         /// <returns></returns>
         [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.Primitive, FilePermissionEnum.Read)]
-        public void EvaluateToString(
+        public Stream EvaluateToStream(
             IWebConnection webConnection,
             IDictionary<string, string> getParameters,
-            string filename,
-            GenericArgument<Stream> resultsCallback)
+            string filename)
         {
             XmlDocument templateDocument = null;
             TemplateParsingState templateParsingState = null;
@@ -212,7 +208,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             stream.Seek(0, SeekOrigin.Begin);
 
-            resultsCallback(stream);
+            return stream;
         }
 
         private static XmlNode GetHeadNode(XmlDocument templateDocument)
