@@ -35,10 +35,11 @@ namespace ObjectCloud.Common
             foreach (XmlNode childNode in xmlNode.ChildNodes)
                 if (childNode is T)
                 {
+                    yield return (T)childNode;
+
                     foreach (T subChildNode in IterateAll<T>(childNode))
                         yield return subChildNode;
 
-                    yield return (T)childNode;
                 }
         }
 
@@ -52,10 +53,10 @@ namespace ObjectCloud.Common
             foreach (XmlNode childNode in xmlNode.ChildNodes)
                 if (childNode is XmlElement)
                 {
+                    yield return childNode;
+
                     foreach (XmlNode subChildNode in IterateAllElementsAndComments(childNode))
                         yield return subChildNode;
-
-                    yield return childNode;
                 }
                 else if (childNode is XmlComment)
                     yield return childNode;
