@@ -11,7 +11,20 @@ namespace ObjectCloud.Common.Threading
 {
     public static class NonBlockingConsoleWriter
     {
-        static int Running = 0;
+        /// <summary>
+        /// Queue of strings to print
+        /// </summary>
+        static LockFreeQueue<string> QueuedStrings = new LockFreeQueue<string>();
+
+        static NonBlockingConsoleWriter()
+        {
+            EventHandler<LockFreeQueue<string>, EventArgs> itemAddedToEmptyQueue = delegate(LockFreeQueue<string> q, EventArgs e)
+            {
+                ThreadPool.QueueUserWorkItem(Work);
+            };
+
+            QueuedStrings.ItemAddedToEmptyQueue += itemAddedToEmptyQueue;
+        }
 
         /// <summary>
         /// Prints the text to the console.  Does not block.  All text is queued up to be printed.  There is a small chance that text will sit in the buffer until the next write, thus it is assumed that this will be called on a regular basis
@@ -20,44 +33,27 @@ namespace ObjectCloud.Common.Threading
         static public void Print(string toPrint)
         {
             QueuedStrings.Enqueue(toPrint);
-
-            if (0 == Running)
-                if (0 == Interlocked.CompareExchange(ref Running, 1, 0))
-                    ThreadPool.QueueUserWorkItem(Work);
         }
 
-        static LockFreeQueue<string> QueuedStrings = new LockFreeQueue<string>();
-
-		/// <summary>
+        /// <summary>
         /// Runs on the Thread to keep printing on the console
         /// </summary>
         static void Work(object state)
         {
-            bool keepRunning = true;
-
             StringBuilder toWrite = new StringBuilder(3000);
 
-            do
+            string toPrint;
+            while (QueuedStrings.Dequeue(out toPrint))
             {
-                string toPrint;
-                if (QueuedStrings.Dequeue(out toPrint))
-                    toWrite.Append(toPrint);
-                else
-                {
-                    // If the queue was emptied, then end the loop
-                    Running = 0;
-                    keepRunning = false;
-                }
+                toWrite.Append(toPrint);
 
                 if (toWrite.Length > 2500)
                 {
                     Console.Write(toWrite);
                     toWrite = new StringBuilder(3000);
                 }
+            }
 
-            } while (keepRunning);
-
-            // Note:  It's possible that things can be printed out-of-order when a lot of stuff is being printed
             if (toWrite.Length > 0)
                 Console.Write(toWrite.ToString());
         }

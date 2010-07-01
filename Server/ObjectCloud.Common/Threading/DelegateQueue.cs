@@ -24,8 +24,34 @@ namespace ObjectCloud.Common.Threading
             public object state;
         }
 
-        int Running = 0;
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name">The name of the thread that handles delegates</param>
+        public DelegateQueue(string name)
+        {
+            Name = name;
+            QueuedDelegates.ItemAddedToEmptyQueue += new EventHandler<LockFreeQueue<QueuedDelegate>, EventArgs>(QueuedDelegates_ItemAddedToEmptyQueue);
+        }
+
+        void QueuedDelegates_ItemAddedToEmptyQueue(LockFreeQueue<DelegateQueue.QueuedDelegate> sender, EventArgs e)
+        {
+            lock (pulser)
+            {
+                if (null == Thread)
+                {
+                    Thread = new Thread(Work);
+                    Thread.Name = Name;
+                    Thread.Start();
+                }
+                else
+                    Monitor.Pulse(pulser);
+            }
+        }
+
         LockFreeQueue<QueuedDelegate> QueuedDelegates = new LockFreeQueue<QueuedDelegate>();
+
+        private string Name;
 
         /// <summary>
         /// Prints the text to the console.  Does not block.  All text is queued up to be printed
@@ -47,26 +73,37 @@ namespace ObjectCloud.Common.Threading
             queuedDelegate.state = State;
 
             QueuedDelegates.Enqueue(queuedDelegate);
-
-            if (0 == Running)
-                if (0 == Interlocked.CompareExchange(ref Running, 1, 0))
-                {
-                    Thread thread = new Thread(Work);
-                    thread.Start();
-                }
         }
+
+        /// <summary>
+        /// The thread that runs the delegates
+        /// </summary>
+        Thread Thread;
+
+        /// <summary>
+        /// Used to indicate new delegates when a thread is running
+        /// </summary>
+        private object pulser = new object();
 
         /// <summary>
         /// Runs on the Thread to keep printing on the console
         /// </summary>
         void Work()
         {
-            QueuedDelegate queuedDelegate;
+            while (true)
+            {
+                QueuedDelegate queuedDelegate;
 
-            while (QueuedDelegates.Dequeue(out queuedDelegate))
-                queuedDelegate.Callback(queuedDelegate.state);
+                while (QueuedDelegates.Dequeue(out queuedDelegate))
+                    queuedDelegate.Callback(queuedDelegate.state);
 
-            Running = 0;
+                lock (pulser)
+                    if (!Monitor.Wait(pulser, 10000))
+                    {
+                        Thread = null;
+                        return;
+                    }
+            }
         }
     }
 }

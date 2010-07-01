@@ -31,6 +31,7 @@ namespace ObjectCloud.Common.Threading
 {
     public class LockFreeQueue<T>
     {
+
         SingleLinkNode<T> Head;
         SingleLinkNode<T> Tail;
 
@@ -63,8 +64,16 @@ namespace ObjectCloud.Common.Threading
                 }
             }
 
-            SyncMethods.CAS<SingleLinkNode<T>>(ref Tail, oldTail, newNode);
+            if (Head == Interlocked.CompareExchange<SingleLinkNode<T>>(ref Tail, newNode, oldTail))
+                if (null != ItemAddedToEmptyQueue)
+                    ItemAddedToEmptyQueue(this, new EventArgs());
+
         }
+
+        /// <summary>
+        /// Occurs whenever an item is added to an empty queue.  This is useful for starting threads that run while a queue has items
+        /// </summary>
+        public event EventHandler<LockFreeQueue<T>, EventArgs> ItemAddedToEmptyQueue;
 
         public virtual bool Dequeue(out T item)
         {

@@ -55,23 +55,7 @@ namespace ObjectCloud.Common.Threading
         /// </summary>
         public long NextId
         {
-            get
-            {
-                long toReturn;
-                long nextId;
-                do
-                {
-                    nextId = _NextId;
-
-                    if (nextId < long.MaxValue)
-                        toReturn = nextId + 1;
-                    else
-                        toReturn = 0;
-
-                } while (nextId != Interlocked.CompareExchange(ref _NextId, toReturn, nextId));
-
-                return toReturn;
-            }
+            get { return Interlocked.Increment(ref _NextId); }
         }
         private long _NextId = 0;
 

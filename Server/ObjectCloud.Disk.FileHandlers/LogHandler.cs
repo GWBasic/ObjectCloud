@@ -116,7 +116,7 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <summary>
         /// Asyncronously runs delegates on a queue where they can't block each other
         /// </summary>
-        private DelegateQueue DelegateQueue = new DelegateQueue();
+        private DelegateQueue DelegateQueue = new DelegateQueue("Log Writer");
 
 		public void WriteLog(
 			string className, 
