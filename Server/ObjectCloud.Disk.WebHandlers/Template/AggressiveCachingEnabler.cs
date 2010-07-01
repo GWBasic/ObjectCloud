@@ -85,11 +85,18 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 Date, MD5, Disable
             }
 
-            Dictionary<string, string> Precalculated = new Dictionary<string, string>();
+            /// <summary>
+            /// Cache of URLs with the BrowserCache argument added when it's based off of an MD5.  This prevents re-calculating MD5s continuously for common URLs
+            /// </summary>
+            Dictionary<string, string> PrecalculatedWithMD5 = new Dictionary<string, string>();
 
             private void AddBrowserCache(ITemplateParsingState templateParsingState, XmlAttribute attribute)
             {
                 string attributeValue = attribute.InnerText;
+
+                // Don't add a dupe cache key
+                if (attributeValue.Contains("?BrowserCache=") || attributeValue.Contains("&BrowserCache="))
+                    return;
 
                 XmlElement xmlElement = attribute.OwnerElement;
 
@@ -108,13 +115,6 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 else if (attributeValue.StartsWith("https://"))
                     return;
 
-                string precalculated;
-                if (Precalculated.TryGetValue(attributeValue, out precalculated))
-                {
-                    attribute.Value = precalculated;
-                    return;
-                }
-
                 BrowserCacheEnum browserCache = BrowserCacheEnum.Disable;
                 string browserCacheValue = xmlElement.GetAttribute("browsercache", TemplatingConstants.TemplateNamespace);
                 if (browserCacheValue.Length > 0)
@@ -132,13 +132,14 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
                 if (BrowserCacheEnum.MD5 == browserCache)
                 {
-                    // Don't add a dupe cache key
-                    if (attributeValue.Contains("?BrowserCache=") || attributeValue.Contains("&BrowserCache="))
+                    string precalculated;
+                    if (PrecalculatedWithMD5.TryGetValue(attributeValue, out precalculated))
+                    {
+                        attribute.Value = precalculated;
                         return;
-
+                    }
+                    
                     IWebResults shelled = templateParsingState.WebConnection.ShellTo(attributeValue);
-
-                    // if it's a 4xx result, and  if minimizing javascript is disabled,  alert that there's an error
 
                     // Get a free hash calculator
                     MD5CryptoServiceProvider hashAlgorithm = Recycler<MD5CryptoServiceProvider>.Get();
@@ -159,6 +160,9 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                         "BrowserCache",
                         'h' + Convert.ToBase64String(scriptHash));
 
+
+                    // Save for reuse
+                    PrecalculatedWithMD5[attributeValue] = attribute.InnerText;
                 }
                 else if (BrowserCacheEnum.Date == browserCache)
                 {
@@ -173,11 +177,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                             "BrowserCache",
                             'd' + Convert.ToBase64String(BitConverter.GetBytes(fileContainer.LastModified.Ticks)));
                     }
-                    // else: if minimizing javascript is disabled, alert that the script is missing!
                 }
-
-                // Save for reuse
-                Precalculated[attributeValue] = attribute.InnerText;
             }
         }
     }
