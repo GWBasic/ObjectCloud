@@ -28,7 +28,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
     {
         static ILog log = LogManager.GetLogger<ComponentAndConditionalsResolver>();
 
-        void ITemplateProcessor.Handle(ITemplateParsingState templateParsingState)
+        void ITemplateProcessor.Register(ITemplateParsingState templateParsingState)
         {
             templateParsingState.ProcessElementForConditionalsAndComponents += ProcessElementForConditionalsAndComponents;
         }

@@ -27,7 +27,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
     /// </summary>
     class Trimmer : ITemplateProcessor
     {
-        void ITemplateProcessor.Handle(ITemplateParsingState templateParsingState)
+        void ITemplateProcessor.Register(ITemplateParsingState templateParsingState)
         {
             templateParsingState.PostProcessElement += PostProcessElement;
         }

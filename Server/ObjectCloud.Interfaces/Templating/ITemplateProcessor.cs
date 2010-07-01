@@ -21,6 +21,6 @@ namespace ObjectCloud.Interfaces.Templating
         /// Allows the template processor to register event handlers so that it can manipulate the template into a complete document
         /// </summary>
         /// <param name="templateParsingState"></param>
-        void Handle(ITemplateParsingState templateParsingState);
+        void Register(ITemplateParsingState templateParsingState);
     }
 }

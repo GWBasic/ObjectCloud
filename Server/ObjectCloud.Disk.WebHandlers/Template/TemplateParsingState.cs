@@ -20,9 +20,8 @@ namespace ObjectCloud.Disk.WebHandlers.Template
     {
         private ILog log = LogManager.GetLogger<TemplateParsingState>();
 
-        internal TemplateParsingState(IWebConnection webConnection, XmlDocument templateDocument)
+        internal TemplateParsingState(IWebConnection webConnection)
         {
-            _TemplateDocument = templateDocument;
             _WebConnection = webConnection;
             _FileHandlerFactoryLocator = webConnection.WebServer.FileHandlerFactoryLocator;
             _TemplateHandlerLocator = _FileHandlerFactoryLocator.TemplateHandlerLocator;
@@ -152,6 +151,13 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         }
         private readonly SortedDictionary<double, LinkedList<XmlNode>> _HeaderNodes = new SortedDictionary<double, LinkedList<XmlNode>>();
 
+        internal void OnDocumentLoaded(IDictionary<string, string> getParameters, XmlElement element)
+        {
+            if (null != DocumentLoaded)
+                DocumentLoaded(this, getParameters, element);
+        }
+        public event ElementProcessorFunction DocumentLoaded;
+
         internal void OnProcessElementForConditionalsAndComponents(IDictionary<string, string> getParameters, XmlElement element)
         {
             if (null != ProcessElementForConditionalsAndComponents)
@@ -193,6 +199,12 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         public void SetCWD(XmlNodeList xmlNodeList, string cwd)
         {
             foreach (XmlNode xmlNode in xmlNodeList)
+                SetCWD(xmlNode, cwd);
+        }
+
+        public void SetCWD(IEnumerable<XmlNode> xmlNodes, string cwd)
+        {
+            foreach (XmlNode xmlNode in xmlNodes)
                 SetCWD(xmlNode, cwd);
         }
 
@@ -303,12 +315,9 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         /// <summary>
         /// Loads an XmlDocument from the filecontainer, replacing GET parameters and verifying permissions
         /// </summary>
-        /// <param name="getParameters"></param>
         /// <param name="fileContainer"></param>
         /// <returns></returns>
-        public XmlDocument LoadXmlDocumentAndReplaceGetParameters(
-            IDictionary<string, string> getParameters, 
-            IFileContainer fileContainer)
+        public XmlDocument LoadXmlDocument(IFileContainer fileContainer)
         {
             WebConnection.TouchedFiles.Add(fileContainer);
 
@@ -324,7 +333,6 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
             try
             {
-                //xmlDocument.LoadXml(ReplaceGetParameters(getParameters, xml));
                 xmlDocument.LoadXml(xml);
             }
             catch (XmlException xmlException)
@@ -339,6 +347,21 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
                 throw new WebResultsOverrideException(WebResults.From(Status._500_Internal_Server_Error, errorBuilder.ToString()));
             }
+
+            return xmlDocument;
+        }
+
+        /// <summary>
+        /// Loads an XmlDocument from the filecontainer, replacing GET parameters and verifying permissions
+        /// </summary>
+        /// <param name="getParameters"></param>
+        /// <param name="fileContainer"></param>
+        /// <returns></returns>
+        public XmlDocument LoadXmlDocumentAndReplaceGetParameters(
+            IDictionary<string, string> getParameters, 
+            IFileContainer fileContainer)
+        {
+            XmlDocument xmlDocument = LoadXmlDocument(fileContainer);
 
             // Do the replacements
             ReplaceGetParameters(getParameters, xmlDocument);

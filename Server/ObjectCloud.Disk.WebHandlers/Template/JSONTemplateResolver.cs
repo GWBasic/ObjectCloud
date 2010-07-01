@@ -30,7 +30,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
     {
         static ILog log = LogManager.GetLogger<ComponentAndConditionalsResolver>();
 
-        void ITemplateProcessor.Handle(ITemplateParsingState templateParsingState)
+        void ITemplateProcessor.Register(ITemplateParsingState templateParsingState)
         {
             templateParsingState.ProcessElementForDependanciesAndTemplates += ProcessElementForDependanciesAndTemplates;
             templateParsingState.RegisterDeferedNode("jsontemplate", TemplatingConstants.TemplateNamespace);
@@ -44,44 +44,21 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     XmlAttribute srcAttribute = (XmlAttribute)element.Attributes.GetNamedItem("src", TemplatingConstants.TemplateNamespace);
                     XmlAttribute urlAttribute = (XmlAttribute)element.Attributes.GetNamedItem("url", TemplatingConstants.TemplateNamespace);
 
-                    if ((null == srcAttribute) || (null == urlAttribute))
+                    if (null == urlAttribute)
                     {
                         // Remove empty components and generate warning
                         templateParsingState.ReplaceNodes(
                             element,
-                            templateParsingState.GenerateWarningNode("Both oc:src and oc:url must be specified: " + element.OuterXml));
+                            templateParsingState.GenerateWarningNode("oc:url must be specified: " + element.OuterXml));
 
                         return;
                     }
 
-                    IFileContainer templateContainer;
-                    try
+                    // Quote the XML in debug mode so the designer can see the template
+                    if (templateParsingState.WebConnection.CookiesFromBrowser.ContainsKey(TemplatingConstants.XMLDebugModeCookie))
                     {
-                        string src = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.GetAbsolutePath(
-                            templateParsingState.GetCWD(element), srcAttribute.Value);
-                        templateContainer = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(src);
-
-                        templateParsingState.WebConnection.TouchedFiles.Add(templateContainer);
-
-                    }
-                    catch (FileDoesNotExist fdne)
-                    {
-                        log.Error("Error resolving a template", fdne);
-                        templateParsingState.ReplaceNodes(element, templateParsingState.GenerateWarningNode("src does not exist: " + element.OuterXml));
-
-                        return;
-                    }
-
-                    // If the user doesn't have permission for the component and the component has something to use instead, use it
-                    if (null == templateContainer.LoadPermission(templateParsingState.WebConnection.Session.User.Id) && element.HasChildNodes)
-                    {
-                        XmlNode replacement = element.OwnerDocument.CreateElement("div");
-
-                        foreach (XmlNode errorNode in element.ChildNodes)
-                            replacement.AppendChild(errorNode);
-
-                        element.ParentNode.InsertAfter(replacement, element);
-                        element.ParentNode.RemoveChild(element);
+                        XmlComment debugComment = templateParsingState.TemplateDocument.CreateComment("Template: " + element.OuterXml);
+                        element.ParentNode.InsertBefore(debugComment, element);
                     }
 
                     // Try to load the destination URL
@@ -97,7 +74,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                         if (url.StartsWith("https://"))
                         {
                             templateParsingState.ReplaceNodes(
-                                element, 
+                                element,
                                 templateParsingState.GenerateWarningNode("https component nodes aren't supported due to certificate complexities" + element.OuterXml));
 
                             return;
@@ -144,7 +121,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                             catch (WebResultsOverrideException wroe)
                             {
                                 templateParsingState.ReplaceNodes(
-                                    element, 
+                                    element,
                                     templateParsingState.GenerateWarningNode(wroe.WebResults.ResultsAsString));
 
                                 return;
@@ -153,19 +130,73 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     catch (Exception e)
                     {
                         log.Error("An error occured when loading a component", e);
-                            templateParsingState.ReplaceNodes(
-                                element, 
-                                templateParsingState.GenerateWarningNode("An unhandled error occured.  See the system logs for more information"));
+                        templateParsingState.ReplaceNodes(
+                            element,
+                            templateParsingState.GenerateWarningNode("An unhandled error occured.  See the system logs for more information"));
 
-                            return;
+                        return;
                     }
 
                     object templateInput = jsonReader.Deserialize();
-                    DoTemplate(templateParsingState, element, templateContainer, templateInput);
+
+                    IEnumerable<XmlNode> replacementNodes;
+
+                    // Either load the nodes or 
+                    if (null != srcAttribute)
+                    {
+                        IFileContainer templateContainer;
+                        try
+                        {
+                            string src = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.GetAbsolutePath(
+                                templateParsingState.GetCWD(element), srcAttribute.Value);
+                            templateContainer = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(src);
+
+                            XmlDocument newDocument = templateParsingState.LoadXmlDocument(templateContainer);
+
+                            // Import the template nodes
+                            XmlNode firstChild = templateParsingState.TemplateDocument.ImportNode(newDocument.FirstChild, true);
+
+                            if ((firstChild.LocalName == "componentdef") && (firstChild.NamespaceURI == TemplatingConstants.TemplateNamespace))
+                                replacementNodes = Enumerable<XmlNode>.FastCopy(Enumerable<XmlNode>.Cast(firstChild.ChildNodes));
+                            else
+                            {
+                                templateParsingState.ReplaceNodes(
+                                    element,
+                                    templateParsingState.GenerateWarningNode("src document must have an <oc:componentdef> tag"));
+
+                                return;
+                            }
+
+                            // Replace child nodes with contents from file
+                            foreach (XmlNode xmlNode in element.ChildNodes)
+                                element.RemoveChild(xmlNode);
+                            foreach (XmlNode xmlNode in replacementNodes)
+                                element.AppendChild(xmlNode);
+
+                            templateParsingState.SetCWD(replacementNodes, templateContainer.ParentDirectoryHandler.FileContainer.FullPath);
+
+                        }
+                        catch (FileDoesNotExist fdne)
+                        {
+                            log.Error("Error resolving a template", fdne);
+                            templateParsingState.ReplaceNodes(element, templateParsingState.GenerateWarningNode("src does not exist: " + element.OuterXml));
+
+                            return;
+                        }
+                    }
+                    else
+                        replacementNodes = Enumerable<XmlNode>.FastCopy(Enumerable<XmlNode>.Cast(element.ChildNodes));
+
+
+                    DoTemplate(
+                        templateParsingState, 
+                        element, 
+                        //replacementNodes, 
+                        templateInput);
                 }
         }
 
-        private void DoTemplate(ITemplateParsingState templateParsingState, XmlNode element, IFileContainer templateContainer, object templateInput)
+        private void DoTemplate(ITemplateParsingState templateParsingState, XmlNode element, /*IEnumerable<XmlNode> replacementNodes,*/ object templateInput)
         {
             if (templateInput is object[])
             {
@@ -174,7 +205,11 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     XmlNode clonedElement = element.CloneNode(true);
                     element.ParentNode.InsertBefore(clonedElement, element);
 
-                    DoTemplate(templateParsingState, clonedElement, templateContainer, o);
+                    DoTemplate(
+                        templateParsingState, 
+                        clonedElement,
+                        //Enumerable<XmlNode>.FastCopy(Enumerable<XmlNode>.Cast(clonedElement.ChildNodes)), 
+                        o);
                 }
 
                 element.ParentNode.RemoveChild(element);
@@ -188,17 +223,10 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 else
                     getParameters["Value"] = JsonWriter.Serialize(templateInput);
 
-                XmlDocument newDocument = templateParsingState.LoadXmlDocumentAndReplaceGetParameters(getParameters, templateContainer);
+                foreach (XmlNode xmlNode in element.ChildNodes)
+                    templateParsingState.ReplaceGetParameters(getParameters, xmlNode);
 
-                XmlNode firstChild = newDocument.FirstChild;
-                XmlNodeList replacementNodes;
-                if ((firstChild.LocalName == "componentdef") && (firstChild.NamespaceURI == TemplatingConstants.TemplateNamespace))
-                    replacementNodes = firstChild.ChildNodes;
-                else
-                    replacementNodes = newDocument.ChildNodes;
-
-                templateParsingState.SetCWD(replacementNodes, templateContainer.ParentDirectoryHandler.FileContainer.FullPath);
-                templateParsingState.ReplaceNodes(element, replacementNodes);
+                templateParsingState.ReplaceNodes(element, element.ChildNodes);
             }
         }
 

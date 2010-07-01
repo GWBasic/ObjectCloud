@@ -26,7 +26,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
     /// </summary>
     class DebugInformationRemover : ITemplateProcessor
     {
-        void ITemplateProcessor.Handle(ITemplateParsingState templateParsingState)
+        void ITemplateProcessor.Register(ITemplateParsingState templateParsingState)
         {
             if (!templateParsingState.WebConnection.CookiesFromBrowser.ContainsKey(TemplatingConstants.XMLDebugModeCookie))
                 templateParsingState.PostProcessElement += RemoveIfInternalData;

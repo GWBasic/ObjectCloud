@@ -85,7 +85,10 @@ namespace ObjectCloud.Disk.WebHandlers
             string filename)
         {
             XmlDocument templateDocument = null;
-            TemplateParsingState templateParsingState = null;
+            TemplateParsingState templateParsingState = new TemplateParsingState(webConnection);
+
+            foreach (ITemplateProcessor templateProcessor in FileHandlerFactoryLocator.TemplateHandlerLocator.TemplateProcessors)
+                templateProcessor.Register(templateParsingState);
 
             Thread myThread = Thread.CurrentThread;
             TimerCallback timerCallback = delegate(object state)
@@ -114,12 +117,10 @@ namespace ObjectCloud.Disk.WebHandlers
 
                     webConnection.TouchedFiles.Add(templateFileContainer);
 
-                    templateParsingState = new TemplateParsingState(webConnection, templateDocument);
                     templateDocument = ResolveHeaderFooter(webConnection, getParameters, templateFileContainer, templateParsingState);
                     templateParsingState.TemplateDocument = templateDocument;
 
-                    foreach (ITemplateProcessor templateProcessor in FileHandlerFactoryLocator.TemplateHandlerLocator.TemplateProcessors)
-                        templateProcessor.Handle(templateParsingState);
+                    templateParsingState.OnDocumentLoaded(getParameters, templateDocument.FirstChild as XmlElement);
 
                     bool continueResolving;
 

@@ -53,6 +53,11 @@ namespace ObjectCloud.Interfaces.Templating
         SortedDictionary<double, LinkedList<XmlNode>> HeaderNodes { get; }
 
         /// <summary>
+        /// This event occurs once the document is first loaded, before any processing typically occurs
+        /// </summary>
+        event ElementProcessorFunction DocumentLoaded;
+
+        /// <summary>
         /// This event occurs on each element in a document while processing for conditionals and components.  It can occur many times on the same element, and continues to occur repeatedly while the document is modified.
         /// </summary>
         event ElementProcessorFunction ProcessElementForConditionalsAndComponents;
@@ -95,6 +100,13 @@ namespace ObjectCloud.Interfaces.Templating
         void SetCWD(XmlNodeList xmlNodeList, string cwd);
 
         /// <summary>
+        /// Sets the current working directory of all nodes in an XmlNodeList
+        /// </summary>
+        /// <param name="xmlNodes"></param>
+        /// <param name="cwd"></param>
+        void SetCWD(IEnumerable<XmlNode> xmlNodes, string cwd);
+
+        /// <summary>
         /// Sets the current working directory of a node
         /// </summary>
         /// <param name="xmlNode"></param>
@@ -128,6 +140,13 @@ namespace ObjectCloud.Interfaces.Templating
         /// <param name="localName"></param>
         /// <param name="namespaceURI"></param>
         void RegisterDeferedNode(string localName, string namespaceURI);
+        
+        /// <summary>
+        /// Loads an XmlDocument from the filecontainer, replacing GET parameters and verifying permissions
+        /// </summary>
+        /// <param name="fileContainer"></param>
+        /// <returns></returns>
+        XmlDocument LoadXmlDocument(IFileContainer fileContainer);
 
         /// <summary>
         /// Loads an XmlDocument from the filecontainer, replacing GET parameters and verifying permissions
