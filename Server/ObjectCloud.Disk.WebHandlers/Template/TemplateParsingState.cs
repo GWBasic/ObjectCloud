@@ -278,6 +278,29 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         }
 
         /// <summary>
+        /// All of the nodes where GET arguments will not be processed
+        /// </summary>
+        public Dictionary<string, Set<string>> DeferedNodes = new Dictionary<string, Set<string>>();
+
+        /// <summary>
+        /// Indicates that ObjectCloud will not replace GET variables in a specific kind of node, but will instead defer processing until the node is handled later
+        /// </summary>
+        /// <param name="localName"></param>
+        /// <param name="namespaceURI"></param>
+        public void RegisterDeferedNode(string localName, string namespaceURI)
+        {
+            Set<string> set;
+
+            if (!DeferedNodes.TryGetValue(localName, out set))
+            {
+                set = new Set<string>();
+                DeferedNodes[localName] = set;
+            }
+
+            set.Add(namespaceURI);
+        }
+
+        /// <summary>
         /// Loads an XmlDocument from the filecontainer, replacing GET parameters and verifying permissions
         /// </summary>
         /// <param name="getParameters"></param>
@@ -301,7 +324,8 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
             try
             {
-                xmlDocument.LoadXml(ReplaceGetParameters(getParameters, xml));
+                //xmlDocument.LoadXml(ReplaceGetParameters(getParameters, xml));
+                xmlDocument.LoadXml(xml);
             }
             catch (XmlException xmlException)
             {
@@ -315,6 +339,9 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
                 throw new WebResultsOverrideException(WebResults.From(Status._500_Internal_Server_Error, errorBuilder.ToString()));
             }
+
+            // Do the replacements
+            ReplaceGetParameters(getParameters, xmlDocument);
 
             if (WebConnection.CookiesFromBrowser.ContainsKey(TemplatingConstants.XMLDebugModeCookie))
             {
@@ -341,8 +368,96 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             return xmlDocument;
         }
 
-        static readonly string[] DeferBegin = { "<defer>" };
-        static readonly string[] DeferEnd = { "</defer>" };
+        /// <summary>
+        /// Replaces all of the GET parameters in an XmlNode
+        /// </summary>
+        /// <param name="getParameters"></param>
+        /// <param name="xmlNode"></param>
+        /// <returns></returns>
+        public void ReplaceGetParameters(IDictionary<string, string> getParameters, XmlNode xmlNode)
+        {
+            // Perform replacements on all attributes
+            if (null != xmlNode.Attributes)
+                foreach (XmlAttribute xmlAttribute in
+                    Enumerable<XmlAttribute>.FastCopy(Enumerable<XmlAttribute>.Cast(xmlNode.Attributes)))
+                {
+                    // Change the value
+                    if (xmlAttribute.Value.Contains(TemplatingConstants.ArgBegin[0]))
+                        xmlAttribute.Value = ReplaceGetParameters(getParameters, xmlAttribute.Value);
+
+                    // Change the namespace
+                    if (xmlAttribute.NamespaceURI.Contains(TemplatingConstants.ArgBegin[0]))
+                    {
+                        XmlAttribute newAttribute = xmlNode.OwnerDocument.CreateAttribute(
+                            xmlAttribute.LocalName,
+                            ReplaceGetParameters(getParameters, xmlAttribute.NamespaceURI));
+
+                        newAttribute.Value = xmlAttribute.Value;
+
+                        xmlNode.Attributes.InsertAfter(newAttribute, xmlAttribute);
+                        xmlNode.Attributes.Remove(xmlAttribute);
+                    }
+                }
+
+            // If the node is text and has a [_, then perform replacements
+            if (xmlNode is XmlText)
+            {
+                XmlText xmlText = (XmlText)xmlNode;
+
+                if (xmlText.InnerText.Contains(TemplatingConstants.ArgBegin[0]))
+                    xmlText.InnerText = ReplaceGetParameters(getParameters, xmlText.InnerText);
+            }
+
+            // Recurse on all child nodes
+            IEnumerable<XmlNode> childNodes = null;
+
+            // Determine if recusion should occur
+            if (xmlNode.HasChildNodes)
+            {
+                bool recurseToChildren = true;
+                Set<string> set;
+
+                // If this node is a defered node, then don't recurse to its children
+                if (DeferedNodes.TryGetValue(xmlNode.LocalName, out set))
+                    if (set.Contains(xmlNode.NamespaceURI))
+                        recurseToChildren = false;
+
+                if (recurseToChildren)
+                {
+                    childNodes = Enumerable<XmlNode>.FastCopy(Enumerable<XmlNode>.Cast(xmlNode.ChildNodes));
+
+                    foreach (XmlNode childNode in childNodes)
+                        ReplaceGetParameters(getParameters, childNode);
+                }
+            }
+
+            // Change the namespace
+            if (xmlNode is XmlElement)
+                if (xmlNode.NamespaceURI.Contains(TemplatingConstants.ArgBegin[0]))
+                {
+                    XmlElement newElement = xmlNode.OwnerDocument.CreateElement(
+                        xmlNode.LocalName,
+                        ReplaceGetParameters(getParameters, xmlNode.NamespaceURI));
+
+                    if (xmlNode.HasChildNodes)
+                    {
+                        if (null == childNodes)
+                            childNodes = Enumerable<XmlNode>.FastCopy(Enumerable<XmlNode>.Cast(xmlNode.ChildNodes));
+
+                        foreach (XmlNode childNode in childNodes)
+                            newElement.AppendChild(childNode);
+                    }
+
+                    if (null != xmlNode.Attributes)
+                        foreach (XmlAttribute xmlAttribute in
+                            Enumerable<XmlAttribute>.FastCopy(Enumerable<XmlAttribute>.Cast(xmlNode.Attributes)))
+                        {
+                            newElement.Attributes.Append(xmlAttribute);
+                        }
+
+                    ReplaceNodes(xmlNode, newElement);
+                }
+        }
 
         /// <summary>
         /// Replaces all of the GET parameters in a string
@@ -354,64 +469,6 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         {
             StringBuilder getArgumentsResolvedBuilder = new StringBuilder(Convert.ToInt32(1.1 * Convert.ToDouble(xmlAsString.Length)));
 
-            int level = 0;
-            int ctr = 0;
-
-            string[] tokens = xmlAsString.Split(DeferBegin, StringSplitOptions.None);
-
-            if (xmlAsString.StartsWith(DeferBegin[0]))
-                ctr = 0;
-            else
-            {
-                ReplaceGetParametersInt(getParameters, tokens[0], getArgumentsResolvedBuilder);
-                ctr = 1;
-            }
-
-            for (; ctr < tokens.Length; ctr++)
-            {
-                string token = tokens[ctr];
-
-                if (0 == level)
-                    //getArgumentsResolvedBuilder.Append("<defer>");
-                    getArgumentsResolvedBuilder.AppendFormat("<defer xmlns=\"{0}\">", TemplatingConstants.TaggingNamespace);
-                else
-                    getArgumentsResolvedBuilder.Append(StringParser.XmlEncode(DeferBegin[0]));
-
-                level++;
-
-                bool complete = false;
-
-                string[] subTokens = token.Split(DeferEnd, StringSplitOptions.None);
-                foreach (string subToken in subTokens)
-                {
-                    if (level > 1)
-                    {
-                        getArgumentsResolvedBuilder.Append(StringParser.XmlEncode(subToken));
-                        getArgumentsResolvedBuilder.Append(StringParser.XmlEncode(DeferEnd[0]));
-                        level--;
-                    }
-                    else if (1 == level)
-                    {
-                        getArgumentsResolvedBuilder.Append(StringParser.XmlEncode(subToken));
-                        level--;
-                    }
-                    else
-                    {
-                        getArgumentsResolvedBuilder.Append("</defer>");
-                        ReplaceGetParametersInt(getParameters, subToken, getArgumentsResolvedBuilder);
-                        complete = true;
-                    }
-                }
-
-                if (!complete)
-                    level++;
-            }
-
-            return getArgumentsResolvedBuilder.ToString();
-        }
-
-        private void ReplaceGetParametersInt(IDictionary<string, string> getParameters, string xmlAsString, StringBuilder getArgumentsResolvedBuilder)
-        {
             // generate [_ ! _]
             string unique = "u" + SRandom.Next<uint>().ToString();
 
@@ -420,16 +477,10 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             // Allocate the results builder, give a little breathing room in case the size grows
             string[] templateSplitAtArgs = xmlAsString.Split(TemplatingConstants.ArgBegin, StringSplitOptions.None);
 
-            int ctr;
-            if (xmlAsString.StartsWith("[_"))
-                ctr = 0;
-            else
-            {
-                ctr = 1;
+            if (!xmlAsString.StartsWith("[_"))
                 getArgumentsResolvedBuilder.Append(templateSplitAtArgs[0]);
-            }
 
-            for (; ctr < templateSplitAtArgs.Length; ctr++)
+            for (int ctr = 1; ctr < templateSplitAtArgs.Length; ctr++)
             {
                 string[] argumentAndTemplateParts = templateSplitAtArgs[ctr].Split(TemplatingConstants.ArgEnd, 2, StringSplitOptions.None);
 
@@ -452,6 +503,8 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     getArgumentsResolvedBuilder.Append(remainder);
                 }
             }
+
+            return getArgumentsResolvedBuilder.ToString();
         }
     }
 }

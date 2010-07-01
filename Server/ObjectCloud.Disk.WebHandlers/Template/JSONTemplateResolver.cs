@@ -33,6 +33,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         void ITemplateProcessor.Handle(ITemplateParsingState templateParsingState)
         {
             templateParsingState.ProcessElementForDependanciesAndTemplates += ProcessElementForDependanciesAndTemplates;
+            templateParsingState.RegisterDeferedNode("jsontemplate", TemplatingConstants.TemplateNamespace);
         }
 
         void ProcessElementForDependanciesAndTemplates(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)

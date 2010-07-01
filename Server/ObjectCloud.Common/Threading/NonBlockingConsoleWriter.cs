@@ -35,7 +35,7 @@ namespace ObjectCloud.Common.Threading
         {
             bool keepRunning = true;
 
-            StringBuilder toWrite = new StringBuilder();
+            StringBuilder toWrite = new StringBuilder(3000);
 
             do
             {
@@ -49,10 +49,10 @@ namespace ObjectCloud.Common.Threading
                     keepRunning = false;
                 }
 
-                if (toWrite.Length > 10000)
+                if (toWrite.Length > 2500)
                 {
                     Console.Write(toWrite);
-                    toWrite = new StringBuilder();
+                    toWrite = new StringBuilder(3000);
                 }
 
             } while (keepRunning);

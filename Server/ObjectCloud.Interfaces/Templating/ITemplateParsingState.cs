@@ -123,6 +123,13 @@ namespace ObjectCloud.Interfaces.Templating
         void ReplaceNodes(XmlNode componentNode, IEnumerable<XmlNode> newNodes);
 
         /// <summary>
+        /// Indicates that ObjectCloud will not replace GET variables in child nodes of this specific node; although GET variables still apply to the specified node's attributes and namespaces
+        /// </summary>
+        /// <param name="localName"></param>
+        /// <param name="namespaceURI"></param>
+        void RegisterDeferedNode(string localName, string namespaceURI);
+
+        /// <summary>
         /// Loads an XmlDocument from the filecontainer, replacing GET parameters and verifying permissions
         /// </summary>
         /// <param name="getParameters"></param>
@@ -131,6 +138,14 @@ namespace ObjectCloud.Interfaces.Templating
         XmlDocument LoadXmlDocumentAndReplaceGetParameters(
             IDictionary<string, string> getParameters,
             IFileContainer fileContainer);
+
+        /// <summary>
+        /// Replaces all of the GET parameters in an XmlNode
+        /// </summary>
+        /// <param name="getParameters"></param>
+        /// <param name="xmlNode"></param>
+        /// <returns></returns>
+        void ReplaceGetParameters(IDictionary<string, string> getParameters, XmlNode xmlNode);
 
         /// <summary>
         /// Replaces all of the GET parameters in a string
