@@ -31,11 +31,11 @@ namespace ObjectCloud.Common.Threading
 {
     public class LockFreeStack<T>
     {
-        private SingleLinkNode<T> head;
+        private SingleLinkNode<T> Head;
 
         public LockFreeStack()
         {
-            head = new SingleLinkNode<T>();
+            Head = new SingleLinkNode<T>();
         }
 
         public virtual void Push(T item)
@@ -44,8 +44,8 @@ namespace ObjectCloud.Common.Threading
             newNode.Item = item;
             do
             {
-                newNode.Next = head.Next;
-            } while (!SyncMethods.CAS<SingleLinkNode<T>>(ref head.Next, newNode.Next, newNode));
+                newNode.Next = Head.Next;
+            } while (!SyncMethods.CAS<SingleLinkNode<T>>(ref Head.Next, newNode.Next, newNode));
         }
 
         public virtual bool Pop(out T item)
@@ -53,13 +53,13 @@ namespace ObjectCloud.Common.Threading
             SingleLinkNode<T> node;
             do
             {
-                node = head.Next;
+                node = Head.Next;
                 if (node == null)
                 {
                     item = default(T);
                     return false;
                 }
-            } while (!SyncMethods.CAS<SingleLinkNode<T>>(ref head.Next, node, node.Next));
+            } while (!SyncMethods.CAS<SingleLinkNode<T>>(ref Head.Next, node, node.Next));
             item = node.Item;
             return true;
         }

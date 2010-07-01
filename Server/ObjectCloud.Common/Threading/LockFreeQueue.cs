@@ -31,14 +31,13 @@ namespace ObjectCloud.Common.Threading
 {
     public class LockFreeQueue<T>
     {
-
-        SingleLinkNode<T> head;
-        SingleLinkNode<T> tail;
+        SingleLinkNode<T> Head;
+        SingleLinkNode<T> Tail;
 
         public LockFreeQueue()
         {
-            head = new SingleLinkNode<T>();
-            tail = head;
+            Head = new SingleLinkNode<T>();
+            Tail = Head;
         }
 
         public virtual void Enqueue(T item)
@@ -52,19 +51,19 @@ namespace ObjectCloud.Common.Threading
             bool newNodeWasAdded = false;
             while (!newNodeWasAdded)
             {
-                oldTail = tail;
+                oldTail = Tail;
                 oldTailNext = oldTail.Next;
 
-                if (tail == oldTail)
+                if (Tail == oldTail)
                 {
                     if (oldTailNext == null)
-                        newNodeWasAdded = SyncMethods.CAS<SingleLinkNode<T>>(ref tail.Next, null, newNode);
+                        newNodeWasAdded = SyncMethods.CAS<SingleLinkNode<T>>(ref Tail.Next, null, newNode);
                     else
-                        SyncMethods.CAS<SingleLinkNode<T>>(ref tail, oldTail, oldTailNext);
+                        SyncMethods.CAS<SingleLinkNode<T>>(ref Tail, oldTail, oldTailNext);
                 }
             }
 
-            SyncMethods.CAS<SingleLinkNode<T>>(ref tail, oldTail, newNode);
+            SyncMethods.CAS<SingleLinkNode<T>>(ref Tail, oldTail, newNode);
         }
 
         public virtual bool Dequeue(out T item)
@@ -76,11 +75,11 @@ namespace ObjectCloud.Common.Threading
             while (!haveAdvancedHead)
             {
 
-                oldHead = head;
-                SingleLinkNode<T> oldTail = tail;
+                oldHead = Head;
+                SingleLinkNode<T> oldTail = Tail;
                 SingleLinkNode<T> oldHeadNext = oldHead.Next;
 
-                if (oldHead == head)
+                if (oldHead == Head)
                 {
                     if (oldHead == oldTail)
                     {
@@ -88,14 +87,14 @@ namespace ObjectCloud.Common.Threading
                         {
                             return false;
                         }
-                        SyncMethods.CAS<SingleLinkNode<T>>(ref tail, oldTail, oldHeadNext);
+                        SyncMethods.CAS<SingleLinkNode<T>>(ref Tail, oldTail, oldHeadNext);
                     }
 
                     else
                     {
                         item = oldHeadNext.Item;
                         haveAdvancedHead =
-                          SyncMethods.CAS<SingleLinkNode<T>>(ref head, oldHead, oldHeadNext);
+                          SyncMethods.CAS<SingleLinkNode<T>>(ref Head, oldHead, oldHeadNext);
                     }
                 }
             }
