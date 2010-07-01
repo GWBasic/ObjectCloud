@@ -519,7 +519,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     string remainder = argumentAndTemplateParts[1];
 
                     if (getParameters.ContainsKey(argument))
-                        getArgumentsResolvedBuilder.Append(StringParser.XmlEncode(getParameters[argument]));
+                        getArgumentsResolvedBuilder.Append(getParameters[argument]);
                     else if ("!" == argument)
                         getArgumentsResolvedBuilder.Append(unique);
 

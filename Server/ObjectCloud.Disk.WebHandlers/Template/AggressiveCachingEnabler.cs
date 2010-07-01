@@ -29,129 +29,155 @@ namespace ObjectCloud.Disk.WebHandlers.Template
     {
         void ITemplateProcessor.Register(ITemplateParsingState templateParsingState)
         {
-            templateParsingState.PostProcessElement += PostProcessElement;
+            templateParsingState.PostProcessElement += new State().PostProcessElement;
         }
 
-        void PostProcessElement(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
+        private class State
         {
-            if (element.NamespaceURI == templateParsingState.TemplateDocument.DocumentElement.NamespaceURI)
-                if (element.LocalName == "script")
-                {
-                    // Don't allow empty <script /> tags
-                    if (null == element.InnerText)
-                        element.InnerText = "";
-
-                    if (element.InnerText.Length == 0)
+            internal void PostProcessElement(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
+            {
+                if (element.NamespaceURI == templateParsingState.TemplateDocument.DocumentElement.NamespaceURI)
+                    if (element.LocalName == "script")
                     {
-                        XmlAttribute srcAttribute = element.Attributes["src"];
+                        // Don't allow empty <script /> tags
+                        if (null == element.InnerText)
+                            element.InnerText = "";
 
-                        if (null != srcAttribute)
+                        if (element.InnerText.Length == 0)
                         {
-                            AddBrowserCache(templateParsingState, srcAttribute);
+                            XmlAttribute srcAttribute = element.Attributes["src"];
 
-                            if (!templateParsingState.WebConnection.CookiesFromBrowser.ContainsKey(TemplatingConstants.JavascriptDebugModeCookie))
-                                srcAttribute.Value = HTTPStringFunctions.AppendGetParameter(srcAttribute.Value, "EncodeFor", "JavaScript");
-                            else if ((!srcAttribute.Value.StartsWith("http://")) && (!srcAttribute.Value.StartsWith("https://")))
+                            if (null != srcAttribute)
                             {
-                                // If Javascript debug mode is on, verify that the script exists
+                                AddBrowserCache(templateParsingState, srcAttribute);
 
-                                string fileName = srcAttribute.Value.Split(new char[] {'?'}, 2)[0];
-
-                                if (!templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.IsFilePresent(fileName))
+                                if (!templateParsingState.WebConnection.CookiesFromBrowser.ContainsKey(TemplatingConstants.JavascriptDebugModeCookie))
+                                    srcAttribute.Value = HTTPStringFunctions.AppendGetParameter(srcAttribute.Value, "EncodeFor", "JavaScript");
+                                else if ((!srcAttribute.Value.StartsWith("http://")) && (!srcAttribute.Value.StartsWith("https://")))
                                 {
-                                    element.InnerText = "alert('" + (srcAttribute.Value + " doesn't exist: " + element.OuterXml).Replace("'", "\\'") + "');";
-                                    element.Attributes.Remove(srcAttribute);
+                                    // If Javascript debug mode is on, verify that the script exists
+
+                                    string fileName = srcAttribute.Value.Split(new char[] { '?' }, 2)[0];
+
+                                    if (!templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.IsFilePresent(fileName))
+                                    {
+                                        element.InnerText = "alert('" + (srcAttribute.Value + " doesn't exist: " + element.OuterXml).Replace("'", "\\'") + "');";
+                                        element.Attributes.Remove(srcAttribute);
+                                    }
                                 }
                             }
                         }
+                        else
+                            if (!templateParsingState.WebConnection.CookiesFromBrowser.ContainsKey(TemplatingConstants.JavascriptDebugModeCookie))
+                                foreach (XmlText scriptContentsNode in Enumerable<XmlText>.Filter(element.ChildNodes))
+                                    scriptContentsNode.InnerText = JavaScriptMinifier.Instance.Minify(scriptContentsNode.InnerText);
+
                     }
-                    else
-                        if (!templateParsingState.WebConnection.CookiesFromBrowser.ContainsKey(TemplatingConstants.JavascriptDebugModeCookie))
-                            foreach (XmlText scriptContentsNode in Enumerable<XmlText>.Filter(element.ChildNodes))
-                                scriptContentsNode.InnerText = JavaScriptMinifier.Instance.Minify(scriptContentsNode.InnerText);
+                    else if (element.LocalName == "link")
+                        AddBrowserCache(templateParsingState, element.Attributes["href"]);
 
-                }
-                else if (element.LocalName == "link")
-                    AddBrowserCache(templateParsingState, element.Attributes["href"]);
-
-                else if (element.LocalName == "img")
-                    AddBrowserCache(templateParsingState, element.Attributes["src"]);
-        }
-
-        private enum BrowserCacheEnum
-        {
-            Date, MD5, Disable
-        }
-
-        private void AddBrowserCache(ITemplateParsingState templateParsingState, XmlAttribute attribute)
-        {
-            string attributeValue = attribute.InnerText;
-            XmlElement xmlElement = attribute.OwnerElement;
-
-            if (null == attribute)
-                return;
-            if (attributeValue.StartsWith("http://"))
-                return;
-            if (attributeValue.StartsWith("https://"))
-                return;
-
-            BrowserCacheEnum browserCache = BrowserCacheEnum.Disable;
-            string browserCacheValue = xmlElement.GetAttribute("browsercache", TemplatingConstants.TemplateNamespace);
-            if (browserCacheValue.Length > 0)
-            {
-                if ("date" == browserCacheValue)
-                    browserCache = BrowserCacheEnum.Date;
-                else if ("md5" == browserCacheValue)
-                    browserCache = BrowserCacheEnum.MD5;
+                    else if (element.LocalName == "img")
+                        AddBrowserCache(templateParsingState, element.Attributes["src"]);
             }
-            else
-                if (attributeValue.Contains("?"))
-                    browserCache = BrowserCacheEnum.MD5;
-                else
-                    browserCache = BrowserCacheEnum.Date;
 
-            if (BrowserCacheEnum.MD5 == browserCache)
+            private enum BrowserCacheEnum
             {
-                // Don't add a dupe cache key
-                if (attributeValue.Contains("?BrowserCache=") || attributeValue.Contains("&BrowserCache="))
+                Date, MD5, Disable
+            }
+
+            Dictionary<string, string> Precalculated = new Dictionary<string, string>();
+
+            private void AddBrowserCache(ITemplateParsingState templateParsingState, XmlAttribute attribute)
+            {
+                string attributeValue = attribute.InnerText;
+
+                XmlElement xmlElement = attribute.OwnerElement;
+
+                if (null == attribute)
                     return;
 
-                IWebResults shelled = templateParsingState.WebConnection.ShellTo(attributeValue);
+                string fullPrefix = "http://" + templateParsingState.FileHandlerFactoryLocator.HostnameAndPort;
 
-                // if it's a 4xx result, and  if minimizing javascript is disabled,  alert that there's an error
-
-                // Get a free hash calculator
-                MD5CryptoServiceProvider hashAlgorithm = Recycler<MD5CryptoServiceProvider>.Get();
-
-                byte[] scriptHash;
-                try
+                if (attributeValue.StartsWith(fullPrefix))
                 {
-                    scriptHash = hashAlgorithm.ComputeHash(shelled.ResultsAsStream);
+                    attribute.Value = attributeValue.Substring(fullPrefix.Length);
+                    attributeValue = attribute.Value;
                 }
-                finally
+                else if (attributeValue.StartsWith("http://"))
+                    return;
+                else if (attributeValue.StartsWith("https://"))
+                    return;
+
+                string precalculated;
+                if (Precalculated.TryGetValue(attributeValue, out precalculated))
                 {
-                    // Save the hash calculator for reuse
-                    Recycler<MD5CryptoServiceProvider>.Recycle(hashAlgorithm);
+                    attribute.Value = precalculated;
+                    return;
                 }
 
-                attribute.InnerText = HTTPStringFunctions.AppendGetParameter(
-                    attributeValue,
-                    "BrowserCache",
-                    'h' + Convert.ToBase64String(scriptHash));
-
-            }
-            else if (BrowserCacheEnum.Date == browserCache)
-            {
-                if (templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.IsFilePresent(attributeValue))
+                BrowserCacheEnum browserCache = BrowserCacheEnum.Disable;
+                string browserCacheValue = xmlElement.GetAttribute("browsercache", TemplatingConstants.TemplateNamespace);
+                if (browserCacheValue.Length > 0)
                 {
-                    IFileContainer fileContainer = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(attributeValue);
+                    if ("date" == browserCacheValue)
+                        browserCache = BrowserCacheEnum.Date;
+                    else if ("md5" == browserCacheValue)
+                        browserCache = BrowserCacheEnum.MD5;
+                }
+                else
+                    if (attributeValue.Contains("?"))
+                        browserCache = BrowserCacheEnum.MD5;
+                    else
+                        browserCache = BrowserCacheEnum.Date;
+
+                if (BrowserCacheEnum.MD5 == browserCache)
+                {
+                    // Don't add a dupe cache key
+                    if (attributeValue.Contains("?BrowserCache=") || attributeValue.Contains("&BrowserCache="))
+                        return;
+
+                    IWebResults shelled = templateParsingState.WebConnection.ShellTo(attributeValue);
+
+                    // if it's a 4xx result, and  if minimizing javascript is disabled,  alert that there's an error
+
+                    // Get a free hash calculator
+                    MD5CryptoServiceProvider hashAlgorithm = Recycler<MD5CryptoServiceProvider>.Get();
+
+                    byte[] scriptHash;
+                    try
+                    {
+                        scriptHash = hashAlgorithm.ComputeHash(shelled.ResultsAsStream);
+                    }
+                    finally
+                    {
+                        // Save the hash calculator for reuse
+                        Recycler<MD5CryptoServiceProvider>.Recycle(hashAlgorithm);
+                    }
 
                     attribute.InnerText = HTTPStringFunctions.AppendGetParameter(
                         attributeValue,
                         "BrowserCache",
-                        'd' + Convert.ToBase64String(BitConverter.GetBytes(fileContainer.LastModified.Ticks)));
+                        'h' + Convert.ToBase64String(scriptHash));
+
                 }
-                // else: if minimizing javascript is disabled, alert that the script is missing!
+                else if (BrowserCacheEnum.Date == browserCache)
+                {
+                    string filename = attributeValue.Split(new char[] { '?' }, 2)[0];
+
+                    if (templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.IsFilePresent(filename))
+                    {
+                        IFileContainer fileContainer = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(filename);
+
+                        attribute.InnerText = HTTPStringFunctions.AppendGetParameter(
+                            attributeValue,
+                            "BrowserCache",
+                            'd' + Convert.ToBase64String(BitConverter.GetBytes(fileContainer.LastModified.Ticks)));
+                    }
+                    // else: if minimizing javascript is disabled, alert that the script is missing!
+                }
+
+                // Save for reuse
+                Precalculated[attributeValue] = attribute.InnerText;
             }
         }
     }

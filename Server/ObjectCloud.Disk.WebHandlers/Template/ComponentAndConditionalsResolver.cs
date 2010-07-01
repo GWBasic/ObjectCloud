@@ -141,7 +141,22 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     templateParsingState.GetCWD(componentNode),
                     srcAttribute.Value);
 
-                IFileContainer fileContainer = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(fileName);
+                IFileContainer fileContainer;
+                try
+                {
+                    fileContainer = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(fileName);
+                }
+                catch (FileDoesNotExist fdne)
+                {
+                    log.Warn("An attempt was made to use a non-existant file in a template", fdne);
+
+                    templateParsingState.ReplaceNodes(
+                        componentNode,
+                        templateParsingState.GenerateWarningNode(fileName + " not found"));
+
+                    return;
+                }
+
                 templateParsingState.WebConnection.TouchedFiles.Add(fileContainer);
 
                 // If the user doesn't have permission for the component and the component has something to use instead, use it
