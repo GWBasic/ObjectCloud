@@ -341,6 +341,9 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             return xmlDocument;
         }
 
+        static readonly string[] DeferBegin = { "<defer>" };
+        static readonly string[] DeferEnd = { "</defer>" };
+
         /// <summary>
         /// Replaces all of the GET parameters in a string
         /// </summary>
@@ -349,11 +352,70 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         /// <returns></returns>
         public string ReplaceGetParameters(IDictionary<string, string> getParameters, string xmlAsString)
         {
+            StringBuilder getArgumentsResolvedBuilder = new StringBuilder(Convert.ToInt32(1.1 * Convert.ToDouble(xmlAsString.Length)));
+
+            int level = 0;
+            int ctr = 0;
+
+            string[] tokens = xmlAsString.Split(DeferBegin, StringSplitOptions.None);
+
+            if (xmlAsString.StartsWith(DeferBegin[0]))
+                ctr = 0;
+            else
+            {
+                ReplaceGetParametersInt(getParameters, tokens[0], getArgumentsResolvedBuilder);
+                ctr = 1;
+            }
+
+            for (; ctr < tokens.Length; ctr++)
+            {
+                string token = tokens[ctr];
+
+                if (0 == level)
+                    //getArgumentsResolvedBuilder.Append("<defer>");
+                    getArgumentsResolvedBuilder.AppendFormat("<defer xmlns=\"{0}\">", TemplatingConstants.TaggingNamespace);
+                else
+                    getArgumentsResolvedBuilder.Append(StringParser.XmlEncode(DeferBegin[0]));
+
+                level++;
+
+                bool complete = false;
+
+                string[] subTokens = token.Split(DeferEnd, StringSplitOptions.None);
+                foreach (string subToken in subTokens)
+                {
+                    if (level > 1)
+                    {
+                        getArgumentsResolvedBuilder.Append(StringParser.XmlEncode(subToken));
+                        getArgumentsResolvedBuilder.Append(StringParser.XmlEncode(DeferEnd[0]));
+                        level--;
+                    }
+                    else if (1 == level)
+                    {
+                        getArgumentsResolvedBuilder.Append(StringParser.XmlEncode(subToken));
+                        level--;
+                    }
+                    else
+                    {
+                        getArgumentsResolvedBuilder.Append("</defer>");
+                        ReplaceGetParametersInt(getParameters, subToken, getArgumentsResolvedBuilder);
+                        complete = true;
+                    }
+                }
+
+                if (!complete)
+                    level++;
+            }
+
+            return getArgumentsResolvedBuilder.ToString();
+        }
+
+        private void ReplaceGetParametersInt(IDictionary<string, string> getParameters, string xmlAsString, StringBuilder getArgumentsResolvedBuilder)
+        {
             // generate [_ ! _]
             string unique = "u" + SRandom.Next<uint>().ToString();
 
             // Split at [_
-            StringBuilder getArgumentsResolvedBuilder = new StringBuilder(Convert.ToInt32(1.1 * Convert.ToDouble(xmlAsString.Length)));
 
             // Allocate the results builder, give a little breathing room in case the size grows
             string[] templateSplitAtArgs = xmlAsString.Split(TemplatingConstants.ArgBegin, StringSplitOptions.None);
@@ -390,32 +452,6 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     getArgumentsResolvedBuilder.Append(remainder);
                 }
             }
-
-            /*if (WebConnection.CookiesFromBrowser.ContainsKey(TemplatingConstants.XMLDebugModeCookie))
-            {
-                StringBuilder commentBuilder = new StringBuilder("\n\nDEBUG INFO\n");
-
-                SortedDictionary<string, string> sortedGetParameters = new SortedDictionary<string, string>(getParameters);
-
-                foreach (KeyValuePair<string, string> getArgument in sortedGetParameters)
-                    commentBuilder.AppendFormat("\t{0}: {1}\n", getArgument.Key, getArgument.Value);
-
-                commentBuilder.Append("\n\n");
-
-                XmlDocument toAddDebugInfo = new XmlDocument();
-                toAddDebugInfo.LoadXml(getArgumentsResolvedBuilder.ToString());
-                XmlComment comment = toAddDebugInfo.CreateComment(commentBuilder.ToString());
-
-                XmlNode firstChild = toAddDebugInfo.FirstChild;
-                if ((firstChild.LocalName == "componentdef") && (firstChild.NamespaceURI == TemplatingConstants.TemplateNamespace))
-                    firstChild.InsertBefore(comment, firstChild.FirstChild);
-                else
-                    toAddDebugInfo.InsertBefore(comment, toAddDebugInfo.FirstChild);
-
-                return toAddDebugInfo.OuterXml;
-            }
-            else*/
-            return getArgumentsResolvedBuilder.ToString();
         }
     }
 }
