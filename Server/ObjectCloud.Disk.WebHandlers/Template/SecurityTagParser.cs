@@ -49,7 +49,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         {
             // Generate the xml
             StringBuilder xml = new StringBuilder(
-                string.Format("<safeparse xmlns=\"{0}\">", templateParsingState.TemplateDocument.FirstChild.NamespaceURI),
+                string.Format("<html xmlns=\"{0}\"><div>", templateParsingState.TemplateDocument.FirstChild.NamespaceURI),
                 element.OuterXml.Length);
 
             foreach (XmlNode xmlNode in element.ChildNodes)
@@ -58,7 +58,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 else
                     xml.Append(xmlNode.OuterXml);
 
-            xml.Append("</safeparse>");
+            xml.Append("</div></html>");
 
             // load it
             XmlDocument xmlDocument = new XmlDocument();
@@ -80,7 +80,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
             // import the new tags
             LinkedList<XmlNode> importedNodes = new LinkedList<XmlNode>();
-            foreach (XmlNode xmlNode in xmlDocument.FirstChild.ChildNodes)
+            foreach (XmlNode xmlNode in xmlDocument.FirstChild.FirstChild.ChildNodes)
                 importedNodes.AddLast(templateParsingState.TemplateDocument.ImportNode(xmlNode, true));
 
             templateParsingState.ReplaceNodes(element, importedNodes);
@@ -104,7 +104,14 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 bool safe = false;
 
                 Set<string> safeTagNames;
-                if (safeTags.TryGetValue(xmlNode.NamespaceURI, out safeTagNames))
+
+                if (xmlNode is XmlText)
+                    safe = true;
+
+                else if (xmlNode is XmlComment)
+                    safe = true;
+
+                else if (safeTags.TryGetValue(xmlNode.NamespaceURI, out safeTagNames))
                     if (safeTagNames.Contains(xmlNode.LocalName))
                         safe = true;
 

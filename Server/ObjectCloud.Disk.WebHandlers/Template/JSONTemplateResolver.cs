@@ -229,10 +229,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     if ("" == attribute.NamespaceURI)
                         getParameters["_UP." + attribute.LocalName] = attribute.Value;
 
-                if (templateInput is Dictionary<string, object>)
-                    Flatten(getParameters, "", templateInput);
-                else
-                    getParameters["Value"] = JsonWriter.Serialize(templateInput);
+                Flatten(getParameters, "", templateInput);
 
                 foreach (XmlNode xmlNode in element.ChildNodes)
                     templateParsingState.ReplaceGetParameters(getParameters, xmlNode);
