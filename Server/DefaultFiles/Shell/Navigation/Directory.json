@@ -1,9 +1,8 @@
 [
+   {"Template":"/Templates/ObjectCloud Template.oc","Extension":".oc","Display":"ObjectCloud Template (HTML5 xml)"},
    {"Template":"/Templates/Page Template.page","Extension":".page","Display":"Web Page"},
    {"Template":"/Templates/Text Template.txt","Extension":".txt","Display":"Text File"},
    {"Template":"/Templates/Directory Template","Extension":"","Display":"Directory"},
-   {"Template":"/Templates/WcHtml Template.wchtml","Extension":".wchtml","Display":"Web Component HTML"},
-   {"Template":"/Templates/WebComponent Template.webcomponent","Extension":".webcomponent","Display":"Web Component"},
    {"Template":"/Templates/ServerSide Javascript Template.ssjs","Extension":".ssjs","Display":"Server-Side Javascript"},
    {"Template":"/Templates/Pairs Template","Extension":"","Display":"Name-Value pairs"},
    {"Template":"/Templates/Database Template","Extension":"","Display":"Database"},

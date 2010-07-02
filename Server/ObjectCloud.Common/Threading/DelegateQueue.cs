@@ -94,8 +94,12 @@ namespace ObjectCloud.Common.Threading
             {
                 QueuedDelegate queuedDelegate;
 
+                Thread.IsBackground = false;
+
                 while (QueuedDelegates.Dequeue(out queuedDelegate))
                     queuedDelegate.Callback(queuedDelegate.state);
+
+                Thread.IsBackground = true;
 
                 lock (pulser)
                     if (!Monitor.Wait(pulser, 10000))

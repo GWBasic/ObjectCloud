@@ -1,4 +1,1 @@
-<div>Enter the title here</div>
-<p>Put the rest of the text here using normal HTML</p>
-<p>You don't have to worry about headers or footers, ObjectCloud puts them in for you automatically!</p>
-<h1>Headings are allowed</h1>
+{"Title":"Enter the title here","Contents":"\n\u003Cp>Put the rest of the text here using normal HTML\u003C/p>\n\u003Cp>You don't have to worry about headers or footers, ObjectCloud puts them in for you automatically!\u003C/p>\n\u003Ch1>Headings are allowed\u003C/h1>"}

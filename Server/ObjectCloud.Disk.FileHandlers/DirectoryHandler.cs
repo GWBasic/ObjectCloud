@@ -439,8 +439,25 @@ namespace ObjectCloud.Disk.FileHandlers
         public void DeleteFile(IUser changer, string filename)
         {
             IFileContainer fileContainer = this.OpenFile(filename);
-            using (IFileHandler fileHandler = fileContainer.FileHandler)
-                fileHandler.OnDelete(changer);
+
+            try
+            {
+                fileContainer.FileHandler.OnDelete(changer);
+
+                try
+                {
+                    if (fileContainer.FileHandler is IDisposable)
+                        ((IDisposable)fileContainer.FileHandler).Dispose();
+                }
+                catch (Exception e)
+                {
+                    log.Error("Error occured while disposing " + fileContainer.FullPath + " during deletion", e);
+                }
+            }
+            catch (Exception e)
+            {
+                log.Error("Error occured while " + fileContainer.FullPath + " that it's being deleted", e);
+            }
 
             DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
             {

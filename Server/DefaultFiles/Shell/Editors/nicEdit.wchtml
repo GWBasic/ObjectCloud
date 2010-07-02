@@ -131,7 +131,11 @@
             }
             else
             {
-               var textToWrite = "<div>" + $("titleInput").value + "</div>" + content;
+               var textToWrite = Object.toJSON(
+               {
+                  Contents: content,
+                  Title: $("titleInput").value
+               });
 
                LastSavedText = textToWrite;
 
@@ -195,8 +199,6 @@
          target="_blank">
       Reply Permissions</a>
 
-      <input type="hidden" id="textfromserver" value="<? WebComponent($_GET["FileName"] . "?Method=ReadAll&EncodeFor=HTML") ?>" />
-
       <div class="contents">
          <div class="contents" style="width: 100%;" id="textarea"></div>
       </div>
@@ -206,19 +208,12 @@
 
          bkLib.onDomLoaded(function() 
          {
-            var textFromServerInput = $("textfromserver");
+            var page = <? WebComponent($_GET["FileName"] . "?Method=ReadAll") ?>;
             var textarea = $("textarea");
-            textarea.innerHTML = textFromServerInput.value;
-            textFromServerInput.remove();
 
-            var childElements = textarea.childElements();
-
-            if (childElements.length > 0)
-            {
-               $("titleInput").value = childElements[0].innerHTML;
-               childElements[0].remove();
-               updateTitle();
-            }
+            textarea.innerHTML = page.Contents;
+            $("titleInput").value = page.Title;
+            updateTitle();
 
             doResize();
          });

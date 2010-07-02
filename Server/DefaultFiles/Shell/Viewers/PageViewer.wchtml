@@ -1,42 +1,20 @@
 <? WebComponent("/Pages/header.webcomponent?Title=" . $_GETENCODE["FileName"]) ?>
-<? Scripts(/API/Prototype.js, /API/Comet/CometProtocol.js, <? $_GET["FileName"] ?>?Method=GetJSW&assignToVariable=Page) ?>
+<? Scripts(/API/Prototype.js, <? $_GET["FileName"] ?>?Method=GetJSW&assignToVariable=Page) ?>
 
 <? WebComponent("/Shell/Viewers/EditAdministerDisplay.webcomponent?FileName=" . $_GET["FileName"]) ?>
 
 <!-- This code is released under the Simple Public License (SimPL) 2.0.  Some additional privelages are granted., See /Docs/license.wchtml -->
 
-<div id="pagecontents" style="position: relative">
-   <? WebComponent($_GET["FileName"] . "?Method=ReadAll") ?>
-</div>
+<div id="pagecontents" style="position: relative"></div>
 
 <script>
    var titleDiv = $("title");
    var pagecontentsDiv = $("pagecontents");
 
-   function displayTitle()
-   {
-      var childElements = pagecontentsDiv.childElements();
+   var page = <? WebComponent($_GET["FileName"] . "?Method=ReadAll") ?>;
 
-      if (childElements.length > 0)
-      {
-         document.title = titleDiv.innerHTML = childElements[0].innerHTML;
-         childElements[0].remove();
-      }
-   }
-
-   displayTitle();
-
-   // Connect back to the server to get COMET updates when the page changes
-   CP_QualityReliable.connect(
-      Url.decode('<? $_GET["FileName"] ?>') + '?ChannelEndpoint=ChangingEvent',
-      {
-         handleIncomingData: function(data)
-         {
-            pagecontentsDiv.innerHTML = data;
-            displayTitle();
-         }
-      });
-
+   titleDiv.innerHTML = page.Title;
+   pagecontentsDiv.innerHTML = page.Contents;
 
 </script>
 
