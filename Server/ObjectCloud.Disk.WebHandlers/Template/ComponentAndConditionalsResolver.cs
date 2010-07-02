@@ -107,6 +107,25 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             XmlAttribute srcAttribute = (XmlAttribute)componentNode.Attributes.GetNamedItem("src", TemplatingConstants.TemplateNamespace);
             XmlAttribute urlAttribute = (XmlAttribute)componentNode.Attributes.GetNamedItem("url", TemplatingConstants.TemplateNamespace);
 
+            // handle GET parameters
+            // First, handle oc:getpassthrough
+            IDictionary<string, string> myGetParameters;
+            XmlAttribute getpassthroughAttribute = (XmlAttribute)componentNode.Attributes.GetNamedItem("getpassthough", TemplatingConstants.TemplateNamespace);
+            if (null == getpassthroughAttribute)
+                myGetParameters = DictionaryFunctions.Create<string, string>(getParameters);
+            else
+            {
+                if ("false" == getpassthroughAttribute.Value)
+                    myGetParameters = new Dictionary<string, string>();
+                else
+                    myGetParameters = DictionaryFunctions.Create<string, string>(getParameters);
+            }
+
+            // Next, pull out get parameters from the tag
+            foreach (XmlAttribute attribute in componentNode.Attributes)
+                if ("" == attribute.NamespaceURI)
+                    myGetParameters[attribute.LocalName] = attribute.Value;
+
             if ((null == srcAttribute) && (null == urlAttribute))
                 // Remove empty components
                 componentNode.ParentNode.RemoveChild(componentNode);
@@ -118,25 +137,6 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
             else if (null != srcAttribute)
             {
-                // handle GET parameters
-                // First, handle oc:getpassthrough
-                IDictionary<string, string> myGetParameters;
-                XmlAttribute getpassthroughAttribute = (XmlAttribute)componentNode.Attributes.GetNamedItem("getpassthough", TemplatingConstants.TemplateNamespace);
-                if (null == getpassthroughAttribute)
-                    myGetParameters = DictionaryFunctions.Create<string, string>(getParameters);
-                else
-                {
-                    if ("false" == getpassthroughAttribute.Value)
-                        myGetParameters = new Dictionary<string, string>();
-                    else
-                        myGetParameters = DictionaryFunctions.Create<string, string>(getParameters);
-                }
-
-                // Next, pull out get parameters from the tag
-                foreach (XmlAttribute attribute in componentNode.Attributes)
-                    if ("" == attribute.NamespaceURI)
-                        myGetParameters[attribute.LocalName] = attribute.Value;
-
                 string fileName = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.GetAbsolutePath(
                     templateParsingState.GetCWD(componentNode),
                     srcAttribute.Value);
@@ -216,9 +216,8 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 XmlNode resultNode;
                 string url = urlAttribute.Value;
 
-                foreach (XmlAttribute attribute in componentNode.Attributes)
-                    if ("" == attribute.NamespaceURI)
-                        url = HTTPStringFunctions.AppendGetParameter(url, attribute.LocalName, attribute.Value);
+                foreach (KeyValuePair<string, string> getParameter in myGetParameters)
+                    url = HTTPStringFunctions.AppendGetParameter(url, getParameter.Key, getParameter.Value);
 
                 try
                 {

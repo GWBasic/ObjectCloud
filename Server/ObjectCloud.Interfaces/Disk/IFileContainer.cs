@@ -109,5 +109,10 @@ namespace ObjectCloud.Interfaces.Disk
         /// Returns the last time that the file was modified
         /// </summary>
         DateTime LastModified { get; }
+
+        /// <summary>
+        /// The FileHandlerFactoryLocator
+        /// </summary>
+        FileHandlerFactoryLocator FileHandlerFactoryLocator { get; }
     }
 }

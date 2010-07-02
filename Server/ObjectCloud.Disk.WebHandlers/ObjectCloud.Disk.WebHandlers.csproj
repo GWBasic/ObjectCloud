@@ -68,6 +68,7 @@
     <Compile Include="Template\DebugInformationRemover.cs" />
     <Compile Include="Template\DependancyResolver.cs" />
     <Compile Include="Template\JSONTemplateResolver.cs" />
+    <Compile Include="Template\SecurityTagParser.cs" />
     <Compile Include="Template\TemplateParsingState.cs" />
     <Compile Include="Template\Trimmer.cs" />
     <Compile Include="TextWebHandler.cs" />

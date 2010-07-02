@@ -46,6 +46,7 @@
         <object id="TemplateDebugInformationRemover" type="ObjectCloud.Disk.WebHandlers.Template.DebugInformationRemover" />
         <object id="JSONTemplateResolver" type="ObjectCloud.Disk.WebHandlers.Template.JSONTemplateResolver" />
         <object id="Trimmer" type="ObjectCloud.Disk.WebHandlers.Template.Trimmer" />
+        <object id="SecurityTagParser" type="ObjectCloud.Disk.WebHandlers.Template.SecurityTagParser" />
       </list>
     </property>
   </object>

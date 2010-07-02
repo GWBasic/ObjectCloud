@@ -134,8 +134,11 @@ namespace ObjectCloud.Disk.WebHandlers
                     templateDocument.NodeRemoved += documentChanged;
 
                     // Keep resolving oc:if, oc:component, oc:script, and oc:css tags while they're loaded
+                    int loopsLeft = 20;
                     do
                     {
+                        int innerLoopsLeft = 20;
+
                         do
                         {
                             continueResolving = false;
@@ -143,12 +146,16 @@ namespace ObjectCloud.Disk.WebHandlers
                             foreach (XmlElement element in Enumerable<XmlElement>.FastCopy(XmlHelper.IterateAllElements(templateDocument)))
                                 templateParsingState.OnProcessElementForConditionalsAndComponents(getParameters, element);
 
-                        } while (continueResolving);
+                            innerLoopsLeft--;
+
+                        } while (continueResolving && (innerLoopsLeft > 0));
 
                         foreach (XmlElement element in Enumerable<XmlElement>.FastCopy(XmlHelper.IterateAllElements(templateDocument)))
                             templateParsingState.OnProcessElementForDependanciesAndTemplates(getParameters, element);
 
-                    } while (continueResolving);
+                        loopsLeft--;
+
+                    } while (continueResolving && (loopsLeft > 0));
 
                     templateDocument.NodeChanged -= documentChanged;
                     templateDocument.NodeInserted -= documentChanged;
@@ -165,15 +172,9 @@ namespace ObjectCloud.Disk.WebHandlers
                 catch (ThreadAbortException tae)
                 {
                     log.Warn("Timeout rendering a template", tae);
-
-                    if (null != templateParsingState)
-                    {
-                        if (null == templateDocument)
-                            webConnection.SendResults(
-                                WebResults.From(Status._500_Internal_Server_Error, "Timeout"));
-                        else
-                            Thread.ResetAbort();
-                    }
+                    throw;
+                    //Thread.ResetAbort();
+                    //throw new WebResultsOverrideException(WebResults.From(Status._500_Internal_Server_Error, "Timeout"));
                 }
 
             // Copy all elements into an immutable list, run document post-processors, and remove comments
