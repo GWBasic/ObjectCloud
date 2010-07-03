@@ -60,7 +60,24 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
             xml.Append("</div></html>");
 
-            // load it
+            XmlDocument xmlDocument;
+            try
+            {
+                xmlDocument = templateParsingState.LoadXmlDocument(
+                    xml.ToString(),
+                    templateParsingState.GetXmlParseMode(element),
+                    element.OuterXml);
+            }
+            catch (WebResultsOverrideException wroe)
+            {
+                templateParsingState.ReplaceNodes(
+                    element,
+                    templateParsingState.GenerateWarningNode(wroe.WebResults.ResultsAsString));
+
+                return;
+            }
+
+            /*/ load it
             XmlDocument xmlDocument = new XmlDocument();
 
             try
@@ -76,10 +93,11 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     templateParsingState.GenerateWarningNode("Can not parse XML in tag: " + xml.ToString()));
 
                 return;
-            }
+            }*/
 
             // import the new tags
             LinkedList<XmlNode> importedNodes = new LinkedList<XmlNode>();
+
             foreach (XmlNode xmlNode in xmlDocument.FirstChild.FirstChild.ChildNodes)
                 importedNodes.AddLast(templateParsingState.TemplateDocument.ImportNode(xmlNode, true));
 

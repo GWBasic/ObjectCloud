@@ -140,13 +140,31 @@ namespace ObjectCloud.Interfaces.Templating
         /// <param name="localName"></param>
         /// <param name="namespaceURI"></param>
         void RegisterDeferedNode(string localName, string namespaceURI);
-        
+
         /// <summary>
         /// Loads an XmlDocument from the filecontainer, replacing GET parameters and verifying permissions
         /// </summary>
         /// <param name="fileContainer"></param>
         /// <returns></returns>
-        XmlDocument LoadXmlDocument(IFileContainer fileContainer);
+        XmlDocument LoadXmlDocument(
+            IFileContainer fileContainer,
+            XmlParseMode xmlParseMode);
+
+        /// <summary>
+        /// Loads an XmlDocument from the filecontainer, replacing GET parameters and verifying permissions
+        /// </summary>
+        /// <param name="fullpath">This should be the full path to the source file</param>
+        /// <returns></returns>
+        XmlDocument LoadXmlDocument(
+            string xml,
+            XmlParseMode xmlParseMode,
+            string fullpath);
+
+        /// <summary>
+        /// Finds the appropriate XmlParseMode attribute
+        /// </summary>
+        /// <param name="element">This is scanned to find the XmlParseMode</param>
+        XmlParseMode GetXmlParseMode(XmlElement element);
 
         /// <summary>
         /// Loads an XmlDocument from the filecontainer, replacing GET parameters and verifying permissions
@@ -156,7 +174,8 @@ namespace ObjectCloud.Interfaces.Templating
         /// <returns></returns>
         XmlDocument LoadXmlDocumentAndReplaceGetParameters(
             IDictionary<string, string> getParameters,
-            IFileContainer fileContainer);
+            IFileContainer fileContainer,
+            XmlParseMode xmlParseMode);
 
         /// <summary>
         /// Replaces all of the GET parameters in an XmlNode

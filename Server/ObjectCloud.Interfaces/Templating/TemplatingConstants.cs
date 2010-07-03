@@ -49,4 +49,25 @@ namespace ObjectCloud.Interfaces.Templating
         /// </summary>
         public static readonly string[] ArgEnd = new string[] { "_]" };
     }
+
+    /// <summary>
+    /// The mode to use when parsing Xml when loading a document
+    /// </summary>
+    public enum XmlParseMode
+    {
+        /// <summary>
+        /// The text is XML, if an error occurs, then throw it
+        /// </summary>
+        Xml,
+
+        /// <summary>
+        /// The text is probably XML, but if an error occurs, try converting it from HTML to XML before throwing an error
+        /// </summary>
+        XmlThenHtml,
+
+        /// <summary>
+        /// The text is HTML, convert it to XML before parsing
+        /// </summary>
+        Html
+    }
 }

@@ -4,10 +4,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Xml;
 
 using Common.Logging;
+using HtmlAgilityPack;
 
 using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Disk;
@@ -316,8 +318,9 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         /// Loads an XmlDocument from the filecontainer, replacing GET parameters and verifying permissions
         /// </summary>
         /// <param name="fileContainer"></param>
+        /// <param name="xmlParseMode">The kind of text that's being parsed</param>
         /// <returns></returns>
-        public XmlDocument LoadXmlDocument(IFileContainer fileContainer)
+        public XmlDocument LoadXmlDocument(IFileContainer fileContainer, XmlParseMode xmlParseMode)
         {
             WebConnection.TouchedFiles.Add(fileContainer);
 
@@ -328,47 +331,128 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             if (!(fileContainer.FileHandler is ITextHandler))
                 throw new WebResultsOverrideException(WebResults.From(Status._400_Bad_Request, fileContainer.FullPath + " must be a text file"));
 
+            return LoadXmlDocument(
+                fileContainer.CastFileHandler<ITextHandler>().ReadAll(),
+                xmlParseMode,
+                fileContainer.FullPath);
+        }
+
+        /// <summary>
+        /// Loads an XmlDocument from the filecontainer, replacing GET parameters and verifying permissions
+        /// </summary>
+        /// <param name="xml"></param>
+        /// <param name="xmlParseMode">The kind of text that's being parsed</param>
+        /// <param name="fullpath"></param>
+        /// <returns></returns>
+        public XmlDocument LoadXmlDocument(string xml, XmlParseMode xmlParseMode, string fullpath)
+        {
             XmlDocument xmlDocument = new XmlDocument();
-            string xml = ((ITextHandler)fileContainer.FileHandler).ReadAll();
 
-            try
+            if (XmlParseMode.Html == xmlParseMode)
             {
-                xmlDocument.LoadXml(xml);
-            }
-            catch (XmlException xmlException)
-            {
-                // Double-check read permission (in case later edits allow non-readers to still use a template with a named permission
-                if (null == fileContainer.LoadPermission(WebConnection.Session.User.Id))
-                    throw;
+                // see http://htmlagilitypack.codeplex.com and http://www.codeproject.com/KB/cs/html2xhtmlcleaner.aspx#xx2357981xx
 
-                // Everyone else can see a nice descriptive error
-                StringBuilder errorBuilder = new StringBuilder(string.Format("An error occured while loading {0}\n", fileContainer.FullPath));
-                errorBuilder.AppendFormat("{0}\n\n\nFrom:\n", xmlException.Message);
 
-                string[] xmlLines = xml.Split('\n', '\r');
-                for (int ctr = 0; ctr < xmlLines.Length; ctr++)
+                /*xml = xml.Split(new char[] { '>' }, 2)[1] + "<!DOCTYPE html>";
+
+
+                HtmlDocument htmlDocument = new HtmlDocument();
+
+                try
                 {
-                    int lineNumber = ctr + 1;
-
-                    if (ctr < 9)
-                        errorBuilder.Append("    ");
-                    else if (ctr < 99)
-                        errorBuilder.Append("   ");
-                    else if (ctr < 999)
-                        errorBuilder.Append("  ");
-                    else if (ctr < 9999)
-                        errorBuilder.Append(" ");
-
-                    errorBuilder.AppendFormat("{0}: {1}\n", lineNumber, xmlLines[ctr]);
-
-                    if (lineNumber == xmlException.LineNumber)
-                        errorBuilder.AppendFormat("    -: {0}^\n", "".PadLeft(xmlException.LinePosition));
+                    htmlDocument.LoadHtml(xml);
+                }
+                catch (Exception e)
+                {
+                    log.Error("An error occured trying to parse html:\n" + xml, e);
+                    throw new WebResultsOverrideException(WebResults.From(Status._500_Internal_Server_Error, "An error occured trying to parse HTML, see the logs for more information"));
                 }
 
-                throw new WebResultsOverrideException(WebResults.From(Status._500_Internal_Server_Error, errorBuilder.ToString()));
+                // Create a stream that's used for reading and writing
+                Stream stream = new MemoryStream(xml.Length + (xml.Length / 5));
+                
+                // Write the html to XML
+                XmlWriter xmlWriter = XmlWriter.Create(stream);
+                htmlDocument.Save(xmlWriter);
+
+                stream.Seek(0, SeekOrigin.Begin);
+
+                // Read xml from the stream
+                XmlReader xmlReader = XmlReader.Create(stream);
+                xmlDocument.Load(xmlReader);*/
+
+                xmlDocument.LoadXml(string.Format(
+                    "<html xmlns=\"{0}\"><div>Converting HTML to XML is not supported</div></html>",
+                    TemplateDocument.FirstChild.NamespaceURI));
+            }
+            else
+            {
+                try
+                {
+                    xmlDocument.LoadXml(xml);
+                }
+                catch (XmlException xmlException)
+                {
+                    // When the Xml parse mode is to try HTML, then try HTML but if an error occurs swallow it and throw the original
+                    if (XmlParseMode.XmlThenHtml == xmlParseMode)
+                        try
+                        {
+                            return LoadXmlDocument(xml, XmlParseMode.Html, fullpath);
+                        }
+                        catch { }
+
+                    // Everyone else can see a nice descriptive error
+                    StringBuilder errorBuilder = new StringBuilder(string.Format("An error occured while loading {0}\n", fullpath));
+                    errorBuilder.AppendFormat("{0}\n\n\nFrom:\n", xmlException.Message);
+
+                    string[] xmlLines = xml.Split('\n', '\r');
+                    for (int ctr = 0; ctr < xmlLines.Length; ctr++)
+                    {
+                        int lineNumber = ctr + 1;
+
+                        if (ctr < 9)
+                            errorBuilder.Append("    ");
+                        else if (ctr < 99)
+                            errorBuilder.Append("   ");
+                        else if (ctr < 999)
+                            errorBuilder.Append("  ");
+                        else if (ctr < 9999)
+                            errorBuilder.Append(" ");
+
+                        errorBuilder.AppendFormat("{0}: {1}\n", lineNumber, xmlLines[ctr]);
+
+                        if (lineNumber == xmlException.LineNumber)
+                            errorBuilder.AppendFormat("    -: {0}^\n", "".PadLeft(xmlException.LinePosition));
+                    }
+
+                    throw new WebResultsOverrideException(WebResults.From(Status._500_Internal_Server_Error, errorBuilder.ToString()));
+                }
             }
 
             return xmlDocument;
+        }
+
+        /// <summary>
+        /// Finds the appropriate XmlParseMode attribute
+        /// </summary>
+        /// <param name="element">This is scanned to find the XmlParseMode</param>
+        /// <returns></returns>
+        public XmlParseMode GetXmlParseMode(XmlElement element)
+        {
+            string xmlParseModeAttribute = 
+                element.GetAttribute("xmlparsemode", TemplatingConstants.TemplateNamespace);
+
+            if (null == xmlParseModeAttribute)
+                return XmlParseMode.Xml;
+
+            else if ("html" == xmlParseModeAttribute)
+                return XmlParseMode.Html;
+
+            else if ("xmlthenhtml" == xmlParseModeAttribute)
+                return XmlParseMode.XmlThenHtml;
+
+            else
+                return XmlParseMode.Xml;
         }
 
         /// <summary>
@@ -376,12 +460,14 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         /// </summary>
         /// <param name="getParameters"></param>
         /// <param name="fileContainer"></param>
+        /// <param name="xmlParseMode">The kind of text that's being parsed</param>
         /// <returns></returns>
         public XmlDocument LoadXmlDocumentAndReplaceGetParameters(
             IDictionary<string, string> getParameters, 
-            IFileContainer fileContainer)
+            IFileContainer fileContainer,
+            XmlParseMode xmlParseMode)
         {
-            XmlDocument xmlDocument = LoadXmlDocument(fileContainer);
+            XmlDocument xmlDocument = LoadXmlDocument(fileContainer, xmlParseMode);
 
             // Do the replacements
             ReplaceGetParameters(getParameters, xmlDocument);

@@ -33,7 +33,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             templateParsingState.ProcessElementForConditionalsAndComponents += ProcessElementForConditionalsAndComponents;
         }
 
-        void ProcessElementForConditionalsAndComponents(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlNode element)
+        void ProcessElementForConditionalsAndComponents(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
         {
             if (element.NamespaceURI == TemplatingConstants.TemplateNamespace)
                 if (element.LocalName == "if")
@@ -102,15 +102,15 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         private void LoadComponent(
             ITemplateParsingState templateParsingState,
             IDictionary<string, string> getParameters,
-            XmlNode componentNode)
+            XmlElement element)
         {
-            XmlAttribute srcAttribute = (XmlAttribute)componentNode.Attributes.GetNamedItem("src", TemplatingConstants.TemplateNamespace);
-            XmlAttribute urlAttribute = (XmlAttribute)componentNode.Attributes.GetNamedItem("url", TemplatingConstants.TemplateNamespace);
+            XmlAttribute srcAttribute = (XmlAttribute)element.Attributes.GetNamedItem("src", TemplatingConstants.TemplateNamespace);
+            XmlAttribute urlAttribute = (XmlAttribute)element.Attributes.GetNamedItem("url", TemplatingConstants.TemplateNamespace);
 
             // handle GET parameters
             // First, handle oc:getpassthrough
             IDictionary<string, string> myGetParameters;
-            XmlAttribute getpassthroughAttribute = (XmlAttribute)componentNode.Attributes.GetNamedItem("getpassthough", TemplatingConstants.TemplateNamespace);
+            XmlAttribute getpassthroughAttribute = (XmlAttribute)element.Attributes.GetNamedItem("getpassthough", TemplatingConstants.TemplateNamespace);
             if (null == getpassthroughAttribute)
                 myGetParameters = DictionaryFunctions.Create<string, string>(getParameters);
             else
@@ -122,23 +122,23 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             }
 
             // Next, pull out get parameters from the tag
-            foreach (XmlAttribute attribute in componentNode.Attributes)
+            foreach (XmlAttribute attribute in element.Attributes)
                 if ("" == attribute.NamespaceURI)
                     myGetParameters[attribute.LocalName] = attribute.Value;
 
             if ((null == srcAttribute) && (null == urlAttribute))
                 // Remove empty components
-                componentNode.ParentNode.RemoveChild(componentNode);
+                element.ParentNode.RemoveChild(element);
 
             else if ((null != srcAttribute) && (null != urlAttribute))
                 templateParsingState.ReplaceNodes(
-                    componentNode,
-                    templateParsingState.GenerateWarningNode("Either oc:src or oc:url can be specified; you can not choose both: " + componentNode.OuterXml));
+                    element,
+                    templateParsingState.GenerateWarningNode("Either oc:src or oc:url can be specified; you can not choose both: " + element.OuterXml));
 
             else if (null != srcAttribute)
             {
                 string fileName = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.GetAbsolutePath(
-                    templateParsingState.GetCWD(componentNode),
+                    templateParsingState.GetCWD(element),
                     srcAttribute.Value);
 
                 IFileContainer fileContainer;
@@ -151,7 +151,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     log.Warn("An attempt was made to use a non-existant file in a template", fdne);
 
                     templateParsingState.ReplaceNodes(
-                        componentNode,
+                        element,
                         templateParsingState.GenerateWarningNode(fileName + " not found"));
 
                     return;
@@ -160,15 +160,15 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 templateParsingState.WebConnection.TouchedFiles.Add(fileContainer);
 
                 // If the user doesn't have permission for the component and the component has something to use instead, use it
-                if (null == fileContainer.LoadPermission(templateParsingState.WebConnection.Session.User.Id) && componentNode.HasChildNodes)
+                if (null == fileContainer.LoadPermission(templateParsingState.WebConnection.Session.User.Id) && element.HasChildNodes)
                 {
-                    XmlNode replacement = componentNode.OwnerDocument.CreateElement("div");
+                    XmlNode replacement = element.OwnerDocument.CreateElement("div");
 
-                    foreach (XmlNode errorNode in componentNode.ChildNodes)
+                    foreach (XmlNode errorNode in element.ChildNodes)
                         replacement.AppendChild(errorNode);
 
-                    componentNode.ParentNode.InsertAfter(replacement, componentNode);
-                    componentNode.ParentNode.RemoveChild(componentNode);
+                    element.ParentNode.InsertAfter(replacement, element);
+                    element.ParentNode.RemoveChild(element);
                 }
                 else
                 {
@@ -182,7 +182,8 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     {
                         componentDocument = templateParsingState.LoadXmlDocumentAndReplaceGetParameters(
                             myGetParameters,
-                            fileContainer);
+                            fileContainer,
+                            templateParsingState.GetXmlParseMode(element));
 
                         XmlNode firstChild = componentDocument.FirstChild;
                         XmlNodeList replacementNodes;
@@ -192,12 +193,12 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                             replacementNodes = componentDocument.ChildNodes;
 
                         templateParsingState.SetCWD(replacementNodes, fileContainer.ParentDirectoryHandler.FileContainer.FullPath);
-                        templateParsingState.ReplaceNodes(componentNode, replacementNodes);
+                        templateParsingState.ReplaceNodes(element, replacementNodes);
                     }
                     catch (WebResultsOverrideException wroe)
                     {
                         templateParsingState.ReplaceNodes(
-                            componentNode,
+                            element,
                             templateParsingState.GenerateWarningNode(wroe.WebResults.ResultsAsString));
                     }
                     catch (Exception e)
@@ -205,7 +206,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                         log.Error("An error occured when loading a component", e);
 
                         templateParsingState.ReplaceNodes(
-                            componentNode,
+                            element,
                             templateParsingState.GenerateWarningNode("An unhandled error occured.  See the system logs for more information"));
                     }
                 }
@@ -234,7 +235,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                             resultNode = resultDocument;
                         }
                         else
-                            resultNode = componentNode.OwnerDocument.CreateTextNode(httpResponse.AsString());
+                            resultNode = element.OwnerDocument.CreateTextNode(httpResponse.AsString());
                     }
                     else
                         try
@@ -255,7 +256,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                                 resultNode = resultDocument;
                             }
                             else
-                                resultNode = componentNode.OwnerDocument.CreateTextNode(shellResults.ResultsAsString);
+                                resultNode = element.OwnerDocument.CreateTextNode(shellResults.ResultsAsString);
                         }
                         catch (WebResultsOverrideException wroe)
                         {
@@ -268,41 +269,41 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     resultNode = templateParsingState.GenerateWarningNode("An unhandled error occured.  See the system logs for more information");
                 }
 
-                templateParsingState.ReplaceNodes(componentNode, resultNode);
+                templateParsingState.ReplaceNodes(element, resultNode);
             }
         }
 
         private void LoadSnipit(
             ITemplateParsingState templateParsingState,
             IDictionary<string, string> getParameters,
-            XmlNode snipitNode)
+            XmlElement element)
         {
-            XmlAttribute srcAttribute = (XmlAttribute)snipitNode.Attributes.GetNamedItem("src", TemplatingConstants.TemplateNamespace);
+            XmlAttribute srcAttribute = (XmlAttribute)element.Attributes.GetNamedItem("src", TemplatingConstants.TemplateNamespace);
 
             if (null == srcAttribute)
                 templateParsingState.ReplaceNodes(
-                    snipitNode,
-                    templateParsingState.GenerateWarningNode("Either oc:src must be specified: " + snipitNode.OuterXml));
+                    element,
+                    templateParsingState.GenerateWarningNode("Either oc:src must be specified: " + element.OuterXml));
 
             else
             {
                 string fileName = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.GetAbsolutePath(
-                    templateParsingState.GetCWD(snipitNode),
+                    templateParsingState.GetCWD(element),
                     srcAttribute.Value);
 
                 IFileContainer fileContainer = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(fileName);
                 templateParsingState.WebConnection.TouchedFiles.Add(fileContainer);
 
                 // If the user doesn't have permission for the component and the component has something to use instead, use it
-                if (null == fileContainer.LoadPermission(templateParsingState.WebConnection.Session.User.Id) && snipitNode.HasChildNodes)
+                if (null == fileContainer.LoadPermission(templateParsingState.WebConnection.Session.User.Id) && element.HasChildNodes)
                 {
-                    XmlNode replacement = snipitNode.OwnerDocument.CreateElement("div");
+                    XmlNode replacement = element.OwnerDocument.CreateElement("div");
 
-                    foreach (XmlNode errorNode in snipitNode.ChildNodes)
+                    foreach (XmlNode errorNode in element.ChildNodes)
                         replacement.AppendChild(errorNode);
 
-                    snipitNode.ParentNode.InsertAfter(replacement, snipitNode);
-                    snipitNode.ParentNode.RemoveChild(snipitNode);
+                    element.ParentNode.InsertAfter(replacement, element);
+                    element.ParentNode.RemoveChild(element);
                 }
                 else
                 {
@@ -322,12 +323,12 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
                         XmlNodeList replacementNodes = snipitDocument.FirstChild.ChildNodes;
                         templateParsingState.SetCWD(replacementNodes, fileContainer.ParentDirectoryHandler.FileContainer.FullPath);
-                        templateParsingState.ReplaceNodes(snipitNode, replacementNodes);
+                        templateParsingState.ReplaceNodes(element, replacementNodes);
                     }
                     catch (WebResultsOverrideException wroe)
                     {
                         templateParsingState.ReplaceNodes(
-                            snipitNode,
+                            element,
                             templateParsingState.GenerateWarningNode(wroe.WebResults.ResultsAsString));
                     }
                     catch (Exception e)
@@ -335,7 +336,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                         log.Error("An error occured when loading a component", e);
 
                         templateParsingState.ReplaceNodes(
-                            snipitNode,
+                            element,
                             templateParsingState.GenerateWarningNode("An unhandled error occured.  See the system logs for more information"));
                     }
                 }

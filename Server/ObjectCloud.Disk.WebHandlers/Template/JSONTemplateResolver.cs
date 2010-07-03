@@ -151,7 +151,9 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                                     templateParsingState.GetCWD(element), srcAttribute.Value);
                                 templateContainer = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(src);
 
-                                XmlDocument newDocument = templateParsingState.LoadXmlDocument(templateContainer);
+                                XmlDocument newDocument = templateParsingState.LoadXmlDocument(
+                                    templateContainer,
+                                    templateParsingState.GetXmlParseMode(element));
 
                                 // Import the template nodes
                                 XmlNode firstChild = templateParsingState.TemplateDocument.ImportNode(newDocument.FirstChild, true);

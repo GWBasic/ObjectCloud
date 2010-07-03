@@ -336,7 +336,7 @@ namespace ObjectCloud.Disk.WebHandlers
             IFileContainer templateFileContainer,
             TemplateParsingState templateParsingState)
         {
-            XmlDocument templateDocument = templateParsingState.LoadXmlDocumentAndReplaceGetParameters(getParameters, templateFileContainer);
+            XmlDocument templateDocument = templateParsingState.LoadXmlDocumentAndReplaceGetParameters(getParameters, templateFileContainer, XmlParseMode.Xml);
 
             // While the first node isn't HTML, keep loading header/footers
             while ("html" != templateDocument.FirstChild.LocalName)
@@ -364,7 +364,8 @@ namespace ObjectCloud.Disk.WebHandlers
 
                 templateDocument = templateParsingState.LoadXmlDocumentAndReplaceGetParameters(
                     getParameters,
-                    templateFileContainer);
+                    templateFileContainer,
+                    XmlParseMode.Xml);
 
                 // find oc:component tag
                 XmlNodeList componentTags = templateDocument.GetElementsByTagName("component", TemplatingConstants.TemplateNamespace);
