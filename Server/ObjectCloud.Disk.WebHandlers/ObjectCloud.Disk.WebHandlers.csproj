@@ -9,9 +9,11 @@
     <OutputType>Library</OutputType>
     <RootNamespace>ObjectCloud.Disk.WebHandlers</RootNamespace>
     <AssemblyName>ObjectCloud.Disk.WebHandlers</AssemblyName>
-    <FileUpgradeFlags>40</FileUpgradeFlags>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
     <OldToolsVersion>4.0</OldToolsVersion>
-    <UpgradeBackupLocation>C:\Users\GWBasic\Mercurial\appfeeds\Backup1\</UpgradeBackupLocation>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <TargetFrameworkProfile />
     <PublishUrl>publish\</PublishUrl>
