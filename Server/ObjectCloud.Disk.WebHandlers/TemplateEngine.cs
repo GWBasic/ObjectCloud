@@ -47,7 +47,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             // Hack to work around a bug in Mozilla handling xhtml
             // What's going on is that I'm using a horrible hack to remove all namespaces from the <html> tag and turn this into an SGML-HTML document instead of xml-html
-            if (webConnection.Headers["USER-AGENT"].Contains(" Firefox/"))
+            if (webConnection.Headers["USER-AGENT"].Contains(" Firefox/") || webConnection.Headers["USER-AGENT"].Contains(" MSIE "))
             {
                 // <?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" 
 
