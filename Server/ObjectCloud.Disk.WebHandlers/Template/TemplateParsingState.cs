@@ -381,8 +381,9 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 xmlDocument.Load(xmlReader);*/
 
                 xmlDocument.LoadXml(string.Format(
-                    "<html xmlns=\"{0}\"><div>Converting HTML to XML is not supported</div></html>",
-                    TemplateDocument.FirstChild.NamespaceURI));
+                    "<html xmlns=\"{0}\"><div><span class=\"{1}\">Converting HTML to XML is not supported</span></div></html>",
+                    TemplateDocument.FirstChild.NamespaceURI,
+                    TemplatingConstants.WarningNodeClass));
             }
             else
             {
