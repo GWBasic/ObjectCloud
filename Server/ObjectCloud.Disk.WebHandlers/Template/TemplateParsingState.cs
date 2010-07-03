@@ -343,7 +343,27 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
                 // Everyone else can see a nice descriptive error
                 StringBuilder errorBuilder = new StringBuilder(string.Format("An error occured while loading {0}\n", fileContainer.FullPath));
-                errorBuilder.AppendFormat("{0}\n\n\nFrom:\n{1}", xmlException.Message, xml);
+                errorBuilder.AppendFormat("{0}\n\n\nFrom:\n", xmlException.Message);
+
+                string[] xmlLines = xml.Split('\n', '\r');
+                for (int ctr = 0; ctr < xmlLines.Length; ctr++)
+                {
+                    int lineNumber = ctr + 1;
+
+                    if (ctr < 9)
+                        errorBuilder.Append("    ");
+                    else if (ctr < 99)
+                        errorBuilder.Append("   ");
+                    else if (ctr < 999)
+                        errorBuilder.Append("  ");
+                    else if (ctr < 9999)
+                        errorBuilder.Append(" ");
+
+                    errorBuilder.AppendFormat("{0}: {1}\n", lineNumber, xmlLines[ctr]);
+
+                    if (lineNumber == xmlException.LineNumber)
+                        errorBuilder.AppendFormat("    -: {0}^\n", "".PadLeft(xmlException.LinePosition));
+                }
 
                 throw new WebResultsOverrideException(WebResults.From(Status._500_Internal_Server_Error, errorBuilder.ToString()));
             }

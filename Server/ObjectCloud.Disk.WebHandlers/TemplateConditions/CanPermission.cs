@@ -44,7 +44,7 @@ namespace ObjectCloud.Disk.WebHandlers.TemplateConditions
             if (null == fileContainer)
                 return false;
 
-            return MinimumPermission >= fileContainer.LoadPermission(templateParsingState.WebConnection.Session.User.Id);
+            return MinimumPermission <= fileContainer.LoadPermission(templateParsingState.WebConnection.Session.User.Id);
         }
     }
 }
