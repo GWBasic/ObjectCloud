@@ -41,15 +41,16 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             if (element.NamespaceURI == TemplatingConstants.TemplateNamespace)
                 if (element.LocalName == "jsontemplate")
                 {
-                    XmlAttribute srcAttribute = (XmlAttribute)element.Attributes.GetNamedItem("src", TemplatingConstants.TemplateNamespace);
-                    XmlAttribute urlAttribute = (XmlAttribute)element.Attributes.GetNamedItem("url", TemplatingConstants.TemplateNamespace);
+                    string src = element.GetAttribute("src", TemplatingConstants.TemplateNamespace);
+                    string url = element.GetAttribute("url", TemplatingConstants.TemplateNamespace);
+                    string data = element.GetAttribute("data", TemplatingConstants.TemplateNamespace);
 
-                    if (null == urlAttribute)
+                    if (url.Length == 0 && data.Length == 0)
                     {
                         // Remove empty components and generate warning
                         templateParsingState.ReplaceNodes(
                             element,
-                            templateParsingState.GenerateWarningNode("oc:url must be specified: " + element.OuterXml));
+                            templateParsingState.GenerateWarningNode("Either oc:url or oc:data must be specified: " + element.OuterXml));
 
                         return;
                     }
@@ -61,94 +62,97 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                         element.ParentNode.InsertBefore(debugComment, element);
                     }
 
-                    // Try to load the destination URL
-                    string url = urlAttribute.Value;
-
-                    foreach (XmlAttribute attribute in element.Attributes)
-                        if ("" == attribute.NamespaceURI)
-                            url = HTTPStringFunctions.AppendGetParameter(url, attribute.LocalName, attribute.Value);
-
                     JsonReader jsonReader;
-                    try
-                    {
-                        if (url.StartsWith("https://"))
-                        {
-                            templateParsingState.ReplaceNodes(
-                                element,
-                                templateParsingState.GenerateWarningNode("https component nodes aren't supported due to certificate complexities" + element.OuterXml));
 
-                            return;
-                        }
-                        else if (url.StartsWith("http://"))
+                    // If oc:url was specified, simulate a request, else, just parse data
+                    if (url.Length > 0)
+                        try
                         {
-                            HttpResponseHandler httpResponse = templateParsingState.WebConnection.Session.HttpWebClient.Get(url);
+                            // Try to load the destination URL
+                            foreach (XmlAttribute attribute in element.Attributes)
+                                if ("" == attribute.NamespaceURI)
+                                    url = HTTPStringFunctions.AppendGetParameter(url, attribute.LocalName, attribute.Value);
 
-                            int statusCode = (int)httpResponse.StatusCode;
-                            if ((statusCode >= 200) && (statusCode < 300))
-                                jsonReader = httpResponse.AsJsonReader();
-                            else
+                            if (url.StartsWith("https://"))
                             {
                                 templateParsingState.ReplaceNodes(
                                     element,
-                                    templateParsingState.GenerateWarningNode(httpResponse.AsString()));
+                                    templateParsingState.GenerateWarningNode("https component nodes aren't supported due to certificate complexities" + element.OuterXml));
 
                                 return;
                             }
-                        }
-                        else
-                            try
+                            else if (url.StartsWith("http://"))
                             {
-                                ShellWebConnection shellWebConnection = new BlockingShellWebConnection(
-                                    url,
-                                    templateParsingState.WebConnection,
-                                    null,
-                                    templateParsingState.WebConnection.CookiesFromBrowser);
+                                HttpResponseHandler httpResponse = templateParsingState.WebConnection.Session.HttpWebClient.Get(url);
 
-                                IWebResults shellResults = shellWebConnection.GenerateResultsForClient();
-
-                                int statusCode = (int)shellResults.Status;
+                                int statusCode = (int)httpResponse.StatusCode;
                                 if ((statusCode >= 200) && (statusCode < 300))
-                                    jsonReader = new JsonReader(shellResults.ResultsAsStream);
+                                    jsonReader = httpResponse.AsJsonReader();
                                 else
                                 {
                                     templateParsingState.ReplaceNodes(
                                         element,
-                                        templateParsingState.GenerateWarningNode(shellResults.ResultsAsString));
+                                        templateParsingState.GenerateWarningNode(httpResponse.AsString()));
 
                                     return;
                                 }
                             }
-                            catch (WebResultsOverrideException wroe)
-                            {
-                                templateParsingState.ReplaceNodes(
-                                    element,
-                                    templateParsingState.GenerateWarningNode(wroe.WebResults.ResultsAsString));
+                            else
+                                try
+                                {
+                                    ShellWebConnection shellWebConnection = new BlockingShellWebConnection(
+                                        url,
+                                        templateParsingState.WebConnection,
+                                        null,
+                                        templateParsingState.WebConnection.CookiesFromBrowser);
 
-                                return;
-                            }
-                    }
-                    catch (Exception e)
-                    {
-                        log.Error("An error occured when loading a component", e);
-                        templateParsingState.ReplaceNodes(
-                            element,
-                            templateParsingState.GenerateWarningNode("An unhandled error occured.  See the system logs for more information"));
+                                    IWebResults shellResults = shellWebConnection.GenerateResultsForClient();
 
-                        return;
-                    }
+                                    int statusCode = (int)shellResults.Status;
+                                    if ((statusCode >= 200) && (statusCode < 300))
+                                        jsonReader = new JsonReader(shellResults.ResultsAsStream);
+                                    else
+                                    {
+                                        templateParsingState.ReplaceNodes(
+                                            element,
+                                            templateParsingState.GenerateWarningNode(shellResults.ResultsAsString));
+
+                                        return;
+                                    }
+                                }
+                                catch (WebResultsOverrideException wroe)
+                                {
+                                    templateParsingState.ReplaceNodes(
+                                        element,
+                                        templateParsingState.GenerateWarningNode(wroe.WebResults.ResultsAsString));
+
+                                    return;
+                                }
+                        }
+                        catch (Exception e)
+                        {
+                            log.Error("An error occured when loading a component", e);
+                            templateParsingState.ReplaceNodes(
+                                element,
+                                templateParsingState.GenerateWarningNode("An unhandled error occured.  See the system logs for more information"));
+
+                            return;
+                        }
+                    else
+                        jsonReader = new JsonReader(data);
 
                     try
                     {
                         object templateInput = jsonReader.Deserialize();
 
                         // Either load the nodes or 
-                        if (null != srcAttribute)
+                        if (src.Length > 0)
                         {
                             IFileContainer templateContainer;
                             try
                             {
-                                string src = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.GetAbsolutePath(
-                                    templateParsingState.GetCWD(element), srcAttribute.Value);
+                                src = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.GetAbsolutePath(
+                                    templateParsingState.GetCWD(element), src);
                                 templateContainer = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(src);
 
                                 XmlDocument newDocument = templateParsingState.LoadXmlDocument(
@@ -182,7 +186,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                             catch (FileDoesNotExist fdne)
                             {
                                 log.Error("Error resolving a template", fdne);
-                                templateParsingState.ReplaceNodes(element, templateParsingState.GenerateWarningNode("src does not exist: " + element.OuterXml));
+                                templateParsingState.ReplaceNodes(element, templateParsingState.GenerateWarningNode("oc:src does not exist: " + element.OuterXml));
 
                                 return;
                             }
@@ -210,10 +214,24 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         {
             if (templateInput is object[])
             {
-                foreach (object o in (object[])templateInput)
+                object[] objects = (object[])templateInput;
+
+                for (int ctr = 0; ctr < objects.Length; ctr++)
                 {
+                    object o = objects[ctr];
+
                     XmlNode clonedElement = element.CloneNode(true);
                     element.ParentNode.InsertBefore(clonedElement, element);
+
+                    if (o is Dictionary<string, object>)
+                        ((Dictionary<string, object>)o)["i"] = ctr;
+                    else
+                    {
+                        Dictionary<string, object> newObject = new Dictionary<string, object>();
+                        newObject["i"] = ctr;
+                        newObject[""] = o;
+                        o = newObject;
+                    }
 
                     DoTemplate(
                         templateParsingState, 

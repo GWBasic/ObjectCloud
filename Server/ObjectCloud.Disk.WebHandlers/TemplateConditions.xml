@@ -35,6 +35,9 @@
         <entry key="islocal">
           <object id="TemplateConditionHandlers_islocal" type="ObjectCloud.Disk.WebHandlers.TemplateConditions.IsLocal" />
         </entry>
+        <entry key="hasvalue">
+          <object id="TemplateConditionHandlers_hasvalue" type="ObjectCloud.Disk.WebHandlers.TemplateConditions.HasValue" />
+        </entry>
       </dictionary>
     </property>
 

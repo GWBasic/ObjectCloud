@@ -380,10 +380,31 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 XmlReader xmlReader = XmlReader.Create(stream);
                 xmlDocument.Load(xmlReader);*/
 
+
+
+
                 xmlDocument.LoadXml(string.Format(
                     "<html xmlns=\"{0}\"><div><span class=\"{1}\">Converting HTML to XML is not supported</span></div></html>",
                     TemplateDocument.FirstChild.NamespaceURI,
                     TemplatingConstants.WarningNodeClass));
+
+                /*HtmlReader htmlReader = new HtmlReader(xml);
+
+                // Create a stream that's used for reading and writing
+                Stream stream = new MemoryStream(xml.Length + (xml.Length / 5));
+                HtmlWriter htmlWriter = new HtmlWriter(stream, Encoding.UTF8);
+
+                htmlReader.Read();
+                while (!htmlReader.EOF)
+                    htmlWriter.WriteNode(htmlReader, true);
+
+                htmlWriter.Flush();
+
+                stream.Seek(0, SeekOrigin.Begin);
+
+                // Read xml from the stream
+                XmlReader xmlReader = XmlReader.Create(stream);
+                xmlDocument.Load(xmlReader);*/
             }
             else
             {
@@ -505,6 +526,8 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         /// <returns></returns>
         public void ReplaceGetParameters(IDictionary<string, string> getParameters, XmlNode xmlNode)
         {
+            AugmentGetParameters(getParameters);
+
             // Perform replacements on all attributes
             if (null != xmlNode.Attributes)
                 foreach (XmlAttribute xmlAttribute in
@@ -512,14 +535,14 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 {
                     // Change the value
                     if (xmlAttribute.Value.Contains(TemplatingConstants.ArgBegin[0]))
-                        xmlAttribute.Value = ReplaceGetParameters(getParameters, xmlAttribute.Value);
+                        xmlAttribute.Value = ReplaceGetParametersInt(getParameters, xmlAttribute.Value);
 
                     // Change the namespace
                     if (xmlAttribute.NamespaceURI.Contains(TemplatingConstants.ArgBegin[0]))
                     {
                         XmlAttribute newAttribute = xmlNode.OwnerDocument.CreateAttribute(
                             xmlAttribute.LocalName,
-                            ReplaceGetParameters(getParameters, xmlAttribute.NamespaceURI));
+                            ReplaceGetParametersInt(getParameters, xmlAttribute.NamespaceURI));
 
                         newAttribute.Value = xmlAttribute.Value;
 
@@ -534,7 +557,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 XmlText xmlText = (XmlText)xmlNode;
 
                 if (xmlText.InnerText.Contains(TemplatingConstants.ArgBegin[0]))
-                    xmlText.InnerText = ReplaceGetParameters(getParameters, xmlText.InnerText);
+                    xmlText.InnerText = ReplaceGetParametersInt(getParameters, xmlText.InnerText);
             }
 
             // Recurse on all child nodes
@@ -566,7 +589,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 {
                     XmlElement newElement = xmlNode.OwnerDocument.CreateElement(
                         xmlNode.LocalName,
-                        ReplaceGetParameters(getParameters, xmlNode.NamespaceURI));
+                        ReplaceGetParametersInt(getParameters, xmlNode.NamespaceURI));
 
                     if (xmlNode.HasChildNodes)
                     {
@@ -589,12 +612,40 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         }
 
         /// <summary>
+        /// Adds some default runtime metadata to the get parameters
+        /// </summary>
+        /// <param name="getParameters"></param>
+        private void AugmentGetParameters(IDictionary<string, string> getParameters)
+        {
+            // Add some default user information
+            if (!getParameters.ContainsKey("User.Identity"))
+                if (WebConnection.Session.User.Id != FileHandlerFactoryLocator.UserFactory.AnonymousUser.Id)
+                    getParameters["User.Identity"] = WebConnection.Session.User.Identity;
+
+            if (!getParameters.ContainsKey("User.Name"))
+                if (WebConnection.Session.User.Local)
+                    getParameters["User.Name"] = WebConnection.Session.User.Name;
+        }
+
+        /// <summary>
         /// Replaces all of the GET parameters in a string
         /// </summary>
         /// <param name="getParameters"></param>
         /// <param name="xmlAsString"></param>
         /// <returns></returns>
         public string ReplaceGetParameters(IDictionary<string, string> getParameters, string xmlAsString)
+        {
+            AugmentGetParameters(getParameters);
+            return ReplaceGetParametersInt(getParameters, xmlAsString);
+        }
+
+        /// <summary>
+        /// Replaces all of the GET parameters in a string
+        /// </summary>
+        /// <param name="getParameters"></param>
+        /// <param name="xmlAsString"></param>
+        /// <returns></returns>
+        private string ReplaceGetParametersInt(IDictionary<string, string> getParameters, string xmlAsString)
         {
             StringBuilder getArgumentsResolvedBuilder = new StringBuilder(Convert.ToInt32(1.1 * Convert.ToDouble(xmlAsString.Length)));
 

@@ -78,6 +78,7 @@
     <Compile Include="TemplateConditions\IsLocal.cs" />
     <Compile Include="TemplateConditions\IsLoggedIn.cs" />
     <Compile Include="TemplateConditions\IsOpenID.cs" />
+    <Compile Include="TemplateConditions\HasValue.cs" />
     <Compile Include="TemplateEngine.cs" />
     <Compile Include="Template\AggressiveCachingEnabler.cs" />
     <Compile Include="Template\ComponentAndConditionalsResolver.cs" />
@@ -94,6 +95,9 @@
     <Compile Include="WebHandler.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="SgmlReaderDll">
+      <HintPath>..\..\Dependancies\SgmlReaderDll.dll</HintPath>
+    </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
