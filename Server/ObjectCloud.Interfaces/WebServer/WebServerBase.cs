@@ -37,7 +37,7 @@ namespace ObjectCloud.Interfaces.WebServer
 			// Register an event handler to preload default ObjectCloud objects
 			EventHandler<IFileSystemResolver, EventArgs> preloadObjects = delegate(IFileSystemResolver sender, EventArgs e)
 			{
-				PreloadObjects();
+				StartExecutionEnvironments();
 			};
 			FileHandlerFactoryLocator.FileSystemResolver.Started += preloadObjects;
 			
@@ -452,8 +452,37 @@ namespace ObjectCloud.Interfaces.WebServer
 		}
 		private string _PreloadedObjects = null;
 		
-		private void PreloadObjects()
+        /// <summary>
+        /// Execution environments are started prior to making the web server available.  This is because loading them on-demand will cause a poor response time
+        /// </summary>
+		private void StartExecutionEnvironments()
 		{
+            try
+            {
+                IFileContainer classesFileContainer = FileSystemResolver.ResolveFile("/Classes");
+
+                LinkedList<IFileContainer> classFiles = new LinkedList<IFileContainer>();
+                foreach (IFileContainer fileContainer in classesFileContainer.CastFileHandler<IDirectoryHandler>().Files)
+                    if (null == fileContainer.Extension)
+                        if (fileContainer.FileHandler is ITextHandler)
+                            classFiles.AddLast(fileContainer);
+
+                FileHandlerFactoryLocator.ExecutionEnvironmentFactory.Start(classFiles);
+            }
+            catch {}
+
+            ThreadPool.QueueUserWorkItem(PreloadObjects);
+        }
+
+        /// <summary>
+        /// Objects are loaded asyncronously on another thread because we really don't need to wait for them in order to have snappy performance
+        /// </summary>
+        /// <param name="state"></param>
+        private void PreloadObjects(object state)
+        {
+            log.Debug("Pre-loading system objects");
+            DateTime start = DateTime.UtcNow;
+
 			try
 			{
 				if (null == PreloadedObjects)
@@ -469,6 +498,9 @@ namespace ObjectCloud.Interfaces.WebServer
 					{
 						fileContainer.WebHandler.GetOrCreateExecutionEnvironment();
 					});
+
+                TimeSpan loadTime = DateTime.UtcNow - start;
+                log.Info("Pre-loading system objects took " + loadTime.TotalSeconds.ToString() + " seconds");
 			}
 			catch (Exception e)
 			{

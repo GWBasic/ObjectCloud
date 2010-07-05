@@ -1366,11 +1366,13 @@ namespace ObjectCloud.Disk.WebHandlers
 			CachedInBrowserJSWrapper = null;
 		}
 		
-		/// <summary>
+		/*// <summary>
 		/// This is set to true while an execution environment is being created 
 		/// </summary>
-		private volatile bool CreatingExecutionEnvironment = false;
+		private volatile bool CreatingExecutionEnvironment = false;*/
 
+
+        // TODO:  Clean this out if it's not needed
 		/// <summary>
 		/// helper to determine if the execution environment is ready 
 		/// </summary>
@@ -1396,9 +1398,9 @@ namespace ObjectCloud.Disk.WebHandlers
             // If a javascript container was found, make sure there's an up-to-date ExecutionEnvironment
             if (null != javascriptContainer)
 			{
-				// If the execution environment is being created, don't bother trying to lock
+				/*// If the execution environment is being created, don't bother trying to lock
 				if (CreatingExecutionEnvironment)
-					return true;
+					return true;*/
 				
                 // Note: a large timeout is used in case a thread is constructing the scope.  Constructing the scope can be time consuming
                 using (TimedLock.Lock(ExecutionEnvironmentLock, TimeSpan.FromSeconds(15)))
@@ -1435,7 +1437,7 @@ namespace ObjectCloud.Disk.WebHandlers
 			}
 		}
 		
-        /// <summary>
+        /*// <summary>
         /// Returns true if the execution environment is ready for use, or if there is no execution environment.  Returns false if there will be a delay while the execution environment is allocation.
         /// </summary>
 		public bool IsExecutionEnvironmentReady 
@@ -1445,7 +1447,7 @@ namespace ObjectCloud.Disk.WebHandlers
 				IFileContainer javascriptContainer;
 				return IsExecutionEnvironmentReady_Helper(out javascriptContainer);
 			}
-		}
+		}*/
 		
 		/// <summary>
         /// Where Javascript is executed
@@ -1462,20 +1464,36 @@ namespace ObjectCloud.Disk.WebHandlers
             using (TimedLock.Lock(ExecutionEnvironmentLock, TimeSpan.FromSeconds(15)))
 				if (!IsExecutionEnvironmentReady_Helper(out javascriptContainer))
 				{
-					CreatingExecutionEnvironment = true;
+					/*CreatingExecutionEnvironment = true;
 				
 					try
-					{
+					{*/
 						IExecutionEnvironmentFactory factory = FileHandlerFactoryLocator.ExecutionEnvironmentFactory;
 						_ExecutionEnvironment = factory.Create(FileHandlerFactoryLocator, FileContainer, javascriptContainer);
-					}
+					/*}
 					finally
 					{
 						CreatingExecutionEnvironment = false;
-					}
+					}*/
 				}
 			
 			return _ExecutionEnvironment;
+        }
+
+        /// <summary>
+        /// Creates an execution environment if no other thread is creating one
+        /// </summary>
+        public void CreateExecutionEnvironmentIfNoOtherThreadCreating()
+        {
+            if (Monitor.TryEnter(ExecutionEnvironmentLock))
+                try
+                {
+                    GetOrCreateExecutionEnvironment();
+                }
+                finally
+                {
+                    Monitor.Exit(ExecutionEnvironmentLock);
+                }
         }
 
         /// <summary>

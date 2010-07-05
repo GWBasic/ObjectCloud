@@ -186,11 +186,16 @@ namespace ObjectCloud.Interfaces.WebServer
         /// Gets or creates the Javascript execution environment.  Returns null if there is no execution environment.
         /// </summary>
         IExecutionEnvironment GetOrCreateExecutionEnvironment();
+
+        /// <summary>
+        /// Creates an execution environment if no other thread is creating one
+        /// </summary>
+        void CreateExecutionEnvironmentIfNoOtherThreadCreating();
 		
-		/// <summary>
+		/*// <summary>
 		/// True if the execution environment is ready to be used, false if there will be a delay while it is allocated.  Also returns true if there isn't an execution environment 
 		/// </summary>
-		bool IsExecutionEnvironmentReady { get; }
+		bool IsExecutionEnvironmentReady { get; }*/
 		
 		/// <summary>
 		/// Resets the execution environment 

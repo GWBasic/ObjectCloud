@@ -114,7 +114,7 @@ namespace ObjectCloud.Javascript.SubProcess
 
         private void ConstructScope()
         {
-            log.Info("Constructing Javascript scope for " + FileContainer.FullPath);
+            log.Debug("Constructing Javascript scope for " + FileContainer.FullPath);
 
             CacheIDsByKey = new Dictionary<object, object>();
 
