@@ -35,6 +35,13 @@ namespace ObjectCloud.Common.Threading
         SingleLinkNode<T> Head;
         SingleLinkNode<T> Tail;
 
+        public LockFreeQueue(IEnumerable<T> items)
+            :this()
+        {
+            foreach (T t in items)
+                Enqueue(t);
+        }
+
         public LockFreeQueue()
         {
             Head = new SingleLinkNode<T>();

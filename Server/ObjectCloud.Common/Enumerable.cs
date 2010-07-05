@@ -268,6 +268,15 @@ namespace ObjectCloud.Common
                 Current = Head;
             }
         }
+
+        public static IEnumerable<T> Reverse(IEnumerable<T> toReverse)
+        {
+            LockFreeStack<T> stack = new LockFreeStack<T>(toReverse);
+
+            T toYield;
+            while (stack.Pop(out toYield))
+                yield return toYield;
+        }
     }
 
     public static class Enumerable

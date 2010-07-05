@@ -33,6 +33,13 @@ namespace ObjectCloud.Common.Threading
     {
         private SingleLinkNode<T> Head;
 
+        public LockFreeStack(IEnumerable<T> items)
+            :this()
+        {
+            foreach (T t in items)
+                Push(t);
+        }
+
         public LockFreeStack()
         {
             Head = new SingleLinkNode<T>();
