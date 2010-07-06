@@ -47,7 +47,7 @@ namespace ObjectCloud.Disk.WebHandlers
                     {
                         // The text will be "minimized" javascript to save space
 
-                        JavaScriptMinifier javaScriptMinifier = new JavaScriptMinifier();
+                        JavaScriptMinifier javaScriptMinifier = Recycler<JavaScriptMinifier>.Get();
 
                         try
                         {
@@ -55,9 +55,11 @@ namespace ObjectCloud.Disk.WebHandlers
                         }
                         catch (Exception e)
                         {
-                            log.Error("Error when minimizing JavaScript", e);
-
-                            return WebResults.From(Status._500_Internal_Server_Error, "Error when minimizing JavaScript: " + e.Message);
+                            log.Warn("Error when minimizing JavaScript", e);
+                        }
+                        finally
+                        {
+                            Recycler<JavaScriptMinifier>.Recycle(javaScriptMinifier);
                         }
 
                         break;

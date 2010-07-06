@@ -130,7 +130,7 @@
          onchange="onFilenameChanged()" />
 
       <input type="button" value="Save" id="saveButton" onclick="save()" ></input> <br />
-      <textarea name="textarea" style="width: 100%" id="textarea" ><? WebComponent($_GET["FileName"] . "?Method=ReadAll&EncodeFor=HTML") ?></textarea>
+      <textarea name="textarea" style="width: 100%; font-family: Courier; font-size: 1em" id="textarea" ><? WebComponent($_GET["FileName"] . "?Method=ReadAll&EncodeFor=HTML") ?></textarea>
 		
       <script>
          onresize();

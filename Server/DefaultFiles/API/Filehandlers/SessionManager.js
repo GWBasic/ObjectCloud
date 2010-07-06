@@ -1,4 +1,4 @@
-// Scripts: /API/Prototype.js, /API/Cookies.js, /System/SessionManager?Method=GetJSW&assignToVariable=SessionManager
+// Scripts: /API/Cookies.js, /System/SessionManager?Method=GetJSW&assignToVariable=SessionManager
 
 // This code is released under the Simple Public License (SimPL) 2.0.  Some additional privelages are granted.
 // See /Docs/license.wchtml
@@ -11,9 +11,6 @@ SessionManager.GetSession = function()
 {
    var sessionString = Cookies.get("SESSION");
    var sessionIdAndMaxAge = sessionString.split(",");
-
-   var keepAliveInput = $("Login_KeepAlive");
-   var maxAgeInput = $("Login_MaxAge");
 
    var toReturn;
 

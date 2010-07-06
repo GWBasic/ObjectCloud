@@ -12,10 +12,10 @@
              // Set checkbox values
 
              if (null != $.cookie("developer_disableMinimizeJavascript"))
-                disableMinimizeJavascript.attr('checked', true);
+                disableMinimizeJavascript.attr('checked', 'checked');
 
              if (null != $.cookie("developer_prettyprintXML"))
-                prettyprintXML.attr('checked', true);
+                prettyprintXML.attr('checked', 'checked');
 
              // Set handlers
              disableMinimizeJavascript.change(function()

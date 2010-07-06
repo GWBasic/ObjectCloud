@@ -87,6 +87,8 @@ namespace ObjectCloud.Disk.WebHandlers
             XmlDocument templateDocument = null;
             TemplateParsingState templateParsingState = new TemplateParsingState(webConnection);
 
+            templateParsingState.PostProcessElement += EnsureNoEmptyTextareas;
+
             foreach (ITemplateProcessor templateProcessor in FileHandlerFactoryLocator.TemplateHandlerLocator.TemplateProcessors)
                 templateProcessor.Register(templateParsingState);
 
@@ -211,6 +213,19 @@ namespace ObjectCloud.Disk.WebHandlers
             stream.Seek(0, SeekOrigin.Begin);
 
             return stream;
+        }
+
+        /// <summary>
+        /// This is to work around a Mozilla quirk where it can't handle empty text areas
+        /// </summary>
+        /// <param name="templateParsingState"></param>
+        /// <param name="getParameters"></param>
+        /// <param name="element"></param>
+        void EnsureNoEmptyTextareas(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
+        {
+            if (element.LocalName == "textarea" && element.NamespaceURI == templateParsingState.TemplateDocument.FirstChild.NamespaceURI)
+                if (element.IsEmpty)
+                    element.IsEmpty = false;
         }
 
         private static XmlNode GetHeadNode(XmlDocument templateDocument)
