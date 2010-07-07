@@ -294,17 +294,6 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 }
                 else
                     componentNode.ParentNode.RemoveChild(componentNode);
-
-            /*
-            // replace this node with the document
-            foreach (XmlNode loadedNode in newNodes)
-            {
-                XmlNode newNode = componentNode.OwnerDocument.ImportNode(loadedNode, true);
-                componentNode.ParentNode.InsertAfter(newNode, previousNode);
-                previousNode = newNode;
-            }
-
-            componentNode.ParentNode.RemoveChild(componentNode);*/
         }
 
         /// <summary>

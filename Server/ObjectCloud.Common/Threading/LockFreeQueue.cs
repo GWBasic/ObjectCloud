@@ -125,7 +125,7 @@ namespace ObjectCloud.Common.Threading
             return result;
         }
 		
-		/*// <summary>
+		/// <summary>
 		/// Unreliable way to filter out items from the queue.  This may not accurately filter around the head or tail.  This function is not thread safe, but hopefully it won't explode if insertions and deletions happen while this is near the head or tail 
 		/// </summary>
 		/// <param name="filter">
@@ -133,13 +133,13 @@ namespace ObjectCloud.Common.Threading
 		/// </param>
 		public void ScanForRemoval(GenericArgumentReturn<T, bool> filter)
 		{
-			SingleLinkNode<T> cur = Tail;
+			SingleLinkNode<T> cur = Head;
 			
 			while (null != cur)
 			{
 				SingleLinkNode<T> next = cur.Next;
 				
-				if ((cur == Head) || (next == Head))
+				if ((cur == Tail) || (next == Tail))
 					return;
 			
 				if (null != next)
@@ -148,7 +148,7 @@ namespace ObjectCloud.Common.Threading
 				
 				cur = cur.Next;
 			}
-		}*/
+		}
     }
 
 

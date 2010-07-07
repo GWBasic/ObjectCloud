@@ -529,10 +529,10 @@ namespace ObjectCloud.Common
             // Likewise, when switching to doubly-linked-lists, the system should be less likely to de-reference an object when
             // moving within the doubly-linked list; as opposed to creating a new reference.
 
-			// Only let one thread perform cleanup at a time, and don't let blocked iterations sit around
-			if (Monitor.TryEnter(CleanupCacheKey))
-	            try
-    		        {
+            // Only let one thread perform cleanup at a time, and don't let blocked iterations sit around
+            if (Monitor.TryEnter(CleanupCacheKey))
+                try
+                {
                     // Get rid of any excess cahced references
                     WeakReference wr;
                     while (CachedReferences.Count > MaxCacheReferences)
@@ -581,50 +581,43 @@ namespace ObjectCloud.Common
                     NumObjectsToDequeue = numObjectsToDequeue;
 
                     // If the garbage collector has run, clean up dead weak references
-		            try
-        		    		{
-	                    	if (LastCleanCollectionCount != GC.CollectionCount(GC.MaxGeneration))
-						{
-							// If a cache handle is no longer in memory, it means that a cache was most likely collected
-							// The entire queue of cache handles should be examined
-							for (int ctr = 0; ctr < CachedReferences.Count; ctr++)
-							{
-							    WeakReference toCheck = CachedReferences.Dequeue();
-							    if (toCheck.IsAlive)
-							        CachedReferences.Enqueue(toCheck);
-							}
-							
-							// Next, look at all of the cache handles that are pending GC.  If their cached value is collected, then
-							// remove the handle completely from memory
-							LockFreeQueue<WeakReference> oldHandlesPendingGC = HandlesPendingGC;
-							HandlesPendingGC = new LockFreeQueue<WeakReference>();
-							
-							WeakReference cacheHandleWR;
-							while (oldHandlesPendingGC.Dequeue(out cacheHandleWR))
-							{
-							    ICacheHandle cacheHandle = (ICacheHandle)cacheHandleWR.Target;
-							
-							    if (null != cacheHandle)
-							        if (!cacheHandle.RemoveIfNotAlive())
-							            HandlesPendingGC.Enqueue(cacheHandleWR);
-							}
+                    try
+                    {
+                        if (LastCleanCollectionCount != GC.CollectionCount(GC.MaxGeneration))
+                        {
+                            CachedReferences.ScanForRemoval(delegate(WeakReference wrr)
+                            {
+                                return wrr.IsAlive;
+                            });
 
-							LastCleanCollectionCount = GC.CollectionCount(GC.MaxGeneration);
-						}
-					}
-					catch (Exception e)
-					{
-					    log.Error("Error cleaning out old handles", e);
-					}
+                            // Next, look at all of the cache handles that are pending GC.  If their cached value is collected, then
+                            // remove the handle completely from memory
+                            HandlesPendingGC.ScanForRemoval(delegate(WeakReference wrr)
+                            {
+                                ICacheHandle cacheHandle = (ICacheHandle)wrr.Target;
+
+                                if (null == cacheHandle)
+                                    return false;
+
+                                return !cacheHandle.RemoveIfNotAlive();
+                            });
+
+                            LastCleanCollectionCount = GC.CollectionCount(GC.MaxGeneration);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        log.Error("Error cleaning out old handles", e);
+                    }
                 }
-	            catch (Exception e)
-    		        {
-            		    log.Error("Error in the RAM cache!!!", e);
-            		}
-				finally
-				{
-					Monitor.Exit(CleanupCacheKey);
-				}
+                catch (Exception e)
+                {
+                    log.Error("Error in the RAM cache!!!", e);
+                }
+                finally
+                {
+                    Monitor.Exit(CleanupCacheKey);
+                }
         }
 
         /// <summary>
