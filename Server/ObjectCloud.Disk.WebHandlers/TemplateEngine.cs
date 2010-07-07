@@ -147,14 +147,34 @@ namespace ObjectCloud.Disk.WebHandlers
                         continueResolving = false;
 
                         foreach (XmlElement element in Enumerable<XmlElement>.FastCopy(XmlHelper.IterateAllElements(templateDocument)))
-                            templateParsingState.OnProcessElementForConditionalsAndComponents(getParameters, element);
+                            try
+                            {
+                                templateParsingState.OnProcessElementForConditionalsAndComponents(getParameters, element);
+                            }
+                            catch (Exception e)
+                            {
+                                log.Error("An error occured while processing " + element.OuterXml, e);
+                                templateParsingState.ReplaceNodes(
+                                    element,
+                                    templateParsingState.GenerateWarningNode("An error occured processing " + element.OuterXml));
+                            }
 
                         innerLoopsLeft--;
 
                     } while (continueResolving && (innerLoopsLeft > 0));
 
                     foreach (XmlElement element in Enumerable<XmlElement>.FastCopy(XmlHelper.IterateAllElements(templateDocument)))
-                        templateParsingState.OnProcessElementForDependanciesAndTemplates(getParameters, element);
+                        try
+                        {
+                            templateParsingState.OnProcessElementForDependanciesAndTemplates(getParameters, element);
+                        }
+                        catch (Exception e)
+                        {
+                            log.Error("An error occured while processing " + element.OuterXml, e);
+                            templateParsingState.ReplaceNodes(
+                                element,
+                                templateParsingState.GenerateWarningNode("An error occured processing " + element.OuterXml));
+                        }
 
                     loopsLeft--;
 

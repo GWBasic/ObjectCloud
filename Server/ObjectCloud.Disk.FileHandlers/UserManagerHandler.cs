@@ -247,6 +247,13 @@ namespace ObjectCloud.Disk.FileHandlers
 
         private IUsers_Readable GetUserInt(string name)
         {
+            // Allow /Users/[username].user
+            if (name.StartsWith("/Users/") && name.EndsWith(".user"))
+            {
+                name = name.Substring(7);
+                name = name.Substring(0, name.Length - 5);
+            }
+
             name = name.ToLowerInvariant();
 
             IUsers_Readable user = DatabaseConnection.Users.SelectSingle(Users_Table.Name == name);
