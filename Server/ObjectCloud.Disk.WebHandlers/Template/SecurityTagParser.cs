@@ -131,50 +131,14 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             get 
             {
                 if (null == _SafeTags)
-                    _SafeTags = new JSONNamedSetReader(FileHandlerFactoryLocator, "/Shell/Security/safetags.json");
+                    Interlocked.CompareExchange<JSONNamedSetReader>(
+                        ref _SafeTags,
+                        new JSONNamedSetReader(FileHandlerFactoryLocator, "/Shell/Security/safetags.json"),
+                        null);
 
                 return _SafeTags; 
             }
         }
         private JSONNamedSetReader _SafeTags;
-
-        /*// <summary>
-        /// The safe tags to use
-        /// </summary>
-        private Dictionary<string, Set<string>> SafeTags
-        {
-            get
-            {
-                if (null == _SafeTags)
-                    lock (SafeTagsLock)
-                        if (null == _SafeTags)
-                        {
-                            Dictionary<string, Set<string>> safeTags = new Dictionary<string, Set<string>>();
-
-                            IFileContainer fileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("/Shell/Security/safetags.json");
-                            ITextHandler textHandler = fileContainer.CastFileHandler<ITextHandler>();
-
-                            Dictionary<string, object> safeTagsFromFile = JsonReader.Deserialize<Dictionary<string, object>>(textHandler.ReadAll());
-                            foreach (KeyValuePair<string, object> namespaceKVP in safeTagsFromFile)
-                            {
-                                Set<string> validTags = new Set<string>(Enumerable<string>.Cast((IEnumerable)namespaceKVP.Value));
-                                safeTags[namespaceKVP.Key] = validTags;
-                            }
-
-                            textHandler.ContentsChanged += new EventHandler<ITextHandler, EventArgs>(textHandler_ContentsChanged);
-
-                            _SafeTags = safeTags;
-                        }
-
-                return _SafeTags;
-            }
-        }
-        private Dictionary<string, Set<string>> _SafeTags = null;
-        private object SafeTagsLock = new object();
-
-        void textHandler_ContentsChanged(ITextHandler sender, EventArgs e)
-        {
-            _SafeTags = null;
-        }*/
     }
 }
