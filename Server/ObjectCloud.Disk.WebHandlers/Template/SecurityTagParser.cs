@@ -20,6 +20,7 @@ using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
 using ObjectCloud.Interfaces.Templating;
+using ObjectCloud.Interfaces.Utilities;
 using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.Disk.WebHandlers.Template
@@ -27,7 +28,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
     /// <summary>
     /// Allows insertion of XML in a secure way
     /// </summary>
-    class SecurityTagParser : ITemplateProcessor
+    class SecurityTagParser : HasFileHandlerFactoryLocator, ITemplateProcessor
     {
         static ILog log = LogManager.GetLogger<SecurityTagParser>();
 
@@ -77,24 +78,6 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 return;
             }
 
-            /*/ load it
-            XmlDocument xmlDocument = new XmlDocument();
-
-            try
-            {
-                xmlDocument.LoadXml(xml.ToString());
-            }
-            catch (XmlException e)
-            {
-                log.Error("Error parsing xml for use in oc:safeparse", e);
-
-                templateParsingState.ReplaceNodes(
-                    element,
-                    templateParsingState.GenerateWarningNode("Can not parse XML in tag: " + xml.ToString()));
-
-                return;
-            }*/
-
             // import the new tags
             LinkedList<XmlNode> importedNodes = new LinkedList<XmlNode>();
 
@@ -103,7 +86,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
             templateParsingState.ReplaceNodes(element, importedNodes);
 
-            MakeSafe(importedNodes, GetSafeTags(templateParsingState.FileHandlerFactoryLocator));
+            MakeSafe(importedNodes);
         }
 
         void DoSafeTag(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
@@ -112,10 +95,10 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
             templateParsingState.ReplaceNodes(element, childNodes);
 
-            MakeSafe(childNodes, GetSafeTags(templateParsingState.FileHandlerFactoryLocator));
+            MakeSafe(childNodes);
         }
 
-        private void MakeSafe(IEnumerable<XmlNode> xmlNodes, Dictionary<string, Set<string>> safeTags)
+        private void MakeSafe(IEnumerable<XmlNode> xmlNodes)
         {
             foreach (XmlNode xmlNode in xmlNodes)
             {
@@ -129,87 +112,69 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 else if (xmlNode is XmlComment)
                     safe = true;
 
-                else if (safeTags.TryGetValue(xmlNode.NamespaceURI, out safeTagNames))
+                else if (SafeTags.NamedSet.TryGetValue(xmlNode.NamespaceURI, out safeTagNames))
                     if (safeTagNames.Contains(xmlNode.LocalName))
                         safe = true;
 
                 if (safe)
-                    MakeSafe(Enumerable<XmlNode>.FastCopy(Enumerable<XmlNode>.Cast(xmlNode.ChildNodes)), safeTags);
+                    MakeSafe(Enumerable<XmlNode>.FastCopy(Enumerable<XmlNode>.Cast(xmlNode.ChildNodes)));
                 else
                     XmlHelper.RemoveFromParent(xmlNode);
             }
         }
 
-        private Dictionary<IFileSystemResolver, Dictionary<string, Set<string>>> SafeTagsCache = new Dictionary<IFileSystemResolver, Dictionary<string, Set<string>>>();
-
-        private ReaderWriterLockSlim SafeTagsCacheLock = new ReaderWriterLockSlim();
-
         /// <summary>
-        /// Gets the safe tags to use
+        /// The safe tags to use
         /// </summary>
-        /// <param name="fileHandlerFactoryLocator"></param>
-        /// <returns>Dictionary, indexed by namespace, then sets of valid tags</returns>
-        private Dictionary<string, Set<string>> GetSafeTags(FileHandlerFactoryLocator fileHandlerFactoryLocator)
+        public JSONNamedSetReader SafeTags
         {
-            Dictionary<string, Set<string>> toReturn;
-
-            SafeTagsCacheLock.EnterReadLock();
-
-            try
+            get 
             {
-                if (SafeTagsCache.TryGetValue(fileHandlerFactoryLocator.FileSystemResolver, out toReturn))
-                    return toReturn;
+                if (null == _SafeTags)
+                    _SafeTags = new JSONNamedSetReader(FileHandlerFactoryLocator, "/Shell/Security/safetags.json");
+
+                return _SafeTags; 
             }
-            finally
-            {
-                SafeTagsCacheLock.ExitReadLock();
-            }
-
-            SafeTagsCacheLock.EnterWriteLock();
-
-            try
-            {
-                toReturn = new Dictionary<string, Set<string>>();
-
-                IFileContainer fileContainer = fileHandlerFactoryLocator.FileSystemResolver.ResolveFile("/Shell/Security/safetags.json");
-                ITextHandler textHandler = fileContainer.CastFileHandler<ITextHandler>();
-
-                Dictionary<string, object> safeTags = JsonReader.Deserialize<Dictionary<string, object>>(textHandler.ReadAll());
-                foreach (KeyValuePair<string, object> namespaceKVP in safeTags)
-                {
-                    Set<string> validTags = new Set<string>(Enumerable<string>.Cast((IEnumerable)namespaceKVP.Value));
-                    toReturn[namespaceKVP.Key] = validTags;
-                }
-
-                textHandler.ContentsChanged += new EventHandler<ITextHandler, EventArgs>(textHandler_ContentsChanged);
-
-                SafeTagsCache[fileHandlerFactoryLocator.FileSystemResolver] = toReturn;
-            }
-            catch (Exception e)
-            {
-                log.Error("Error when parsing /Shell/Security/safetags.json", e);
-                throw;
-            }
-            finally
-            {
-                SafeTagsCacheLock.ExitWriteLock();
-            }
-
-            return toReturn;
         }
+        private JSONNamedSetReader _SafeTags;
+
+        /*// <summary>
+        /// The safe tags to use
+        /// </summary>
+        private Dictionary<string, Set<string>> SafeTags
+        {
+            get
+            {
+                if (null == _SafeTags)
+                    lock (SafeTagsLock)
+                        if (null == _SafeTags)
+                        {
+                            Dictionary<string, Set<string>> safeTags = new Dictionary<string, Set<string>>();
+
+                            IFileContainer fileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("/Shell/Security/safetags.json");
+                            ITextHandler textHandler = fileContainer.CastFileHandler<ITextHandler>();
+
+                            Dictionary<string, object> safeTagsFromFile = JsonReader.Deserialize<Dictionary<string, object>>(textHandler.ReadAll());
+                            foreach (KeyValuePair<string, object> namespaceKVP in safeTagsFromFile)
+                            {
+                                Set<string> validTags = new Set<string>(Enumerable<string>.Cast((IEnumerable)namespaceKVP.Value));
+                                safeTags[namespaceKVP.Key] = validTags;
+                            }
+
+                            textHandler.ContentsChanged += new EventHandler<ITextHandler, EventArgs>(textHandler_ContentsChanged);
+
+                            _SafeTags = safeTags;
+                        }
+
+                return _SafeTags;
+            }
+        }
+        private Dictionary<string, Set<string>> _SafeTags = null;
+        private object SafeTagsLock = new object();
 
         void textHandler_ContentsChanged(ITextHandler sender, EventArgs e)
         {
-            SafeTagsCacheLock.EnterWriteLock();
-
-            try
-            {
-                SafeTagsCache.Remove(sender.FileContainer.FileHandlerFactoryLocator.FileSystemResolver);
-            }
-            finally
-            {
-                SafeTagsCacheLock.ExitWriteLock();
-            }
-        }
+            _SafeTags = null;
+        }*/
     }
 }

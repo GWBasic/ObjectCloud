@@ -43,13 +43,27 @@
 
     <property name="TemplateProcessors">
       <list element-type="ObjectCloud.Interfaces.Templating.ITemplateProcessor">
-        <object id="ComponentAndConditionalsResolver" type="ObjectCloud.Disk.WebHandlers.Template.ComponentAndConditionalsResolver" />
-        <object id="DependancyResolver" type="ObjectCloud.Disk.WebHandlers.Template.DependancyResolver" />
-        <object id="AggressiveCachingEnabler" type="ObjectCloud.Disk.WebHandlers.Template.AggressiveCachingEnabler" />
-        <object id="TemplateDebugInformationRemover" type="ObjectCloud.Disk.WebHandlers.Template.DebugInformationRemover" />
-        <object id="JSONTemplateResolver" type="ObjectCloud.Disk.WebHandlers.Template.JSONTemplateResolver" />
-        <object id="Trimmer" type="ObjectCloud.Disk.WebHandlers.Template.Trimmer" />
-        <object id="SecurityTagParser" type="ObjectCloud.Disk.WebHandlers.Template.SecurityTagParser" />
+        <object id="ComponentAndConditionalsResolver" type="ObjectCloud.Disk.WebHandlers.Template.ComponentAndConditionalsResolver">
+          <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+        </object>
+        <object id="DependancyResolver" type="ObjectCloud.Disk.WebHandlers.Template.DependancyResolver">
+          <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+        </object>
+        <object id="AggressiveCachingEnabler" type="ObjectCloud.Disk.WebHandlers.Template.AggressiveCachingEnabler">
+          <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+        </object>
+        <object id="TemplateDebugInformationRemover" type="ObjectCloud.Disk.WebHandlers.Template.DebugInformationRemover">
+          <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+        </object>
+        <object id="JSONTemplateResolver" type="ObjectCloud.Disk.WebHandlers.Template.JSONTemplateResolver">
+          <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+        </object>
+        <object id="Trimmer" type="ObjectCloud.Disk.WebHandlers.Template.Trimmer">
+          <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+        </object>
+        <object id="SecurityTagParser" type="ObjectCloud.Disk.WebHandlers.Template.SecurityTagParser">
+          <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+        </object>
       </list>
     </property>
   </object>

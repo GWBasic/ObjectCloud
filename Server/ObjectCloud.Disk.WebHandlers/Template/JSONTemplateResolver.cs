@@ -26,7 +26,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
     /// <summary>
     /// Handles JSON templates
     /// </summary>
-    class JSONTemplateResolver : ITemplateProcessor
+    class JSONTemplateResolver : HasFileHandlerFactoryLocator, ITemplateProcessor
     {
         static ILog log = LogManager.GetLogger<ComponentAndConditionalsResolver>();
 

@@ -25,7 +25,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
     /// <summary>
     /// Assists in trimming large XML blobs
     /// </summary>
-    class Trimmer : ITemplateProcessor
+    class Trimmer : HasFileHandlerFactoryLocator, ITemplateProcessor
     {
         void ITemplateProcessor.Register(ITemplateParsingState templateParsingState)
         {

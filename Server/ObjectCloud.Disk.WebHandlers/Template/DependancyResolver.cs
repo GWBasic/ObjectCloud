@@ -24,7 +24,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
     /// <summary>
     /// Removes debug information from documents
     /// </summary>
-    class DependancyResolver : ITemplateProcessor
+    class DependancyResolver : HasFileHandlerFactoryLocator, ITemplateProcessor
     {
         //static ILog log = LogManager.GetLogger<ComponentAndConditionalsResolver>();
 

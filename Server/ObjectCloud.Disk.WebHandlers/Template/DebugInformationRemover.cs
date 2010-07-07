@@ -24,7 +24,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
     /// <summary>
     /// Removes debug information from documents
     /// </summary>
-    class DebugInformationRemover : ITemplateProcessor
+    class DebugInformationRemover : HasFileHandlerFactoryLocator, ITemplateProcessor
     {
         void ITemplateProcessor.Register(ITemplateParsingState templateParsingState)
         {

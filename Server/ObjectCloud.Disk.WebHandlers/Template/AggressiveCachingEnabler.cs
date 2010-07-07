@@ -25,7 +25,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
     /// <summary>
     /// Enables aggressive caching on a document prior to returning it
     /// </summary>
-    class AggressiveCachingEnabler : ITemplateProcessor
+    class AggressiveCachingEnabler : HasFileHandlerFactoryLocator, ITemplateProcessor
     {
         void ITemplateProcessor.Register(ITemplateParsingState templateParsingState)
         {

@@ -65,6 +65,7 @@
     <Compile Include="Disk\FileIsNotADirectory.cs" />
     <Compile Include="Disk\FileTypePlugin.cs" />
     <Compile Include="Disk\GlobalWebHandlerPlugin.cs" />
+    <Compile Include="Disk\HasFileHandlerFactoryLocator.cs" />
     <Compile Include="Disk\IBinaryHandler.cs" />
     <Compile Include="Disk\IDirectoryHandler.cs" />
     <Compile Include="Disk\IFileContainer.cs" />
@@ -111,6 +112,7 @@
     <Compile Include="Templating\ITemplateProcessor.cs" />
     <Compile Include="Templating\TemplateHandlerLocator.cs" />
     <Compile Include="Templating\TemplatingConstants.cs" />
+    <Compile Include="Utilities\JSONNamedSetReader.cs" />
     <Compile Include="WebServer\BlockingShellWebConnection.cs" />
     <Compile Include="Security\ChannelEndpointMinimumPermissionAttribute.cs" />
     <Compile Include="WebServer\CookieToSet.cs" />
