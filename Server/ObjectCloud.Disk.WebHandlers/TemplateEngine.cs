@@ -385,13 +385,9 @@ namespace ObjectCloud.Disk.WebHandlers
 
                 // find oc:component tag
                 XmlNodeList componentTags = templateDocument.GetElementsByTagName("component", TemplatingConstants.TemplateNamespace);
-                for (int ctr = 0; ctr < componentTags.Count; ctr++)
-                {
-                    XmlNode componentNode = componentTags[ctr];
-
+                foreach (XmlNode componentNode in Enumerable<XmlNode>.FastCopy(Enumerable<XmlNode>.Cast(componentTags)))
                     if ((null == componentNode.Attributes.GetNamedItem("url", TemplatingConstants.TemplateNamespace)) && (null == componentNode.Attributes.GetNamedItem("src", TemplatingConstants.TemplateNamespace)))
                         templateParsingState.ReplaceNodes(componentNode, nodesToInsert);
-                }
             }
 
             templateParsingState.SetCWD(templateDocument.ChildNodes, templateFileContainer.ParentDirectoryHandler.FileContainer.FullPath);

@@ -278,8 +278,24 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         /// <param name="componentNode"></param>
         public void ReplaceNodes(XmlNode componentNode, IEnumerable<XmlNode> newNodes)
         {
-            XmlNode previousNode = componentNode;
+            using (IEnumerator<XmlNode> enumerator = newNodes.GetEnumerator())
+                if (enumerator.MoveNext())
+                {
+                    XmlNode newNode = componentNode.OwnerDocument.ImportNode(enumerator.Current, true);
+                    componentNode.ParentNode.ReplaceChild(newNode, componentNode);
+                    XmlNode previousNode = newNode;
 
+                    while (enumerator.MoveNext())
+                    {
+                        newNode = componentNode.OwnerDocument.ImportNode(enumerator.Current, true);
+                        previousNode.ParentNode.InsertAfter(newNode, previousNode);
+                        previousNode = newNode;
+                    }
+                }
+                else
+                    componentNode.ParentNode.RemoveChild(componentNode);
+
+            /*
             // replace this node with the document
             foreach (XmlNode loadedNode in newNodes)
             {
@@ -288,7 +304,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 previousNode = newNode;
             }
 
-            componentNode.ParentNode.RemoveChild(componentNode);
+            componentNode.ParentNode.RemoveChild(componentNode);*/
         }
 
         /// <summary>
