@@ -85,6 +85,9 @@ namespace ObjectCloud.Common.Threading
     /// <typeparam name="T"></typeparam>
     public class LockFreeStack_WithCount<T> : LockFreeStack<T>
     {
+        public LockFreeStack_WithCount() : base() { }
+        public LockFreeStack_WithCount(IEnumerable<T> items) : base(items) { }
+
         /// <summary>
         /// The number of items in the stack.  This might be inaccurate if a concurrent thread is pushing or popping, thus it should be treated as an estimate
         /// </summary>

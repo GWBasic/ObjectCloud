@@ -148,52 +148,14 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                         // Either load the nodes or 
                         if (src.Length > 0)
                         {
-                            IFileContainer templateContainer;
-                            try
-                            {
-                                src = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.GetAbsolutePath(
-                                    templateParsingState.GetCWD(element), src);
-                                templateContainer = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(src);
+                            src = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.GetAbsolutePath(
+                                templateParsingState.GetCWD(element), src);
 
-                                XmlDocument newDocument = templateParsingState.LoadXmlDocument(
-                                    templateContainer,
-                                    templateParsingState.GetXmlParseMode(element));
-
-                                // Import the template nodes
-                                XmlNode firstChild = templateParsingState.TemplateDocument.ImportNode(newDocument.FirstChild, true);
-
-                                if (!(firstChild.LocalName == "componentdef") && (firstChild.NamespaceURI == TemplatingConstants.TemplateNamespace))
-                                {
-                                    templateParsingState.ReplaceNodes(
-                                        element,
-                                        templateParsingState.GenerateWarningNode("src document must have an <oc:componentdef> tag"));
-
-                                    return;
-                                }
-
-                                IEnumerable<XmlNode> replacementNodes = Enumerable<XmlNode>.FastCopy(Enumerable<XmlNode>.Cast(firstChild.ChildNodes));
-
-
-                                // Replace child nodes with contents from file
-                                foreach (XmlNode xmlNode in element.ChildNodes)
-                                    element.RemoveChild(xmlNode);
-                                foreach (XmlNode xmlNode in replacementNodes)
-                                    element.AppendChild(xmlNode);
-
-                                templateParsingState.SetCWD(replacementNodes, templateContainer.ParentDirectoryHandler.FileContainer.FullPath);
-
-                            }
-                            catch (FileDoesNotExist fdne)
-                            {
-                                log.Error("Error resolving a template", fdne);
-                                templateParsingState.ReplaceNodes(element, templateParsingState.GenerateWarningNode("oc:src does not exist: " + element.OuterXml));
-
+                            if (!templateParsingState.LoadComponentForJSON(element, src))
                                 return;
-                            }
                         }
 
-                        DoTemplate(
-                            templateParsingState,
+                        templateParsingState.DoTemplate(
                             element,
                             templateInput);
                     }
@@ -208,110 +170,6 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                         element.ParentNode.RemoveChild(element);
                     }
                 }
-        }
-
-        private void DoTemplate(ITemplateParsingState templateParsingState, XmlNode element, object templateInput)
-        {
-            if (templateInput is object[])
-            {
-                object[] objects = (object[])templateInput;
-
-                for (int ctr = 0; ctr < objects.Length; ctr++)
-                {
-                    object o = objects[ctr];
-
-                    XmlNode clonedElement = element.CloneNode(true);
-                    element.ParentNode.InsertBefore(clonedElement, element);
-
-                    if (o is Dictionary<string, object>)
-                        ((Dictionary<string, object>)o)["i"] = ctr;
-                    else
-                    {
-                        Dictionary<string, object> newObject = new Dictionary<string, object>();
-                        newObject["i"] = ctr;
-                        newObject[""] = o;
-                        o = newObject;
-                    }
-
-                    DoTemplate(
-                        templateParsingState, 
-                        clonedElement,
-                        o);
-                }
-
-                element.ParentNode.RemoveChild(element);
-            }
-            else
-            {
-                Dictionary<string, string> getParameters = new Dictionary<string, string>();
-
-                foreach (XmlAttribute attribute in element.Attributes)
-                    if ("" == attribute.NamespaceURI)
-                        getParameters["_UP." + attribute.LocalName] = attribute.Value;
-
-                Flatten(getParameters, "", templateInput);
-
-                foreach (XmlNode xmlNode in element.ChildNodes)
-                    templateParsingState.ReplaceGetParameters(getParameters, xmlNode);
-
-                templateParsingState.ReplaceNodes(element, element.ChildNodes);
-            }
-        }
-
-        /// <summary>
-        /// Flattens a JSON object for use with a template
-        /// </summary>
-        /// <param name="getParameters"></param>
-        /// <param name="prefix"></param>
-        /// <param name="templateInput"></param>
-        private void Flatten(Dictionary<string, string> getParameters, string prefix, object templateInput)
-        {
-            if (templateInput is object[])
-            {
-                // Keep a "naked" one just in case, but only do naked if we're not too deep in a tree
-                if (prefix.Length < 15)
-                    getParameters[prefix] = JsonWriter.Serialize(templateInput);
-
-                object[] objects = (object[])templateInput;
-
-                for (int ctr = 0; ctr < objects.Length; ctr++)
-                    Flatten(getParameters, string.Format("{0}[{1}]", prefix, ctr.ToString()), objects[ctr]);
-            }
-            else if (templateInput is Dictionary<string, object>)
-            {
-                // Keep a "naked" one just in case, but only do naked if we're not too deep in a tree
-                if (prefix.Length < 15)
-                    getParameters[prefix] = JsonWriter.Serialize(templateInput);
-
-                foreach (KeyValuePair<string, object> kvp in (Dictionary<string, object>)templateInput)
-                    if (kvp.Value is Dictionary<string, object>)
-                        Flatten(getParameters, string.Format("{0}{1}.", prefix, kvp.Key), kvp.Value);
-                    else
-                        Flatten(getParameters, string.Format("{0}{1}", prefix, kvp.Key), kvp.Value);
-            }
-
-            else if (templateInput is string)
-                getParameters[prefix] = templateInput.ToString();
-
-            else if (templateInput is double)
-                getParameters[prefix] = ((double)templateInput).ToString("R");
-
-            else if (templateInput is DateTime)
-            {
-                DateTime dateTime = (DateTime)templateInput;
-
-                getParameters[prefix + ".Ugly"] = string.Format("{0}, {1}", dateTime.ToShortDateString(), dateTime.ToShortTimeString());
-                getParameters[prefix + ".ForJS"] = JsonWriter.Serialize(dateTime);
-                getParameters[prefix] = (DateTime.UtcNow - dateTime).TotalDays.ToString() + " days ago";
-                /*getParameters[prefix + ".Time"] = dateTime.ToShortTimeString();
-                getParameters[prefix + ".Date"] = dateTime.ToShortDateString();
-                getParameters[prefix + ".Ticks"] = dateTime.Ticks.ToString();*/
-
-                // todo:  add a span tag with special class and write a jquery script to format them nicely
-            }
-
-            else
-                getParameters[prefix] = JsonWriter.Serialize(templateInput);
         }
     }
 }

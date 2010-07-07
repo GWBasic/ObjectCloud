@@ -9,6 +9,7 @@ using System.Text;
 using System.Xml;
 
 using Common.Logging;
+using JsonFx.Json;
 
 using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Disk;
@@ -685,6 +686,166 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             }
 
             return getArgumentsResolvedBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Loads a component for use with JSON.  All inner nodes of element will be replaced with nodes from src
+        /// </summary>
+        /// <param name="element"></param>
+        /// <param name="src"></param>
+        /// <returns>True if the component nodes were loaded successfully; false if there was an error.  Exceptions are not thrown because processing can continue on other parts of the document</returns>
+        public bool LoadComponentForJSON(XmlElement element, string src)
+        {
+            IFileContainer templateContainer;
+            try
+            {
+                templateContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(src);
+
+                XmlDocument newDocument = LoadXmlDocument(
+                    templateContainer,
+                    GetXmlParseMode(element));
+
+                // Import the template nodes
+                XmlNode firstChild = TemplateDocument.ImportNode(newDocument.FirstChild, true);
+
+                if (!(firstChild.LocalName == "componentdef") && (firstChild.NamespaceURI == TemplatingConstants.TemplateNamespace))
+                {
+                    ReplaceNodes(
+                        element,
+                        GenerateWarningNode("src document must have an <oc:componentdef> tag"));
+
+                    return false;
+                }
+
+                IEnumerable<XmlNode> replacementNodes = Enumerable<XmlNode>.FastCopy(Enumerable<XmlNode>.Cast(firstChild.ChildNodes));
+
+
+                // Replace child nodes with contents from file
+                foreach (XmlNode xmlNode in element.ChildNodes)
+                    element.RemoveChild(xmlNode);
+                foreach (XmlNode xmlNode in replacementNodes)
+                    element.AppendChild(xmlNode);
+
+                SetCWD(replacementNodes, templateContainer.ParentDirectoryHandler.FileContainer.FullPath);
+
+                return true;
+
+            }
+            catch (FileDoesNotExist fdne)
+            {
+                log.Error("Error resolving a template", fdne);
+                ReplaceNodes(element, GenerateWarningNode("oc:src does not exist: " + element.OuterXml));
+
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Runs a template on the child nodes of an element, and then replaces the element with its children
+        /// </summary>
+        /// <param name="element"></param>
+        /// <param name="templateInput"></param>
+        public void DoTemplate(XmlNode element, object templateInput)
+        {
+            if (templateInput is object[])
+            {
+                object[] objects = (object[])templateInput;
+
+                for (int ctr = 0; ctr < objects.Length; ctr++)
+                {
+                    object o = objects[ctr];
+
+                    XmlNode clonedElement = element.CloneNode(true);
+                    element.ParentNode.InsertBefore(clonedElement, element);
+
+                    if (o is Dictionary<string, object>)
+                        ((Dictionary<string, object>)o)["i"] = ctr;
+                    else
+                    {
+                        Dictionary<string, object> newObject = new Dictionary<string, object>();
+                        newObject["i"] = ctr;
+                        newObject[""] = o;
+                        o = newObject;
+                    }
+
+                    DoTemplate(
+                        clonedElement,
+                        o);
+                }
+
+                element.ParentNode.RemoveChild(element);
+            }
+            else
+            {
+                Dictionary<string, string> getParameters = new Dictionary<string, string>();
+
+                foreach (XmlAttribute attribute in element.Attributes)
+                    if ("" == attribute.NamespaceURI)
+                        getParameters["_UP." + attribute.LocalName] = attribute.Value;
+
+                Flatten(getParameters, "", templateInput);
+
+                foreach (XmlNode xmlNode in element.ChildNodes)
+                    ReplaceGetParameters(getParameters, xmlNode);
+
+                ReplaceNodes(element, element.ChildNodes);
+            }
+        }
+
+        /// <summary>
+        /// Flattens a JSON object for use with a template
+        /// </summary>
+        /// <param name="getParameters"></param>
+        /// <param name="prefix"></param>
+        /// <param name="templateInput"></param>
+        private void Flatten(Dictionary<string, string> getParameters, string prefix, object templateInput)
+        {
+            if (templateInput is object[])
+            {
+                // Keep a "naked" one just in case, but only do naked if we're not too deep in a tree
+                if (prefix.Length < 15)
+                    getParameters[prefix] = JsonWriter.Serialize(templateInput);
+
+                object[] objects = (object[])templateInput;
+
+                for (int ctr = 0; ctr < objects.Length; ctr++)
+                    Flatten(getParameters, string.Format("{0}[{1}]", prefix, ctr.ToString()), objects[ctr]);
+            }
+            else if (templateInput is Dictionary<string, object>)
+            {
+                // Keep a "naked" one just in case, but only do naked if we're not too deep in a tree
+                if (prefix.Length < 15)
+                    getParameters[prefix] = JsonWriter.Serialize(templateInput);
+
+                foreach (KeyValuePair<string, object> kvp in (Dictionary<string, object>)templateInput)
+                    if (kvp.Value is Dictionary<string, object>)
+                        Flatten(getParameters, string.Format("{0}{1}.", prefix, kvp.Key), kvp.Value);
+                    else
+                        Flatten(getParameters, string.Format("{0}{1}", prefix, kvp.Key), kvp.Value);
+            }
+
+            else if (templateInput is string)
+                getParameters[prefix] = templateInput.ToString();
+
+            else if (templateInput is double)
+                getParameters[prefix] = ((double)templateInput).ToString("R");
+
+            else if (templateInput is DateTime)
+            {
+                DateTime dateTime = (DateTime)templateInput;
+
+                getParameters[prefix + ".Ugly"] = string.Format("{0}, {1}", dateTime.ToShortDateString(), dateTime.ToShortTimeString());
+                getParameters[prefix + ".ForJS"] = JsonWriter.Serialize(dateTime);
+                getParameters[prefix] = (DateTime.UtcNow - dateTime).TotalDays.ToString() + " days ago";
+                /*getParameters[prefix + ".Time"] = dateTime.ToShortTimeString();
+                getParameters[prefix + ".Date"] = dateTime.ToShortDateString();
+                getParameters[prefix + ".Ticks"] = dateTime.Ticks.ToString();*/
+
+                // todo:  add a span tag with special class and write a jquery script to format them nicely
+            }
+
+            else
+                getParameters[prefix] = JsonWriter.Serialize(templateInput);
         }
     }
 }

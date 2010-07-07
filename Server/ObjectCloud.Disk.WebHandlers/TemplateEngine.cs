@@ -92,7 +92,8 @@ namespace ObjectCloud.Disk.WebHandlers
             foreach (ITemplateProcessor templateProcessor in FileHandlerFactoryLocator.TemplateHandlerLocator.TemplateProcessors)
                 templateProcessor.Register(templateParsingState);
 
-            Thread myThread = Thread.CurrentThread;
+            // The code below mostly gets in the way while debugging
+/*            Thread myThread = Thread.CurrentThread;
             TimerCallback timerCallback = delegate(object state)
             {
 #if DEBUG
@@ -112,72 +113,72 @@ namespace ObjectCloud.Disk.WebHandlers
                 myThread.Abort();
             };
 
-            using (new Timer(timerCallback, null, 15000, 15000))
-                try
+            using (new Timer(timerCallback, null, 15000, 15000))*/
+            try
+            {
+                IFileContainer templateFileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(filename);
+
+                webConnection.TouchedFiles.Add(templateFileContainer);
+
+                templateDocument = ResolveHeaderFooter(webConnection, getParameters, templateFileContainer, templateParsingState);
+                templateParsingState.TemplateDocument = templateDocument;
+
+                templateParsingState.OnDocumentLoaded(getParameters, templateDocument.FirstChild as XmlElement);
+
+                bool continueResolving;
+
+                XmlNodeChangedEventHandler documentChanged = delegate(object sender, XmlNodeChangedEventArgs e)
                 {
-                    IFileContainer templateFileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(filename);
+                    continueResolving = true;
+                };
 
-                    webConnection.TouchedFiles.Add(templateFileContainer);
+                templateDocument.NodeChanged += documentChanged;
+                templateDocument.NodeInserted += documentChanged;
+                templateDocument.NodeRemoved += documentChanged;
 
-                    templateDocument = ResolveHeaderFooter(webConnection, getParameters, templateFileContainer, templateParsingState);
-                    templateParsingState.TemplateDocument = templateDocument;
+                // Keep resolving oc:if, oc:component, oc:script, and oc:css tags while they're loaded
+                int loopsLeft = 20;
+                do
+                {
+                    int innerLoopsLeft = 20;
 
-                    templateParsingState.OnDocumentLoaded(getParameters, templateDocument.FirstChild as XmlElement);
-
-                    bool continueResolving;
-
-                    XmlNodeChangedEventHandler documentChanged = delegate(object sender, XmlNodeChangedEventArgs e)
-                    {
-                        continueResolving = true;
-                    };
-
-                    templateDocument.NodeChanged += documentChanged;
-                    templateDocument.NodeInserted += documentChanged;
-                    templateDocument.NodeRemoved += documentChanged;
-
-                    // Keep resolving oc:if, oc:component, oc:script, and oc:css tags while they're loaded
-                    int loopsLeft = 20;
                     do
                     {
-                        int innerLoopsLeft = 20;
-
-                        do
-                        {
-                            continueResolving = false;
-
-                            foreach (XmlElement element in Enumerable<XmlElement>.FastCopy(XmlHelper.IterateAllElements(templateDocument)))
-                                templateParsingState.OnProcessElementForConditionalsAndComponents(getParameters, element);
-
-                            innerLoopsLeft--;
-
-                        } while (continueResolving && (innerLoopsLeft > 0));
+                        continueResolving = false;
 
                         foreach (XmlElement element in Enumerable<XmlElement>.FastCopy(XmlHelper.IterateAllElements(templateDocument)))
-                            templateParsingState.OnProcessElementForDependanciesAndTemplates(getParameters, element);
+                            templateParsingState.OnProcessElementForConditionalsAndComponents(getParameters, element);
 
-                        loopsLeft--;
+                        innerLoopsLeft--;
 
-                    } while (continueResolving && (loopsLeft > 0));
+                    } while (continueResolving && (innerLoopsLeft > 0));
 
-                    templateDocument.NodeChanged -= documentChanged;
-                    templateDocument.NodeInserted -= documentChanged;
-                    templateDocument.NodeRemoved -= documentChanged;
+                    foreach (XmlElement element in Enumerable<XmlElement>.FastCopy(XmlHelper.IterateAllElements(templateDocument)))
+                        templateParsingState.OnProcessElementForDependanciesAndTemplates(getParameters, element);
 
-                    XmlNode headNode = GetHeadNode(templateDocument);
+                    loopsLeft--;
 
-                    // Add script and css tags to the header
-                    GenerateScriptAndCssTags(templateParsingState, headNode);
+                } while (continueResolving && (loopsLeft > 0));
 
-                    // Add <oc:inserthead> tags to the header
-                    GenerateHeadTags(templateParsingState, headNode);
-                }
-                catch (ThreadAbortException tae)
-                {
-                    log.Warn("Timeout rendering a template", tae);
-                    throw;
-                    //Thread.ResetAbort();
-                    //throw new WebResultsOverrideException(WebResults.From(Status._500_Internal_Server_Error, "Timeout"));
-                }
+                templateDocument.NodeChanged -= documentChanged;
+                templateDocument.NodeInserted -= documentChanged;
+                templateDocument.NodeRemoved -= documentChanged;
+
+                XmlNode headNode = GetHeadNode(templateDocument);
+
+                // Add script and css tags to the header
+                GenerateScriptAndCssTags(templateParsingState, headNode);
+
+                // Add <oc:inserthead> tags to the header
+                GenerateHeadTags(templateParsingState, headNode);
+            }
+            catch (ThreadAbortException tae)
+            {
+                log.Warn("Timeout rendering a template", tae);
+                throw;
+                //Thread.ResetAbort();
+                //throw new WebResultsOverrideException(WebResults.From(Status._500_Internal_Server_Error, "Timeout"));
+            }
 
             // Copy all elements into an immutable list, run document post-processors, and remove comments
             bool removeComments = !webConnection.CookiesFromBrowser.ContainsKey(TemplatingConstants.XMLDebugModeCookie);

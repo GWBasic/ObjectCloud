@@ -1461,6 +1461,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
 			IFileContainer javascriptContainer;
             // Note: a large timeout is used in case a thread is constructing the scope.  Constructing the scope can be time consuming
+            // TODO:  Try to do a lot of checking without a lock, or using a read/write lock
             using (TimedLock.Lock(ExecutionEnvironmentLock, TimeSpan.FromSeconds(15)))
 				if (!IsExecutionEnvironmentReady_Helper(out javascriptContainer))
 				{

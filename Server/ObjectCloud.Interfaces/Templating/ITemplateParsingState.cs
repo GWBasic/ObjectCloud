@@ -192,6 +192,21 @@ namespace ObjectCloud.Interfaces.Templating
         /// <param name="xmlAsString"></param>
         /// <returns></returns>
         string ReplaceGetParameters(IDictionary<string, string> getParameters, string xmlAsString);
+
+        /// <summary>
+        /// Loads a component for use with JSON.  All inner nodes of element will be replaced with nodes from src
+        /// </summary>
+        /// <param name="element"></param>
+        /// <param name="src"></param>
+        /// <returns>True if the component nodes were loaded successfully; false if there was an error.  Exceptions are not thrown because processing can continue on other parts of the document</returns>
+        bool LoadComponentForJSON(XmlElement element, string src);
+
+        /// <summary>
+        /// Runs a template on the child nodes of an element, and then replaces the element with its children
+        /// </summary>
+        /// <param name="element"></param>
+        /// <param name="templateInput"></param>
+        void DoTemplate(XmlNode element, object templateInput);
     }
 
     /// <summary>

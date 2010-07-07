@@ -277,6 +277,18 @@ namespace ObjectCloud.Common
             while (stack.Pop(out toYield))
                 yield return toYield;
         }
+
+        public static T[] ToArray(IEnumerable<T> items)
+        {
+            LockFreeQueue_WithCount<T> queue = new LockFreeQueue_WithCount<T>(items);
+
+            T[] toReturn = new T[queue.Count];
+
+            for (int ctr = 0; ctr < toReturn.Length; ctr++)
+                toReturn[ctr] = queue.Dequeue();
+
+            return toReturn;
+        }
     }
 
     public static class Enumerable
