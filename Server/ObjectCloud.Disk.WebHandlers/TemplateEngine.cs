@@ -225,7 +225,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
                 } while (continueResolving && (innerLoopsLeft > 0));
 
-                foreach (XmlElement element in Enumerable<XmlElement>.FastCopy(XmlHelper.IterateAllElements(templateDocument)))
+                foreach (XmlElement element in templateParsingState.IterateNonDeferredElements(templateDocument))
                     try
                     {
                         templateParsingState.OnProcessElementForDependanciesAndTemplates(getParameters, element);

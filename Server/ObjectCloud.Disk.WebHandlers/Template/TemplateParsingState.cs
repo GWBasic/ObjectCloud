@@ -866,7 +866,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         /// <returns></returns>
         public IEnumerable<XmlElement> IterateNonDeferredElements(XmlNode xmlNode)
         {
-            foreach (XmlNode childNode in xmlNode.ChildNodes)
+            foreach (XmlNode childNode in Enumerable<XmlNode>.FastCopy(Enumerable<XmlNode>.Cast(xmlNode.ChildNodes)))
                 if (childNode is XmlElement)
                 {
                     yield return (XmlElement)childNode;

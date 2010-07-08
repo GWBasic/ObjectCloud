@@ -30,7 +30,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
     /// </summary>
     class SecurityTagParser : HasFileHandlerFactoryLocator, ITemplateProcessor
     {
-        static ILog log = LogManager.GetLogger<SecurityTagParser>();
+        //static ILog log = LogManager.GetLogger<SecurityTagParser>();
 
         public void Register(ITemplateParsingState templateParsingState)
         {
