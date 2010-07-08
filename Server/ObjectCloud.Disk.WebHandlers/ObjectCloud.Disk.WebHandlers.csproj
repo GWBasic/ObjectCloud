@@ -40,7 +40,7 @@
     <DefineConstants>DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug\ObjectCloud.Disk.WebHandlers.XML</DocumentationFile>
+    <DocumentationFile>ObjectCloud.Disk.WebHandlers.XML</DocumentationFile>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -50,7 +50,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <DocumentationFile>bin\Release\ObjectCloud.Disk.WebHandlers.XML</DocumentationFile>
+    <DocumentationFile>ObjectCloud.Disk.WebHandlers.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="BinaryWebHandler.cs" />
@@ -128,6 +128,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="ObjectCloud.Disk.WebHandlers.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="TemplateConditions.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
