@@ -313,6 +313,13 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public IGroup GetGroup(string name)
         {
+            // Allow /Users/[username].user
+            if (name.StartsWith("/Users/") && name.EndsWith(".group"))
+            {
+                name = name.Substring(7);
+                name = name.Substring(0, name.Length - 6);
+            }
+
             IGroups_Readable group = DatabaseConnection.Groups.SelectSingle(Groups_Table.Name == name);
 
             if (null == group)
@@ -444,10 +451,24 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <returns></returns>
         public IEnumerable<IUserOrGroup> GetUsersAndGroups(IEnumerable<string> names)
         {
-            foreach (IUsers_Readable user in DatabaseConnection.Users.Select(Users_Table.Name.In(names)))
+			string[] namesArray = Enumerable<string>.ToArray(names);
+			for (int ctr = 0; ctr < namesArray.Length; ctr++)
+				if (namesArray[ctr].StartsWith("/Users/"))
+					if (namesArray[ctr].EndsWith(".user")) 
+                    {
+                        namesArray[ctr] = namesArray[ctr].Substring(7);
+                        namesArray[ctr] = namesArray[ctr].Substring(0, namesArray[ctr].Length - 5);
+                    }
+					else if (namesArray[ctr].EndsWith(".group"))
+                    {
+                        namesArray[ctr] = namesArray[ctr].Substring(7);
+                        namesArray[ctr] = namesArray[ctr].Substring(0, namesArray[ctr].Length - 6);
+                    }
+
+			foreach (IUsers_Readable user in DatabaseConnection.Users.Select(Users_Table.Name.In(namesArray)))
                 yield return CreateUserObject(user);
 
-            foreach (IGroups_Readable group in DatabaseConnection.Groups.Select(Groups_Table.Name.In(names)))
+            foreach (IGroups_Readable group in DatabaseConnection.Groups.Select(Groups_Table.Name.In(namesArray)))
                 yield return CreateGroupObject(group);
         }
 
