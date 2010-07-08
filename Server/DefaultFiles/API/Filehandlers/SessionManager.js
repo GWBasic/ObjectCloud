@@ -7,6 +7,10 @@
 JavaScript wrapper for manipulating the session
 */
 
+// The session manager isn't allowed for anonymous users
+if (typeof SessionManager == "undefined")
+   SessionManager = {};
+
 SessionManager.GetSession = function()
 {
    var sessionString = Cookies.get("SESSION");

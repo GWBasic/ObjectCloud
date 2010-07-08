@@ -93,7 +93,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             private void AddBrowserCache(ITemplateParsingState templateParsingState, XmlAttribute attribute)
             {
                 string attributeValue = attribute.InnerText;
-
+				
                 // Don't add a dupe cache key
                 if (attributeValue.Contains("?BrowserCache=") || attributeValue.Contains("&BrowserCache="))
                     return;
@@ -167,10 +167,12 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 else if (BrowserCacheEnum.Date == browserCache)
                 {
                     string filename = attributeValue.Split(new char[] { '?' }, 2)[0];
-
+					
                     if (templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.IsFilePresent(filename))
                     {
                         IFileContainer fileContainer = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(filename);
+
+						templateParsingState.WebConnection.TouchedFiles.Add(fileContainer);
 
                         attribute.InnerText = HTTPStringFunctions.AppendGetParameter(
                             attributeValue,
