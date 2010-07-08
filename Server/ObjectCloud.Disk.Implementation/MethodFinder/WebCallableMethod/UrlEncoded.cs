@@ -72,7 +72,10 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
 
                             // Nullable
                             else if (parameterType.IsGenericType && typeof(Nullable<>) == parameterType.GetGenericTypeDefinition())
-                                arguments[parameterIndex] = Convert.ChangeType(value, parameterType.GetGenericArguments()[0]);
+                            {
+                                if (value.Length > 0)
+                                    arguments[parameterIndex] = Convert.ChangeType(value, parameterType.GetGenericArguments()[0]);
+                            }
 
                             // Arrays
                             else if (parameterType.IsArray)

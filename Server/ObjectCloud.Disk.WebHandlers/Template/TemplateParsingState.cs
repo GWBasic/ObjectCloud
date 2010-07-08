@@ -281,13 +281,19 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             using (IEnumerator<XmlNode> enumerator = newNodes.GetEnumerator())
                 if (enumerator.MoveNext())
                 {
-                    XmlNode newNode = componentNode.OwnerDocument.ImportNode(enumerator.Current, true);
+                    XmlNode newNode = enumerator.Current;
+                    if ((newNode.OwnerDocument != componentNode.OwnerDocument) || (newNode.ParentNode == componentNode))
+                        newNode = componentNode.OwnerDocument.ImportNode(newNode, true);
+
                     componentNode.ParentNode.ReplaceChild(newNode, componentNode);
                     XmlNode previousNode = newNode;
 
                     while (enumerator.MoveNext())
                     {
-                        newNode = componentNode.OwnerDocument.ImportNode(enumerator.Current, true);
+                        newNode = enumerator.Current;
+                        if ((newNode.OwnerDocument != componentNode.OwnerDocument) || (newNode.ParentNode == componentNode))
+                            newNode = componentNode.OwnerDocument.ImportNode(newNode, true);
+
                         previousNode.ParentNode.InsertAfter(newNode, previousNode);
                         previousNode = newNode;
                     }
@@ -297,12 +303,12 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         }
 
         /// <summary>
-        /// All of the nodes where GET arguments will not be processed
+        /// All of the nodes where GET arguments will not be processed, indexed by localname then by namespace
         /// </summary>
         public Dictionary<string, Set<string>> DeferedNodes = new Dictionary<string, Set<string>>();
 
         /// <summary>
-        /// Indicates that ObjectCloud will not replace GET variables in a specific kind of node, but will instead defer processing until the node is handled later
+        /// Indicates that ObjectCloud will not replace GET variables or handle sub-nodes in a specific kind of node, but will instead defer processing until the node is handled later
         /// </summary>
         /// <param name="localName"></param>
         /// <param name="namespaceURI"></param>
@@ -851,6 +857,34 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
             else
                 getParameters[prefix] = JsonWriter.Serialize(templateInput);
+        }
+
+        /// <summary>
+        /// Iterates through all elements except children of deferred elements
+        /// </summary>
+        /// <param name="xmlNode"></param>
+        /// <returns></returns>
+        public IEnumerable<XmlElement> IterateNonDeferredElements(XmlNode xmlNode)
+        {
+            foreach (XmlNode childNode in xmlNode.ChildNodes)
+                if (childNode is XmlElement)
+                {
+                    yield return (XmlElement)childNode;
+
+                    Set<string> badNamespaces;
+
+                    if (DeferedNodes.TryGetValue(childNode.LocalName, out badNamespaces))
+                    {
+                        if (!badNamespaces.Contains(childNode.NamespaceURI))
+                            foreach (XmlElement subChildNode in IterateNonDeferredElements(childNode))
+                                yield return subChildNode;
+                    }
+                    else
+                        foreach (XmlElement subChildNode in IterateNonDeferredElements(childNode))
+                            yield return subChildNode;
+
+
+                }
         }
     }
 }

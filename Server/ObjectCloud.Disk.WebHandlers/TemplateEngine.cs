@@ -40,14 +40,15 @@ namespace ObjectCloud.Disk.WebHandlers
         {
             Stream results = EvaluateToStream(
                 webConnection,
-                webConnection.GetParameters, 
+                webConnection.GetParameters,
                 filename);
 
             IWebResults toReturn;
 
-            // Hack to work around a bug in Mozilla handling xhtml
+            // Hack to work around a bug in IE handling xhtml
             // What's going on is that I'm using a horrible hack to remove all namespaces from the <html> tag and turn this into an SGML-HTML document instead of xml-html
-            if (webConnection.Headers["USER-AGENT"].Contains(" Firefox/") || webConnection.Headers["USER-AGENT"].Contains(" MSIE "))
+            //if (webConnection.Headers["USER-AGENT"].Contains(" Firefox/") || webConnection.Headers["USER-AGENT"].Contains(" MSIE "))
+            if (webConnection.Headers["USER-AGENT"].Contains(" MSIE "))
             {
                 // <?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" 
 
@@ -65,7 +66,7 @@ namespace ObjectCloud.Disk.WebHandlers
             {
                 // Everyone else gets real XML
                 toReturn = WebResults.From(Status._200_OK, results);
-                toReturn.ContentType = "text/xml";
+                toReturn.ContentType = "application/xhtml+xml"; // "text/xml";
             }
 
             return toReturn;
@@ -78,42 +79,36 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="getParameters"></param>
         /// <param name="filename"></param>
         /// <returns></returns>
-        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.Primitive, FilePermissionEnum.Read)]
         public Stream EvaluateToStream(
             IWebConnection webConnection,
             IDictionary<string, string> getParameters,
             string filename)
         {
             XmlDocument templateDocument = null;
-            TemplateParsingState templateParsingState = new TemplateParsingState(webConnection);
-
-            templateParsingState.PostProcessElement += EnsureNoEmptyTextareas;
-
-            foreach (ITemplateProcessor templateProcessor in FileHandlerFactoryLocator.TemplateHandlerLocator.TemplateProcessors)
-                templateProcessor.Register(templateParsingState);
+            TemplateParsingState templateParsingState = CreateTemplateParsingState(webConnection);
 
             // The code below mostly gets in the way while debugging
-/*            Thread myThread = Thread.CurrentThread;
-            TimerCallback timerCallback = delegate(object state)
-            {
-#if DEBUG
-                // If the program is in the debugger, play a few tricks to not abort while stepping through
-                if (System.Diagnostics.Debugger.IsAttached)
-                {
-                    DateTime start = DateTime.UtcNow;
+            /*            Thread myThread = Thread.CurrentThread;
+                        TimerCallback timerCallback = delegate(object state)
+                        {
+            #if DEBUG
+                            // If the program is in the debugger, play a few tricks to not abort while stepping through
+                            if (System.Diagnostics.Debugger.IsAttached)
+                            {
+                                DateTime start = DateTime.UtcNow;
 
-                    for (int ctr = 0; ctr < 10; ctr++)
-                        Thread.Sleep(10);
+                                for (int ctr = 0; ctr < 10; ctr++)
+                                    Thread.Sleep(10);
 
-                    if (start.AddSeconds(1) < DateTime.UtcNow)
-                        return;
-                }
-#endif
+                                if (start.AddSeconds(1) < DateTime.UtcNow)
+                                    return;
+                            }
+            #endif
 
-                myThread.Abort();
-            };
+                            myThread.Abort();
+                        };
 
-            using (new Timer(timerCallback, null, 15000, 15000))*/
+                        using (new Timer(timerCallback, null, 15000, 15000))*/
             try
             {
                 IFileContainer templateFileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(filename);
@@ -123,66 +118,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 templateDocument = ResolveHeaderFooter(webConnection, getParameters, templateFileContainer, templateParsingState);
                 templateParsingState.TemplateDocument = templateDocument;
 
-                templateParsingState.OnDocumentLoaded(getParameters, templateDocument.FirstChild as XmlElement);
-
-                bool continueResolving;
-
-                XmlNodeChangedEventHandler documentChanged = delegate(object sender, XmlNodeChangedEventArgs e)
-                {
-                    continueResolving = true;
-                };
-
-                templateDocument.NodeChanged += documentChanged;
-                templateDocument.NodeInserted += documentChanged;
-                templateDocument.NodeRemoved += documentChanged;
-
-                // Keep resolving oc:if, oc:component, oc:script, and oc:css tags while they're loaded
-                int loopsLeft = 20;
-                do
-                {
-                    int innerLoopsLeft = 20;
-
-                    do
-                    {
-                        continueResolving = false;
-
-                        foreach (XmlElement element in Enumerable<XmlElement>.FastCopy(XmlHelper.IterateAllElements(templateDocument)))
-                            try
-                            {
-                                templateParsingState.OnProcessElementForConditionalsAndComponents(getParameters, element);
-                            }
-                            catch (Exception e)
-                            {
-                                log.Error("An error occured while processing " + element.OuterXml, e);
-                                templateParsingState.ReplaceNodes(
-                                    element,
-                                    templateParsingState.GenerateWarningNode("An error occured processing " + element.OuterXml));
-                            }
-
-                        innerLoopsLeft--;
-
-                    } while (continueResolving && (innerLoopsLeft > 0));
-
-                    foreach (XmlElement element in Enumerable<XmlElement>.FastCopy(XmlHelper.IterateAllElements(templateDocument)))
-                        try
-                        {
-                            templateParsingState.OnProcessElementForDependanciesAndTemplates(getParameters, element);
-                        }
-                        catch (Exception e)
-                        {
-                            log.Error("An error occured while processing " + element.OuterXml, e);
-                            templateParsingState.ReplaceNodes(
-                                element,
-                                templateParsingState.GenerateWarningNode("An error occured processing " + element.OuterXml));
-                        }
-
-                    loopsLeft--;
-
-                } while (continueResolving && (loopsLeft > 0));
-
-                templateDocument.NodeChanged -= documentChanged;
-                templateDocument.NodeInserted -= documentChanged;
-                templateDocument.NodeRemoved -= documentChanged;
+                ResolveDocument(getParameters, templateDocument, templateParsingState);
 
                 XmlNode headNode = GetHeadNode(templateDocument);
 
@@ -236,6 +172,116 @@ namespace ObjectCloud.Disk.WebHandlers
             return stream;
         }
 
+        private TemplateParsingState CreateTemplateParsingState(IWebConnection webConnection)
+        {
+            TemplateParsingState templateParsingState = new TemplateParsingState(webConnection);
+
+            templateParsingState.PostProcessElement += EnsureNoEmptyTextareas;
+
+            foreach (ITemplateProcessor templateProcessor in FileHandlerFactoryLocator.TemplateHandlerLocator.TemplateProcessors)
+                templateProcessor.Register(templateParsingState);
+            return templateParsingState;
+        }
+
+        private static void ResolveDocument(IDictionary<string, string> getParameters, XmlDocument templateDocument, TemplateParsingState templateParsingState)
+        {
+            templateParsingState.OnDocumentLoaded(getParameters, templateDocument.FirstChild as XmlElement);
+
+            bool continueResolving;
+
+            XmlNodeChangedEventHandler documentChanged = delegate(object sender, XmlNodeChangedEventArgs e)
+            {
+                continueResolving = true;
+            };
+
+            templateDocument.NodeChanged += documentChanged;
+            templateDocument.NodeInserted += documentChanged;
+            templateDocument.NodeRemoved += documentChanged;
+
+            // Keep resolving oc:if, oc:component, oc:script, and oc:css tags while they're loaded
+            int loopsLeft = 20;
+            do
+            {
+                int innerLoopsLeft = 20;
+
+                do
+                {
+                    continueResolving = false;
+
+                    foreach (XmlElement element in templateParsingState.IterateNonDeferredElements(templateDocument))
+                        try
+                        {
+                            templateParsingState.OnProcessElementForConditionalsAndComponents(getParameters, element);
+                        }
+                        catch (Exception e)
+                        {
+                            log.Error("An error occured while processing " + element.OuterXml, e);
+                            templateParsingState.ReplaceNodes(
+                                element,
+                                templateParsingState.GenerateWarningNode("An error occured processing " + element.OuterXml));
+                        }
+
+                    innerLoopsLeft--;
+
+                } while (continueResolving && (innerLoopsLeft > 0));
+
+                foreach (XmlElement element in Enumerable<XmlElement>.FastCopy(XmlHelper.IterateAllElements(templateDocument)))
+                    try
+                    {
+                        templateParsingState.OnProcessElementForDependanciesAndTemplates(getParameters, element);
+                    }
+                    catch (Exception e)
+                    {
+                        log.Error("An error occured while processing " + element.OuterXml, e);
+                        templateParsingState.ReplaceNodes(
+                            element,
+                            templateParsingState.GenerateWarningNode("An error occured processing " + element.OuterXml));
+                    }
+
+                loopsLeft--;
+
+            } while (continueResolving && (loopsLeft > 0));
+
+            templateDocument.NodeChanged -= documentChanged;
+            templateDocument.NodeInserted -= documentChanged;
+            templateDocument.NodeRemoved -= documentChanged;
+        }
+
+        /// <summary>
+        /// Evaluates the named template
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.Primitive, FilePermissionEnum.Read)]
+        public IWebResults EvaluateComponent(IWebConnection webConnection, string filename)
+        {
+            IDictionary<string, string> getParameters = webConnection.GetParameters;
+
+            XmlDocument templateDocument;
+            TemplateParsingState templateParsingState = CreateTemplateParsingState(webConnection);
+
+            IFileContainer templateFileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(filename);
+
+            webConnection.TouchedFiles.Add(templateFileContainer);
+
+            templateDocument = templateParsingState.LoadXmlDocument(templateFileContainer, XmlParseMode.Xml);
+            templateParsingState.TemplateDocument = templateDocument;
+            templateParsingState.ReplaceGetParameters(getParameters, templateDocument);
+
+            templateParsingState.SetCWD(templateDocument.ChildNodes, templateFileContainer.ParentDirectoryHandler.FileContainer.FullPath);
+
+            ResolveDocument(getParameters, templateDocument, templateParsingState);
+
+            foreach (XmlNode xmlNode in Enumerable<XmlNode>.FastCopy(XmlHelper.IterateAllElementsAndComments(templateDocument)))
+                if (xmlNode is XmlElement)
+                    templateParsingState.OnPostProcessElement(getParameters, (XmlElement)xmlNode);
+                else if (xmlNode is XmlComment)
+                    xmlNode.ParentNode.RemoveChild(xmlNode);
+
+            return WebResults.From(Status._200_OK, templateDocument.FirstChild.InnerXml);
+        }
+
         /// <summary>
         /// This is to work around a Mozilla quirk where it can't handle empty text areas
         /// </summary>
@@ -244,7 +290,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="element"></param>
         void EnsureNoEmptyTextareas(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
         {
-            if (element.LocalName == "textarea" && element.NamespaceURI == templateParsingState.TemplateDocument.FirstChild.NamespaceURI)
+            if (element.LocalName == "textarea" && TemplatingConstants.HtmlNamespaces.Contains(element.NamespaceURI))
                 if (element.IsEmpty)
                     element.IsEmpty = false;
         }

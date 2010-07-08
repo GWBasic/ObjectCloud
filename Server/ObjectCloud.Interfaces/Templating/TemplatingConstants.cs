@@ -48,6 +48,11 @@ namespace ObjectCloud.Interfaces.Templating
         /// Delimeter for the end of GET arguments
         /// </summary>
         public static readonly string[] ArgEnd = new string[] { "_]" };
+
+        /// <summary>
+        /// Namespaces for HTML tags
+        /// </summary>
+        public readonly static Set<string> HtmlNamespaces = new Set<string>("", "http://www.w3.org/1999/xhtml");
     }
 
     /// <summary>

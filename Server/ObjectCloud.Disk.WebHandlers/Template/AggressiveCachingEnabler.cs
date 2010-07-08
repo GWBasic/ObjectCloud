@@ -36,7 +36,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         {
             internal void PostProcessElement(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
             {
-                if (element.NamespaceURI == templateParsingState.TemplateDocument.DocumentElement.NamespaceURI)
+                if (TemplatingConstants.HtmlNamespaces.Contains(element.NamespaceURI))
                     if (element.LocalName == "script")
                     {
                         // Don't allow empty <script /> tags

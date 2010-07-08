@@ -135,7 +135,7 @@ namespace ObjectCloud.Interfaces.Templating
         void ReplaceNodes(XmlNode componentNode, IEnumerable<XmlNode> newNodes);
 
         /// <summary>
-        /// Indicates that ObjectCloud will not replace GET variables in child nodes of this specific node; although GET variables still apply to the specified node's attributes and namespaces
+        /// Indicates that ObjectCloud will not replace GET variables or handle sub-nodes in a specific kind of node, but will instead defer processing until the node is handled later
         /// </summary>
         /// <param name="localName"></param>
         /// <param name="namespaceURI"></param>
@@ -207,6 +207,13 @@ namespace ObjectCloud.Interfaces.Templating
         /// <param name="element"></param>
         /// <param name="templateInput"></param>
         void DoTemplate(XmlNode element, object templateInput);
+
+        /// <summary>
+        /// Iterates through all elements except children of deferred elements
+        /// </summary>
+        /// <param name="xmlNode"></param>
+        /// <returns></returns>
+        IEnumerable<XmlElement> IterateNonDeferredElements(XmlNode xmlNode);
     }
 
     /// <summary>
