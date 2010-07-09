@@ -82,17 +82,20 @@ namespace ObjectCloud
 							}
                         case ("dump"):
                             {
-                                //FileHandlerFactoryLocator fileHandlerFactoryLocator = (FileHandlerFactoryLocator)context["FileHandlerFactoryLocator"];
-
-                                string objectCloudfileToDump = args[1];
-                                string fileSystemDestination = args[2];
+                                // Key is the OC directory, value is the local destination
+                                Dictionary<string, string> toDump = new Dictionary<string,string>();
+                                for (int ctr = 1; ctr + 1 < args.Length; ctr = ctr + 2)
+                                    toDump[args[ctr]] = args[ctr + 1];
 
                                 fileHandlerFactoryLocator.FileSystemResolver.Start();
-                                IFileContainer fileContainer = fileHandlerFactoryLocator.FileSystemResolver.ResolveFile(objectCloudfileToDump);
 
-                                using (TimedLock.Lock(fileContainer.FileHandler))
-                                    fileContainer.FileHandler.Dump(fileSystemDestination, fileHandlerFactoryLocator.UserManagerHandler.Root.Id);
+                                foreach (KeyValuePair<string, string> kvp in toDump)
+                                {
+                                    IFileContainer fileContainer = fileHandlerFactoryLocator.FileSystemResolver.ResolveFile(kvp.Key);
 
+                                    using (TimedLock.Lock(fileContainer.FileHandler))
+                                        fileContainer.FileHandler.Dump(kvp.Value, fileHandlerFactoryLocator.UserManagerHandler.Root.Id);
+                                }
                                 break;
                             }
 

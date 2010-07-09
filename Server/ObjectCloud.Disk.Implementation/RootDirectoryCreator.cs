@@ -287,6 +287,12 @@ namespace ObjectCloud.Disk.Implementation
         {
             IFileHandler dir;
 
+            if (rootDirectoryHandler.IsFilePresent("Actions"))
+            {
+                dir = rootDirectoryHandler.OpenFile("Actions").FileHandler;
+                dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Actions", false);
+            }
+
             dir = rootDirectoryHandler.OpenFile("Shell").FileHandler;
             dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Shell", false);
 
@@ -485,6 +491,24 @@ insert into Metadata (Name, Value) values ('GroupId', @groupId);
                 systemDirectory.SetPermission(
                     null,
                     "Documentation",
+                    FileHandlerFactoryLocator.UserFactory.Everybody.Id,
+                    FilePermissionEnum.Read,
+                    true,
+                    false);
+            }
+
+            if (!rootDirectoryHandler.IsFilePresent("Actions"))
+            {
+                // Create actions directory
+                rootDirectoryHandler.RestoreFile(
+                    "Actions",
+                    "directory",
+                    "." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Actions",
+                    FileHandlerFactoryLocator.UserFactory.RootUser.Id);
+
+                rootDirectoryHandler.SetPermission(
+                    null,
+                    "Actions",
                     FileHandlerFactoryLocator.UserFactory.Everybody.Id,
                     FilePermissionEnum.Read,
                     true,

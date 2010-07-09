@@ -578,11 +578,11 @@ namespace ObjectCloud.Interfaces.WebServer
             if (hasExtension)
             {
                 extension = requestedFile.Substring(lastIndexOfDot + 1);
-                shellFile = "/Shell/Actions/ByExtension/" + extension;
+                shellFile = "/Actions/ByExtension/" + extension;
             }
             else
             {
-                shellFile = "/Shell/Actions/ByType/" + fileContainer.TypeId;
+                shellFile = "/Actions/ByType/" + fileContainer.TypeId;
                 extension = fileContainer.TypeId;
             }
 
@@ -657,7 +657,7 @@ namespace ObjectCloud.Interfaces.WebServer
         /// <returns></returns>
         private FilePermissionEnum? LoadMinimumPermissionForAction(string action)
         {
-            IFileContainer actionPermissionsFileContainer = WebServer.FileSystemResolver.ResolveFile("/Shell/Actions/ActionPermissions");
+            IFileContainer actionPermissionsFileContainer = WebServer.FileSystemResolver.ResolveFile("/Actions/ActionPermissions");
             INameValuePairsHandler actionPermissions = actionPermissionsFileContainer.CastFileHandler<INameValuePairsHandler>();
 
             if (actionPermissions.Contains(action))
