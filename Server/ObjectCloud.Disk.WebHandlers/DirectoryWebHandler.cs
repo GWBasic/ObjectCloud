@@ -555,7 +555,7 @@ namespace ObjectCloud.Disk.WebHandlers
             string[] filenameSplitAtDot = filename.Split('.');
             string extension = filenameSplitAtDot[filenameSplitAtDot.Length - 1].ToLowerInvariant();
 
-            IFileContainer extensionContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("/Shell/Upload/ByExtension");
+            IFileContainer extensionContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("/Actions/Upload/ByExtension");
             INameValuePairsHandler extensionHandler = extensionContainer.CastFileHandler<INameValuePairsHandler>();
 
             // If there's a specific file type given the extension, let it override the MIME type
@@ -570,7 +570,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
                 else if (null != contentType)
                 {
-                    IFileContainer mimeContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("/Shell/Upload/ByMime");
+                    IFileContainer mimeContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("/Actions/Upload/ByMime");
                     INameValuePairsHandler mime = mimeContainer.CastFileHandler<INameValuePairsHandler>();
 
                     fileFactoryType = mime[contentType];
