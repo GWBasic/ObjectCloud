@@ -60,24 +60,3 @@ $(document).ready(function()
    Login_UpdateKeepAlive();
 
 });
-
-
-/*function Login_RegisterLogin(loginID)
-{
-
-   });
-}
-
-function Login_OnKeepAliveChanged()
-{
-}
-
-function Login_OnMaxAgeChanged()
-{
-   SessionManager.SetMaxAge(
-      {
-         MaxAge: $("Login_MaxAge").value,
-      },
-      Login_UpdateKeepAlive);
-}
-*/
