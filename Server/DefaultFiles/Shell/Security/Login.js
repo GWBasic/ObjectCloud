@@ -31,11 +31,11 @@ $(document).ready(function()
          }
    });
 
-   $('input.Login_loginButton').click(function()
+   $('form.Login_LoginForm').submit(function()
    {
-      var parent = $(this).parent();
-      var usernameInput = parent.find("input[name$='username']")[0];
-      var passwordInput = parent.find("input[name$='password']")[0];
+      var me = $(this);
+      var usernameInput = me.find("input[name$='username']")[0];
+      var passwordInput = me.find("input[name$='password']")[0];
 
       UserDB.Login(
          {
@@ -46,6 +46,8 @@ $(document).ready(function()
          {
             window.location.reload();
          });
+
+      return false;
    });
 
    $('input.Login_KeepAlive').click(function()

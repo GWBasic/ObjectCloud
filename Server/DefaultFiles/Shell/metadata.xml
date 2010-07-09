@@ -85,22 +85,22 @@
 			Inherit="False"
 			SendNotifications="False" />
 	</File>
-  <File
+	<File
 		Name="Security"
 		TypeId="directory"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
-    <Permission
+		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
 			Level="Administer"
 			Inherit="False"
 			SendNotifications="False" />
-    <Permission
+		<Permission
 			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
 			Level="Administer"
 			Inherit="False"
 			SendNotifications="False" />
-  </File>
-  <File
+	</File>
+	<File
 		Name="UserManagers"
 		TypeId="directory"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
