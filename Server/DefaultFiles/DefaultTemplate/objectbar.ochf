@@ -1,0 +1,226 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" xmlns:af="appfeeds_templating">
+<oc:inserthead>
+   <oc:script src="/API/jquery.js" />
+   <oc:script src="/API/shareDialog.js" />
+   <oc:open filename="[_FileName_]" varname="object_target" />
+</oc:inserthead>
+
+<!-- ? Scripts(/AppFeeds/API/modaldbox.js, /API/Prototype.js, /Lifestream?Method=GetJSW&amp;assignToVariable=Lifestream) ?
+?
+   scope.permissions = ? WebComponent($_GET["FileName"] . "?Method=GetPermissionAsJSON") ?;
+
+   callAsOwner(function()
+   {
+      scope.metadata = open('? $_GET["FileName"] ?').GetMetadata_Sync();
+   });
+
+   var tags = "";
+   for (var i = 0; i &lt; scope.metadata.Tags.length - 1; i++)
+      tags += scope.metadata.Tags[i] + ' ';
+
+   if (scope.metadata.Tags.length > 1)
+      tags += scope.metadata.Tags[scope.metadata.Tags.length - 1];
+
+   scope.tags = tags;
+
+   scope.permissions.CanAdminister;
+? 
+
+<script>
+   function objectbar_share()
+   {
+      sm('objectbar_share',window.innerWidth * 0.9,window.innerHeight * 0.9);
+      $('objectbar_permissions').innerHTML = 'iframe width="98%" height="95%" src="/AppFeeds/API/PermissionsFrame.wchtml?FileName=? $_GET["FileName"] /iframe>';
+   }
+
+   function objectbar_shareClose()
+   {
+      hm('objectbar_share');
+      $('objectbar_permissions').innerHTML = '';
+   }
+
+   function objectbar_submit()
+   {
+      Lifestream.CreateFile(
+      {
+         extension: 'idea',
+         fileNameSuggestion: '? $_GET["FileName"] ?'
+      },
+      function(ideaWrapper)
+      {
+         ideaWrapper.AddRelatedFile(
+         {
+            filename: '? $_GET["FileName"] ?',
+            relationship: 'link'
+         },
+         function()
+         {
+            window.location.href = ideaWrapper.FullPath;
+         });
+      });
+   }
+</script> -->
+
+<div class="objectbar" id="objectbar" style="position: relative;">
+   <oc:if>
+      <oc:canadminister filename="[_FileName_]">
+         <input type="button" value="share" id="objectbar_share" />
+         <script>
+            $(document).ready(function()
+            {
+               $('#objectbar_share').click(function()
+               {
+                  shareDialog_show('[_FileName_]');
+               });
+            });
+         </script>
+      </oc:canadminister>
+   </oc:if>
+   &#160;
+
+   <!-- ?
+      if (scope.permissions.CanAdminister)
+      {
+         var filename = '? $_GET["FileName"] ?';
+         scope.extension = filename.substring(filename.lastIndexOf('.') + 1);
+
+         var actions = open('/Shell/Actions/ByExtension/' + scope.extension);
+
+         if (actions.Contains_Sync({Name:'Edit'}))
+            'input type="button" value="edit" onclick="window.location.href = ' + "'" + filename + "?Action=Edit'" + '" ';
+         else
+            '';
+      }
+      else
+         false;
+   ?
+   ?
+      if (scope.permissions.CanAdminister)
+         'idea' != scope.extension;
+      else
+         false;
+   ?
+   <input type="button" value="submit for approval" onclick="objectbar_submit()" />
+   ?
+      if (scope.permissions.CanAdminister)
+         'Tags: <input type="text" id="object_tags" value="' + scope.tags + '" onchange="object_updateTags()" /><span id="object_tags_saving"></span>';
+      else
+         false;
+   ?
+   ? scope.permissions.CanAdminister ? -->
+
+   <span id="object_tags"> </span>
+   <script>
+      $(document).ready(function()
+      {
+         var metadata = <oc:component oc:url="[_FileName_]" Method="GetMetadata" />;
+
+         var tags = metadata.Tags;
+
+         var tagsString = '';
+         for (var i = 0; i &lt; tags.length; i++)
+            tagsString += escape(tags[i]) + ' ';
+
+         var tagsSpan = $('#object_tags');
+
+         <oc:if>
+            <oc:canadminister filename="[_FileName_]">
+               var tagsInput = $('&lt;input type="text" /&gt;');
+               tagsSpan.append(tagsInput);
+               tagsInput.val(tagsString);
+
+               tagsInput.change(function()
+               {
+                  tagsInput.attr('disabled', 'disabled');
+
+                  var dirtyTags = tagsInput.val().split(' ');
+                  tags = [];
+
+                  for (var i = 0; i &lt; dirtyTags.length; i++)
+                  {
+                     var tag = dirtyTags[i].replace(/^\s+|\s+$/g,"");
+                     if (tag.length > 0)
+                        tags.push(tag);
+                  }
+
+                  // set the metadata
+                  object_target.SetMetadata(
+                  {
+                     replaceTags: true,
+                     tags: tags
+                  },
+                  function()
+                  {
+                     tagsInput.removeAttr('disabled');
+                  },
+                  function()
+                  {
+                     tagsInput.removeAttr('disabled');
+                     alert('error saving tags');
+                  });
+               });
+            </oc:canadminister>
+            <oc:else>
+               tagsSpan.text(tagsString);
+            </oc:else>
+         </oc:if>
+      });
+   </script>
+</div>
+
+   <oc:component />
+
+<div class="ObjectFooter">
+<!-- <pre>
+   scope.filename = '? $_GET["FileName"] ?';
+   scope.extension = scope.filename.substring(scope.filename.lastIndexOf('.') + 1);
+
+   // Load the default supported named permissions from security by extension
+   try
+   {
+      scope.defaultNamedPermissionsString = open('/Shell/Security/ByExtension/' + scope.extension + '.json').ReadAll_Sync();
+   }
+   catch (exception)
+   {
+      scope.defaultNamedPermissionsString = '[]';
+   }
+
+   var namedPermissions = eval('(' + scope.defaultNamedPermissionsString + ')');
+
+   scope.CanReply = false;
+   scope.CanLink = false;
+   scope.CanVote = false;
+
+   // Loop through to determine what can be done
+   for (var i = 0; i &lt; namedPermissions.length; i++)
+      if (namedPermissions.NamedPermission == "link")
+         scope.CanLink = true;
+      else if (namedPermissions.NamedPermission == "reply")
+         scope.CanReply = true;
+      else if (namedPermissions.NamedPermission == "vote")
+         scope.CanVote = true;
+
+   scope.CanVote;
+?<hr />? WebComponent($_GET["FileName"] . "?Method=vote_GenerateVoteSummary") ?
+? scope.CanLink; ?<hr />? WebComponent("/AppFeeds/API/LinkHandler.ssjs?FileName=" . $_GET["FileName"]) ?
+? scope.CanReply; ?<hr />? WebComponent("/Shell/Communication/Replier.webcomponent?ObjectName=" . $_GET["ObjectName"] . "&amp;FileName=" . $_GET["FileName"]) ?
+? true; </pre>
+
+      <oc:if>
+         <oc:can namedpermission="vote" filename="[_FileName_]">
+            WebComponent($_GET["FileName"] . "?Method=vote_GenerateVoteSummary"
+         </oc:can>
+      </oc:if>
+      <oc:if>
+         <oc:can namedpermission="link" filename="[_FileName_]">
+            WebComponent("/AppFeeds/API/LinkHandler.ssjs?FileName=" . $_GET["FileName"]
+         </oc:can>
+      </oc:if>
+      <oc:if>
+         <oc:can namedpermission="reply" filename="[_FileName_]">
+            WebComponent("/Shell/Communication/Replier.webcomponent?ObjectName=" . $_GET["ObjectName"] . "&amp;FileName=" . $_GET["FileName"]
+         </oc:can>
+      </oc:if>
+
+ -->   </div>
+</oc:componentdef>

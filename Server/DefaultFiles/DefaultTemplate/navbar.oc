@@ -1,0 +1,32 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
+<oc:inserthead>
+   <oc:script src="/API/jquery.js" />
+</oc:inserthead>
+
+         <div class="navbar">
+
+            <oc:if>
+               <oc:islocal>
+                 <oc:if>
+                    <oc:isloggedin>
+                       <p><a href="/Shell/Viewers/NotificationsViewer.wchtml">Messages (Experimental)</a></p>
+                       <p><a href="[_User.Identity_]">Profile</a></p>
+                       <p><a href="/Shell/UserManagers/UserManager.wchtml?Target=/Users/[_User.Name_].user">Account</a></p>
+                    </oc:isloggedin>
+                 </oc:if>
+              </oc:islocal>
+           </oc:if>
+
+           <oc:if>
+              <oc:can namedpermission="CreateUser" filename="/Users/UserDB">
+                 <p><a href="/Shell/UserManagers/Create%20Account.wchtml">Create Account</a></p>
+              </oc:can>
+           </oc:if>
+
+           <p><a href="/Shell/UserManagers/GroupManager.wchtml">Groups</a></p>
+           <p><a href="/Shell/Developer.oc">Developer Controls</a></p>
+
+         </div>
+
+
+</oc:componentdef>

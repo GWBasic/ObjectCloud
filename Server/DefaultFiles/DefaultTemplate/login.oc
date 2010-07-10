@@ -6,28 +6,28 @@
       <div id="accountblock" style="float: right">
          <oc:if>
             <oc:isloggedin>
-               <div id="profilepicaccount"><img src="[_User.Identity_]?Method=GetAvatar&amp;height=30" /></div>
-                  <div id="Login_Welcome" class="login">
-                     <a href="/AppFeeds/CreateAccount.ssjs">Create Account</a> - Welcome [_User.Name_]
-                      <input class="Login_logoutButton" type="submit" value="Logout" />
-                     <form>
-                        Stay logged in <input class="Login_KeepAlive" type="checkbox" />
-                        <span class="Login_MaxAgeSpan">for <input class="Login_MaxAge" type="text" size="5" /> days</span>.
-                     </form>
-                  </div>
+               <div id="profilepicaccount"><img src="[_User.Identity_]?Method=GetAvatar&amp;height=60" /></div>
+               <div id="Login_Welcome" class="login">
+                  Welcome [_User.Name_]
+                     <input class="Login_logoutButton" type="submit" value="Logout" />
+                  <form>
+                     Stay logged in <input class="Login_KeepAlive" type="checkbox" />
+                     <span class="Login_MaxAgeSpan">for <input class="Login_MaxAge" type="text" size="5" /> days</span>.
+                  </form>
+               </div>
             </oc:isloggedin>
             <oc:else>
                <div id="account"> 
                   <form action="/Users/UserDB?Method=OpenIDLogin" method="POST"> 
-                     <a href="/AppFeeds/CreateAccount.ssjs">Create Account</a> - OpenID: <input type="text" name="openid_url" id="openid_url"/> 
+                     OpenID: <input type="text" name="openid_url" id="openid_url"/> 
                      <input type="submit" value="OpenID login"/> 
                      <input type="hidden" name="redirect" id="Login_redirect"/> 
                   </form> 
                   <div id="accountblock"> 
-                     <form id="LocalLoginForm" onsubmit="DoLocalLogin(); return false;"> 
-                        Username: <input type="text" name="username"/> 
-                        Password: <input type="password" name="password"/> 
-                        <input class="Login_loginButton" type="button" value="login"/> 
+                     <form class="Login_LoginForm"> 
+                        Username: <input type="text" name="username" size="10" /> 
+                        Password: <input type="password" name="password" size="10" /> 
+                        <input class="Login_loginButton" type="submit" value="login"/> 
                      </form> 
                   </div> 
                </div>

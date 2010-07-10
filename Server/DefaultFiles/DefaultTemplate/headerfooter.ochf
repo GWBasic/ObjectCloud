@@ -1,9 +1,70 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
    <head>
       <oc:title>ObjectCloud</oc:title>
+      <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+      <oc:css src="default.css" />
+      <oc:css src="jquery-ui.css" />
+      <oc:script src="/API/jquery.js" />
+      <oc:script src="/API/Url.js" />
    </head>
    <body>
-      <a href="/Shell/Developer.oc">Developer Controls</a>
-      <oc:component />
+      <oc:if>
+         <oc:isadministrator>
+            <script>
+               $(document).ready(function()
+               {
+                  document.body.style.backgroundColor = 'red';
+               });
+            </script>
+         </oc:isadministrator>
+      </oc:if>
+     <div id="container"> 
+       <div id="header"> 
+          <a href="/"><img id="headerlogofloat" src="/Pages/objectcloud%20logo.png?Method=GetScaled&amp;height=80" /></a> 
+             
+          <oc:component oc:src="login.oc" />
+          <div style="float: clear"></div>
+         </div> 
+
+         <script>
+            var myUrl = Url.parseCurrent();
+
+             if (myUrl.arguments.tag)
+             {
+                $('#tagInput')[0].value = myUrl.arguments.tag;
+                $('#tagInput')[0].style.color = 'black';
+            }
+         </script>
+
+         <oc:component oc:src="navbar.oc" />
+
+         <div class="contents"><oc:component /></div>
+
+         <div style="float: clear" ></div>
+      </div>
+      <div class="footer">
+         <a href="http://objectcloud.com"><img src="/Pages/powered-by-banner.png" alt="Powered by ObjectCloud" /></a>
+         <oc:jsontemplate oc:url="/Shell/version.json" Method="ReadAll">
+            <div>
+                  ObjectCloud version [_Major_].[_Minor_], [_State_]
+
+                  <oc:if>
+                     <oc:hasvalue value="[_Release_]">
+                        : [_Release_]
+                     </oc:hasvalue>
+                  </oc:if>
+
+                  [_Joke_]
+
+                  <oc:if>
+                     <oc:hasvalue value="[_Stable_]"></oc:hasvalue>
+                     <oc:else>
+                         <em>WARNING!  THIS IS AN UNSTABLE RELEASE</em>
+                     </oc:else>
+                  </oc:if>
+            </div>
+         ObjectCloud is copyright 2009, 2010, <a href="http://andrewrondeau.com">Andrew Rondeau</a> and is released under an open-source license.  For more information, view <a href="/Docs/license.wchtml">/Docs/license.wchtml</a>
+         </oc:jsontemplate>
+      </div>
    </body>
 </html>

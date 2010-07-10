@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Directory>
+	<File
+		Name="ui-anim_basic_16x16.gif"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="ui-bg_diagonals-thick_90_eeeeee_40x40.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="ui-bg_flat_15_cd0a0a_40x100.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="ui-bg_glass_100_e4f1fb_1x400.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="ui-bg_glass_50_3f6ca9_1x400.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="ui-bg_glass_80_dae8f1_1x400.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="ui-bg_highlight-hard_100_d9d9d9_1x100.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="ui-bg_highlight-hard_70_000000_1x100.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="ui-bg_highlight-soft_100_153f77_1x100.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="ui-bg_highlight-soft_25_ffef8f_1x100.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="ui-icons_2694e8_256x240.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="ui-icons_2e83ff_256x240.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="ui-icons_3d80b3_256x240.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="ui-icons_3f6ca9_256x240.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="ui-icons_ffffff_256x240.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+</Directory>
