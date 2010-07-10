@@ -6,7 +6,7 @@ function rply_addReply(inObject)
 {
    rpy_object = inObject;
 
-   var replier = $("Replier");
+   var replier = $('Replier_Replier');
 
    rpy_oldHTML = replier.innerHTML;
    replier.innerHTML = "";
@@ -25,7 +25,7 @@ function rply_displayNicEdit()
    });
 
    rpy_editor.panelInstance(
-      'Replier',
+      'Replier_Replier',
       {
          hasPanel: true,
          style: "contents"
@@ -34,12 +34,12 @@ function rply_displayNicEdit()
 
 function rpy_save(content, id, instance)
 {
-   var replier = $("Replier");
+   var replier = $('Replier_Replier');
 
    if (null != rpy_editor)
-      rpy_editor.removeInstance('Replier');
+      rpy_editor.removeInstance('Replier_Replier');
 
-   replier.innerHTML = "Saving...<div>" + content + "</div>";
+   replier.innerHTML = 'Saving...<div>' + content + '</div>';
 
    rpy_object.Replier_AddReply(
       {
@@ -48,6 +48,16 @@ function rpy_save(content, id, instance)
       function()
       {
          replier.innerHTML = rpy_oldHTML;
+
+         var repliesDiv = $('Replier_Replies');
+         repliesDiv.innerHTML = "Loading...";
+
+         rpy_object.Replier_GetRepliesForDisplay(
+            {},
+            function(repliesHtml)
+            {
+               repliesDiv.innerHTML = repliesHtml;
+            });
       },
       function()
       {
@@ -55,31 +65,4 @@ function rpy_save(content, id, instance)
          replier.innerHTML = content;
          rply_displayNicEdit();
       });
-}
-
-function rpy_createReplyElement(reply)
-{
-   var replyHtml = '';
-
-   replyHtml +=
-      '<a href="' + reply.File.OwnerIdentity + '">' + reply.File.Owner + '</a>, at ';
-   replyHtml += new Date(reply.File.Created) + ', says:';
-
-   var toReturn = document.createElement('div');
-
-   var headerSpan = document.createElement('span');
-   headerSpan.innerHTML = replyHtml;
-   toReturn.appendChild(headerSpan);
-
-   var contentDiv = document.createElement('div');
-   contentDiv.innerHTML = reply.View.Content;
-   toReturn.appendChild(contentDiv);
-
-   var linkDiv = document.createElement('span');
-   linkDiv.innerHTML = '<a href="' + reply.File.FullPath + '">View / Reply</a>';
-   toReturn.appendChild(linkDiv);
-
-   toReturn.appendChild(document.createElement('hr'));
-
-   return toReturn;
 }

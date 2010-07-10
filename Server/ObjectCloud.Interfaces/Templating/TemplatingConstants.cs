@@ -50,9 +50,14 @@ namespace ObjectCloud.Interfaces.Templating
         public static readonly string[] ArgEnd = new string[] { "_]" };
 
         /// <summary>
+        /// Preffered Namespace for HTML tags
+        /// </summary>
+        public const string HtmlNamespace = "http://www.w3.org/1999/xhtml";
+
+        /// <summary>
         /// Namespaces for HTML tags
         /// </summary>
-        public readonly static Set<string> HtmlNamespaces = new Set<string>("", "http://www.w3.org/1999/xhtml");
+        public readonly static Set<string> HtmlNamespaces = new Set<string>("", HtmlNamespace);
     }
 
     /// <summary>

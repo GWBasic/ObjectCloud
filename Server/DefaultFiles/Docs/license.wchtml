@@ -213,6 +213,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. </pre></td><td>O
 <td>Changed namespace, added some additional counters</td>
    </tr>
 
+   <tr>
+      <td><a href="http://htmlagilitypack.codeplex.com/">HTML Agility Pack</td><td><a href="http://htmlagilitypack.codeplex.com/team/view">Team Page</a></td><td>HTML parser</td><td><a href="http://htmlagilitypack.codeplex.com/license">Ms-PL</a></td><td>Convert HTML to XHTML when rendering templates that need to include HTML that isn't valid xml.</td><td>HtmlAgilityPack.dll, HtmlAgilityPack.xml</td>
+   </tr>
+
 </table>
 
 <? WebComponent("/Pages/footer.webcomponent") ?>

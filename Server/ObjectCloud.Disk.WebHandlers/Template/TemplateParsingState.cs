@@ -9,6 +9,7 @@ using System.Text;
 using System.Xml;
 
 using Common.Logging;
+using HtmlAgilityPack;
 using JsonFx.Json;
 
 using ObjectCloud.Common;
@@ -361,17 +362,29 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
             if (XmlParseMode.Html == xmlParseMode)
             {
-                // see http://htmlagilitypack.codeplex.com and http://www.codeproject.com/KB/cs/html2xhtmlcleaner.aspx#xx2357981xx
+                // see http://htmlagilitypack.codeplex.com 
+                // see http://htmlagilitypack.codeplex.com/SourceControl/changeset/view/67079#52182
 
-
-                /*xml = xml.Split(new char[] { '>' }, 2)[1] + "<!DOCTYPE html>";
-
+                xml = "<!DOCTYPE html><html>" + xml.Split(new char[] { '>' }, 2)[1];
 
                 HtmlDocument htmlDocument = new HtmlDocument();
+
+                // Create a stream that's used for reading and writing
+                Stream stream = new MemoryStream(xml.Length + (xml.Length / 5));
+
+                // Create the XML writer
+                XmlWriterSettings settings = new XmlWriterSettings();
+                //settings.ConformanceLevel = ConformanceLevel.Fragment;
+                settings.OmitXmlDeclaration = true;
+                XmlWriter xmlWriter = XmlWriter.Create(stream, settings);
 
                 try
                 {
                     htmlDocument.LoadHtml(xml);
+
+                    // Write the html to XML
+                    htmlDocument.OptionOutputAsXml = true;
+                    htmlDocument.Save(xmlWriter);
                 }
                 catch (Exception e)
                 {
@@ -379,44 +392,22 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     throw new WebResultsOverrideException(WebResults.From(Status._500_Internal_Server_Error, "An error occured trying to parse HTML, see the logs for more information"));
                 }
 
-                // Create a stream that's used for reading and writing
-                Stream stream = new MemoryStream(xml.Length + (xml.Length / 5));
-                
-                // Write the html to XML
-                XmlWriter xmlWriter = XmlWriter.Create(stream);
-                htmlDocument.Save(xmlWriter);
-
                 stream.Seek(0, SeekOrigin.Begin);
 
                 // Read xml from the stream
                 XmlReader xmlReader = XmlReader.Create(stream);
-                xmlDocument.Load(xmlReader);*/
+                xmlDocument.Load(xmlReader);
 
+                // Get rid of junk nodes
+                while ("html" != xmlDocument.FirstChild.LocalName)
+                    xmlDocument.RemoveChild(xmlDocument.FirstChild);
 
-
-
-                xmlDocument.LoadXml(string.Format(
-                    "<html xmlns=\"{0}\"><div><span class=\"{1}\">Converting HTML to XML is not supported</span></div></html>",
-                    TemplateDocument.FirstChild.NamespaceURI,
-                    TemplatingConstants.WarningNodeClass));
-
-                /*HtmlReader htmlReader = new HtmlReader(xml);
-
-                // Create a stream that's used for reading and writing
-                Stream stream = new MemoryStream(xml.Length + (xml.Length / 5));
-                HtmlWriter htmlWriter = new HtmlWriter(stream, Encoding.UTF8);
-
-                htmlReader.Read();
-                while (!htmlReader.EOF)
-                    htmlWriter.WriteNode(htmlReader, true);
-
-                htmlWriter.Flush();
-
-                stream.Seek(0, SeekOrigin.Begin);
-
-                // Read xml from the stream
-                XmlReader xmlReader = XmlReader.Create(stream);
-                xmlDocument.Load(xmlReader);*/
+                // Convert the namespace
+                // TODO:  There really needs to be a better way to do this
+                XmlAttribute namespaceAttribute = xmlDocument.CreateAttribute("xmlns");
+                namespaceAttribute.Value = TemplatingConstants.HtmlNamespace;
+                xmlDocument.DocumentElement.Attributes.Append(namespaceAttribute);
+                xmlDocument.LoadXml(xmlDocument.OuterXml);
             }
             else
             {

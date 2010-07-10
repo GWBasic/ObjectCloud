@@ -1439,7 +1439,7 @@ var paint = {
       alert('Error opening '+this.src);
       iface.status.innerHTML = '';
     }
-    img.src = url;
+    img.src = url + '?Method=ReadAll';
   }
     
 }

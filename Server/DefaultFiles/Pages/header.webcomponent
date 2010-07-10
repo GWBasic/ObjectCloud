@@ -4,9 +4,9 @@
    <head>
       <title><? $_GET["Title"] ?></title>
       <meta http-equiv="X-UA-Compatible" content="chrome=1">
-      <link href="/Pages/objectcloud.css" type="text/css" rel="stylesheet" />
-      <link href="/API/proto.menu.css" type="text/css" rel="stylesheet" />
-      <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+      <link href="<? Cache(/Pages/objectcloud.css) ?>" type="text/css" rel="stylesheet" />
+      <link href="<? Cache(/API/proto.menu.css) ?>" type="text/css" rel="stylesheet" />
+      <link rel="shortcut icon" type="image/x-icon" href="<? Cache(/favicon.ico) ?>">
 
       <? Scripts(/API/Prototype.js, /API/DetectMobile.js) ?>
 
