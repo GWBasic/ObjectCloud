@@ -5,4 +5,4 @@
 # For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
 
 
-mono ObjectCloud.exe Actions ../../../DefaultFiles/Actions Shell ../../../DefaultFiles/Shell API ../../../DefaultFiles/API Templates ../../../DefaultFiles/Templates Tests ../../../DefaultFiles/Tests Pages ../../../DefaultFiles/Pages Docs ../../../DefaultFiles/Docs Classes ../../../DefaultFiles/Classes DefaultTemplate ../../../DefaultFiles/DefaultTemplate
+mono ObjectCloud.exe dump Actions ../../../DefaultFiles/Actions Shell ../../../DefaultFiles/Shell API ../../../DefaultFiles/API Templates ../../../DefaultFiles/Templates Tests ../../../DefaultFiles/Tests Pages ../../../DefaultFiles/Pages Docs ../../../DefaultFiles/Docs Classes ../../../DefaultFiles/Classes DefaultTemplate ../../../DefaultFiles/DefaultTemplate

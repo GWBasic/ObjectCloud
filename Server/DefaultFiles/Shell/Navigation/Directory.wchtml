@@ -125,11 +125,12 @@ to <input id="DestinationFileNameInput" type="text" name="DestinationFilename" /
 <input type="submit" value="copy" onclick="copy()" />
 (Start the filename with a "/" for an absolute path, or omit a path to copy from this directory)
 
-<form method="post" action="<? $_GET["Directory"] ?>?Method=Upload" name="submit" enctype="multipart/form-data" target="_blank">
+<form method="post" action="<? $_GET["Directory"] ?>?Method=Upload" name="submit" enctype="multipart/form-data" target="uploadtarget">
    <h3>Upload</h3>
 
-   <input type="file" name="File" />
-   <input type="submit" value="upload" />
+   <input type="file" name="File" onchange="this.parentNode.submit()" />
+   <!-- <input type="submit" value="upload" /> -->
+   <iframe width="90%" height="25px" name="uploadtarget"></iframe>
 </form>
 
 <script>
