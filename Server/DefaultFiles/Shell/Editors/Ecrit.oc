@@ -1,0 +1,14 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
+<oc:inserthead>
+   <oc:script src="Ecrit.js" />
+   <oc:css src="/API/jquery_rte/jquery.rte.css" />
+</oc:inserthead>
+
+   <script>
+      Ecrit(<oc:component oc:url="[_FileName_]" Method="ReadAll" />);
+   </script>
+
+   <input type="text" class="title" />
+   <textarea class="contents" />
+
+</oc:componentdef>
