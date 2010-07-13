@@ -318,6 +318,16 @@ namespace ObjectCloud.Disk.FileHandlers
             {
                 name = name.Substring(7);
                 name = name.Substring(0, name.Length - 6);
+				
+				// If this is a personal group, then the name must be loaded
+				if (name.Contains("/"))
+				{
+					string filename = "/Users/" + name + ".group";
+					IFileContainer groupFileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(filename);
+					INameValuePairsHandler groupData = groupFileContainer.CastFileHandler<INameValuePairsHandler>();
+					
+					name = groupData["GroupId"];
+				}
             }
 
             IGroups_Readable group = DatabaseConnection.Groups.SelectSingle(Groups_Table.Name == name);
@@ -463,6 +473,16 @@ namespace ObjectCloud.Disk.FileHandlers
                     {
                         namesArray[ctr] = namesArray[ctr].Substring(7);
                         namesArray[ctr] = namesArray[ctr].Substring(0, namesArray[ctr].Length - 6);
+				
+						// If this is a personal group, then the name must be loaded
+						if (namesArray[ctr].Contains("/"))
+						{
+							string filename = "/Users/" + namesArray[ctr] + ".group";
+							IFileContainer groupFileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(filename);
+							INameValuePairsHandler groupData = groupFileContainer.CastFileHandler<INameValuePairsHandler>();
+							
+							namesArray[ctr] = groupData["GroupId"];
+						}
                     }
 
 			foreach (IUsers_Readable user in DatabaseConnection.Users.Select(Users_Table.Name.In(namesArray)))
