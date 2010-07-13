@@ -1,6 +1,8 @@
-<? WebComponent("/Pages/header.webcomponent?Title=ObjectCloud%20Licenses") ?>
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
 
-All original ObjectCloud source code is copyright (c) 2009, 2010 Andrew Rondeau.  ObjectCloud contains additional source code, programs, and libraries from additional authors.  These retain their original copyright, and are documented in this file.
+<img src="/Pages/objectcloud logo.png?Method=GetScaled&amp;width=600" />
+
+<p>All original ObjectCloud source code is copyright (c) 2009, 2010 Andrew Rondeau.  ObjectCloud contains additional source code, programs, and libraries from additional authors.  These retain their original copyright, and are documented in this file.</p>
 
 <h1>Summary</h1>
 <p><em>The terms of the license are subject to change.  Assume that future releases will modify or replace this license.</em></p>
@@ -67,22 +69,21 @@ All original ObjectCloud source code is copyright (c) 2009, 2010 Andrew Rondeau.
    </tr>
 
    <tr>
-      <td><a href="http://nicedit.com/">NicEdit<br />http://nicedit.com/</td>
+      <td><a href="http://nicedit.com/">NicEdit<br />http://nicedit.com/</a></td>
          <td><a href="http://bkirchoff.com/">Brian Kirchoff</a></td><td>NicEdit is a Lightweight, Cross Platform, Inline Content Editor to allow easy editing of web site content on the fly in the browser.</td><td>NicEdit is distributed under the terms of the MIT license For more information visit http://nicedit.com/</td><td><a href="/Shell/Editors/nicEdit.wchtml?Method=ReadAll">/Shell/Editors/nicEdit.wchtml</a> uses nicEdit to edit .page files</td><td><a href="/API/nicEdit.js">/API/nicEdit.js</a> and <a href="/API/nicEditorIcons.gif">/API/nicEditorIcons.gif</a></td><td>Modified to use <a href="/API/nicEditorIcons.gif">/API/nicEditorIcons.gif</a>'s correct location.  This version of NicEdit includes the "save" button and icon.  I had problems with the minimized redistributable, so I use the development version.  Also fixed a minor CSS bug in the font size, font family, and font style menus.</td>
    </tr>
 
    <tr>
-      <td><a href="http://code.google.com/p/proto-menu/">Proto.Menu</a><br /><a href="http://yura.thinkweb2.com/scripting/contextMenu/"</a>Also see: http://yura.thinkweb2.com/scripting/contextMenu/</a></td>
-         <td><a href="http://thinkweb2.com/projects/prototype/"Juriy Zaytsev</a></td><td>Prototype-based right-click context menu.  Adds right-click to an element.</td><td><a href="http://www.opensource.org/licenses/mit-license.php">MIT</a></td><td>Used in the <a href="/Shell/Navigation/Directory.webcomponent?Method=ReadAll">directory view webcomponent (/Shell/Navigation/Directory.webcomponent)</a> to add context menus to each file.  Note:  I plan on replacing or augmenting the library with a something that adds a small button to the side of an element; right-click doesn't work very well on touch-screens and goes against my <a href="/Docs/philosophy.page">Web Development Philosophy</a>.</td><td><a href="/API/proto.menu.js">/API/proto.menu.js</a> and <a href="/API/proto.menu.css">/API/proto.menu.css</a></td>
+      <td><a href="http://code.google.com/p/proto-menu/">Proto.Menu</a><br /><a href="http://yura.thinkweb2.com/scripting/contextMenu/">Also see: http://yura.thinkweb2.com/scripting/contextMenu/</a></td>
+         <td><a href="http://thinkweb2.com/projects/prototype/">Juriy Zaytsev</a></td><td>Prototype-based right-click context menu.  Adds right-click to an element.</td><td><a href="http://www.opensource.org/licenses/mit-license.php">MIT</a></td><td>Used in the <a href="/Shell/Navigation/Directory.webcomponent?Method=ReadAll">directory view webcomponent (/Shell/Navigation/Directory.webcomponent)</a> to add context menus to each file.  Note:  I plan on replacing or augmenting the library with a something that adds a small button to the side of an element; right-click doesn't work very well on touch-screens and goes against my <a href="/Docs/philosophy.page">Web Development Philosophy</a>.</td><td><a href="/API/proto.menu.js">/API/proto.menu.js</a> and <a href="/API/proto.menu.css">/API/proto.menu.css</a></td>
    </tr>
 
    <tr>
-      <td><a href="http://www.prototypejs.org/">Prototype.js<br />http://www.prototypejs.org/</td>
+      <td><a href="http://www.prototypejs.org/">Prototype.js<br />http://www.prototypejs.org/</a></td>
          <td><a href="http://conio.net/">Sam Stephenson</a></td><td>Popular web-development framework that assists in
          cross-browser functionality for DHTML and AJAX, also provides significant Javascript helper methods including
          safe JSON parsing and serialization.</td><td><a href="http://dev.rubyonrails.org/browser/spinoffs/prototype/trunk/LICENSE?format=raw">MIT</a></td><td>Used almost everywhere for cross-browser compatibility, including in the
 Javascript AJAX wrappers.  Note:  I chose Prototype because it was very easy to learn.</td><td><a href="/API/Prototype.js">/API/Prototype.js</a></td>
-      </tr>
    </tr>
 
    <tr>
@@ -94,11 +95,15 @@ Javascript AJAX wrappers.  Note:  I chose Prototype because it was very easy to 
    </tr>
 
    <tr>
-      <td><a href="http://www.rainforestnet.com/datetimepicker.htm">Javascript Date Time Picker 2.0 (CSS Version)<br/>http://www.rainforestnet.com/datetimepicker.htm</a></td><td>Ng <a href="http://www.rainforestnet.com/">Teng-Yong<a/>, Yvan Lavoie</td><td>Javascript-based Date/Time picker component</td><td>???</td><td>Date/Time picker on the log viewer</td><td><a href="/API/datetimepicker_css.js">/API/datetimepicker_css.js</a> and <a href="/API/DateTime Picker Images">/API/DateTime Picker Images</a></td><td>Images converted to .png</td>
+      <td><a href="http://www.rainforestnet.com/datetimepicker.htm">Javascript Date Time Picker 2.0 (CSS Version)<br/>http://www.rainforestnet.com/datetimepicker.htm</a></td><td>Ng <a href="http://www.rainforestnet.com/">Teng-Yong</a>, Yvan Lavoie</td><td>Javascript-based Date/Time picker component</td><td>???</td><td>Date/Time picker on the log viewer</td><td><a href="/API/datetimepicker_css.js">/API/datetimepicker_css.js</a> and <a href="/API/DateTime Picker Images">/API/DateTime Picker Images</a></td><td>Images converted to .png</td>
    </tr>
 
    <tr>
       <td><a href="http://www.datejs.com/">date.js<br />http://www.datejs.com/</a></td><td><a href="http://www.coolite.com/">http://www.coolite.com/</a></td><td>Javascript date parser</td><td><a href="http://www.opensource.org/licenses/mit-license.php">MIT</a></td><td>Date parser on the log viewer</td><td><a href="/API/date.js">/API/date.js</a></td>
+   </tr>
+
+   <tr>
+      <td><a href="http://plugins.jquery.com/project/lwRTE/">LIGHTWEIGHT RICH TEXT EDITOR (RTE / WYSIWYG) FOR JQUERY/</a></td><td><a href="http://code.google.com/p/lwrte/">http://code.google.com/p/lwrte/</a></td><td>jQuery-based rich text editor</td><td><a href="http://www.opensource.org/licenses/mit-license.php">MIT</a></td><td>Rich ext editor for use on jQuery-based xhtml pages.</td><td><a href="/API/jquery.rte.js">/API/jquery.rte.js</a>, <a href="/API/jquery.rte.tb.js">/API/jquery.rte.tb.js</a>, and <a href="/API/jquery_rte">/API/jquery_rte</a></td><td>Fixed bugs that prevented use with xhtml and removed php bindings</td>
    </tr>
 
 </table>
@@ -144,30 +149,16 @@ SOFTWARE.</p></td><td>Primarily used in TextWebHandler.cs to compress Javascript
    </tr>
 
    <tr>
-      <td><a href="http://netcommon.sourceforge.net/">Common.Logging.dll<br />http://netcommon.sourceforge.net/</td>
+      <td><a href="http://netcommon.sourceforge.net/">Common.Logging.dll<br />http://netcommon.sourceforge.net/</a></td>
       <td>Mark Pollack, Erich Eichinger, Bruno Baia</td><td>High-level logging library intended to abstract popular .Net loggers.</td><td><a href="http://www.apache.org/licenses/LICENSE-2.0">Apache</a></td><td>Logging interface used throughout all of ObjectCloud.</td><td>Common.Logging.dll</td><td>Might be recompiled.</td>
    </tr>
 
    <tr>
-      <td><a href="http://extremeswank.com/aspnet_openid.html">ExtremeSwank OpenID<br />http://extremeswank.com/aspnet_openid.html</td><td>http://extremeswank.com</td><td>OpenID consumer library.  Chosen because it does not rely on ASP.</td><td><a href="http://www.opensource.org/licenses/mit-license.php">MIT</a></td><td>Used in ObjectCloud.Implementation.WebHandlers.dll to allow OpenID users to log into an ObjectCloud server.</td><td>ExtremeSwank.OpenId.dll</td>
+      <td><a href="http://extremeswank.com/aspnet_openid.html">ExtremeSwank OpenID<br />http://extremeswank.com/aspnet_openid.html</a></td><td>http://extremeswank.com</td><td>OpenID consumer library.  Chosen because it does not rely on ASP.</td><td><a href="http://www.opensource.org/licenses/mit-license.php">MIT</a></td><td>Used in ObjectCloud.Implementation.WebHandlers.dll to allow OpenID users to log into an ObjectCloud server.</td><td>ExtremeSwank.OpenId.dll</td>
    </tr>
 
    <tr>
-      <td><a href="http://www.ikvm.net/">IKVM.Net</a></td><td>Jeroen Frijters?  IKVM is a large project with many contributors and includes ports of many open-source Java libraries, including the OpenJDK.</td><td>IKVM is a JVM implemented in .Net/Mono.  It allows a .jar file to be translated into a CLR-Complaint .dll file, which then allows CLR languages like C# to use Java libraries with very few headaches.</td><td>
-
-<a href="http://weblog.ikvm.net/story.aspx/license">IKVM license page</a>
-
-<PRE>&nbsp; Copyright (C) 2002-2008 Jeroen Frijters</PRE><PRE>&nbsp; This software is provided 'as-is', without any express or implied<BR>&nbsp; warranty.&nbsp; In no event will the authors be held liable for any damages<BR>&nbsp; arising from the use of this software.</PRE><PRE>&nbsp; Permission is granted to anyone to use this software for any purpose,<BR>&nbsp; including commercial applications, and to alter it and redistribute it<BR>&nbsp; freely, subject to the following restrictions:</PRE><PRE>&nbsp; 1. The origin of this software must not be misrepresented; you must not<BR>&nbsp;&nbsp;&nbsp;&nbsp; claim that you wrote the original software. If you use this software<BR>&nbsp;&nbsp;&nbsp;&nbsp; in a product, an acknowledgment in the product documentation would be<BR>&nbsp;&nbsp;&nbsp;&nbsp; appreciated but is not required.<BR>&nbsp; 2. Altered source versions must be plainly marked as such, and must not be<BR>&nbsp;&nbsp;&nbsp;&nbsp; misrepresented as being the original software.<BR>&nbsp; 3. This notice may not be removed or altered from any source distribution.</PRE><PRE>&nbsp; Jeroen Frijters<BR>&nbsp; <A href="mailto:jeroen@frijters.net">jeroen@frijters.net</A><BR></PRE>
-
-<hr>
-IKVM.OpenJDK.ClassLibrary.dll contains code from the OpenJDK, GNU Classpath and IcedTea projects and is licensed under the <a href="http://openjdk.java.net/legal/gplv2+ce.html">GPL v2 + "Classpath" exception</a>.
-
-</td>
-         <td>Used in ObjectCloud.Javascript.dll to allow use of Rhino, a Javascript interpreter written in Java.</td><td>IKVM.OpenJDK.Core.dll, IKVM.OpenJDK.Security.dll, IKVM.OpenJDK.Text.dll, IKVM.OpenJDK.Util.dll, and IKVM.Runtime.dll</td>
-   </tr>
-
-   <tr>
-      <td><a href="http://www.nunit.org/">NUnit<br />http://www.nunit.org/</td><td>"The NUnit development team currently consists of Charlie Poole, Jamie Cansdale and Gary Feldman. Past developers include James W. Newkirk, Alexei A. Vorontsov, Michael C. Two and Philip A. Craig."</td><td>Popular unit-testing framework for C# and .Net/mono</td><td><a href="http://www.opensource.org/licenses/zlib-license.php">zlib/libpng License</a></td><td>All server-side unit tests use NUnit</td><td>Only used and included in source distributions.</td>
+      <td><a href="http://www.nunit.org/">NUnit<br />http://www.nunit.org/</a></td><td>"The NUnit development team currently consists of Charlie Poole, Jamie Cansdale and Gary Feldman. Past developers include James W. Newkirk, Alexei A. Vorontsov, Michael C. Two and Philip A. Craig."</td><td>Popular unit-testing framework for C# and .Net/mono</td><td><a href="http://www.opensource.org/licenses/zlib-license.php">zlib/libpng License</a></td><td>All server-side unit tests use NUnit</td><td>Only used and included in source distributions.</td>
    </tr>
 
    <tr>
@@ -176,7 +167,7 @@ IKVM.OpenJDK.ClassLibrary.dll contains code from the OpenJDK, GNU Classpath and 
    </tr>
 
    <tr>
-      <td><a href="http://www.springframework.net/">Spring.net<br />http://www.springframework.net/</td><td><a href="http://www.springsource.com/">Springsource</a></td><td>Application framework</td><td><a href="http://www.apache.org/licenses/LICENSE-2.0">Apache 2.0</a></td><td>Basic dependency injection</td><td>Spring.Core.dll</td>
+      <td><a href="http://www.springframework.net/">Spring.net<br />http://www.springframework.net/</a></td><td><a href="http://www.springsource.com/">Springsource</a></td><td>Application framework</td><td><a href="http://www.apache.org/licenses/LICENSE-2.0">Apache 2.0</a></td><td>Basic dependency injection</td><td>Spring.Core.dll</td>
    </tr>
 
    <tr>
@@ -214,9 +205,9 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. </pre></td><td>O
    </tr>
 
    <tr>
-      <td><a href="http://htmlagilitypack.codeplex.com/">HTML Agility Pack</td><td><a href="http://htmlagilitypack.codeplex.com/team/view">Team Page</a></td><td>HTML parser</td><td><a href="http://htmlagilitypack.codeplex.com/license">Ms-PL</a></td><td>Convert HTML to XHTML when rendering templates that need to include HTML that isn't valid xml.</td><td>HtmlAgilityPack.dll, HtmlAgilityPack.xml</td>
+      <td><a href="http://htmlagilitypack.codeplex.com/">HTML Agility Pack</a></td><td><a href="http://htmlagilitypack.codeplex.com/team/view">Team Page</a></td><td>HTML parser</td><td><a href="http://htmlagilitypack.codeplex.com/license">Ms-PL</a></td><td>Convert HTML to XHTML when rendering templates that need to include HTML that isn't valid xml.</td><td>HtmlAgilityPack.dll, HtmlAgilityPack.xml</td>
    </tr>
 
 </table>
 
-<? WebComponent("/Pages/footer.webcomponent") ?>
+</oc:componentdef>

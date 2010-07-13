@@ -412,7 +412,8 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 				// Clean up &nbsp; that is converted incorrectly
 				
 				foreach (XmlText xmlText in XmlHelper.IterateAll<XmlText>(xmlDocument))
-					xmlText.InnerText = xmlText.InnerText.Replace("&nbsp;",char.ConvertFromUtf32(160));
+					if (null != xmlText.InnerText)
+						xmlText.InnerText = xmlText.InnerText.Replace("&nbsp;",char.ConvertFromUtf32(160).Replace("&amp;lt;", "<").Replace("&amp;gt;", ">"));
             }
             else
             {
