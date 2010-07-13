@@ -31,13 +31,13 @@ var	rte_toolbar = {
 	block			: {command: 'formatblock', select: '\
 <select>\
 	<option value="">- format -</option>\
-	<option value="<p>">Paragraph</option>\
-	<option value="<h1>">Header 1</option>\
-	<option value="<h2>">Header 2</options>\
-	<option value="<h3>">Header 3</option>\
-	<option value="<h4>">Header 4</options>\
-	<option value="<h5>">Header 5</option>\
-	<option value="<h6>">Header 6</options>\
+	<option value="&lt;p&gt;">Paragraph</option>\
+	<option value="&lt;h1&gt;">Header 1</option>\
+	<option value="&lt;h2&gt;">Header 2</option>\
+	<option value="&lt;h3&gt;">Header 3</option>\
+	<option value="&lt;h4&gt;">Header 4</option>\
+	<option value="&lt;h5&gt;">Header 5</option>\
+	<option value="&lt;h6&gt;">Header 6</option>\
 </select>\
 	', tag_cmp: lwrte_block_compare, tags: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']},
 	font			: {command: 'fontname', select: '\
@@ -45,13 +45,13 @@ var	rte_toolbar = {
 	<option value="">- font -</option>\
 	<option value="arial">Arial</option>\
 	<option value="comic sans ms">Comic Sans</option>\
-	<option value="courier new">Courier New</options>\
+	<option value="courier new">Courier New</option>\
 	<option value="georgia">Georgia</option>\
-	<option value="helvetica">Helvetica</options>\
+	<option value="helvetica">Helvetica</option>\
 	<option value="impact">Impact</option>\
-	<option value="times new roman">Times</options>\
-	<option value="trebuchet ms">Trebuchet</options>\
-	<option value="verdana">Verdana</options>\
+	<option value="times new roman">Times</option>\
+	<option value="trebuchet ms">Trebuchet</option>\
+	<option value="verdana">Verdana</option>\
 </select>\
 	', tags: ['font']},
 	size			: {command: 'fontsize', select: '\
@@ -59,11 +59,11 @@ var	rte_toolbar = {
 	<option value="">-</option>\
 	<option value="1">1 (8pt)</option>\
 	<option value="2">2 (10pt)</option>\
-	<option value="3">3 (12pt)</options>\
+	<option value="3">3 (12pt)</option>\
 	<option value="4">4 (14pt)</option>\
-	<option value="5">5 (16pt)</options>\
+	<option value="5">5 (16pt)</option>\
 	<option value="6">6 (18pt)</option>\
-	<option value="7">7 (20pt)</options>\
+	<option value="7">7 (20pt)</option>\
 </select>\
 	', tags: ['font']},
 	style			: {exec: lwrte_style, init: lwrte_style_init},
@@ -324,7 +324,7 @@ function lwrte_cleanup_word() {
 	
 	function cleanup_word(s, bIgnoreFont, bRemoveStyles, bCleanWordKeepsStructure) {
 		s = s.replace(/<o:p>\s*<\/o:p>/g, '') ;
-		s = s.replace(/<o:p>[\s\S]*?<\/o:p>/g, 'Â ') ;
+		s = s.replace(/<o:p>[\s\S]*?<\/o:p>/g, 'Ã‚Â ') ;
 
 		// Remove mso-xxx styles.
 		s = s.replace( /\s*mso-[^:]+:[^;"]+;?/gi, '' ) ;
@@ -367,7 +367,7 @@ function lwrte_cleanup_word() {
 		// Remove empty styles.
 		s =  s.replace( /\s*style="\s*"/gi, '' ) ;
 
-		s = s.replace( /<SPAN\s*[^>]*>\s*Â \s*<\/SPAN>/gi, 'Â ' ) ;
+		s = s.replace( /<SPAN\s*[^>]*>\s*Ã‚Â \s*<\/SPAN>/gi, 'Ã‚Â ' ) ;
 
 		s = s.replace( /<SPAN\s*[^>]*><\/SPAN>/gi, '' ) ;
 
@@ -390,7 +390,7 @@ function lwrte_cleanup_word() {
 		// Remove comments [SF BUG-1481861].
 		s = s.replace(/<\!--[\s\S]*?-->/g, '' ) ;
 
-		s = s.replace( /<(U|I|STRIKE)>Â <\/\1>/g, 'Â ' ) ;
+		s = s.replace( /<(U|I|STRIKE)>Ã‚Â <\/\1>/g, 'Ã‚Â ' ) ;
 
 		s = s.replace( /<H\d>\s*<\/H\d>/gi, '' ) ;
 

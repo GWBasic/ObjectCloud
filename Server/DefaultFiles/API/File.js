@@ -1,4 +1,4 @@
-// Scripts: /API/Prototype.js, /API/AJAX.js
+// Scripts: /API/AJAX.js
 
 // This code is released under the Simple Public License (SimPL) 2.0.  Some additional privelages are granted.
 // See /Docs/license.wchtml

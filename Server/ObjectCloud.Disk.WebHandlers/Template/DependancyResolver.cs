@@ -53,12 +53,22 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     XmlAttribute varnameAttribute = element.Attributes["varname"];
 
                     if ((null != filenameAttribute) && (null != varnameAttribute))
+					{
                         templateParsingState.AddScript(string.Format(
                             "{0}?Method=GetJSW&assignToVariable={1}",
                             templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.GetAbsolutePath(templateParsingState.GetCWD(element), filenameAttribute.Value),
                             varnameAttribute.Value));
 
-                    XmlHelper.RemoveFromParent(element);
+                    	XmlHelper.RemoveFromParent(element);
+					}
+					else if (templateParsingState.WebConnection.CookiesFromBrowser.ContainsKey(TemplatingConstants.JavascriptDebugModeCookie))
+					{
+						XmlElement replacementScript = templateParsingState.TemplateDocument.CreateElement("", "script", TemplatingConstants.HtmlNamespace);
+						XmlText alertText = templateParsingState.TemplateDocument.CreateTextNode("alert('Invalid open: " + element.OuterXml + "');");
+						replacementScript.AppendChild(alertText);
+					
+						templateParsingState.ReplaceNodes(element, replacementScript);
+					}
                 }
                 else if (element.LocalName == "css")
                 {

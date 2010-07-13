@@ -8,7 +8,9 @@
       Ecrit(<oc:component oc:url="[_FileName_]" Method="ReadAll" />);
    </script>
 
-   <input type="text" class="title" />
+   Title: <br />
+   <input type="text" class="title" style="width: 100%" /><br />
+   <div id="editorTop" style="width: 100%" >_</div>
    <textarea class="contents" />
 
 </oc:componentdef>

@@ -32,17 +32,17 @@ namespace ObjectCloud.Common
         public static IEnumerable<T> IterateAll<T>(XmlNode xmlNode)
             where T : XmlNode
         {
-            foreach (XmlNode childNode in xmlNode.ChildNodes)
-                if (childNode is T)
-                {
-                    yield return (T)childNode;
-
-                    foreach (T subChildNode in IterateAll<T>(childNode))
-                        yield return subChildNode;
-
-                }
-        }
-
+			if (null != xmlNode.ChildNodes)
+	            foreach (XmlNode childNode in xmlNode.ChildNodes)
+				{
+	                if (childNode is T)
+	                    yield return (T)childNode;
+	
+	                foreach (T subChildNode in IterateAll<T>(childNode))
+	                    yield return subChildNode;
+	        	}
+		}
+		
         /// <summary>
         /// Helps iterate through all elements and comments in an XmlNode, recursively going through all child elements.
         /// </summary>

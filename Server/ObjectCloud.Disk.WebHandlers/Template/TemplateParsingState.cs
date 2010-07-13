@@ -408,6 +408,11 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 namespaceAttribute.Value = TemplatingConstants.HtmlNamespace;
                 xmlDocument.DocumentElement.Attributes.Append(namespaceAttribute);
                 xmlDocument.LoadXml(xmlDocument.OuterXml);
+				
+				// Clean up &nbsp; that is converted incorrectly
+				
+				foreach (XmlText xmlText in XmlHelper.IterateAll<XmlText>(xmlDocument))
+					xmlText.InnerText = xmlText.InnerText.Replace("&nbsp;",char.ConvertFromUtf32(160));
             }
             else
             {

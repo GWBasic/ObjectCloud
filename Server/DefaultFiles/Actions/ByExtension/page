@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <NameValuePairs>
-	<NameValuePair Name="View" Value="/Shell/Viewers/PageViewer.wchtml?FileName=[Target], text/html" />
+	<NameValuePair Name="View" Value="/Shell/Viewers/PageViewer.oc?FileName=[Target]" />
 	<NameValuePair Name="Preview" Value="[Target]?Method=ReadAll&amp;MaxLength=2000" />
-	<NameValuePair Name="Edit" Value="/Shell/Editors/Ecrit.oc?FileName=[Target]" />
+	<NameValuePair Name="Edit" Value="/Shell/Editors/nicEdit.wchtml?FileName=[Target]" />
 </NameValuePairs>

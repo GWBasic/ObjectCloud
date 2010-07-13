@@ -442,7 +442,15 @@ namespace ObjectCloud.Disk.WebHandlers
 
                 templateParsingState.SetCWD(nodesToInsert, templateFileContainer.ParentDirectoryHandler.FileContainer.FullPath);
 
-                templateFileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(headerFooter);
+				try
+				{
+                	templateFileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(headerFooter);
+				} catch (FileDoesNotExist fdne)
+				{
+					log.Error(headerFooter + " does not exist", fdne);
+					
+					throw new WebResultsOverrideException(WebResults.From(Status._500_Internal_Server_Error, headerFooter + " does not exist"));
+				}
 
                 templateDocument = templateParsingState.LoadXmlDocumentAndReplaceGetParameters(
                     getParameters,
