@@ -1,4 +1,3 @@
 [
-   {"NamedPermission":"reply", Label: "Respond", "Default":true},
-   {"NamedPermission":"link", Label: "Link", "Default":true},
+   {"NamedPermission":"reply", Label: "Respond", "Default":true}
 ]

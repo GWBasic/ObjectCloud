@@ -1561,6 +1561,34 @@ namespace ObjectCloud.Disk.WebHandlers
         protected object ExecutionEnvironmentLock = new object();
 
         #endregion
+
+		/// <summary>
+		/// Returns the named permissions that apply to this file 
+		/// </summary>
+		/// <param name="webConnection">
+		/// A <see cref="IWebConnection"/>
+		/// </param>
+		/// <returns>
+		/// A <see cref="IWebResults"/>
+		/// </returns>
+        [WebCallable(WebCallingConvention.GET, WebReturnConvention.JSON)]
+		public IWebResults GetAssignableNamedPermissions(IWebConnection webConnection)
+		{
+			string filename = "/Actions/Security/";
+			
+			if (FileContainer.Filename.Contains("."))
+				filename += "ByExtension/" + FileContainer.Extension;
+			else
+				filename += "ByType/" + FileContainer.TypeId;
+			
+			filename += ".json";
+			
+			if (!FileHandlerFactoryLocator.FileSystemResolver.IsFilePresent(filename))
+				return WebResults.ToJson(new object[0]);
+			
+			IFileContainer fileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(filename);
+			return WebResults.From(Status._200_OK, fileContainer.CastFileHandler<ITextHandler>().ReadAll());
+		}
     }
 
     /// <summary>

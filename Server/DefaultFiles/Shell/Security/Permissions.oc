@@ -1,0 +1,6 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
+<oc:inserthead>
+   <oc:script src="/API/jquery.js" />
+</oc:inserthead>
+   <oc:component oc:src="PermissionsComponent.oc" FileName="[_FileName_]" />
+</oc:componentdef>

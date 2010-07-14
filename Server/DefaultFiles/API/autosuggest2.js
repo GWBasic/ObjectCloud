@@ -103,7 +103,7 @@ AutoSuggestControl.prototype.getLeft = function () /*:int*/ {
     var oNode = this.textbox;
     var iLeft = 0;
     
-    while(oNode.tagName != "BODY") {
+    while(oNode.tagName.toLowerCase() != "body") {
         iLeft += oNode.offsetLeft;
         oNode = oNode.offsetParent;        
     }
@@ -121,7 +121,7 @@ AutoSuggestControl.prototype.getTop = function () /*:int*/ {
     var oNode = this.textbox;
     var iTop = 0;
     
-    while(oNode.tagName != "BODY") {
+    while(oNode.tagName.toLowerCase() != "body") {
         iTop += oNode.offsetTop;
         oNode = oNode.offsetParent;
     }

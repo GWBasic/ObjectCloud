@@ -201,5 +201,16 @@ namespace ObjectCloud.Interfaces.WebServer
 		/// Resets the execution environment 
 		/// </summary>
 		void ResetExecutionEnvironment();
+		
+		/// <summary>
+		/// Returns the named permissions that apply to this file 
+		/// </summary>
+		/// <param name="webConnection">
+		/// A <see cref="IWebConnection"/>
+		/// </param>
+		/// <returns>
+		/// A <see cref="IWebResults"/>
+		/// </returns>
+		IWebResults GetAssignableNamedPermissions(IWebConnection webConnection);
     }
 }

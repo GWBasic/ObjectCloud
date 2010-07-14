@@ -1,0 +1,39 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" headerfooter="/DefaultTemplate/empty.ochf">
+<oc:inserthead>
+   <oc:script src="/API/jquery.js" />
+   <oc:open filename="[_FileName_]" varname="File" />
+   <oc:script src="/API/UserSuggest.js" />
+   <oc:script src="Permissions.js" />
+</oc:inserthead>
+
+   <script>
+      doPermissions(
+         <oc:component oc:url="[_FileName_]" Method="GetPermissions" />,
+         <oc:component oc:url="[_FileName_]" Method="GetAssignableNamedPermissions" />);
+   </script>
+
+   <h1>Permissions for [_FileName_]</h1>
+   <div class="PermissionsDiv">Loading...</div>
+
+   <h1>Add a Permission</h1>
+   <form class="addForm" >
+      User, Group, or <img src="/Shell/OpenID/login-bg.gif" /> OpenID: <input type="text" name="UserOrGroup" class="UserOrGroupInput" />
+      Level: <select name="FilePermission" class="FilePermissionInput" >
+         <option value="Read">Read</option>
+         <option value="Write">Write</option>
+         <option value="Administer">Administer</option>
+      </select>
+      <input type="submit" value="add"/>
+   </form>
+
+   <p>
+   Note:  The following built-in groups are supported:
+   <ul>
+      <li><em>everybody</em>: Grants everyone access to the file, including people from the general public who aren't logged in.</li>
+      <li><em>authenticatedusers</em>: Grants everyone access to the file, as long as they are logged in through a local or OpenID account.</li>
+      <li><em>localusers</em>: Grants access only to users local to this instance of ObjectCloud, but not to OpenID users.</li>
+      <li><em>administrators</em>: Grants access only to administrators.</li>
+   </ul>
+   </p>
+
+</oc:componentdef>

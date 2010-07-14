@@ -67,7 +67,7 @@
                name: 'Permissions',
                callback: function()
                {
-                  window.open('/Shell/Security/Permissions.wchtml?FileName=' + directory + file.Filename);
+                  window.open('/Shell/Security/Permissions.oc?FileName=' + directory + file.Filename);
                }
             });
 
