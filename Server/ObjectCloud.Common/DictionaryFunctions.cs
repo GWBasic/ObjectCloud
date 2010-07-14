@@ -40,6 +40,19 @@ namespace ObjectCloud.Common
         /// <typeparam name="TValue"></typeparam>
         /// <param name="values"></param>
         /// <returns></returns>
+        public static Dictionary<TKey, TValue> Create<TKey, TValue>(params KeyValuePair<TKey, TValue>[] values)
+        {
+            return Create<TKey, TValue>(values as IEnumerable<KeyValuePair<TKey, TValue>>);
+        }
+
+        /// <summary>
+        /// Returns a dictionary object created from an enumeration of key-value pairs
+        /// </summary>
+        /// <typeparam name="TDictionary"></typeparam>
+        /// <typeparam name="TKey"></typeparam>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="values"></param>
+        /// <returns></returns>
         public static Dictionary<TKey, TValue> Create<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> values)
         {
             Dictionary<TKey, TValue> toReturn = new Dictionary<TKey, TValue>();

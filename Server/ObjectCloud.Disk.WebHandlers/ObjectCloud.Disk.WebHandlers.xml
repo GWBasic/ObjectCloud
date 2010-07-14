@@ -1484,6 +1484,11 @@
             <param name="xmlParseMode">The kind of text that's being parsed</param>
             <returns></returns>
         </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.Template.TemplateParsingState.HTMLReplacementChars">
+            <summary>
+            All of the indexed strings will be replaced by their corresponding value when converting HTML to XHTML
+            </summary>
+        </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.Template.TemplateParsingState.LoadXmlDocument(System.String,ObjectCloud.Interfaces.Templating.XmlParseMode,System.String)">
             <summary>
             Loads an XmlDocument from the filecontainer, replacing GET parameters and verifying permissions

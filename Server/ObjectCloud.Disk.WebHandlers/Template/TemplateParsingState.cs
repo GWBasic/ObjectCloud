@@ -350,6 +350,14 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         }
 
         /// <summary>
+        /// All of the indexed strings will be replaced by their corresponding value when converting HTML to XHTML
+        /// </summary>
+        private static readonly Dictionary<string, string> HTMLReplacementChars = DictionaryFunctions.Create<string, string>(
+            new KeyValuePair<string, string>("&amp;nbsp;", "&#160;"),
+            new KeyValuePair<string, string>("&amp;lt;", "&lt;"),
+            new KeyValuePair<string, string>("&amp;gt;", "&gt;"));
+
+        /// <summary>
         /// Loads an XmlDocument from the filecontainer, replacing GET parameters and verifying permissions
         /// </summary>
         /// <param name="xml"></param>
@@ -402,61 +410,56 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 while ("html" != xmlDocument.FirstChild.LocalName)
                     xmlDocument.RemoveChild(xmlDocument.FirstChild);
 
-                // Convert the namespace
+                // Convert the namespace and clean up &nbsp; &lt; &gt that are converted incorrectly
                 // TODO:  There really needs to be a better way to do this
                 XmlAttribute namespaceAttribute = xmlDocument.CreateAttribute("xmlns");
                 namespaceAttribute.Value = TemplatingConstants.HtmlNamespace;
                 xmlDocument.DocumentElement.Attributes.Append(namespaceAttribute);
-                xmlDocument.LoadXml(xmlDocument.OuterXml);
-				
-				// Clean up &nbsp; that is converted incorrectly
-				
-				foreach (XmlText xmlText in XmlHelper.IterateAll<XmlText>(xmlDocument))
-					if (null != xmlText.InnerText)
-						xmlText.InnerText = xmlText.InnerText.Replace("&nbsp;",char.ConvertFromUtf32(160).Replace("&amp;lt;", "<").Replace("&amp;gt;", ">"));
+
+                xml = xmlDocument.OuterXml;
+                foreach (KeyValuePair<string, string> toReplace in HTMLReplacementChars)
+                    xml = xml.Replace(toReplace.Key, toReplace.Value);
             }
-            else
+
+            try
             {
-                try
-                {
-                    xmlDocument.LoadXml(xml);
-                }
-                catch (XmlException xmlException)
-                {
-                    // When the Xml parse mode is to try HTML, then try HTML but if an error occurs swallow it and throw the original
-                    if (XmlParseMode.XmlThenHtml == xmlParseMode)
-                        try
-                        {
-                            return LoadXmlDocument(xml, XmlParseMode.Html, fullpath);
-                        }
-                        catch { }
-
-                    // Everyone else can see a nice descriptive error
-                    StringBuilder errorBuilder = new StringBuilder(string.Format("An error occured while loading {0}\n", fullpath));
-                    errorBuilder.AppendFormat("{0}\n\n\nFrom:\n", xmlException.Message);
-
-                    string[] xmlLines = xml.Split('\n', '\r');
-                    for (int ctr = 0; ctr < xmlLines.Length; ctr++)
+                xmlDocument.LoadXml(xml);
+            }
+            catch (XmlException xmlException)
+            {
+                // When the Xml parse mode is to try HTML, then try HTML but if an error occurs swallow it and throw the original
+                if (XmlParseMode.XmlThenHtml == xmlParseMode)
+                    try
                     {
-                        int lineNumber = ctr + 1;
-
-                        if (ctr < 9)
-                            errorBuilder.Append("    ");
-                        else if (ctr < 99)
-                            errorBuilder.Append("   ");
-                        else if (ctr < 999)
-                            errorBuilder.Append("  ");
-                        else if (ctr < 9999)
-                            errorBuilder.Append(" ");
-
-                        errorBuilder.AppendFormat("{0}: {1}\n", lineNumber, xmlLines[ctr]);
-
-                        if (lineNumber == xmlException.LineNumber)
-                            errorBuilder.AppendFormat("    -: {0}^\n", "".PadLeft(xmlException.LinePosition));
+                        return LoadXmlDocument(xml, XmlParseMode.Html, fullpath);
                     }
+                    catch { }
 
-                    throw new WebResultsOverrideException(WebResults.From(Status._500_Internal_Server_Error, errorBuilder.ToString()));
+                // Everyone else can see a nice descriptive error
+                StringBuilder errorBuilder = new StringBuilder(string.Format("An error occured while loading {0}\n", fullpath));
+                errorBuilder.AppendFormat("{0}\n\n\nFrom:\n", xmlException.Message);
+
+                string[] xmlLines = xml.Split('\n', '\r');
+                for (int ctr = 0; ctr < xmlLines.Length; ctr++)
+                {
+                    int lineNumber = ctr + 1;
+
+                    if (ctr < 9)
+                        errorBuilder.Append("    ");
+                    else if (ctr < 99)
+                        errorBuilder.Append("   ");
+                    else if (ctr < 999)
+                        errorBuilder.Append("  ");
+                    else if (ctr < 9999)
+                        errorBuilder.Append(" ");
+
+                    errorBuilder.AppendFormat("{0}: {1}\n", lineNumber, xmlLines[ctr]);
+
+                    if (lineNumber == xmlException.LineNumber)
+                        errorBuilder.AppendFormat("    -: {0}^\n", "".PadLeft(xmlException.LinePosition));
                 }
+
+                throw new WebResultsOverrideException(WebResults.From(Status._500_Internal_Server_Error, errorBuilder.ToString()));
             }
 
             return xmlDocument;
