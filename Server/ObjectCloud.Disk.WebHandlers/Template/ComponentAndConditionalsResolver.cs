@@ -112,17 +112,21 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             IDictionary<string, string> myGetParameters;
             XmlAttribute getpassthroughAttribute = (XmlAttribute)element.Attributes.GetNamedItem("getpassthough", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
             if (null == getpassthroughAttribute)
+            {
                 myGetParameters = DictionaryFunctions.Create<string, string>(getParameters);
+                myGetParameters.Remove("Method");
+                myGetParameters.Remove("Action");
+            }
             else
             {
                 if ("false" == getpassthroughAttribute.Value)
                     myGetParameters = new Dictionary<string, string>();
                 else
-				{
+                {
                     myGetParameters = DictionaryFunctions.Create<string, string>(getParameters);
-					myGetParameters.Remove("Method");
-					myGetParameters.Remove("Action");
-				}
+                    myGetParameters.Remove("Method");
+                    myGetParameters.Remove("Action");
+                }
             }
 
             // Next, pull out get parameters from the tag
