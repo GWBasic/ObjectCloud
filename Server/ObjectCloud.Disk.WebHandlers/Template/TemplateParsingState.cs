@@ -188,7 +188,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             {
                 XmlAttribute cwdAttribute = xmlNode.Attributes.GetNamedItem(
                     "cwd",
-                    TemplatingConstants.TaggingNamespace) as XmlAttribute;
+                    TemplateHandlerLocator.TemplatingConstants.TaggingNamespace) as XmlAttribute;
 
                 if (null != cwdAttribute)
                     return cwdAttribute.Value;
@@ -218,7 +218,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
             if (xmlNode is XmlElement)
             {
-                XmlAttribute xmlAttribute = xmlNode.OwnerDocument.CreateAttribute("cwd", TemplatingConstants.TaggingNamespace);
+                XmlAttribute xmlAttribute = xmlNode.OwnerDocument.CreateAttribute("cwd", TemplateHandlerLocator.TemplatingConstants.TaggingNamespace);
                 xmlAttribute.Value = cwd;
                 xmlNode.Attributes.Append(xmlAttribute);
             }
@@ -248,7 +248,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         public void SetErrorClass(XmlNode htmlNode)
         {
             XmlAttribute classAttribute = (XmlAttribute)htmlNode.OwnerDocument.CreateAttribute("class");
-            classAttribute.Value = TemplatingConstants.WarningNodeClass;
+            classAttribute.Value = TemplateHandlerLocator.TemplatingConstants.WarningNodeClass;
             htmlNode.Attributes.Append(classAttribute);
         }
 
@@ -350,14 +350,6 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         }
 
         /// <summary>
-        /// All of the indexed strings will be replaced by their corresponding value when converting HTML to XHTML
-        /// </summary>
-        private static readonly Dictionary<string, string> HTMLReplacementChars = DictionaryFunctions.Create<string, string>(
-            new KeyValuePair<string, string>("&amp;nbsp;", "&#160;"),
-            new KeyValuePair<string, string>("&amp;lt;", "&lt;"),
-            new KeyValuePair<string, string>("&amp;gt;", "&gt;"));
-
-        /// <summary>
         /// Loads an XmlDocument from the filecontainer, replacing GET parameters and verifying permissions
         /// </summary>
         /// <param name="xml"></param>
@@ -413,11 +405,11 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 // Convert the namespace and clean up &nbsp; &lt; &gt that are converted incorrectly
                 // TODO:  There really needs to be a better way to do this
                 XmlAttribute namespaceAttribute = xmlDocument.CreateAttribute("xmlns");
-                namespaceAttribute.Value = TemplatingConstants.HtmlNamespace;
+                namespaceAttribute.Value = TemplateHandlerLocator.TemplatingConstants.HtmlNamespace;
                 xmlDocument.DocumentElement.Attributes.Append(namespaceAttribute);
 
                 xml = xmlDocument.OuterXml;
-                foreach (KeyValuePair<string, string> toReplace in HTMLReplacementChars)
+                foreach (KeyValuePair<string, string> toReplace in TemplateHandlerLocator.TemplatingConstants.HTMLReplacementChars)
                     xml = xml.Replace(toReplace.Key, toReplace.Value);
             }
 
@@ -472,8 +464,8 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         /// <returns></returns>
         public XmlParseMode GetXmlParseMode(XmlElement element)
         {
-            string xmlParseModeAttribute = 
-                element.GetAttribute("xmlparsemode", TemplatingConstants.TemplateNamespace);
+            string xmlParseModeAttribute =
+                element.GetAttribute("xmlparsemode", TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
 
             if (null == xmlParseModeAttribute)
                 return XmlParseMode.Xml;
@@ -505,7 +497,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             // Do the replacements
             ReplaceGetParameters(getParameters, xmlDocument);
 
-            if (WebConnection.CookiesFromBrowser.ContainsKey(TemplatingConstants.XMLDebugModeCookie))
+            if (WebConnection.CookiesFromBrowser.ContainsKey(TemplateHandlerLocator.TemplatingConstants.XMLDebugModeCookie))
             {
                 StringBuilder commentBuilder = new StringBuilder("\n\nDEBUG INFO\n");
 
@@ -519,7 +511,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 XmlComment comment = xmlDocument.CreateComment(commentBuilder.ToString());
 
                 XmlNode firstChild = xmlDocument.FirstChild;
-                if ((firstChild.LocalName == "componentdef") && (firstChild.NamespaceURI == TemplatingConstants.TemplateNamespace))
+                if ((firstChild.LocalName == "componentdef") && (firstChild.NamespaceURI == TemplateHandlerLocator.TemplatingConstants.TemplateNamespace))
                     firstChild.InsertBefore(comment, firstChild.FirstChild);
                 else if ("html" != xmlDocument.FirstChild.LocalName)
                     xmlDocument.InsertBefore(comment, firstChild);
@@ -546,11 +538,11 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     Enumerable<XmlAttribute>.FastCopy(Enumerable<XmlAttribute>.Cast(xmlNode.Attributes)))
                 {
                     // Change the value
-                    if (xmlAttribute.Value.Contains(TemplatingConstants.ArgBegin[0]))
+                    if (xmlAttribute.Value.Contains(TemplateHandlerLocator.TemplatingConstants.ArgBegin[0]))
                         xmlAttribute.Value = ReplaceGetParametersInt(getParameters, xmlAttribute.Value);
 
                     // Change the namespace
-                    if (xmlAttribute.NamespaceURI.Contains(TemplatingConstants.ArgBegin[0]))
+                    if (xmlAttribute.NamespaceURI.Contains(TemplateHandlerLocator.TemplatingConstants.ArgBegin[0]))
                     {
                         XmlAttribute newAttribute = xmlNode.OwnerDocument.CreateAttribute(
                             xmlAttribute.LocalName,
@@ -568,7 +560,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             {
                 XmlText xmlText = (XmlText)xmlNode;
 
-                if (xmlText.InnerText.Contains(TemplatingConstants.ArgBegin[0]))
+                if (xmlText.InnerText.Contains(TemplateHandlerLocator.TemplatingConstants.ArgBegin[0]))
                     xmlText.InnerText = ReplaceGetParametersInt(getParameters, xmlText.InnerText);
             }
 
@@ -597,7 +589,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
             // Change the namespace
             if (xmlNode is XmlElement)
-                if (xmlNode.NamespaceURI.Contains(TemplatingConstants.ArgBegin[0]))
+                if (xmlNode.NamespaceURI.Contains(TemplateHandlerLocator.TemplatingConstants.ArgBegin[0]))
                 {
                     XmlElement newElement = xmlNode.OwnerDocument.CreateElement(
                         xmlNode.LocalName,
@@ -667,14 +659,14 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             // Split at [_
 
             // Allocate the results builder, give a little breathing room in case the size grows
-            string[] templateSplitAtArgs = xmlAsString.Split(TemplatingConstants.ArgBegin, StringSplitOptions.None);
+            string[] templateSplitAtArgs = xmlAsString.Split(TemplateHandlerLocator.TemplatingConstants.ArgBegin, StringSplitOptions.None);
 
             if (!xmlAsString.StartsWith("[_"))
                 getArgumentsResolvedBuilder.Append(templateSplitAtArgs[0]);
 
             for (int ctr = 1; ctr < templateSplitAtArgs.Length; ctr++)
             {
-                string[] argumentAndTemplateParts = templateSplitAtArgs[ctr].Split(TemplatingConstants.ArgEnd, 2, StringSplitOptions.None);
+                string[] argumentAndTemplateParts = templateSplitAtArgs[ctr].Split(TemplateHandlerLocator.TemplatingConstants.ArgEnd, 2, StringSplitOptions.None);
 
                 if (argumentAndTemplateParts.Length != 2)
                 {
@@ -719,7 +711,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 // Import the template nodes
                 XmlNode firstChild = TemplateDocument.ImportNode(newDocument.FirstChild, true);
 
-                if (!(firstChild.LocalName == "componentdef") && (firstChild.NamespaceURI == TemplatingConstants.TemplateNamespace))
+                if (!(firstChild.LocalName == "componentdef") && (firstChild.NamespaceURI == TemplateHandlerLocator.TemplatingConstants.TemplateNamespace))
                 {
                     ReplaceNodes(
                         element,

@@ -35,7 +35,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
         void ProcessElementForDependanciesAndTemplates(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
         {
-            if (element.NamespaceURI == TemplatingConstants.TemplateNamespace)
+            if (element.NamespaceURI == templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace)
                 if (element.LocalName == "script")
                 {
                     XmlAttribute srcAttribute = element.Attributes["src"];
@@ -61,9 +61,9 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
                     	XmlHelper.RemoveFromParent(element);
 					}
-					else if (templateParsingState.WebConnection.CookiesFromBrowser.ContainsKey(TemplatingConstants.JavascriptDebugModeCookie))
+                    else if (templateParsingState.WebConnection.CookiesFromBrowser.ContainsKey(templateParsingState.TemplateHandlerLocator.TemplatingConstants.JavascriptDebugModeCookie))
 					{
-						XmlElement replacementScript = templateParsingState.TemplateDocument.CreateElement("", "script", TemplatingConstants.HtmlNamespace);
+                        XmlElement replacementScript = templateParsingState.TemplateDocument.CreateElement("", "script", templateParsingState.TemplateHandlerLocator.TemplatingConstants.HtmlNamespace);
 						XmlText alertText = templateParsingState.TemplateDocument.CreateTextNode("alert('Invalid open: " + element.OuterXml + "');");
 						replacementScript.AppendChild(alertText);
 					

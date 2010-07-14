@@ -39,7 +39,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
         void ProcessElementForDependanciesAndTemplates(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
         {
-            if (TemplatingConstants.TemplateNamespace == element.NamespaceURI)
+            if (templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace == element.NamespaceURI)
                 if ("safeparse" == element.LocalName)
                     DoSafeParseTag(templateParsingState, getParameters, element);
                 else if ("safe" == element.LocalName)

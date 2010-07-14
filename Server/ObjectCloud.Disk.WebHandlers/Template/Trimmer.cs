@@ -34,7 +34,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
         void PostProcessElement(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
         {
-            if (element.LocalName == "trim" && element.NamespaceURI == TemplatingConstants.TemplateNamespace)
+            if (element.LocalName == "trim" && element.NamespaceURI == templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace)
             {
                 XmlAttribute maxtagsAttribute = element.Attributes["maxtags"];
                 XmlAttribute maxlengthAttribute = element.Attributes["maxlength"];

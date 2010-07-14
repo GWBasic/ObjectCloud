@@ -137,7 +137,7 @@ namespace ObjectCloud.Disk.WebHandlers
             }
 
             // Copy all elements into an immutable list, run document post-processors, and remove comments
-            bool removeComments = !webConnection.CookiesFromBrowser.ContainsKey(TemplatingConstants.XMLDebugModeCookie);
+            bool removeComments = !webConnection.CookiesFromBrowser.ContainsKey(templateParsingState.TemplateHandlerLocator.TemplatingConstants.XMLDebugModeCookie);
 
             foreach (XmlNode xmlNode in Enumerable<XmlNode>.FastCopy(XmlHelper.IterateAllElementsAndComments(templateDocument)))
             {
@@ -152,7 +152,7 @@ namespace ObjectCloud.Disk.WebHandlers
             xmlWriterSettings.ConformanceLevel = ConformanceLevel.Document;
             xmlWriterSettings.Encoding = Encoding.UTF8;
 
-            if (webConnection.CookiesFromBrowser.ContainsKey(TemplatingConstants.XMLDebugModeCookie))
+            if (webConnection.CookiesFromBrowser.ContainsKey(templateParsingState.TemplateHandlerLocator.TemplatingConstants.XMLDebugModeCookie))
             {
                 xmlWriterSettings.Indent = true;
                 xmlWriterSettings.IndentChars = "\t";
@@ -290,7 +290,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="element"></param>
         void EnsureNoEmptyTextareas(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
         {
-            if (element.LocalName == "textarea" && TemplatingConstants.HtmlNamespaces.Contains(element.NamespaceURI))
+            if (element.LocalName == "textarea" && templateParsingState.TemplateHandlerLocator.TemplatingConstants.HtmlNamespaces.Contains(element.NamespaceURI))
                 if (element.IsEmpty)
                     element.IsEmpty = false;
         }
@@ -369,7 +369,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             // handle oc:title, if present
             // TODO:  Use XPATH
-            XmlNodeList ocTitleNodes = headNode.OwnerDocument.GetElementsByTagName("title", TemplatingConstants.TemplateNamespace);
+            XmlNodeList ocTitleNodes = headNode.OwnerDocument.GetElementsByTagName("title", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
 
             if (ocTitleNodes.Count > 1)
                 for (int ctr = 1; ctr < ocTitleNodes.Count; ctr++)
@@ -427,7 +427,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 string headerFooter = "/DefaultTemplate/headerfooter.ochf";
 
                 XmlNodeList nodesToInsert;
-                if (("componentdef" == firstChild.LocalName) && (TemplatingConstants.TemplateNamespace == firstChild.NamespaceURI))
+                if (("componentdef" == firstChild.LocalName) && (templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace == firstChild.NamespaceURI))
                 {
                     XmlAttribute headerFooterAttribue = firstChild.Attributes["headerfooter"];
                     if (null != headerFooterAttribue)
@@ -458,9 +458,9 @@ namespace ObjectCloud.Disk.WebHandlers
                     XmlParseMode.Xml);
 
                 // find oc:component tag
-                XmlNodeList componentTags = templateDocument.GetElementsByTagName("component", TemplatingConstants.TemplateNamespace);
+                XmlNodeList componentTags = templateDocument.GetElementsByTagName("component", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
                 foreach (XmlNode componentNode in Enumerable<XmlNode>.FastCopy(Enumerable<XmlNode>.Cast(componentTags)))
-                    if ((null == componentNode.Attributes.GetNamedItem("url", TemplatingConstants.TemplateNamespace)) && (null == componentNode.Attributes.GetNamedItem("src", TemplatingConstants.TemplateNamespace)))
+                    if ((null == componentNode.Attributes.GetNamedItem("url", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace)) && (null == componentNode.Attributes.GetNamedItem("src", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace)))
                         templateParsingState.ReplaceNodes(componentNode, nodesToInsert);
             }
 

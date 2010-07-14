@@ -35,7 +35,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
         void ProcessElementForConditionalsAndComponents(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
         {
-            if (element.NamespaceURI == TemplatingConstants.TemplateNamespace)
+            if (element.NamespaceURI == templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace)
                 if (element.LocalName == "if")
                     HandleConditional(templateParsingState, getParameters, element);
                 else if (element.LocalName == "component")
@@ -58,9 +58,9 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             while (null != current)
             {
                 // Make sure the namespace is proper
-                if (current.NamespaceURI != TemplatingConstants.TemplateNamespace)
+                if (current.NamespaceURI != templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace)
                     conditionalNode.ParentNode.InsertBefore(
-                        templateParsingState.GenerateWarningNode("All nodes within an <if> must be of " + TemplatingConstants.TemplateNamespace + " namespace: " + current.OuterXml),
+                        templateParsingState.GenerateWarningNode("All nodes within an <if> must be of " + templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace + " namespace: " + current.OuterXml),
                         conditionalNode);
 
                 else
@@ -104,13 +104,13 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             IDictionary<string, string> getParameters,
             XmlElement element)
         {
-            XmlAttribute srcAttribute = (XmlAttribute)element.Attributes.GetNamedItem("src", TemplatingConstants.TemplateNamespace);
-            XmlAttribute urlAttribute = (XmlAttribute)element.Attributes.GetNamedItem("url", TemplatingConstants.TemplateNamespace);
+            XmlAttribute srcAttribute = (XmlAttribute)element.Attributes.GetNamedItem("src", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
+            XmlAttribute urlAttribute = (XmlAttribute)element.Attributes.GetNamedItem("url", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
 
             // handle GET parameters
             // First, handle oc:getpassthrough
             IDictionary<string, string> myGetParameters;
-            XmlAttribute getpassthroughAttribute = (XmlAttribute)element.Attributes.GetNamedItem("getpassthough", TemplatingConstants.TemplateNamespace);
+            XmlAttribute getpassthroughAttribute = (XmlAttribute)element.Attributes.GetNamedItem("getpassthough", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
             if (null == getpassthroughAttribute)
                 myGetParameters = DictionaryFunctions.Create<string, string>(getParameters);
             else
@@ -187,7 +187,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
                         XmlNode firstChild = componentDocument.FirstChild;
                         XmlNodeList replacementNodes;
-                        if ((firstChild.LocalName == "componentdef") && (firstChild.NamespaceURI == TemplatingConstants.TemplateNamespace))
+                        if ((firstChild.LocalName == "componentdef") && (firstChild.NamespaceURI == templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace))
                             replacementNodes = firstChild.ChildNodes;
                         else
                             replacementNodes = componentDocument.ChildNodes;
@@ -278,7 +278,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             IDictionary<string, string> getParameters,
             XmlElement element)
         {
-            XmlAttribute srcAttribute = (XmlAttribute)element.Attributes.GetNamedItem("src", TemplatingConstants.TemplateNamespace);
+            XmlAttribute srcAttribute = (XmlAttribute)element.Attributes.GetNamedItem("src", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
 
             if (null == srcAttribute)
                 templateParsingState.ReplaceNodes(
@@ -318,7 +318,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                         snipitDocument.LoadXml(string.Format(
                             "<div xmlns=\"{0}\" xmlns:oc=\"{1}\">{2}</div>",
                             templateParsingState.TemplateDocument.FirstChild.NamespaceURI,
-                            TemplatingConstants.TemplateNamespace,
+                            templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace,
                             fileContainer.CastFileHandler<ITextHandler>().ReadAll()));
 
                         XmlNodeList replacementNodes = snipitDocument.FirstChild.ChildNodes;

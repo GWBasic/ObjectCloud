@@ -28,13 +28,13 @@ namespace ObjectCloud.Disk.WebHandlers.Template
     {
         void ITemplateProcessor.Register(ITemplateParsingState templateParsingState)
         {
-            if (!templateParsingState.WebConnection.CookiesFromBrowser.ContainsKey(TemplatingConstants.XMLDebugModeCookie))
+            if (!templateParsingState.WebConnection.CookiesFromBrowser.ContainsKey(templateParsingState.TemplateHandlerLocator.TemplatingConstants.XMLDebugModeCookie))
                 templateParsingState.PostProcessElement += RemoveIfInternalData;
         }
 
         private void RemoveIfInternalData(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlNode element)
         {
-            if (element.NamespaceURI == TemplatingConstants.TaggingNamespace)
+            if (element.NamespaceURI == templateParsingState.TemplateHandlerLocator.TemplatingConstants.TaggingNamespace)
                 element.ParentNode.RemoveChild(element);
 
             if (null != element.Attributes)
@@ -42,7 +42,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 LinkedList<XmlAttribute> attributesToRemove = new LinkedList<XmlAttribute>();
 
                 foreach (XmlAttribute xmlAttribute in element.Attributes)
-                    if (xmlAttribute.NamespaceURI == TemplatingConstants.TaggingNamespace)
+                    if (xmlAttribute.NamespaceURI == templateParsingState.TemplateHandlerLocator.TemplatingConstants.TaggingNamespace)
                         attributesToRemove.AddLast(xmlAttribute);
 
                 foreach (XmlAttribute xmlAttribute in attributesToRemove)

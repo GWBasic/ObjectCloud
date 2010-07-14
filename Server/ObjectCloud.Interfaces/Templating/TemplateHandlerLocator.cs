@@ -32,5 +32,15 @@ namespace ObjectCloud.Interfaces.Templating
             set { _TemplateProcessors = value; }
         }
         private List<ITemplateProcessor> _TemplateProcessors;
+
+        /// <summary>
+        /// Constants for use with templating
+        /// </summary>
+        public TemplatingConstants TemplatingConstants
+        {
+            get { return _TemplatingConstants; }
+            set { _TemplatingConstants = value; }
+        }
+        private TemplatingConstants _TemplatingConstants;
     }
 }

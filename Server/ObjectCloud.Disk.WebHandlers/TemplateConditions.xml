@@ -66,6 +66,33 @@
         </object>
       </list>
     </property>
+
+    <property name="TemplatingConstants">
+      <object id="TemplatingConstants" type="ObjectCloud.Interfaces.Templating.TemplatingConstants">
+        
+        <property name="HtmlNamespaces">
+          <object type="ObjectCloud.Common.Set&lt;string&gt;">
+            <constructor-arg>
+              <object id="HtmlNamespacesValue" type="string[]" >
+                <constructor-arg value="2" />
+                <property name="[0]" value="" />
+                <property name="[1]" value="http://www.w3.org/1999/xhtml" />
+              </object>
+            </constructor-arg>
+          </object>
+        </property>
+        <property name="HtmlNamespace" value="http://www.w3.org/1999/xhtml" />
+
+        <property name="HTMLReplacementChars">
+          <dictionary key-type="String" value-type="String">
+            <entry key="&amp;amp;nbsp;" value="&amp;#160;" />
+            <entry key="&amp;amp;lt;" value="&amp;lt;" />
+            <entry key="&amp;amp;gt;" value="&amp;gt;" />
+          </dictionary>
+        </property>
+
+      </object>
+    </property>
   </object>
   
 </objects>

@@ -358,6 +358,17 @@
             Lock for when determining if the ExecutionEnvironment should be updated
             </summary>
         </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.WebHandler`1.GetAssignableNamedPermissions(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Returns the named permissions that apply to this file 
+            </summary>
+            <param name="webConnection">
+            A <see cref="T:ObjectCloud.Interfaces.WebServer.IWebConnection"/>
+            </param>
+            <returns>
+            A <see cref="T:ObjectCloud.Interfaces.WebServer.IWebResults"/>
+            </returns>
+        </member>
         <member name="P:ObjectCloud.Disk.WebHandlers.WebHandler`1.FileHandler">
             <value>
             The FileHandler, pre-casted
@@ -1483,11 +1494,6 @@
             <param name="fileContainer"></param>
             <param name="xmlParseMode">The kind of text that's being parsed</param>
             <returns></returns>
-        </member>
-        <member name="F:ObjectCloud.Disk.WebHandlers.Template.TemplateParsingState.HTMLReplacementChars">
-            <summary>
-            All of the indexed strings will be replaced by their corresponding value when converting HTML to XHTML
-            </summary>
         </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.Template.TemplateParsingState.LoadXmlDocument(System.String,ObjectCloud.Interfaces.Templating.XmlParseMode,System.String)">
             <summary>

@@ -36,7 +36,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         {
             internal void PostProcessElement(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
             {
-                if (TemplatingConstants.HtmlNamespaces.Contains(element.NamespaceURI))
+                if (templateParsingState.TemplateHandlerLocator.TemplatingConstants.HtmlNamespaces.Contains(element.NamespaceURI))
                     if (element.LocalName == "script")
                     {
                         // Don't allow empty <script /> tags
@@ -51,7 +51,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                             {
                                 AddBrowserCache(templateParsingState, srcAttribute);
 
-                                if (!templateParsingState.WebConnection.CookiesFromBrowser.ContainsKey(TemplatingConstants.JavascriptDebugModeCookie))
+                                if (!templateParsingState.WebConnection.CookiesFromBrowser.ContainsKey(templateParsingState.TemplateHandlerLocator.TemplatingConstants.JavascriptDebugModeCookie))
                                     srcAttribute.Value = HTTPStringFunctions.AppendGetParameter(srcAttribute.Value, "EncodeFor", "JavaScript");
                                 else if ((!srcAttribute.Value.StartsWith("http://")) && (!srcAttribute.Value.StartsWith("https://")))
                                 {
@@ -68,7 +68,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                             }
                         }
                         else
-                            if (!templateParsingState.WebConnection.CookiesFromBrowser.ContainsKey(TemplatingConstants.JavascriptDebugModeCookie))
+                            if (!templateParsingState.WebConnection.CookiesFromBrowser.ContainsKey(templateParsingState.TemplateHandlerLocator.TemplatingConstants.JavascriptDebugModeCookie))
                                 foreach (XmlText scriptContentsNode in Enumerable<XmlText>.Filter(element.ChildNodes))
                                     scriptContentsNode.InnerText = JavaScriptMinifier.Instance.Minify(scriptContentsNode.InnerText);
 
@@ -116,7 +116,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     return;
 
                 BrowserCacheEnum browserCache = BrowserCacheEnum.Disable;
-                string browserCacheValue = xmlElement.GetAttribute("browsercache", TemplatingConstants.TemplateNamespace);
+                string browserCacheValue = xmlElement.GetAttribute("browsercache", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
                 if (browserCacheValue.Length > 0)
                 {
                     if ("date" == browserCacheValue)

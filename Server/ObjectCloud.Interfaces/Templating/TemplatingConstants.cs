@@ -12,52 +12,107 @@ using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.Interfaces.Templating
 {
-    public static class TemplatingConstants
+    public class TemplatingConstants
     {
         /// <summary>
         /// ObjectCloud's templating xml namespace
         /// </summary>
-        public const string TemplateNamespace = "objectcloud_templating";
+        public string TemplateNamespace
+        {
+            get { return _TemplateNamespace; }
+            set { _TemplateNamespace = value; }
+        }
+        private string _TemplateNamespace = "objectcloud_templating";
 
         /// <summary>
         /// A temporary namespace for tagging nodes; all nodes and attributes of this namespace will be removed prior to returning a document
         /// </summary>
-        public const string TaggingNamespace = "objectcloud_templating_GHDTTGXDNHT";
+        public string TaggingNamespace
+        {
+            get { return _TaggingNamespace; }
+            set { _TaggingNamespace = value; }
+        }
+        private string _TaggingNamespace = "objectcloud_templating_GHDTTGXDNHT";
 
         /// <summary>
         /// Cookie name for enabling XML debugging
         /// </summary>
-        public const string XMLDebugModeCookie = "developer_prettyprintXML";
+        public string XMLDebugModeCookie
+        {
+            get { return _XMLDebugModeCookie; }
+            set { _XMLDebugModeCookie = value; }
+        }
+        private string _XMLDebugModeCookie = "developer_prettyprintXML";
 
         /// <summary>
         /// Cookie name to disable javascript minization
         /// </summary>
-        public const string JavascriptDebugModeCookie = "developer_disableMinimizeJavascript";
+        public string JavascriptDebugModeCookie
+        {
+            get { return _JavascriptDebugModeCookie; }
+            set { _JavascriptDebugModeCookie = value; }
+        }
+        private string _JavascriptDebugModeCookie = "developer_disableMinimizeJavascript";
 
         /// <summary>
         /// The CSS class for warning nodes
         /// </summary>
-        public const string WarningNodeClass = "oc_template_warning";
+        public string WarningNodeClass
+        {
+            get { return _WarningNodeClass; }
+            set { _WarningNodeClass = value; }
+        }
+        private string _WarningNodeClass = "oc_template_warning";
 
         /// <summary>
         /// Delimeter for the beginning of GET arguments
         /// </summary>
-        public static readonly string[] ArgBegin = new string[] { "[_" };
+        public string[] ArgBegin
+        {
+            get { return _ArgBegin; }
+            set { _ArgBegin = value; }
+        }
+        private string[] _ArgBegin = new string[] { "[_" };
 
         /// <summary>
         /// Delimeter for the end of GET arguments
         /// </summary>
-        public static readonly string[] ArgEnd = new string[] { "_]" };
+        public string[] ArgEnd
+        {
+            get { return _ArgEnd; }
+            set { _ArgEnd = value; }
+        }
+        private string[] _ArgEnd = new string[] { "_]" };
 
         /// <summary>
         /// Preffered Namespace for HTML tags
         /// </summary>
-        public const string HtmlNamespace = "http://www.w3.org/1999/xhtml";
+        public string HtmlNamespace
+        {
+            get { return _HtmlNamespace; }
+            set { _HtmlNamespace = value; }
+        }
+        private string _HtmlNamespace;
 
         /// <summary>
         /// Namespaces for HTML tags
         /// </summary>
-        public readonly static Set<string> HtmlNamespaces = new Set<string>("", HtmlNamespace);
+        public Set<string> HtmlNamespaces
+        {
+            get { return _HtmlNamespaces; }
+            set { _HtmlNamespaces = value; }
+        }
+        private Set<string> _HtmlNamespaces;
+
+        /// <summary>
+        /// All of the indexed strings will be replaced by their corresponding value when converting HTML to XHTML
+        /// </summary>
+        public Dictionary<string, string> HTMLReplacementChars
+        {
+            get { return _HTMLReplacementChars; }
+            set { _HTMLReplacementChars = value; }
+        }
+        private Dictionary<string, string> _HTMLReplacementChars;
     }
 
     /// <summary>

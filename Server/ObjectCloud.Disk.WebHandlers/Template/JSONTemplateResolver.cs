@@ -33,17 +33,17 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         void ITemplateProcessor.Register(ITemplateParsingState templateParsingState)
         {
             templateParsingState.ProcessElementForDependanciesAndTemplates += ProcessElementForDependanciesAndTemplates;
-            templateParsingState.RegisterDeferedNode("jsontemplate", TemplatingConstants.TemplateNamespace);
+            templateParsingState.RegisterDeferedNode("jsontemplate", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
         }
 
         void ProcessElementForDependanciesAndTemplates(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
         {
-            if (element.NamespaceURI == TemplatingConstants.TemplateNamespace)
+            if (element.NamespaceURI == templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace)
                 if (element.LocalName == "jsontemplate")
                 {
-                    string src = element.GetAttribute("src", TemplatingConstants.TemplateNamespace);
-                    string url = element.GetAttribute("url", TemplatingConstants.TemplateNamespace);
-                    string data = element.GetAttribute("data", TemplatingConstants.TemplateNamespace);
+                    string src = element.GetAttribute("src", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
+                    string url = element.GetAttribute("url", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
+                    string data = element.GetAttribute("data", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
 
                     if (url.Length == 0 && data.Length == 0)
                     {
@@ -56,7 +56,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     }
 
                     // Quote the XML in debug mode so the designer can see the template
-                    if (templateParsingState.WebConnection.CookiesFromBrowser.ContainsKey(TemplatingConstants.XMLDebugModeCookie))
+                    if (templateParsingState.WebConnection.CookiesFromBrowser.ContainsKey(templateParsingState.TemplateHandlerLocator.TemplatingConstants.XMLDebugModeCookie))
                     {
                         XmlComment debugComment = templateParsingState.TemplateDocument.CreateComment("Template: " + element.OuterXml);
                         element.ParentNode.InsertBefore(debugComment, element);
