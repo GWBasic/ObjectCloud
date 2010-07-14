@@ -1,87 +1,31 @@
-<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" xmlns:af="appfeeds_templating">
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
 <oc:inserthead>
    <oc:script src="/API/jquery.js" />
    <oc:script src="/API/shareDialog.js" />
    <oc:open filename="[_FileName_]" varname="object_target" />
 </oc:inserthead>
 
-<div class="objectbar" id="objectbar" style="position: relative;">
-   <oc:if>
-      <oc:canadminister filename="[_FileName_]">
-         <input type="button" value="share" id="objectbar_share" />
-         <script>
-            $(document).ready(function()
-            {
-               $('#objectbar_share').click(function()
+   <div class="objectbar" id="objectbar" style="position: relative;">
+      <oc:if>
+         <oc:canadminister filename="[_FileName_]">
+            <input type="button" value="share" class="objectbar_share" />
+            <script>
+               $(document).ready(function()
                {
-                  shareDialog_show('[_FileName_]');
-               });
-            });
-         </script>
-      </oc:canadminister>
-   </oc:if>
-   &#160;
-
-   <span id="object_tags"> </span>
-   <script>
-      $(document).ready(function()
-      {
-         var metadata = <oc:component oc:url="[_FileName_]" Method="GetMetadata" />;
-
-         var tags = metadata.Tags;
-
-         var tagsString = '';
-         for (var i = 0; i &lt; tags.length; i++)
-            tagsString += escape(tags[i]) + ' ';
-
-         var tagsSpan = $('#object_tags');
-
-         <oc:if>
-            <oc:canadminister filename="[_FileName_]">
-               var tagsInput = $('&lt;input type="text" /&gt;');
-               tagsSpan.append(tagsInput);
-               tagsInput.val(tagsString);
-
-               tagsInput.change(function()
-               {
-                  tagsInput.attr('disabled', 'disabled');
-
-                  var dirtyTags = tagsInput.val().split(' ');
-                  tags = [];
-
-                  for (var i = 0; i &lt; dirtyTags.length; i++)
+                  $('.objectbar_share').click(function()
                   {
-                     var tag = dirtyTags[i].replace(/^\s+|\s+$/g,"");
-                     if (tag.length > 0)
-                        tags.push(tag);
-                  }
-
-                  // set the metadata
-                  object_target.SetMetadata(
-                  {
-                     replaceTags: true,
-                     tags: tags
-                  },
-                  function()
-                  {
-                     tagsInput.removeAttr('disabled');
-                  },
-                  function()
-                  {
-                     tagsInput.removeAttr('disabled');
-                     alert('error saving tags');
+                     shareDialog_show('[_FileName_]');
                   });
                });
-            </oc:canadminister>
-            <oc:else>
-               tagsSpan.text(tagsString);
-            </oc:else>
-         </oc:if>
-      });
-   </script>
-</div>
+            </script>
+         </oc:canadminister>
+      </oc:if>
+      &#160;
+   </div>
 
    <oc:component />
 
-<div class="ObjectFooter"></div>
+   <div class="ObjectFooter">
+      <oc:component oc:src="/Shell/Communication/Replier.oc" FileName="[_FileName_]" />
+   </div>
 </oc:componentdef>

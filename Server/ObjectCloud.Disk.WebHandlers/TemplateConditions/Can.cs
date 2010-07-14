@@ -42,7 +42,7 @@ namespace ObjectCloud.Disk.WebHandlers.TemplateConditions
             {
                 me.ParentNode.ParentNode.InsertBefore(
                     templateParsingState.GenerateWarningNode("namedpermission not specified: " + me.OuterXml),
-                    me.ParentNode.ParentNode);
+                    me.ParentNode);
 
                 return false;
             }

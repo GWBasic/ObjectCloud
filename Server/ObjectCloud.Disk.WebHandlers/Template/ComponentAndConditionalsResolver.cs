@@ -118,7 +118,11 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 if ("false" == getpassthroughAttribute.Value)
                     myGetParameters = new Dictionary<string, string>();
                 else
+				{
                     myGetParameters = DictionaryFunctions.Create<string, string>(getParameters);
+					myGetParameters.Remove("Method");
+					myGetParameters.Remove("Action");
+				}
             }
 
             // Next, pull out get parameters from the tag
@@ -283,7 +287,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             if (null == srcAttribute)
                 templateParsingState.ReplaceNodes(
                     element,
-                    templateParsingState.GenerateWarningNode("Either oc:src must be specified: " + element.OuterXml));
+                    templateParsingState.GenerateWarningNode("oc:src must be specified: " + element.OuterXml));
 
             else
             {

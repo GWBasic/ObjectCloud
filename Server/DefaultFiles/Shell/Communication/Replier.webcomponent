@@ -1,4 +1,4 @@
-<? Scripts(/API/Prototype.js, /API/nicEdit.js, /Shell/Communication/Replier.js, /API/Comet/CometProtocol.js) ?>
+<? Scripts(/API/Prototype.js, /API/nicEdit.js, /Shell/Communication/Old_Replier.js, /API/Comet/CometProtocol.js) ?>
 
 <div id="Replier_Replier">
    <input type="button" value="Add a reply" onclick="rply_addReply(<? $_GET["ObjectName"] ?>)" />

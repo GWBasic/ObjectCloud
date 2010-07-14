@@ -1,0 +1,51 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
+<oc:inserthead>
+   <oc:script src="/API/jquery.js" />
+   <oc:css src="/API/jquery_rte/jquery.rte.css" />
+   <oc:open filename="[_FileName_]" varname="object_target" />
+
+   <oc:if>
+      <oc:can namedpermission="reply" filename="[_FileName_]">
+      </oc:can>
+   </oc:if>
+
+</oc:inserthead>
+
+   <oc:if>
+      <oc:can namedpermission="reply" filename="[_FileName_]">
+         <input type="button" value="Add a reply" class="rply_reply" />
+         <input type="button" value="Save" class="rply_save" />
+         <span class="rply_saving">Saving...</span>
+         <div id="Replier_Replier"></div>
+
+         <oc:inserthead>
+            <script>
+               $(document).ready(function()
+               {
+                  rply_register(object_target);
+               });
+            </script>
+         </oc:inserthead>
+         <oc:script src="/Shell/Communication/Replier.js" />
+
+      </oc:can>
+   </oc:if>
+
+   <div id="Replier_Replies">
+      ? WebComponent($_GET["FileName"] . "?Method=Replier_GetRepliesForDisplay" ?
+      <hr />
+      <oc:component oc:url="[_FileName_]" Method="GetRelatedFiles"
+         relationships="['reply']"
+         maxToReturn="200" />
+
+      <oc:jsontemplate oc:url="[_FileName_]" Method="GetRelatedFiles"
+         relationships="['reply']"
+         maxToReturn="200">
+
+         <oc:component oc:url="[_FullPath_]" Action="Preview" getpassthough="false" />
+
+         <hr />
+      </oc:jsontemplate>
+   </div>
+
+</oc:componentdef>

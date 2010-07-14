@@ -40,7 +40,7 @@ namespace ObjectCloud.Disk.WebHandlers.TemplateConditions
             {
                 me.ParentNode.ParentNode.InsertBefore(
                     templateParsingState.GenerateWarningNode("filename not specified: " + me.OuterXml),
-                    me.ParentNode.ParentNode);
+                    me.ParentNode);
 
                 return null;
             }
@@ -59,7 +59,7 @@ namespace ObjectCloud.Disk.WebHandlers.TemplateConditions
 
                 me.ParentNode.ParentNode.InsertBefore(
                     templateParsingState.GenerateWarningNode("File doesn't exist: " + me.OuterXml),
-                    me.ParentNode.ParentNode);
+                    me.ParentNode);
 
                 return null;
             }
