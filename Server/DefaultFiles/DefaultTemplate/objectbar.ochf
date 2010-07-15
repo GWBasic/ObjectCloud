@@ -26,6 +26,6 @@
    <oc:component />
 
    <div class="ObjectFooter">
-      <oc:component oc:src="/Shell/Communication/Replier.oc" FileName="[_FileName_]" />
+      <oc:component oc:src="/Shell/Viewers/ObjectFooter.oc" FileName="[_FileName_]" />
    </div>
 </oc:componentdef>

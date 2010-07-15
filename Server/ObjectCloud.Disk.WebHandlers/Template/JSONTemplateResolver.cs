@@ -45,12 +45,12 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     string url = element.GetAttribute("url", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
                     string data = element.GetAttribute("data", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
 
-                    if (url.Length == 0 && data.Length == 0)
+                    if (url.Length == 0 && data.Length == 0 && src.Length == 0)
                     {
                         // Remove empty components and generate warning
                         templateParsingState.ReplaceNodes(
                             element,
-                            templateParsingState.GenerateWarningNode("Either oc:url or oc:data must be specified: " + element.OuterXml));
+                            templateParsingState.GenerateWarningNode("Either oc:url, oc:data, or oc:src must be specified: " + element.OuterXml));
 
                         return;
                     }
@@ -138,6 +138,28 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
                             return;
                         }
+					else if (src.Length > 0)
+					{
+						try
+						{
+							string filename = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.GetAbsolutePath(
+								templateParsingState.GetCWD(element),
+						        src);
+						
+							IFileContainer fileContainer = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(filename);
+						
+							jsonReader = new JsonReader(fileContainer.CastFileHandler<ITextHandler>().ReadAll());
+                        }
+                        catch (Exception e)
+                        {
+                            log.Error("An error occured when loading a component", e);
+                            templateParsingState.ReplaceNodes(
+                                element,
+                                templateParsingState.GenerateWarningNode("An unhandled error occured.  See the system logs for more information"));
+
+                            return;
+                        }
+					}
                     else
                         jsonReader = new JsonReader(data);
 
