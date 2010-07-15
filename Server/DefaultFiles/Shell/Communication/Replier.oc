@@ -32,15 +32,13 @@
    </oc:if>
 
    <div id="Replier_Replies">
-      <hr />
 
       <oc:jsontemplate oc:url="[_FileName_]" Method="GetRelatedFiles"
          relationships="['reply']"
          maxToReturn="200">
          <oc:safeparse>
-            <oc:component oc:url="[_FullPath_]" Action="Preview" getpassthough="false" MimeOverride="text/text" />
+            <oc:component oc:url="[_FullPath_]" Action="Preview" oc:getpassthough="false" MimeOverride="text/text" />
          </oc:safeparse>
-         <hr />
       </oc:jsontemplate>
    </div>
 

@@ -25,7 +25,7 @@ namespace ObjectCloud.Interfaces.Utilities
         private readonly string Filename;
 
         /// <summary>
-        /// The safe tags to use
+        /// The named set that's stored in this JSON file
         /// </summary>
         public Dictionary<string, Set<string>> NamedSet
         {
