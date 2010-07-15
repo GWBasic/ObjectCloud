@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <NameValuePairs>
 	<NameValuePair Name="View" Value="/Shell/Viewers/ReplyViewer.wchtml?FileName=[Target]" />
-	<NameValuePair Name="Preview" Value="[Target]?Method=ReadAll&amp;MaxLength=500" />
+	<NameValuePair Name="Preview" Value="/Shell/Viewers/ReplyPreviewer.occ?FileName=[Target]&amp;MimeOverride=text/xml" />
 </NameValuePairs>

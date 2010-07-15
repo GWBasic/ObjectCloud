@@ -237,11 +237,8 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                         HttpResponseHandler httpResponse = templateParsingState.WebConnection.Session.HttpWebClient.Get(url);
 
                         if ("text/xml" == httpResponse.ContentType)
-                        {
-                            XmlDocument resultDocument = new XmlDocument();
-                            resultDocument.Load(httpResponse.AsString());
-                            resultNode = resultDocument;
-                        }
+							resultNode =
+								templateParsingState.LoadXmlDocument(httpResponse.AsString(), XmlParseMode.Xml, templateParsingState.GetCWD(element));
                         else
                             resultNode = element.OwnerDocument.CreateTextNode(httpResponse.AsString());
                     }
@@ -257,12 +254,8 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                             IWebResults shellResults = shellWebConnection.GenerateResultsForClient();
 
                             if ("text/xml" == shellResults.ContentType)
-                            {
-                                // TODO:  this probably won't work
-                                XmlDocument resultDocument = new XmlDocument();
-                                resultDocument.Load(shellResults.ResultsAsStream);
-                                resultNode = resultDocument;
-                            }
+								resultNode =
+									templateParsingState.LoadXmlDocument(shellResults.ResultsAsString, XmlParseMode.Xml, templateParsingState.GetCWD(element));
                             else
                                 resultNode = element.OwnerDocument.CreateTextNode(shellResults.ResultsAsString);
                         }

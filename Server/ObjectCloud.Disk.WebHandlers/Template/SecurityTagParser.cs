@@ -44,9 +44,16 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     DoSafeParseTag(templateParsingState, getParameters, element);
                 else if ("safe" == element.LocalName)
                     DoSafeTag(templateParsingState, getParameters, element);
+                else if ("parse" == element.LocalName)
+                    DoParseTag(templateParsingState, getParameters, element);
         }
 
         void DoSafeParseTag(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
+        {
+            MakeSafe(DoParseTag(templateParsingState, getParameters, element));
+        }
+		
+        IEnumerable<XmlNode> DoParseTag(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
         {
             // Generate the xml
             StringBuilder xml = new StringBuilder(
@@ -75,22 +82,17 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     element,
                     templateParsingState.GenerateWarningNode(wroe.WebResults.ResultsAsString));
 
-                return;
+                return new XmlNode[0];
             }
 
             // import the new tags
             IEnumerable<XmlNode> importedNodes = Enumerable<XmlNode>.FastCopy(Enumerable<XmlNode>.Cast(
                 xmlDocument.FirstChild.ChildNodes[1].ChildNodes));
 
-            /*LinkedList<XmlNode> importedNodes = new LinkedList<XmlNode>();
-
-            foreach (XmlNode xmlNode in xmlDocument.FirstChild.ChildNodes[1].ChildNodes)
-                importedNodes.AddLast(templateParsingState.TemplateDocument.ImportNode(xmlNode, true));*/
-
             templateParsingState.ReplaceNodes(element, importedNodes);
-
-            MakeSafe(importedNodes);
-        }
+			
+			return importedNodes;
+		}
 
         void DoSafeTag(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
         {

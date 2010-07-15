@@ -32,11 +32,7 @@
    </oc:if>
 
    <div id="Replier_Replies">
-      ? WebComponent($_GET["FileName"] . "?Method=Replier_GetRepliesForDisplay" ?
       <hr />
-      <oc:component oc:url="[_FileName_]" Method="GetRelatedFiles"
-         relationships="['reply']"
-         maxToReturn="200" />
 
       <oc:jsontemplate oc:url="[_FileName_]" Method="GetRelatedFiles"
          relationships="['reply']"
