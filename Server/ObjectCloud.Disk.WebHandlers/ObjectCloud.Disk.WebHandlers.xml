@@ -84,6 +84,13 @@
             <param name="webConnection"></param>
             <returns></returns>
         </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.WebHandler`1.GetInfoAndPermission(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Returns the currently logged in user's permission for this file as a Javascript object that can be queried, the file name, extension, full path, create date, and modification date.
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.WebHandler`1.GetPermissions(ObjectCloud.Interfaces.WebServer.IWebConnection)">
             <summary>
             Returns all assigned permissions to the object

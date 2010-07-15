@@ -212,5 +212,12 @@ namespace ObjectCloud.Interfaces.WebServer
 		/// A <see cref="IWebResults"/>
 		/// </returns>
 		IWebResults GetAssignableNamedPermissions(IWebConnection webConnection);
+
+        /// <summary>
+        /// Returns the currently logged in user's permission for this file as a Javascript object that can be queried, the file name, extension, full path, create date, and modification date.
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <returns></returns>
+        IWebResults GetInfoAndPermission(IWebConnection webConnection);
     }
 }

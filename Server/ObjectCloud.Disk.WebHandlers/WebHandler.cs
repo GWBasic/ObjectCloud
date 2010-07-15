@@ -358,10 +358,18 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.GET, WebReturnConvention.JSON)]
         public IWebResults GetPermissionAsJSON(IWebConnection webConnection)
         {
+            ID<IUserOrGroup, Guid> userId = webConnection.Session.User.Id;
+            Dictionary<string, object> toReturn = GetPermissionAsJSON(userId);
+
+            return WebResults.ToJson(toReturn);
+        }
+
+        private Dictionary<string, object> GetPermissionAsJSON(ID<IUserOrGroup, Guid> userId)
+        {
             // Create an array of values to return
             Dictionary<string, object> toReturn = new Dictionary<string, object>();
 
-            FilePermissionEnum? permissionNullable = FileContainer.LoadPermission(webConnection.Session.User.Id);
+            FilePermissionEnum? permissionNullable = FileContainer.LoadPermission(userId);
 
             if (null != permissionNullable)
             {
@@ -375,6 +383,42 @@ namespace ObjectCloud.Disk.WebHandlers
             else
                 foreach (FilePermissionEnum fpe in Enum<FilePermissionEnum>.Values)
                     toReturn["Can" + fpe.ToString()] = false;
+
+            return toReturn;
+        }
+
+        /// <summary>
+        /// Returns the currently logged in user's permission for this file as a Javascript object that can be queried, the file name, extension, full path, create date, and modification date.
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.GET, WebReturnConvention.JSON)]
+        public IWebResults GetInfoAndPermission(IWebConnection webConnection)
+        {
+            ID<IUserOrGroup, Guid> userId = webConnection.Session.User.Id;
+            Dictionary<string, object> toReturn = GetPermissionAsJSON(userId);
+
+            toReturn["Created"] = FileContainer.Created;
+            toReturn["LastModified"] = FileContainer.LastModified;
+            toReturn["Extension"] = FileContainer.Extension;
+            toReturn["FileId"] = FileContainer.FileId.ToString();
+            toReturn["Name"] = FileContainer.Filename;
+            toReturn["Url"] = FileContainer.ObjectUrl;
+
+            if (null != FileContainer.OwnerId)
+            {
+                IUser owner = FileHandlerFactoryLocator.UserManagerHandler.GetUser(FileContainer.OwnerId.Value);
+
+                toReturn["OwnerId"] = owner.Id.ToString();
+                toReturn["Owner"] = owner.Name;
+                toReturn["OwnerIdentity"] = owner.Identity;
+            }
+            else
+            {
+                toReturn["OwnerId"] = null;
+                toReturn["Owner"] = null;
+                toReturn["OwnerIdentity"] = null;
+            }
 
             return WebResults.ToJson(toReturn);
         }

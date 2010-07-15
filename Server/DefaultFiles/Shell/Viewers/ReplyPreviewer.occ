@@ -1,8 +1,15 @@
 <oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
-   <oc:trim maxtags="30" maxlength="150">
-      <oc:safeparse oc:xmlparsemode="xmlthenhtml">
-         <oc:component oc:url="[_FileName_]" Method="ReadAll" />
-      </oc:safeparse>
-   </oc:trim>
+   <oc:script src="/API/pretty.js" />
+   <oc:jsontemplate oc:url="[_FileName_]" Method="GetInfoAndPermission">
+      <a href="[_OwnerIdentity_]">[_Owner_]</a> says ([_Created_]):
+   </oc:jsontemplate>
+
+   <div class="reply_text">
+      <oc:trim maxtags="30" maxlength="150">
+         <oc:safeparse oc:xmlparsemode="xmlthenhtml">
+            <oc:component oc:url="[_FileName_]" Method="ReadAll" MimeOverride="text/text"/>
+         </oc:safeparse>
+      </oc:trim>
+   </div>
    <a href="[_FileName_]"> more...</a>
 </oc:componentdef>

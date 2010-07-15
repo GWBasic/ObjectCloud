@@ -37,9 +37,9 @@
       <oc:jsontemplate oc:url="[_FileName_]" Method="GetRelatedFiles"
          relationships="['reply']"
          maxToReturn="200">
-
-         <oc:component oc:url="[_FullPath_]" Action="Preview" getpassthough="false" />
-
+         <oc:safeparse>
+            <oc:component oc:url="[_FullPath_]" Action="Preview" getpassthough="false" MimeOverride="text/text" />
+         </oc:safeparse>
          <hr />
       </oc:jsontemplate>
    </div>

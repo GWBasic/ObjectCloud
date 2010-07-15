@@ -49,6 +49,9 @@ function rply_register(file)
             replyButton.show();
             replierDiv.empty();
             replierDiv.show();
+
+            // TODO:  this should be replaced with something that loads new replies through comet
+            window.location.href=window.location.href
          },
          function()
          {
@@ -61,69 +64,4 @@ function rply_register(file)
 
       saveButton.click(saveFunction);
    });
-}
-
-function rply_addReply(inObject)
-{
-   rpy_object = inObject;
-
-   var replier = $('Replier_Replier');
-
-   rpy_oldHTML = replier.innerHTML;
-   replier.innerHTML = "";
-   replier.style.width="100%";
-
-   rply_displayNicEdit();
-}
-
-function rply_displayNicEdit()
-{
-   rpy_editor = new nicEditor(
-   {
-      fullPanel: true,
-      onSave : rpy_save,
-      style: "contents"
-   });
-
-   rpy_editor.panelInstance(
-      'Replier_Replier',
-      {
-         hasPanel: true,
-         style: "contents"
-      });
-}
-
-function rpy_save(content, id, instance)
-{
-   var replier = $('Replier_Replier');
-
-   if (null != rpy_editor)
-      rpy_editor.removeInstance('Replier_Replier');
-
-   replier.innerHTML = 'Saving...<div>' + content + '</div>';
-
-   rpy_object.Replier_AddReply(
-      {
-         replyText: content
-      },
-      function()
-      {
-         replier.innerHTML = rpy_oldHTML;
-
-         var repliesDiv = $('Replier_Replies');
-         repliesDiv.innerHTML = "Loading...";
-
-         rpy_object.Replier_GetRepliesForDisplay(
-            {},
-            function(repliesHtml)
-            {
-               repliesDiv.innerHTML = repliesHtml;
-            });
-      },
-      function()
-      {
-         alert("Could not save the reply");
-         replier.innerHTML = content;
-         rply_displayNicEdit();
-      });
 }
