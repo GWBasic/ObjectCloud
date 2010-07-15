@@ -44,8 +44,9 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     string src = element.GetAttribute("src", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
                     string url = element.GetAttribute("url", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
                     string data = element.GetAttribute("data", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
+                    string datafile = element.GetAttribute("datafile", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
 
-                    if (url.Length == 0 && data.Length == 0 && src.Length == 0)
+                    if (url.Length == 0 && data.Length == 0 && datafile.Length == 0)
                     {
                         // Remove empty components and generate warning
                         templateParsingState.ReplaceNodes(
@@ -138,13 +139,13 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
                             return;
                         }
-					else if (src.Length > 0)
+                    else if (datafile.Length > 0)
 					{
 						try
 						{
 							string filename = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.GetAbsolutePath(
 								templateParsingState.GetCWD(element),
-						        src);
+                                datafile);
 						
 							IFileContainer fileContainer = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(filename);
 						
@@ -188,8 +189,6 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                         templateParsingState.ReplaceNodes(
                             element,
                             templateParsingState.GenerateWarningNode("Error processing node.  Make sure results are proper JSON: " + element.OuterXml));
-
-                        element.ParentNode.RemoveChild(element);
                     }
                 }
         }

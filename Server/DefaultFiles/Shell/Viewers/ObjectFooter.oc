@@ -1,11 +1,12 @@
 <oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
-<oc:inserthead>
-   <oc:script src="/API/jquery.js" />
-</oc:inserthead>
 
    <oc:jsontemplate oc:url="[_FileName_]" Method="GetInfoAndPermission" fn="[_FileName_]">
-      <oc:jsontemplate oc:src="/Actions/Security/ByExtension/[_Extension_].json" fn="[_fn_]">
-[_NamedPermission_] [_fn_]
+      <oc:jsontemplate oc:datafile="/Actions/Security/ByExtension/[_Extension_].json" fn="[__UP.fn_]">
+         <oc:component oc:src="[_FooterComponent_]" FileName="[__UP.fn_]" />
+
+         <!-- oc:jsontemplate oc:datafile="/Actions/Security/objectfootercomponents.json"  fn="[__UP.fn_]" NamedPermission="[_NamedPermission_]">
+[__UP.NamedPermission_] [__UP.fn_]
+         </oc:jsontemplate -->
       </oc:jsontemplate>
    </oc:jsontemplate>
 

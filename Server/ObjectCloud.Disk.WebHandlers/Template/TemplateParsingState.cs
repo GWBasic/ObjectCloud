@@ -279,28 +279,29 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         /// <param name="componentNode"></param>
         public void ReplaceNodes(XmlNode componentNode, IEnumerable<XmlNode> newNodes)
         {
-            using (IEnumerator<XmlNode> enumerator = newNodes.GetEnumerator())
-                if (enumerator.MoveNext())
-                {
-                    XmlNode newNode = enumerator.Current;
-                    if ((newNode.OwnerDocument != componentNode.OwnerDocument) || (newNode.ParentNode == componentNode))
-                        newNode = componentNode.OwnerDocument.ImportNode(newNode, true);
-
-                    componentNode.ParentNode.ReplaceChild(newNode, componentNode);
-                    XmlNode previousNode = newNode;
-
-                    while (enumerator.MoveNext())
+            if (null != componentNode.ParentNode)
+                using (IEnumerator<XmlNode> enumerator = newNodes.GetEnumerator())
+                    if (enumerator.MoveNext())
                     {
-                        newNode = enumerator.Current;
+                        XmlNode newNode = enumerator.Current;
                         if ((newNode.OwnerDocument != componentNode.OwnerDocument) || (newNode.ParentNode == componentNode))
                             newNode = componentNode.OwnerDocument.ImportNode(newNode, true);
 
-                        previousNode.ParentNode.InsertAfter(newNode, previousNode);
-                        previousNode = newNode;
+                        componentNode.ParentNode.ReplaceChild(newNode, componentNode);
+                        XmlNode previousNode = newNode;
+
+                        while (enumerator.MoveNext())
+                        {
+                            newNode = enumerator.Current;
+                            if ((newNode.OwnerDocument != componentNode.OwnerDocument) || (newNode.ParentNode == componentNode))
+                                newNode = componentNode.OwnerDocument.ImportNode(newNode, true);
+
+                            previousNode.ParentNode.InsertAfter(newNode, previousNode);
+                            previousNode = newNode;
+                        }
                     }
-                }
-                else
-                    componentNode.ParentNode.RemoveChild(componentNode);
+                    else
+                        componentNode.ParentNode.RemoveChild(componentNode);
         }
 
         /// <summary>
