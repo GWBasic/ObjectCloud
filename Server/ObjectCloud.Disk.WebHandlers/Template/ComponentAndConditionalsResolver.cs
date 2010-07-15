@@ -238,7 +238,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
                         if ("text/xml" == httpResponse.ContentType)
 							resultNode =
-								templateParsingState.LoadXmlDocument(httpResponse.AsString(), XmlParseMode.Xml, templateParsingState.GetCWD(element));
+                                templateParsingState.LoadXmlDocument("<html xmlns=\"" + templateParsingState.TemplateHandlerLocator.TemplatingConstants.HtmlNamespace + "\"><head></head><body>" + httpResponse.AsString() + "</body></html>", XmlParseMode.Xml, templateParsingState.GetCWD(element)).FirstChild.ChildNodes[1];
                         else
                             resultNode = element.OwnerDocument.CreateTextNode(httpResponse.AsString());
                     }
@@ -255,7 +255,8 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
                             if ("text/xml" == shellResults.ContentType)
 								resultNode =
-									templateParsingState.LoadXmlDocument(shellResults.ResultsAsString, XmlParseMode.Xml, templateParsingState.GetCWD(element));
+                                    templateParsingState.LoadXmlDocument("<html xmlns=\"" + templateParsingState.TemplateHandlerLocator.TemplatingConstants.HtmlNamespace + "\"><head></head><body>" + shellResults.ResultsAsString + "</body></html>", XmlParseMode.Xml, templateParsingState.GetCWD(
+                                    element)).FirstChild.ChildNodes[1];
                             else
                                 resultNode = element.OwnerDocument.CreateTextNode(shellResults.ResultsAsString);
                         }
