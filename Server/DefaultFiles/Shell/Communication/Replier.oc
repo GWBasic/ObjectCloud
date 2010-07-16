@@ -3,12 +3,6 @@
    <oc:script src="/API/jquery.js" />
    <oc:css src="/API/jquery_rte/jquery.rte.css" />
    <oc:open filename="[_FileName_]" varname="object_target" />
-
-   <oc:if>
-      <oc:can namedpermission="reply" filename="[_FileName_]">
-      </oc:can>
-   </oc:if>
-
 </oc:inserthead>
 
    <oc:if>

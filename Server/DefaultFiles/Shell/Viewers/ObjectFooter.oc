@@ -2,6 +2,7 @@
 
    <oc:jsontemplate oc:url="[_FileName_]" Method="GetInfoAndPermission" fn="[_FileName_]">
       <oc:jsontemplate oc:datafile="/Actions/Security/ByExtension/[_Extension_].json" fn="[__UP.fn_]">
+         <hr />
          <oc:component oc:src="[_FooterComponent_]" FileName="[__UP.fn_]" />
 
          <!-- oc:jsontemplate oc:datafile="/Actions/Security/objectfootercomponents.json"  fn="[__UP.fn_]" NamedPermission="[_NamedPermission_]">
