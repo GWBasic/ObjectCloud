@@ -1,0 +1,5 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" headerfooter="/DefaultTemplate/objectbar.ochf">
+   <oc:safeparse>
+      <oc:component oc:url="[_FileName_]" Method="ReadAll" />
+   </oc:safeparse>
+</oc:componentdef>

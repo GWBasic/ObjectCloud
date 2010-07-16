@@ -1,7 +1,4 @@
 <oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" headerfooter="/DefaultTemplate/objectbar.ochf">
-<oc:inserthead>
-   <oc:script src="/API/jquery.js" />
-</oc:inserthead>
 
    <oc:jsontemplate oc:url="[_FileName_]" Method="ReadAll">
       <div class="title">[_Title_]</div>
