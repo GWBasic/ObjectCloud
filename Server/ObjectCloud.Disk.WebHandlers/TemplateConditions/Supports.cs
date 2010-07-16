@@ -21,7 +21,7 @@ namespace ObjectCloud.Disk.WebHandlers.TemplateConditions
     /// <summary>
     /// 
     /// </summary>
-    public class Can : NamedPermissionBase
+    public class Supports : NamedPermissionBase
     {
         /// <summary>
         /// 
@@ -32,13 +32,11 @@ namespace ObjectCloud.Disk.WebHandlers.TemplateConditions
         /// <returns></returns>
         protected override bool DetermineCondition(ITemplateParsingState templateParsingState, IFileContainer fileContainer, string namedPermission)
         {
-            // Always return true for administrators
-            if (templateParsingState.WebConnection.WebServer.FileHandlerFactoryLocator.UserManagerHandler.IsUserInGroup(
-                templateParsingState.WebConnection.Session.User.Id,
-                templateParsingState.WebConnection.WebServer.FileHandlerFactoryLocator.UserFactory.Administrators.Id))
-                return true;
+            foreach (Dictionary<string, object> supportedNamedPermission in fileContainer.GetNamedPermissionsConfiguration())
+                if (supportedNamedPermission["NamedPermission"].ToString() == namedPermission)
+                    return true;
 
-            return fileContainer.HasNamedPermissions(templateParsingState.WebConnection.Session.User.Id, namedPermission);
+            return false;
         }
     }
 }

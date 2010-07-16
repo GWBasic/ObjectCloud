@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+using JsonFx.Json;
+
 using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Javascript;
 using ObjectCloud.Interfaces.Security;
@@ -301,5 +303,38 @@ namespace ObjectCloud.Interfaces.Disk
         private DateTime _Created;
 
         public abstract DateTime LastModified { get; }
+
+        /// <summary>
+        /// Returns a deserialized JSON named configuration file
+        /// </summary>
+        /// <returns></returns>
+        public object[] GetNamedPermissionsConfiguration()
+        {
+            string filename = GetNamedPermissionsConfigurationFilename();
+
+            if (!FileHandlerFactoryLocator.FileSystemResolver.IsFilePresent(filename))
+                return new object[0];
+
+            ITextHandler supportedNamedPermissionsHandler = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(filename).CastFileHandler<ITextHandler>();
+            return JsonReader.Deserialize<object[]>(supportedNamedPermissionsHandler.ReadAll());
+        }
+
+        /// <summary>
+        /// Returns the filename used for named permissions configuration
+        /// </summary>
+        /// <returns></returns>
+        public string GetNamedPermissionsConfigurationFilename()
+        {
+            string filename = "/Actions/Security/";
+
+            if (Filename.Contains("."))
+                filename += "ByExtension/" + Extension;
+            else
+                filename += "ByType/" + TypeId;
+
+            filename += ".json";
+            return filename;
+        }
+
     }
 }

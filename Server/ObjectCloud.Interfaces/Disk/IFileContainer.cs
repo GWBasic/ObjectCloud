@@ -114,5 +114,17 @@ namespace ObjectCloud.Interfaces.Disk
         /// The FileHandlerFactoryLocator
         /// </summary>
         FileHandlerFactoryLocator FileHandlerFactoryLocator { get; }
+
+        /// <summary>
+        /// Returns a deserialized JSON named configuration file
+        /// </summary>
+        /// <returns></returns>
+        object[] GetNamedPermissionsConfiguration();
+
+        /// <summary>
+        /// Returns the filename used for named permissions configuration
+        /// </summary>
+        /// <returns></returns>
+        string GetNamedPermissionsConfigurationFilename();
     }
 }

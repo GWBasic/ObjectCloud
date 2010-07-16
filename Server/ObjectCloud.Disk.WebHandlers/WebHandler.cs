@@ -384,6 +384,9 @@ namespace ObjectCloud.Disk.WebHandlers
                 foreach (FilePermissionEnum fpe in Enum<FilePermissionEnum>.Values)
                     toReturn["Can" + fpe.ToString()] = false;
 
+            foreach (Dictionary<string, object> supportedNamedPermission in FileContainer.GetNamedPermissionsConfiguration())
+                toReturn["Supports" + supportedNamedPermission["NamedPermission"].ToString()] = true;
+
             return toReturn;
         }
 
@@ -1618,17 +1621,10 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.GET, WebReturnConvention.JSON)]
 		public IWebResults GetAssignableNamedPermissions(IWebConnection webConnection)
 		{
-			string filename = "/Actions/Security/";
-			
-			if (FileContainer.Filename.Contains("."))
-				filename += "ByExtension/" + FileContainer.Extension;
-			else
-				filename += "ByType/" + FileContainer.TypeId;
-			
-			filename += ".json";
+            string filename = FileContainer.GetNamedPermissionsConfigurationFilename();
 			
 			if (!FileHandlerFactoryLocator.FileSystemResolver.IsFilePresent(filename))
-				return WebResults.ToJson(new object[0]);
+                return WebResults.From(Status._200_OK, "[]");
 			
 			IFileContainer fileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(filename);
 			return WebResults.From(Status._200_OK, fileContainer.CastFileHandler<ITextHandler>().ReadAll());

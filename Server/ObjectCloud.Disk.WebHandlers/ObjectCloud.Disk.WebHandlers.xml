@@ -602,6 +602,11 @@
             
             </summary>
         </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.NamedPermissionBase">
+            <summary>
+            
+            </summary>
+        </member>
         <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.CanBase">
             <summary>
             Assists in processing permissions on a file
@@ -615,12 +620,30 @@
             <param name="me"></param>
             <returns></returns>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.Can.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.NamedPermissionBase.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
             <summary>
             
             </summary>
             <param name="templateParsingState"></param>
             <param name="me"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.NamedPermissionBase.DetermineCondition(ObjectCloud.Interfaces.Templating.ITemplateParsingState,ObjectCloud.Interfaces.Disk.IFileContainer,System.String)">
+            <summary>
+            
+            </summary>
+            <param name="templateParsingState"></param>
+            <param name="fileContainer"></param>
+            <param name="namedPermission"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.Can.DetermineCondition(ObjectCloud.Interfaces.Templating.ITemplateParsingState,ObjectCloud.Interfaces.Disk.IFileContainer,System.String)">
+            <summary>
+            
+            </summary>
+            <param name="templateParsingState"></param>
+            <param name="fileContainer"></param>
+            <param name="namedPermission"></param>
             <returns></returns>
         </member>
         <member name="T:ObjectCloud.Disk.WebHandlers.Comet.LoopbackQueuingReliableWebHandler">
@@ -1995,6 +2018,13 @@
             <param name="webConnection"></param>
             <returns></returns>
         </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetCurrentUser(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Returns a JSON object with information about the current user
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetIdentity(ObjectCloud.Interfaces.WebServer.IWebConnection)">
             <summary>
             Returns the user open id of the currently-logged in user.
@@ -2116,6 +2146,20 @@
             <summary>
             Removes debug information from documents
             </summary>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.Supports">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.Supports.DetermineCondition(ObjectCloud.Interfaces.Templating.ITemplateParsingState,ObjectCloud.Interfaces.Disk.IFileContainer,System.String)">
+            <summary>
+            
+            </summary>
+            <param name="templateParsingState"></param>
+            <param name="fileContainer"></param>
+            <param name="namedPermission"></param>
+            <returns></returns>
         </member>
     </members>
 </doc>

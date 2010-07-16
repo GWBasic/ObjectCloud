@@ -79,6 +79,8 @@
     <Compile Include="TemplateConditions\IsLoggedIn.cs" />
     <Compile Include="TemplateConditions\IsOpenID.cs" />
     <Compile Include="TemplateConditions\HasValue.cs" />
+    <Compile Include="TemplateConditions\NamedPermissionBase.cs" />
+    <Compile Include="TemplateConditions\Supports.cs" />
     <Compile Include="TemplateEngine.cs" />
     <Compile Include="Template\AggressiveCachingEnabler.cs" />
     <Compile Include="Template\ComponentAndConditionalsResolver.cs" />

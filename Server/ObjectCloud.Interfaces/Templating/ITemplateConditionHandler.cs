@@ -23,6 +23,6 @@ namespace ObjectCloud.Interfaces.Templating
         /// <param name="webConnection"></param>
         /// <param name="me"></param>
         /// <returns></returns>
-        bool IsConditionMet(ITemplateParsingState TemplateParsingState, XmlNode me);
+        bool IsConditionMet(ITemplateParsingState templateParsingState, XmlNode me);
     }
 }

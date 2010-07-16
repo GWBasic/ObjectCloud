@@ -338,6 +338,17 @@ namespace ObjectCloud.Disk.WebHandlers
         }
 
         /// <summary>
+        /// Returns a JSON object with information about the current user
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.GET, WebReturnConvention.JSON, FilePermissionEnum.Read)]
+        public IWebResults GetCurrentUser(IWebConnection webConnection)
+        {
+            return WebResults.ToJson(this.CreateJSONDictionary(webConnection.Session.User));
+        }
+
+        /// <summary>
         /// Returns the user open id of the currently-logged in user.
         /// </summary>
         /// <param name="webConnection"></param>
