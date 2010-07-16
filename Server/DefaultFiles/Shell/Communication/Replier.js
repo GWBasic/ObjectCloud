@@ -51,6 +51,7 @@ function rply_register(file)
             replierDiv.show();
 
             // TODO:  this should be replaced with something that loads new replies through comet
+            $('body').html('<div class="title">Loading...</div>');
             window.location.href=window.location.href
          },
          function()

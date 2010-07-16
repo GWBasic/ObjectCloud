@@ -6,21 +6,7 @@
 </oc:inserthead>
 
    <div class="objectbar" id="objectbar" style="position: relative;">
-      <oc:if>
-         <oc:canadminister filename="[_FileName_]">
-            <input type="button" value="share" class="objectbar_share" />
-            <script>
-               $(document).ready(function()
-               {
-                  $('.objectbar_share').click(function()
-                  {
-                     shareDialog_show('[_FileName_]');
-                  });
-               });
-            </script>
-         </oc:canadminister>
-      </oc:if>
-      &#160;
+      <oc:component oc:src="/Shell/Viewers/EditShare.oc" FileName="[_FileName_]" />
    </div>
 
    <oc:component />

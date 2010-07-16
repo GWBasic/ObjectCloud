@@ -1,0 +1,53 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" xmlns:af="appfeeds_templating">
+<oc:inserthead>
+   <oc:script src="/API/jquery.js" />
+</oc:inserthead>
+
+   <oc:if>
+      <oc:canadminister filename="[_FileName_]">
+         <input type="button" value="share" class="objectbar_share" />
+         <script>
+            $(document).ready(function()
+            {
+               $('.objectbar_share').click(function()
+               {
+                  shareDialog_show('[_FileName_]');
+               });
+            });
+         </script>
+      </oc:canadminister>
+   </oc:if>
+   &#160;
+
+   <oc:if>
+      <oc:canwrite filename="[_FileName_]">
+         <input type="button" value="edit" class="objectbar_edit" />
+
+         <script>
+            $(document).ready(function()
+            {
+               var editButton = $('.objectbar_edit');
+
+               <oc:if>
+                  <oc:hasaction filename="[_FileName_]" action="Edit">
+
+                     editButton.click(function()
+                     {
+                        window.location.href = '[_FileName_]?Action=Edit';
+                     });
+
+                  </oc:hasaction>
+                  <oc:else>
+
+                     editButton.hide();
+
+                  </oc:else>
+               </oc:if>
+            });
+         </script>
+
+      </oc:canwrite>
+   </oc:if>
+   &#160;
+
+</oc:componentdef>

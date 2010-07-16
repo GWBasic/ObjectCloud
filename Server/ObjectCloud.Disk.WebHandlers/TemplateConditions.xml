@@ -41,6 +41,9 @@
         <entry key="supports">
           <object id="TemplateConditionHandlers_supports" type="ObjectCloud.Disk.WebHandlers.TemplateConditions.Supports" />
         </entry>
+        <entry key="hasaction">
+          <object id="TemplateConditionHandlers_hasaction" type="ObjectCloud.Disk.WebHandlers.TemplateConditions.HasAction" />
+        </entry>
       </dictionary>
     </property>
 
