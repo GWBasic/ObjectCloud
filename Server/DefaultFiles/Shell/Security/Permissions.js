@@ -155,7 +155,6 @@ function doPermissions(inPermissions, inDefaultNamedPermissions)
                      displayPermissions();
                   });
 
-               alert(result);
                UserOrGroupInput.val("");
 
                me.removeAttr('disabled');
