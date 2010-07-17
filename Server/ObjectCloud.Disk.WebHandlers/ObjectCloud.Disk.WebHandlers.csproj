@@ -95,6 +95,8 @@
     <Compile Include="LogWebHandler.cs" />
     <Compile Include="WebHandler.cs" />
     <Compile Include="TemplateConditions\HasAction.cs" />
+    <Compile Include="TemplateConditions\IsOwner.cs" />
+    <Compile Include="TemplateConditions\IsA.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Data" />

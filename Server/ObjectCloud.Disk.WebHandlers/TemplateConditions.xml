@@ -44,6 +44,12 @@
         <entry key="hasaction">
           <object id="TemplateConditionHandlers_hasaction" type="ObjectCloud.Disk.WebHandlers.TemplateConditions.HasAction" />
         </entry>
+        <entry key="isa">
+          <object id="TemplateConditionHandlers_isa" type="ObjectCloud.Disk.WebHandlers.TemplateConditions.IsA" />
+        </entry>
+        <entry key="isowner">
+          <object id="TemplateConditionHandlers_isowner" type="ObjectCloud.Disk.WebHandlers.TemplateConditions.IsOwner" />
+        </entry>
       </dictionary>
     </property>
 
