@@ -1100,6 +1100,19 @@
             Assists in trimming large XML blobs
             </summary>
         </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsOwner">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsOwner.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
+            <summary>
+            
+            </summary>
+            <param name="templateParsingState"></param>
+            <param name="me"></param>
+            <returns></returns>
+        </member>
         <member name="T:ObjectCloud.Disk.WebHandlers.TemplateEngine">
             <summary>
             Generates complete files from templates
@@ -1159,6 +1172,19 @@
             </summary>
         </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsLoggedIn.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
+            <summary>
+            
+            </summary>
+            <param name="templateParsingState"></param>
+            <param name="me"></param>
+            <returns></returns>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsA">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsA.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
             <summary>
             
             </summary>
@@ -1311,6 +1337,19 @@
             Proxies all kinds of POST requests
             </summary>
             <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.HasAction">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.HasAction.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
+            <summary>
+            
+            </summary>
+            <param name="templateParsingState"></param>
+            <param name="me"></param>
             <returns></returns>
         </member>
         <member name="T:ObjectCloud.Disk.WebHandlers.Template.SecurityTagParser">

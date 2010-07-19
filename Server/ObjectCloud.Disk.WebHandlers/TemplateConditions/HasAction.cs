@@ -18,8 +18,17 @@ using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.Disk.WebHandlers.TemplateConditions
 {
+    /// <summary>
+    /// 
+    /// </summary>
 	public class HasAction : CanBase, ITemplateConditionHandler
 	{
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="templateParsingState"></param>
+        /// <param name="me"></param>
+        /// <returns></returns>
 		public bool IsConditionMet (ITemplateParsingState templateParsingState, XmlNode me)
 		{
 			IFileContainer fileContainer = GetFileContainer(templateParsingState, me);

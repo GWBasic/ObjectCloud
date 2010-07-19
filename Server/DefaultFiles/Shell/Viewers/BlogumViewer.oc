@@ -1,0 +1,38 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" headerfooter="/DefaultTemplate/objectbar.ochf">
+<oc:inserthead>
+   <oc:script src="/API/jquery.js" />
+   <oc:script src="/API/prettyPrintDates.js" />
+   <oc:css src="/API/jquery_rte/jquery.rte.css" />
+   <oc:open filename="[_FileName_]" varname="object_target" />
+   <oc:script src="/Shell/Viewers/BlogumViewer.js" />
+   <script>
+      $(document).ready(function()
+      {
+         doBlogum(object_target);
+      });
+   </script>
+</oc:inserthead>
+
+   <oc:if>
+      <oc:can filename="[_FileName_]" namedpermission="post">
+         <input type="button" value="Add a post" class="post" />
+         <span class="saving">Saving...</span>
+         <div id="postarea">
+            Title: <input type="text" class="posttitle" style="width: 90%" /><br />
+            <input type="button" value="save" class="savepost" /><br />
+         </div>
+      </oc:can>
+   </oc:if>
+
+   <div id="Blogum_Blogum">
+      <oc:jsontemplate oc:url="[_FileName_]" Method="GetRelatedFiles"
+         relationships="['post']"
+         maxToReturn="10"
+         newest="[_newest_]">
+         <div class="post"><oc:safeparse>
+            <oc:component oc:url="[_FullPath_]" Action="Preview" oc:getpassthough="false" MimeOverride="text/text" />
+         </oc:safeparse></div><hr />
+      </oc:jsontemplate>
+   </div>
+
+</oc:componentdef>

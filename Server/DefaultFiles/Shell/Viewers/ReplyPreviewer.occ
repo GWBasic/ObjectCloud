@@ -1,7 +1,7 @@
 <oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
-   <oc:script src="/API/pretty.js" />
+   <oc:script src="/API/prettyPrintDates.js" />
    <oc:jsontemplate oc:url="[_FileName_]" Method="GetInfoAndPermission">
-      <a href="[_OwnerIdentity_]">[_Owner_]</a> says ([_Created_]):
+      <a href="[_OwnerIdentity_]">[_Owner_]</a> says (<span class="date_ago">[_Created_]</span>):
    </oc:jsontemplate>
 
    <div class="reply_text">

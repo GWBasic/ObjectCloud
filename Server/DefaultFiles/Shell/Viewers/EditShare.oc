@@ -1,6 +1,7 @@
 <oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" xmlns:af="appfeeds_templating">
 <oc:inserthead>
    <oc:script src="/API/jquery.js" />
+   <oc:script src="/API/prettyPrintDates.js" />
 </oc:inserthead>
 
    <oc:if>
@@ -49,5 +50,12 @@
       </oc:canwrite>
    </oc:if>
    &#160;
+
+   <span class="object_createdmodified">
+      <oc:jsontemplate oc:url="[_FileName_]" Method="GetInfoAndPermission">
+         <span class="created">Created: <span class="date">[_Created_]</span></span>
+         <!-- <span class="modified">Modified: <span class="date">[_LastModified_]</span></span> -->
+      </oc:jsontemplate>
+   </span>
 
 </oc:componentdef>

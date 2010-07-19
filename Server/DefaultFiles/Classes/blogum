@@ -82,7 +82,7 @@ AddPostWithContent.webCallable = "POST_application_x_www_form_urlencoded";
 AddPostWithContent.minimumWebPermission = "Write";
 AddPostWithContent.namedPermissions = "reply";
 AddPostWithContent.webReturnConvention = "Status";
-function AddPostWithContent(title, replyText)
+function AddPostWithContent(title, contents)
 {
    var userMetadata = getConnectionMetadata();
 
@@ -102,7 +102,11 @@ function AddPostWithContent(title, replyText)
                ErrorIfExists: true
             });
 
-         replyFile.WriteAll_Sync('<div>' + sanitize(title) + '</div>' + sanitize(replyText));
+         replyFile.WriteAll_Sync(JSON.stringify(
+         {
+            Title: title,
+            Contents: contents
+         }));
 
          replyFile.AddRelatedFile_Sync(
             {

@@ -61,10 +61,11 @@ namespace ObjectCloud.Disk.Implementation.MethodFinder
                             else if ((typeof(DateTime) == parameterType) || (typeof(DateTime?) == parameterType))
                             {
                                 if (null != value)
-                                {
-                                    JsonReader jsonReader = new JsonReader(value);
-                                    arguments[parameterIndex] = jsonReader.Deserialize<DateTime>();
-                                }
+                                    if (value.Length > 0)
+                                    {
+                                        JsonReader jsonReader = new JsonReader(value);
+                                        arguments[parameterIndex] = jsonReader.Deserialize<DateTime>();
+                                    }
                             }
 
                             else if (typeof(Guid) == parameterType || typeof(Guid?) == parameterType)

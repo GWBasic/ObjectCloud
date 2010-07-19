@@ -1,0 +1,16 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
+   <div class="reply_text">
+      <oc:jsontemplate oc:datafile="[_FileName_]" FileName="[_FileName_]">
+         <h1>[_Title_]</h1>
+         <oc:jsontemplate oc:url="[__UP.FileName_]" Method="GetInfoAndPermission">
+            <div><a href="[_OwnerIdentity_]">[_Owner_]</a>, <span class="date">[_Created_]</span></div>
+         </oc:jsontemplate>
+         <oc:trim maxtags="100" maxlength="500">
+            <oc:safeparse oc:xmlparsemode="xmlthenhtml">
+               [_Contents_]
+            </oc:safeparse>
+         </oc:trim>
+      </oc:jsontemplate>
+   </div>
+   <br /><a href="[_FileName_]"> View / Reply</a>
+</oc:componentdef>

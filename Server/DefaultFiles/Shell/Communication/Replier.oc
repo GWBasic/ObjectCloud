@@ -2,6 +2,7 @@
 <oc:inserthead>
    <oc:script src="/API/jquery.js" />
    <oc:css src="/API/jquery_rte/jquery.rte.css" />
+   <oc:script src="/API/prettyPrintDates.js" />
    <oc:open filename="[_FileName_]" varname="object_target" />
 </oc:inserthead>
 

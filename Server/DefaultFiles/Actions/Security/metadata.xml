@@ -15,8 +15,4 @@
 			Inherit="False"
 			SendNotifications="False" />
 	</File>
-	<File
-		Name="objectfootercomponents.json"
-		TypeId="text"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 </Directory>

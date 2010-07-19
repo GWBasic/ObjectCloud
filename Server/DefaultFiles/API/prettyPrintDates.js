@@ -6,4 +6,10 @@ $(document).ready(function() {
       var date = new Date(parseFloat(element.innerHTML));
       element.innerHTML = prettyDate(date);
    });
+
+   $('.date').each(function(i, element)
+   {
+      var date = new Date(parseFloat(element.innerHTML));
+      element.innerHTML = prettyDate(date) + ' (' + date + ')';
+   });
 });
