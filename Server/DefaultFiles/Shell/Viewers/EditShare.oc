@@ -54,7 +54,6 @@
    <span class="object_createdmodified">
       <oc:jsontemplate oc:url="[_FileName_]" Method="GetInfoAndPermission">
          <span class="created">Created: <span class="date">[_Created_]</span></span>
-         <!-- <span class="modified">Modified: <span class="date">[_LastModified_]</span></span> -->
       </oc:jsontemplate>
    </span>
 
