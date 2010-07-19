@@ -56,4 +56,8 @@ function doBlogum(object_target)
 
       saveButton.click(saveFunction);
    });
+
+   var morelinks = $('.morelink');
+   for (var i = 0; i < morelinks.length - 1; i++)
+      $(morelinks[i]).hide();
 }

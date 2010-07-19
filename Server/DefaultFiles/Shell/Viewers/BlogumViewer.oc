@@ -28,10 +28,12 @@
       <oc:jsontemplate oc:url="[_FileName_]" Method="GetRelatedFiles"
          relationships="['post']"
          maxToReturn="10"
-         newest="[_newest_]">
+         newest="[_newest_]"
+         FileName="[_FileName_]">
          <div class="post"><oc:safeparse>
             <oc:component oc:url="[_FullPath_]" Action="Preview" oc:getpassthough="false" MimeOverride="text/text" />
          </oc:safeparse></div><hr />
+         <div class="morelink"><a href="[__UP.FileName_]?newest=[_Created_]">More...</a></div>
       </oc:jsontemplate>
    </div>
 
