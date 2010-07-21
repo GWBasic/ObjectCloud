@@ -1013,8 +1013,16 @@ namespace ObjectCloud.Disk.FileHandlers
 									IFileContainer toSync = OpenFile(filename);
 							
 									log.Trace("Jumping into " + toSync.FullPath);
-							
-                                    toSync.FileHandler.SyncFromLocalDisk(fileToSync, force);
+
+                                    try
+                                    {
+                                        toSync.FileHandler.SyncFromLocalDisk(fileToSync, force);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        log.Error("Error syncing " + toSync.FullPath, e);
+                                        throw;
+                                    }
 
                                     DatabaseConnection.File.Update((File_Table.Name == filename) & (File_Table.OwnerId != ownerId),
                                         delegate(IFile_Writable file)
