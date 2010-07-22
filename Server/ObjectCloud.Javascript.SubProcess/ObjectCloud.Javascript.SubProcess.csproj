@@ -65,13 +65,13 @@
     <Compile Include="ExecutionEnvironmentFactory.cs" />
     <Compile Include="FunctionCallContext.cs" />
     <Compile Include="FunctionCaller.cs" />
-    <Compile Include="ISubProcessFactory.cs" />
     <Compile Include="JavascriptDatabaseFunctions.cs" />
     <Compile Include="JavascriptFunctions.cs" />
+    <Compile Include="ParentScope.cs" />
+    <Compile Include="ParentScopeFactory.cs" />
     <Compile Include="ScopeWrapper.cs" />
     <Compile Include="SubProcess.cs" />
     <Compile Include="JavascriptException.cs" />
-    <Compile Include="SubProcessFactory.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

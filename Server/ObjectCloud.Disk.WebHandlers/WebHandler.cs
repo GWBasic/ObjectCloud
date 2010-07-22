@@ -1408,93 +1408,16 @@ namespace ObjectCloud.Disk.WebHandlers
         public void ResetExecutionEnvironment()
 		{
             using (TimedLock.Lock(ExecutionEnvironmentLock))
-				_ExecutionEnvironment = null;
-			
-			CachedInBrowserJSWrapper = null;
-		}
-		
-		/*// <summary>
-		/// This is set to true while an execution environment is being created 
-		/// </summary>
-		private volatile bool CreatingExecutionEnvironment = false;*/
-
-
-        // TODO:  Clean this out if it's not needed
-		/// <summary>
-		/// helper to determine if the execution environment is ready 
-		/// </summary>
-		/// <param name="javascriptContainer">
-		/// A <see cref="IFileContainer"/>
-		/// </param>
-		/// <returns>
-		/// A <see cref="System.Boolean"/>
-		/// </returns>
-		private bool IsExecutionEnvironmentReady_Helper(out IFileContainer javascriptContainer)
-		{
-            // Files without an extension can not have a local execution environment
-            string extension = FileContainer.Extension;
-            if (null == extension)
-			{
-				javascriptContainer = null;
-                return true;
-			}
-			
-            // Try to find the javascript file
-            javascriptContainer = FindJavascriptContainer(extension, FileContainer.ParentDirectoryHandler);
-
-            // If a javascript container was found, make sure there's an up-to-date ExecutionEnvironment
-            if (null != javascriptContainer)
-			{
-				/*// If the execution environment is being created, don't bother trying to lock
-				if (CreatingExecutionEnvironment)
-					return true;*/
-				
-                // Note: a large timeout is used in case a thread is constructing the scope.  Constructing the scope can be time consuming
-                using (TimedLock.Lock(ExecutionEnvironmentLock, TimeSpan.FromSeconds(15)))
-                {
-                    // If the execution environment isn't created, then it isn't ready
-                    if (null == _ExecutionEnvironment)
-                    {
-                        _ExecutionEnvironment = null;
-                        return false;
-                    }
-
-                    // Or it's based around the wrong file, then it isn't ready
-                    else if (_ExecutionEnvironment.JavascriptContainer != javascriptContainer)
-                    {
-                        _ExecutionEnvironment = null;
-                        return false;
-                    }
-
-                    // Or it's outdated, then it isn't ready
-                    else if (javascriptContainer.LastModified > _ExecutionEnvironment.JavascriptLastModified)
-                    {
-                        _ExecutionEnvironment = null;
-                        return false;
-                    }
-                    else
-                        return true;
-                }
-			}
-			else
-			{
-				// There is no execution environment
+            {
                 _ExecutionEnvironment = null;
-				return true;
-			}
+                CachedInBrowserJSWrapper = null;
+            }
 		}
-		
-        /*// <summary>
-        /// Returns true if the execution environment is ready for use, or if there is no execution environment.  Returns false if there will be a delay while the execution environment is allocation.
+
+        /// <summary>
+        /// Prevents recurion when calling GetOrCreateExecutionEnvironment(), as this will almost always result in a stack overflow exception
         /// </summary>
-		public bool IsExecutionEnvironmentReady 
-		{
-			get
-			{
-				IFileContainer javascriptContainer;
-				return IsExecutionEnvironmentReady_Helper(out javascriptContainer);
-			}
-		}*/
+        bool CreatingExecutionEnvironment = false;
 		
 		/// <summary>
         /// Where Javascript is executed
@@ -1506,26 +1429,47 @@ namespace ObjectCloud.Disk.WebHandlers
             if (null == extension)
                 return null;
 
-			IFileContainer javascriptContainer;
+            IExecutionEnvironment executionEnvironment = _ExecutionEnvironment;
+            if (null != executionEnvironment)
+                return executionEnvironment;
+
             // Note: a large timeout is used in case a thread is constructing the scope.  Constructing the scope can be time consuming
             // TODO:  Try to do a lot of checking without a lock, or using a read/write lock
             using (TimedLock.Lock(ExecutionEnvironmentLock, TimeSpan.FromSeconds(15)))
-				if (!IsExecutionEnvironmentReady_Helper(out javascriptContainer))
-				{
-					/*CreatingExecutionEnvironment = true;
-				
-					try
-					{*/
-						IExecutionEnvironmentFactory factory = FileHandlerFactoryLocator.ExecutionEnvironmentFactory;
-						_ExecutionEnvironment = factory.Create(FileHandlerFactoryLocator, FileContainer, javascriptContainer);
-					/*}
-					finally
-					{
-						CreatingExecutionEnvironment = false;
-					}*/
-				}
-			
-			return _ExecutionEnvironment;
+            {
+                if (null != _ExecutionEnvironment)
+                    return _ExecutionEnvironment;
+
+                if (CreatingExecutionEnvironment)
+                {
+                    log.Error("An attempt was made to call GetOrCreateExecutionEnvironment() while it's being created.  " +
+                        "This usually occurs when server-side javascript, while creating a scope calls a function that depends on " + 
+                        "GetOrCreateExecutionEnvironment() being complete.  As GetOrCreateExecutionEnvrionment() isn't complete, it " + 
+                        "would attempt to create a new one which will result in a stack overflow and server crash.  " +
+                        "To resolve this problem, do not use operations while creating a Javascript scope that depend on the completed " +
+                        "scope, such as calling open() against yourself.  " + FileContainer.ObjectUrl);
+                    throw new WebResultsOverrideException(WebResults.From(Status._500_Internal_Server_Error));
+                }
+
+                CreatingExecutionEnvironment = true;
+
+                try
+                {
+                    // Try to find the javascript file
+                    IFileContainer javascriptContainer = FindJavascriptContainer(extension, FileContainer.ParentDirectoryHandler);
+                    if (null != javascriptContainer)
+                    {
+                        IExecutionEnvironmentFactory factory = FileHandlerFactoryLocator.ExecutionEnvironmentFactory;
+                        _ExecutionEnvironment = factory.Create(FileContainer, javascriptContainer);
+                    }
+
+                    return _ExecutionEnvironment;
+                }
+                finally
+                {
+                    CreatingExecutionEnvironment = false;
+                }
+            }
         }
 
         /// <summary>

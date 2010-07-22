@@ -19,6 +19,6 @@ namespace ObjectCloud.Javascript.SubProcess
         /// Returns a sub process that can provide a scope for the given javascript container
         /// </summary>
         /// <returns></returns>
-        SubProcess GetOrCreateSubProcess(IFileContainer javascriptContainer);
+        SubProcess GetOrCreateSubProcess();
     }
 }

@@ -8,13 +8,20 @@ using System.Xml;
 
 namespace ObjectCloud.Interfaces.Disk
 {
-    public class HasFileHandlerFactoryLocator
+    public abstract class HasFileHandlerFactoryLocator
     {
         public FileHandlerFactoryLocator FileHandlerFactoryLocator
         {
             get { return _FileHandlerFactoryLocator; }
-            set { _FileHandlerFactoryLocator = value; }
+            set 
+            {
+                _FileHandlerFactoryLocator = value;
+                FileHandlerFactoryLocatorSet();
+            }
         }
         private FileHandlerFactoryLocator _FileHandlerFactoryLocator;
+
+        protected virtual void FileHandlerFactoryLocatorSet()
+        { }
     }
 }

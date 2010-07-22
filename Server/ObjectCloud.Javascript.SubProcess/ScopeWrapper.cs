@@ -27,8 +27,8 @@ namespace ObjectCloud.Javascript.SubProcess
     public class ScopeWrapper : IDisposable
     {
         private static ILog log = LogManager.GetLogger<ScopeWrapper>();
-		
-		private static Wrapped<int> IdCtr = int.MinValue;
+
+        private static int ScopeIdCtr = int.MinValue;
 
         public int ScopeId
         {
@@ -36,7 +36,6 @@ namespace ObjectCloud.Javascript.SubProcess
         }
         private readonly int _ScopeId;
 
-        private ISubProcessFactory SubProcessFactory;
         private IFileContainer JavascriptContainer;
 
         public SubProcess SubProcess
@@ -90,22 +89,16 @@ namespace ObjectCloud.Javascript.SubProcess
         public ScopeWrapper(
             FileHandlerFactoryLocator fileHandlerFactoryLocator,
             IFileContainer javascriptContainer,
-            ISubProcessFactory subProcessFactory,
-            IFileContainer fileContainer)
+            SubProcess subProcess,
+            IFileContainer fileContainer,
+            ParentScope parentScope)
         {
             _FileContainer = fileContainer;
-            SubProcessFactory = subProcessFactory;
+            _SubProcess = subProcess;
             JavascriptContainer = javascriptContainer;
+            _ParentScope = parentScope;
 
-            using (TimedLock.Lock(IdCtr))
-            {
-                _ScopeId = IdCtr.Value;
-
-                if (int.MaxValue == IdCtr.Value)
-                    IdCtr.Value = int.MinValue;
-                else
-                    IdCtr.Value++;
-            }
+            _ScopeId = Interlocked.Increment(ref ScopeIdCtr);
 
             _FileHandlerFactoryLocator = fileHandlerFactoryLocator;
 
@@ -118,7 +111,6 @@ namespace ObjectCloud.Javascript.SubProcess
 
             CacheIDsByKey = new Dictionary<object, object>();
 
-            _SubProcess = SubProcessFactory.GetOrCreateSubProcess(JavascriptContainer);
             _SubProcess.RegisterParentFunctionDelegate(ScopeId, CallParentFunction);
             FunctionCallers = new Dictionary<string, FunctionCaller>();
 
@@ -145,6 +137,7 @@ namespace ObjectCloud.Javascript.SubProcess
                     {
                         return _SubProcess.CreateScope(
                             ScopeId,
+                            ParentScope.ParentScopeId,
                             Thread.CurrentThread.ManagedThreadId,
                             CreateMetadata());
                     });
@@ -273,6 +266,15 @@ namespace ObjectCloud.Javascript.SubProcess
         private readonly IFileContainer _FileContainer;
 
         /// <summary>
+        /// The parent scope ID
+        /// </summary>
+        public ParentScope ParentScope
+        {
+            get { return _ParentScope; }
+        }
+        private readonly ParentScope _ParentScope;
+
+        /// <summary>
         /// Returns the appropriate delegate for the named method, or null if it doesn't exist
         /// </summary>
         /// <param name="method"></param>
@@ -295,29 +297,19 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <exception cref="AbortedException">Thrown if the sub process aborted anormally.  Callers should recover from this error condition</exception>
         public object CallFunction(IWebConnection webConnection, string functionName, IEnumerable arguments)
         {
-            int tryCtr = 0;
+            try
+            {
+                return _SubProcess.CallFunctionInScope(ScopeId, Thread.CurrentThread.ManagedThreadId, functionName, arguments);
+            }
+            catch (SubProcess.AbortedException)
+            {
+                // If the sub process was aborted, then reset every execution envrionemnt that uses this subprocess
+                IWebHandler webHandler;
+                while (ParentScope.WebHandlersWithThisAsParent.Dequeue(out webHandler))
+                    webHandler.ResetExecutionEnvironment();
 
-            SubProcess subProcess = null;
-
-            while (true)
-                try
-                {
-                    subProcess = _SubProcess;
-                    return _SubProcess.CallFunctionInScope(ScopeId, Thread.CurrentThread.ManagedThreadId, functionName, arguments);
-                }
-                catch (SubProcess.AbortedException)
-                {
-                    // Allow a max of 3 tries
-                    if (tryCtr >= 3)
-                        throw;
-
-                    tryCtr++;
-
-                    if (subProcess == _SubProcess)
-                    using (TimedLock.Lock(subProcess))
-                        if (subProcess == _SubProcess)
-                            ConstructScope();
-                }
+                throw;
+            }
         }
 
         /// <summary>
@@ -342,7 +334,7 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             try
             {
-                MethodInfo toInvoke = SubProcess.FunctionsInScope[functionName];
+                MethodInfo toInvoke = ParentScope.FunctionsInScope[functionName];
                 ParameterInfo[] parameters = toInvoke.GetParameters();
 
                 object[] allArguments = new object[parameters.Length];
@@ -367,7 +359,7 @@ namespace ObjectCloud.Javascript.SubProcess
                         allArguments[argCtr] = parameterType.IsValueType ? Activator.CreateInstance(parameterType) : null;
                 }
 
-                return SubProcess.FunctionsInScope[functionName].Invoke(null, allArguments);
+                return ParentScope.FunctionsInScope[functionName].Invoke(null, allArguments);
             }
             catch (TargetInvocationException tie)
             {
@@ -495,10 +487,12 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <returns></returns>
         public object Open(IWebConnection webConnection, string toOpen)
         {
+            IFileContainer fileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(toOpen);
+            /*if (FileContainer == fileContainer)
+                return new SubProcess.StringToEval("(this.base)");*/
+
             object cacheId;
             string cacheIdKey = "Open-+-+-+-+" + toOpen;
-
-            IFileContainer fileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(toOpen);
 
             // If the library is already loaded, then the return value is cached.
             if (GetCacheID(cacheIdKey, out cacheId))

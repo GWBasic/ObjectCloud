@@ -326,16 +326,10 @@
             Rebuilds the Javascript execution environment
             </summary>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.WebHandler`1.IsExecutionEnvironmentReady_Helper(ObjectCloud.Interfaces.Disk.IFileContainer@)">
+        <member name="F:ObjectCloud.Disk.WebHandlers.WebHandler`1.CreatingExecutionEnvironment">
             <summary>
-            helper to determine if the execution environment is ready 
+            Prevents recurion when calling GetOrCreateExecutionEnvironment(), as this will almost always result in a stack overflow exception
             </summary>
-            <param name="javascriptContainer">
-            A <see cref="T:ObjectCloud.Interfaces.Disk.IFileContainer"/>
-            </param>
-            <returns>
-            A <see cref="T:System.Boolean"/>
-            </returns>
         </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.WebHandler`1.GetOrCreateExecutionEnvironment">
             <summary>

@@ -457,20 +457,6 @@ namespace ObjectCloud.Interfaces.WebServer
         /// </summary>
 		private void StartExecutionEnvironments()
 		{
-            try
-            {
-                IFileContainer classesFileContainer = FileSystemResolver.ResolveFile("/Classes");
-
-                LinkedList<IFileContainer> classFiles = new LinkedList<IFileContainer>();
-                foreach (IFileContainer fileContainer in classesFileContainer.CastFileHandler<IDirectoryHandler>().Files)
-                    if (null == fileContainer.Extension)
-                        if (fileContainer.FileHandler is ITextHandler)
-                            classFiles.AddLast(fileContainer);
-
-                FileHandlerFactoryLocator.ExecutionEnvironmentFactory.Start(classFiles);
-            }
-            catch {}
-
             ThreadPool.QueueUserWorkItem(PreloadObjects);
         }
 
