@@ -696,10 +696,16 @@ namespace ObjectCloud.Javascript.SubProcess
         /// </summary>
         private object RespondKey = new object();
 
-        /// <summary>
-        /// Place to stuff the SubProcess's response
+        //// <summary>
+        /// Dictionary of objects that are to be pulsed to re-awake when the response comes in
         /// </summary>
-        Dictionary<object, Dictionary<string, object>> InCommandsByThreadId = new Dictionary<object, Dictionary<string, object>>();
+        private Dictionary<object, Wrapped<Dictionary<string, object>>> ResponsePulsers =
+            new Dictionary<object, Wrapped<Dictionary<string, object>>>();
+
+        /*// <summary>
+        /// The currently-pending InCommand
+        /// </summary>
+        Dictionary<string, object> InCommand = null;*/
 
         /// <summary>
         /// Syncronizes the sub process's output stream and returns the appropriate response
@@ -708,156 +714,138 @@ namespace ObjectCloud.Javascript.SubProcess
         private Dictionary<string, object> WaitForResponse()
         {
             object threadID = Thread.CurrentThread.ManagedThreadId;
-            Dictionary<string, object> inCommand = null;
 
-            do
-            {
-                // If there's a response waiting, return it
-                lock (InCommandsByThreadId)
-                {
-                    if (InCommandsByThreadId.TryGetValue(threadID, out inCommand))
+            while (!Process.HasExited)
+                if (Monitor.TryEnter(RespondKey))
+                    try
                     {
-                        InCommandsByThreadId.Remove(threadID);
-                        return inCommand;
-                    }
-                }
-
-                lock (RespondKey)
-                {
-                    bool checkForOutput;
-
-                    // (double-check in case something changed while waiting for the lock...)
-                    // If there's a response waiting, return it
-                    lock (InCommandsByThreadId)
-                    {
-                        if (InCommandsByThreadId.TryGetValue(threadID, out inCommand))
+                        while (!Process.HasExited)
                         {
-                            InCommandsByThreadId.Remove(threadID);
-                            return inCommand;
+                            string inCommandString;
+
+                            do
+                            {
+                                if (Process.StandardOutput.EndOfStream || Process.HasExited)
+                                    throw new JavascriptException("The sub process has exited");
+
+                                inCommandString = _Process.StandardOutput.ReadLine();
+
+                                if (null == inCommandString)
+                                    log.Warn("Null recieved from sub process");
+
+                            } while (null == inCommandString);
+
+                            Dictionary<string, object> inCommand = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
+
+                            object commandThreadID = inCommand["ThreadID"];
+
+                            Wrapped<Dictionary<string, object>> toPulse;
+
+                            lock (ResponsePulsers)
+                                // If this is the command for this thread, return it
+                                if (commandThreadID.Equals(threadID))
+                                {
+                                    Monitor.Exit(RespondKey);
+
+                                    using (IEnumerator<Wrapped<Dictionary<string, object>>> pulserEnumerator = ResponsePulsers.Values.GetEnumerator())
+                                        if (pulserEnumerator.MoveNext())
+                                            toPulse = pulserEnumerator.Current;
+
+                                    return inCommand;
+                                }
+                                else
+                                {
+                                    // Wait until the expected value is put in the dictionary
+                                    while (!ResponsePulsers.TryGetValue(commandThreadID, out toPulse))
+                                    {
+                                        Monitor.Exit(ResponsePulsers);
+                                        Thread.Sleep(0);
+                                        Monitor.Enter(ResponsePulsers);
+                                    }
+
+                                    toPulse.Value = inCommand;
+                                }
+
+                            lock (toPulse)
+                                Monitor.Pulse(toPulse);
                         }
 
-                        checkForOutput = InCommandsByThreadId.Count == 0;
+                        Monitor.Exit(RespondKey);
                     }
-
-                    // else, if there isn't a waiting response that came in on another thread, and if there aren't waiting responses, wait for a response
-                    if (Process.StandardOutput.EndOfStream || Process.HasExited)
-                        throw new JavascriptException("The sub process has exited");
-
-                    // Only wait for output if there are no pending responses.  If there are pending responses, let the waiting threads fight until they all get the responses
-                    if (checkForOutput)
+                    catch
                     {
-                        string inCommandString = _Process.StandardOutput.ReadLine();
-
-                        if (null == inCommandString)
-                            log.Warn("Null recieved from sub process");
-
-                        inCommand = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
-
-                        object commandThreadID = inCommand["ThreadID"];
-
-                        // If this is the command for this thread, return it
-                        if (commandThreadID == threadID)
-                            return inCommand;
-
-                        // else, stuff it into the dictionary of results
-                        lock (InCommandsByThreadId)
-                            InCommandsByThreadId[commandThreadID] = inCommand;
+                        Monitor.Exit(RespondKey);
+                        throw;
                     }
+                else
+                {
+                    Wrapped<Dictionary<string, object>> pulser = new Wrapped<Dictionary<string, object>>();
+
+                    lock (pulser)
+                    {
+                        lock (ResponsePulsers)
+                            ResponsePulsers[threadID] = pulser;
+
+                        Monitor.Wait(pulser, 100);
+                    }
+
+                    lock (ResponsePulsers)
+                        ResponsePulsers.Remove(threadID);
+
+                    if (null != pulser.Value)
+                        return pulser.Value;
                 }
 
-                // Make sure that a context switch occurs after the lock is released
-                Thread.Sleep(0);
+            throw new ObjectDisposedException("The sub processes has exited");
 
-            } while (!_Process.HasExited);
-			
-			throw new ObjectDisposedException("The sub processes has exited");
+            /*while (!Process.HasExited)
+            {
+                Dictionary<string, object> inCommand = InCommand;
+
+                // Check to see if this is the appropriate response
+                if (null != inCommand)
+                    if (threadID.Equals(inCommand["ThreadID"]))
+                    {
+                        InCommand = null;
+                        return inCommand;
+                    }
+
+                if (null == InCommand)
+                {
+                    lock (RespondKey)
+                        if (null == InCommand)
+                        {
+                            string inCommandString;
+
+                            do
+                            {
+                                if (Process.StandardOutput.EndOfStream || Process.HasExited)
+                                    throw new JavascriptException("The sub process has exited");
+
+                                inCommandString = _Process.StandardOutput.ReadLine();
+
+                                if (null == inCommandString)
+                                    log.Warn("Null recieved from sub process");
+
+                            } while (null == inCommandString);
+
+                            inCommand = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
+
+                            object commandThreadID = inCommand["ThreadID"];
+
+                            // If this is the command for this thread, return it
+                            if (commandThreadID.Equals(threadID))
+                                return inCommand;
+
+                            InCommand = inCommand;
+                        }
+                }
+                else
+                    Thread.Sleep(0);
+            }
+
+            throw new ObjectDisposedException("The sub processes has exited");*/
         }
-
-			/*
-			 * Alternet version of WaitForResponse
-		/// <summary>
-		/// The most recent command returned from the sub process
-		/// </summary>
-		Dictionary<string, object> InCommand = null;
-		
-		/// <summary>
-		/// The thread that has a result waiting for it
-		/// </summary>
-		int InCommandThreadId;
-		
-		/// <summary>
-		/// Used to block and unblock all threads that are waiting for a response 
-		/// </summary>
-		object WaitForResponsePulser = new object();
-		
-		/// <summary>
-		/// Syncronizes the sub process's output stream and returns the appropriate response
-		/// </summary>
-		/// <returns></returns>
-		private Dictionary<string, object> WaitForResponse()
-		{
-			int threadID = Thread.CurrentThread.ManagedThreadId;
-			
-			do
-			{
-				// If there is a waiting result and it's for this thread, return it
-				if (null != InCommand)
-					if (threadID == InCommandThreadId)
-					{
-						Dictionary<string, object> toReturn = InCommand;
-						InCommand = null;
-						return toReturn;
-					}
-				
-				// Only 1 thread can read from the sub process at a time
-				
-				if (Monitor.TryEnter(RespondKey))
-					try
-					{
-						if (Process.StandardOutput.EndOfStream || Process.HasExited)
-							throw new JavascriptException("The sub process has exited");
-				
-						string inCommandString = _Process.StandardOutput.ReadLine();
-						
-						if (null == inCommandString)
-							log.Warn("Null recieved from sub process");
-						else
-						{
-							// Spin while another thread hasn't picked up its result
-							DateTime killTime = DateTime.UtcNow.AddSeconds(30);
-							while (null != InCommand)
-							{
-								if (DateTime.UtcNow > killTime)
-								{
-									// If this thread spins for more then 30 seconds waiting for another thread to pick up its result,
-									// then the server is borked.  This should never happen
-									log.FatalFormat("Thread {0} has a pending result from Javascript, but it didn't pick it up!!!", InCommandThreadId);
-									
-									Thread.Sleep(1000);
-									System.Environment.Exit(-1);
-								}
-							
-								Thread.Sleep(0);
-							}
-						
-							InCommand = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
-							InCommandThreadId = Convert.ToInt32(InCommand["ThreadID"]);
-
-							lock (WaitForResponsePulser)
-								Monitor.PulseAll(WaitForResponsePulser);
-						}
-					}
-					finally
-					{
-						Monitor.Exit(RespondKey);
-					}
-				else
-					lock (WaitForResponsePulser)
-						if (null == InCommand)
-							Monitor.Wait(WaitForResponsePulser, 250);
-				
-			} while (true);
-		} */
 		
         /// <summary>
         /// Represents an undefined value

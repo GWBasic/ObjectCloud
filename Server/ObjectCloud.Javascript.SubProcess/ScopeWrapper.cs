@@ -47,15 +47,19 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <summary>
         /// Pointers to cache IDs
         /// </summary>
-        private Dictionary<object, object> CacheIDsByKey;
+        private Dictionary<object, KeyValuePair<object, DateTime>> CacheIDsByKey;
+
+        ReaderWriterLockSlim CacheIDsByKeyLock = new ReaderWriterLockSlim();
 
         /// <summary>
         /// Returns a new CacheID
         /// </summary>
         /// <returns></returns>
-        public object GenerateCacheID(object key)
+        public object GenerateCacheID(object key, DateTime lastModified)
         {
-            using (TimedLock.Lock(CacheIDsByKey))
+            CacheIDsByKeyLock.EnterWriteLock();
+
+            try
             {
                 object toReturn;
 
@@ -63,9 +67,13 @@ namespace ObjectCloud.Javascript.SubProcess
                     toReturn = SRandom.Next();
                 while (CacheIDsByKey.ContainsKey(toReturn));
 
-                CacheIDsByKey[key] = toReturn;
+                CacheIDsByKey[key] = new KeyValuePair<object, DateTime>(toReturn, lastModified);
 
                 return toReturn;
+            }
+            finally
+            {
+                CacheIDsByKeyLock.ExitWriteLock();
             }
         }
 
@@ -74,9 +82,18 @@ namespace ObjectCloud.Javascript.SubProcess
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public bool GetCacheID(object key, out object cacheId)
+        public bool GetCacheID(object key, out KeyValuePair<object, DateTime> cacheId)
         {
-            return CacheIDsByKey.TryGetValue(key, out cacheId);
+            CacheIDsByKeyLock.EnterReadLock();
+
+            try
+            {
+                return CacheIDsByKey.TryGetValue(key, out cacheId);
+            }
+            finally
+            {
+                CacheIDsByKeyLock.ExitReadLock();
+            }
         }
 
         /// <summary>
@@ -109,7 +126,7 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             log.Debug("Constructing Javascript scope for " + FileContainer.FullPath);
 
-            CacheIDsByKey = new Dictionary<object, object>();
+            CacheIDsByKey = new Dictionary<object, KeyValuePair<object, DateTime>>();
 
             _SubProcess.RegisterParentFunctionDelegate(ScopeId, CallParentFunction);
             FunctionCallers = new Dictionary<string, FunctionCaller>();
@@ -409,10 +426,10 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <returns></returns>
         public object GetParentDirectoryWrapper(IWebConnection webConnection)
         {
-            object cacheID;
+            KeyValuePair<object, DateTime> cacheID;
 
             if (GetCacheID(parentDirectoryWrapperKey, out cacheID))
-                return new SubProcess.CachedObjectId(cacheID);
+                return new SubProcess.CachedObjectId(cacheID.Key);
 
             IDirectoryHandler parentDirectoryHandler = FileContainer.ParentDirectoryHandler;
 
@@ -424,13 +441,8 @@ namespace ObjectCloud.Javascript.SubProcess
 
             return new SubProcess.StringToEval(
                 "(" + webResultsAsString + ")",
-                GenerateCacheID(parentDirectoryWrapperKey));
+                GenerateCacheID(parentDirectoryWrapperKey, DateTime.MinValue));
         }
-
-        /// <summary>
-        /// The times that objects were last modified
-        /// </summary>
-        Dictionary<string, DateTime> UseLastModified = new Dictionary<string, DateTime>();
 
         /// <summary>
         /// Loads the given Javascript library into the scope, if it is not yet loaded
@@ -457,28 +469,20 @@ namespace ObjectCloud.Javascript.SubProcess
                 return false;
             }
 
-            object cacheId;
+            KeyValuePair<object, DateTime> cacheId;
             string cacheIdKey = "Use:::::::" + toLoad;
 
             // If the library is already loaded, then the return value is cached.
             if (GetCacheID(cacheIdKey, out cacheId))
             {
-                if (fileContainer.LastModified == UseLastModified[toLoad])
-                    return new SubProcess.CachedObjectId(cacheId);
+                if (fileContainer.LastModified == cacheId.Value)
+                    return new SubProcess.CachedObjectId(cacheId.Key);
             }
-            else
-                cacheId = GenerateCacheID(cacheIdKey);
 
-            UseLastModified[toLoad] = fileContainer.LastModified;
             return new SubProcess.StringToEval(
                 textHandler.ReadAll(),
-                cacheId);
+                GenerateCacheID(cacheIdKey, fileContainer.LastModified));
         }
-
-        /// <summary>
-        /// The times that objects were last modified
-        /// </summary>
-        Dictionary<string, DateTime> OpenLastModified = new Dictionary<string, DateTime>();
 
         /// <summary>
         /// Returns a wrapper to use the specified object
@@ -491,24 +495,21 @@ namespace ObjectCloud.Javascript.SubProcess
             /*if (FileContainer == fileContainer)
                 return new SubProcess.StringToEval("(this.base)");*/
 
-            object cacheId;
+            KeyValuePair<object, DateTime> cacheId;
             string cacheIdKey = "Open-+-+-+-+" + toOpen;
 
             // If the library is already loaded, then the return value is cached.
             if (GetCacheID(cacheIdKey, out cacheId))
             {
-                if (fileContainer.LastModified == OpenLastModified[toOpen])
-                    return new SubProcess.CachedObjectId(cacheId);
+                if (fileContainer.LastModified == cacheId.Value)
+                    return new SubProcess.CachedObjectId(cacheId.Key);
             }
-            else
-                cacheId = GenerateCacheID(cacheIdKey);
 
             string wrapper = fileContainer.WebHandler.GetJSW(webConnection, null, null, false).ResultsAsString;
 
-            OpenLastModified[toOpen] = fileContainer.LastModified;
             return new SubProcess.StringToEval(
                 "(" + wrapper + ")",
-                cacheId);
+                GenerateCacheID(cacheIdKey, fileContainer.LastModified));
         }
     }
 }
