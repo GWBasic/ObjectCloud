@@ -1,34 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Directory>
 	<File
-		Name="BlogumViewer.wchtml"
+		Name="BlogumViewer.js"
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
-		<Permission
-			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
-			Level="Administer"
-			Inherit="False"
-			SendNotifications="False" />
-		<Permission
-			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
-			Level="Administer"
-			Inherit="False"
-			SendNotifications="False" />
 	</File>
 	<File
-		Name="BlogumViewer.webcomponent"
+		Name="BlogumViewer.oc"
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
-		<Permission
-			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
-			Level="Administer"
-			Inherit="False"
-			SendNotifications="False" />
-		<Permission
-			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
-			Level="Administer"
-			Inherit="False"
-			SendNotifications="False" />
 	</File>
 	<File
 		Name="CloudUnitRunner.wchtml"

@@ -184,16 +184,18 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
         public string GetCWD(XmlNode xmlNode)
         {
-            while (null != xmlNode)
+            XmlNode xmlNodeItr = xmlNode;
+
+            while (null != xmlNodeItr)
             {
-                XmlAttribute cwdAttribute = xmlNode.Attributes.GetNamedItem(
+                XmlAttribute cwdAttribute = xmlNodeItr.Attributes.GetNamedItem(
                     "cwd",
                     TemplateHandlerLocator.TemplatingConstants.TaggingNamespace) as XmlAttribute;
 
                 if (null != cwdAttribute)
                     return cwdAttribute.Value;
 
-                xmlNode = xmlNode.ParentNode;
+                xmlNodeItr = xmlNodeItr.ParentNode;
             }
 
             throw new KeyNotFoundException("Can not find CWD: " + xmlNode.OuterXml);

@@ -27,6 +27,8 @@ namespace ObjectCloud.Disk.WebHandlers.Template
     /// </summary>
     class AggressiveCachingEnabler : HasFileHandlerFactoryLocator, ITemplateProcessor
     {
+        private static ILog log = LogManager.GetLogger<AggressiveCachingEnabler>();
+
         void ITemplateProcessor.Register(ITemplateParsingState templateParsingState)
         {
             templateParsingState.PostProcessElement += new State().PostProcessElement;
@@ -69,8 +71,39 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                         }
                         else
                             if (!templateParsingState.WebConnection.CookiesFromBrowser.ContainsKey(templateParsingState.TemplateHandlerLocator.TemplatingConstants.JavascriptDebugModeCookie))
-                                foreach (XmlText scriptContentsNode in Enumerable<XmlText>.Filter(element.ChildNodes))
-                                    scriptContentsNode.InnerText = JavaScriptMinifier.Instance.Minify(scriptContentsNode.InnerText);
+                                try
+                                {
+                                    IEnumerable<XmlNode> toIterate = Enumerable<XmlNode>.FastCopy(Enumerable<XmlNode>.Cast(element.ChildNodes));
+
+                                    // The xml contents of a script tag are minified in case xml is quoted
+                                    StringBuilder scriptBuilder = new StringBuilder((element.InnerXml.Length * 5) / 4);
+                                    foreach(XmlNode node in toIterate)
+                                        if (node is XmlText)
+                                            scriptBuilder.Append(node.InnerText);
+                                        else
+                                            scriptBuilder.Append(node.OuterXml);
+
+                                    string minified = JavaScriptMinifier.Instance.Minify(scriptBuilder.ToString());
+
+                                    foreach (XmlNode node in toIterate)
+                                        element.RemoveChild(node);
+
+                                    element.AppendChild(
+                                        templateParsingState.TemplateDocument.CreateTextNode(minified));
+                                }
+                                catch (Exception e)
+                                {
+                                    log.Warn("Exception minimizing Javascript:\n" + element.InnerXml, e);
+                                }
+                                /*foreach (XmlText scriptContentsNode in Enumerable<XmlText>.Filter(element.ChildNodes))
+                                    try
+                                    {
+                                        scriptContentsNode.InnerText = JavaScriptMinifier.Instance.Minify(scriptContentsNode.InnerText);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        log.Warn("Exception minimizing Javascript:\n" + scriptContentsNode.InnerText, e);
+                                    }*/
 
                     }
                     else if (element.LocalName == "link")
