@@ -37,10 +37,17 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             base.FileHandlerFactoryLocatorSet();
 
-            for (int ctr = 0; ctr < NumSubProcesses; ctr++)
-                ParentScopeFactories.Enqueue(new ParentScopeFactory(
-                    FileHandlerFactoryLocator,
-                    new SubProcess(FileHandlerFactoryLocator)));
+            object[] toEnumerate = new object[NumSubProcesses];
+
+            Enumerable<object>.MultithreadedEach(
+                1,
+                toEnumerate,
+                delegate(object o)
+                {
+                    ParentScopeFactories.Enqueue(new ParentScopeFactory(
+                        FileHandlerFactoryLocator,
+                        new SubProcess(FileHandlerFactoryLocator)));
+                });
         }
 
         /// <summary>
@@ -62,9 +69,16 @@ namespace ObjectCloud.Javascript.SubProcess
         public ParentScopeFactory GetParentScopeFactory()
         {
             // Spin while there isn't a sub process in the queue
-            ParentScopeFactory parentScopeFactory;
-            while (!ParentScopeFactories.Dequeue(out parentScopeFactory));
+            ParentScopeFactory parentScopeFactory = null;
+            DateTime timeout = DateTime.UtcNow.AddSeconds(SRandom.Next(2,6));
 
+            while ((!ParentScopeFactories.Dequeue(out parentScopeFactory)) && (DateTime.UtcNow < timeout));
+
+            // if spinning occurs for too long, then a new sub process is created
+            if (null == parentScopeFactory)
+                parentScopeFactory = new ParentScopeFactory(FileHandlerFactoryLocator, new SubProcess(FileHandlerFactoryLocator));
+
+            // If the process died, restart it
             if (!parentScopeFactory.SubProcess.Alive)
                 parentScopeFactory = new ParentScopeFactory(FileHandlerFactoryLocator, new SubProcess(FileHandlerFactoryLocator));
 
