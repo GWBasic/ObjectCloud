@@ -38,6 +38,8 @@ public class ScopeWrapper {
 	private final Integer scopeID;
 	Function jsonStringifyFunction;
 	Function jsonParseFunction;
+	private final Map<Object, Object> monitorObjectsByThreadID = new HashMap<Object, Object>();
+	private final Map<Object, JSONObject> inCommandByThreadID = new HashMap<Object, JSONObject>();
 	private final Map<Object, Function> callbacks = new HashMap<Object, Function>();
 	private final Map<Object, Object> cachedObjects = new HashMap<Object, Object>();
 	private final ParentScope parentScope;
@@ -54,10 +56,34 @@ public class ScopeWrapper {
 		}
 	};
 	
-	public void handle(JSONObject inCommand, Object threadID) {
+	public void handle(JSONObject inCommand) {
 		
 		try {
-
+			
+			Object threadID = inCommand.get("ThreadID");
+			
+			// If there's a thread waiting on the ThreadID, stuff the inCommand into a map, unblock the other thread, and return
+			// The blocked thread will take over handling the command
+			
+			Object monitorObject = null;
+			synchronized (monitorObjectsByThreadID) {
+				if (monitorObjectsByThreadID.containsKey(threadID))
+					monitorObject = monitorObjectsByThreadID.get(threadID);
+			}
+				
+			if (null != monitorObject) {
+				
+				synchronized (inCommandByThreadID) {
+					inCommandByThreadID.put(threadID, inCommand);
+				}
+				
+				synchronized (monitorObject) {
+					monitorObject.notifyAll();
+				}
+				
+				return;
+			}
+			
 			String command = inCommand.getString("Command");
 			JSONObject data = inCommand.getJSONObject("Data");
 			
@@ -91,13 +117,13 @@ public class ScopeWrapper {
 				else if (command.equals("DisposeScope"))
 					ioPump.DisposeScopeWrapper(scopeID);
 				
-				/*/ If this is a response, it means that somehow the parent process is faster then Java!
+				// If this is a response, it means that somehow the parent process is faster then Java!
 				// It's unlikely that this block will be called; it's just here in case of a potential weirdo
 				// syncronization glitch
 				else if (command.equals("RespondCallParentFunction")) {
 					Thread.sleep(25);
 					handle(inCommand);
-				}*/
+				}
 
 				else
 					System.err.println(JSONObject.quote(command + " is unsupported"));
@@ -386,9 +412,30 @@ public class ScopeWrapper {
 			
 			sendCommand("CallParentFunction", threadID, data);
 			
+			Object monitorObject = new Object();
+			
 			do
 			{
-				JSONObject inCommand = ioPump.block(threadID);
+				
+				try {
+					
+					synchronized(monitorObject) {
+						synchronized(monitorObjectsByThreadID) {
+							monitorObjectsByThreadID.put(threadID, monitorObject);
+						}
+					
+						monitorObject.wait();
+					}
+					
+				} finally {
+					synchronized(monitorObjectsByThreadID) {
+						monitorObjectsByThreadID.remove(threadID);
+					}
+				}
+				
+				// pull inCommand out of a map and then re-call handle, unless a response is returned
+				JSONObject inCommand = inCommandByThreadID.get(threadID);
+				inCommandByThreadID.remove(threadID);
 	
 				// If the command is a response to the function call, return the data, else, handle the command
 				if (inCommand.getString("Command").equals("RespondCallParentFunction")) {
@@ -437,7 +484,7 @@ public class ScopeWrapper {
 						return Undefined.instance;
 				}
 				
-				handle(inCommand, threadID);
+				handle(inCommand);
 	
 			} while (true);
 		} finally {
