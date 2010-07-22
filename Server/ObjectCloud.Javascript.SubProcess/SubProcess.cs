@@ -702,11 +702,6 @@ namespace ObjectCloud.Javascript.SubProcess
         private Dictionary<object, Wrapped<Dictionary<string, object>>> ResponsePulsers =
             new Dictionary<object, Wrapped<Dictionary<string, object>>>();
 
-        /*// <summary>
-        /// The currently-pending InCommand
-        /// </summary>
-        Dictionary<string, object> InCommand = null;*/
-
         /// <summary>
         /// Syncronizes the sub process's output stream and returns the appropriate response
         /// </summary>
@@ -797,54 +792,6 @@ namespace ObjectCloud.Javascript.SubProcess
                 }
 
             throw new ObjectDisposedException("The sub processes has exited");
-
-            /*while (!Process.HasExited)
-            {
-                Dictionary<string, object> inCommand = InCommand;
-
-                // Check to see if this is the appropriate response
-                if (null != inCommand)
-                    if (threadID.Equals(inCommand["ThreadID"]))
-                    {
-                        InCommand = null;
-                        return inCommand;
-                    }
-
-                if (null == InCommand)
-                {
-                    lock (RespondKey)
-                        if (null == InCommand)
-                        {
-                            string inCommandString;
-
-                            do
-                            {
-                                if (Process.StandardOutput.EndOfStream || Process.HasExited)
-                                    throw new JavascriptException("The sub process has exited");
-
-                                inCommandString = _Process.StandardOutput.ReadLine();
-
-                                if (null == inCommandString)
-                                    log.Warn("Null recieved from sub process");
-
-                            } while (null == inCommandString);
-
-                            inCommand = JsonReader.Deserialize<Dictionary<string, object>>(inCommandString);
-
-                            object commandThreadID = inCommand["ThreadID"];
-
-                            // If this is the command for this thread, return it
-                            if (commandThreadID.Equals(threadID))
-                                return inCommand;
-
-                            InCommand = inCommand;
-                        }
-                }
-                else
-                    Thread.Sleep(0);
-            }
-
-            throw new ObjectDisposedException("The sub processes has exited");*/
         }
 		
         /// <summary>
