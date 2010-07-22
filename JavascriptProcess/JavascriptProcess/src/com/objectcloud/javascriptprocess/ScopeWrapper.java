@@ -419,11 +419,11 @@ public class ScopeWrapper {
 				
 				try {
 					
-					synchronized(monitorObjectsByThreadID) {
-						monitorObjectsByThreadID.put(threadID, monitorObject);
-					}
-					
 					synchronized(monitorObject) {
+						synchronized(monitorObjectsByThreadID) {
+							monitorObjectsByThreadID.put(threadID, monitorObject);
+						}
+					
 						monitorObject.wait();
 					}
 					

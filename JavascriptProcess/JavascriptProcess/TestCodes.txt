@@ -1,8 +1,14 @@
 {
-   "Scripts": ["foo.a = 123; function foo(a){return a + \"!!!\";} function bar() {} aaa(1,2,'3', function(){});"],
-   "Functions":["aaa","bbb","ccc"]
+   "ParentScopeID": 55,
+   "ThreadID": 76,
+   "Data":
+   {
+      "Scripts": ["foo.a = 123; function foo(a){return a + \"!!!\";} function bar() {} aaa(1,2,'3', function(){});"],
+      "Functions":["aaa","bbb","ccc"]
+   }
 }
 {
+   "ParentScopeID": 55,
    "ScopeID":123,
    "Command":"CreateScope",
    "ThreadID":456,

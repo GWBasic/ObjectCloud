@@ -8,7 +8,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONString;
-import org.mozilla.javascript.Callable;
 import org.mozilla.javascript.ClassShutter;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
@@ -25,8 +24,6 @@ public class ParentScope {
 	private final ArrayList<NativeFunction> compiledScripts = new ArrayList<NativeFunction>();
 	private final NativeFunction getJsonStringifyFunction = new Json2stringify();
 	private final NativeFunction getJsonParseFunction = new Json2parse();
-	//private final NativeFunction getThrowFunction = new ThrowFunction();
-	//private final Function throwFunction;
 	private final Function jsonStringifyFunction;
 	private final ArrayList<String> functions = new ArrayList<String>();
 	private final OutputStreamWriter outputStreamWriter;
@@ -50,16 +47,14 @@ public class ParentScope {
 	            
 	        // For now these are being swallowed because they seem to occur if setting this twice
 	        } catch (SecurityException se) {}
+	        
+	        ScriptableObject rootScope = RootScope.getScope();
+	        
+	        scope = (ScriptableObject)context.newObject(rootScope);
+			scope.setPrototype(rootScope);
+			scope.setParentScope(null);
 
-            scope = context.initStandardObjects();
-            
-            // Load custom version of eval
-            scope.put("eval", scope, new EvalCallable());
-
-            // Load JSON methods
-            Json2 json2 = new Json2();
-            json2.call(context, scope, scope, null);
-            jsonStringifyFunction = (Function)getJsonStringifyFunction.call(context, scope, scope, null);
+			jsonStringifyFunction = (Function)getJsonStringifyFunction.call(context, scope, scope, null);
             
             // Get easy way to throw
             //throwFunction = (Function)getThrowFunction.call(context, scope, scope, null);
@@ -97,9 +92,6 @@ public class ParentScope {
 				returnResult(context, e.getMessage(), outData, "Exception");
 				throw e;
 			}
-				
-			outputStreamWriter.write("{}\r\n");
-			outputStreamWriter.flush();
 			
 			// This makes the parent scope sealed and immutable
 			scope.sealObject();
@@ -107,34 +99,6 @@ public class ParentScope {
 		} finally {
             Context.exit();
         }
-	}
-	
-	private final static CompiledJavascriptTracker compiledJavascriptTracker = CompiledJavascriptTracker.getInstance();
-	
-	private class EvalCallable implements Callable {
-
-		@Override
-		public Object call(Context context, Scriptable scope, Scriptable thisObj, Object[] args) {
-			
-			String script = args[0].toString();
-			
-			if (script.length() < 15)
-				return context.evaluateString(scope, args[0].toString(), "<cmd>", 0, null);
-			else {
-				NativeFunction nativeFunction;
-				
-				try {
-					nativeFunction = compiledJavascriptTracker.getGetOrCompileScript(script);
-				} catch (RuntimeException re) {
-					throw re;
-				} catch (Exception e) {
-					throw new RuntimeException(e);
-				}
-				
-				return nativeFunction.call(context, scope, thisObj, null);
-			}
-		}
-		
 	}
 	
 	/* // Uncomment to test stderr

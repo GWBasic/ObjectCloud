@@ -168,7 +168,7 @@ namespace ObjectCloud
 						        IFileSystemResolver fileSystemResolver = fileHandlerFactoryLocator.FileSystemResolver;
 						        fileSystemResolver.Start();
 						
-								foreach (string dirNameToClean in new string[] {"Shell", "API", "Templates", "Tests", "Pages", "Docs", "Classes"})
+								foreach (string dirNameToClean in new string[] {"Shell", "API", "Templates", "Tests", "Pages", "Docs", "Classes", "DefaultTemplate"})
 								{
 									IDirectoryHandler dirToClean = fileSystemResolver.ResolveFile(dirNameToClean).CastFileHandler<IDirectoryHandler>();
 							
