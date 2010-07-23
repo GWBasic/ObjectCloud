@@ -89,12 +89,8 @@ namespace ObjectCloud.Javascript.SubProcess
             StartProcessKiller();
         }
 
-        private FileHandlerFactoryLocator FileHandlerFactoryLocator;
-
         public SubProcess(FileHandlerFactoryLocator fileHandlerFactoryLocator)
         {
-            FileHandlerFactoryLocator = fileHandlerFactoryLocator;
-
             _Process = new Process();
             _Process.StartInfo = new ProcessStartInfo("java", "-cp ." + Path.DirectorySeparatorChar + "js.jar -jar JavascriptProcess.jar " + Process.GetCurrentProcess().Id.ToString());
             _Process.StartInfo.RedirectStandardInput = true;
@@ -291,7 +287,7 @@ namespace ObjectCloud.Javascript.SubProcess
             command["ThreadID"] = threadID;
             command["Data"] = data;
 
-            Dictionary<string, object> dataToReturn = SendCommandAndHandleResponse(command, int.MaxValue);
+            SendCommandAndHandleResponse(command, int.MaxValue);
         }
 
         /// <summary>

@@ -36,8 +36,6 @@ namespace ObjectCloud.Javascript.SubProcess
         }
         private readonly int _ScopeId;
 
-        private IFileContainer JavascriptContainer;
-
         public SubProcess SubProcess
         {
             get { return _SubProcess; }
@@ -105,14 +103,12 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <param name="fileContainer"></param>
         public ScopeWrapper(
             FileHandlerFactoryLocator fileHandlerFactoryLocator,
-            IFileContainer javascriptContainer,
             SubProcess subProcess,
             IFileContainer fileContainer,
             ParentScope parentScope)
         {
             _FileContainer = fileContainer;
             _SubProcess = subProcess;
-            JavascriptContainer = javascriptContainer;
             _ParentScope = parentScope;
 
             _ScopeId = Interlocked.Increment(ref ScopeIdCtr);

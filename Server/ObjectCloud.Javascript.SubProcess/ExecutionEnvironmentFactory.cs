@@ -17,7 +17,7 @@ namespace ObjectCloud.Javascript.SubProcess
 {
     public class ExecutionEnvironmentFactory : HasFileHandlerFactoryLocator, IExecutionEnvironmentFactory
     {
-		private static ILog log = LogManager.GetLogger<ExecutionEnvironmentFactory>();
+		//private static ILog log = LogManager.GetLogger<ExecutionEnvironmentFactory>();
 
         public IExecutionEnvironment Create(
             IFileContainer fileContainer,

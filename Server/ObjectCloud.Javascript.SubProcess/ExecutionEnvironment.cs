@@ -48,7 +48,6 @@ namespace ObjectCloud.Javascript.SubProcess
             {
                 ScopeWrapper = new ObjectCloud.Javascript.SubProcess.ScopeWrapper(
                     fileHandlerFactoryLocator,
-                    javascriptContainer,
                     subProcess,
                     fileContainer,
                     parentScope);
