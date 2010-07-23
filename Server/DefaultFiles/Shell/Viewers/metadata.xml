@@ -3,13 +3,11 @@
 	<File
 		Name="BlogumViewer.js"
 		TypeId="text"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
-	</File>
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 	<File
 		Name="BlogumViewer.oc"
 		TypeId="text"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
-	</File>
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 	<File
 		Name="CloudUnitRunner.wchtml"
 		TypeId="text"
@@ -116,6 +114,10 @@
 	</File>
 	<File
 		Name="ObjectFooter.oc"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="PagePreviewer.occ"
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 	<File
