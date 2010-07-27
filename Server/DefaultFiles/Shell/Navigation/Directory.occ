@@ -1,36 +1,40 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
+<oc:inserthead>
+   <oc:script src="/API/jquery.js" />
+   <oc:script src="Directory.js" />
+   <script>
+      $(document).ready(function()
+      {
+         displayFiles(
+            Url.decode('[_FileName_]'),
+            <oc:component oc:url="[_FileName_]" Method="ListFiles" />);
+      });
+   </script>
+</oc:inserthead>
+
 <!-- This code is released under the Simple Public License (SimPL) 2.0.  Some additional privelages are granted., See /Docs/license.wchtml -->
 
-<div id="FilesDiv"></div>
+<div class="filesDiv"></div>
 
-<? Scripts(<? $_GET["Directory"] ?>?Method=GetJSW&assignToVariable=Dir, /Shell/Navigation/Directory_OLD.js, /API/Comet/CometProtocol.js, /API/Url.js) ?>
+? Scripts(/API/Comet/CometProtocol.js, /API/Url.js) ?
 
 <script>
    var lastUpdated = 0;
 
    // Connect back to the server to get COMET updates when the directory changes
    CP_QualityReliable.connect(
-      "<? $_GET["Directory"] ?>?ChannelEndpoint=ChangingEvent",
+      "? $_GET["Directory"] ??ChannelEndpoint=ChangingEvent",
       {
          handleIncomingData: function(data)
          {
             if (data.Timestamp > lastUpdated)
             {
                lastUpdated = data.Timestamp;
-               displayFiles('<? $_GET["Directory"] ?>', data.Files);
+               displayFiles('? $_GET["Directory"] ?', data.Files);
             }
          }
       });
 
-   // The initial files are embedded into the HTML
-   var defaultFiles = <? WebComponent($_GET["Directory"] . "?Method=ListFiles") ?>;
-
-   // The context menus can only be created after onload
-   var myoldOnload = window.onload;
-   window.onload = function()
-   {
-      displayFiles(Url.decode('<? $_GET["Directory"] ?>'), defaultFiles);
-
-      if (null != myoldOnload)
-         myoldOnload();
-   };
 </script>
+
+</oc:componentdef>

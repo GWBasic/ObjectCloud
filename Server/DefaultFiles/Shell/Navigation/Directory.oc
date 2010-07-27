@@ -16,7 +16,7 @@
 
 <div class="title" id="title">[_FileName_]</div>
 
-? WebComponent("/Shell/Navigation/Directory.webcomponent?Method=ResolveComponents&amp;Directory=" . $_GET["Directory"]) ?
+<oc:component oc:src="Directory.occ" />
 
 <h3>New File</h3>
 
