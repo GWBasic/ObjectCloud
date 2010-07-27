@@ -1,0 +1,65 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
+<oc:inserthead>
+   <oc:script src="/API/jquery.js" />
+   <oc:script src="Directory.js" />
+   <oc:open filename="[_FileName_]" varname="object_target" />
+   <script>
+      doDirectory(
+         '[_FileName_]',
+         <oc:component oc:url="/Shell/Navigation/Directory.json" Method="ReadAll" />,
+         object_target);
+   </script>
+   <title>[_FileName_]</title>
+</oc:inserthead>
+
+<!-- This code is released under the Simple Public License (SimPL) 2.0.  Some additional privelages are granted., See /Docs/license.wchtml -->
+
+<div class="title" id="title">[_FileName_]</div>
+
+? WebComponent("/Shell/Navigation/Directory.webcomponent?Method=ResolveComponents&amp;Directory=" . $_GET["Directory"]) ?
+
+<h3>New File</h3>
+
+<form class="newFile">
+   <select class="SelectFileType">
+      <oc:jsontemplate oc:datafile="Directory.json">
+         <option value="[_i_]">[_Display_]</option>
+      </oc:jsontemplate>
+   </select>
+
+   <input class="FileNameInput" type="text" name="DestinationFilename" value="new file" />
+   <input type="submit" value="create" />
+</form>
+
+<h3>Copy</h3>
+
+<form class="copyFile">
+   From <input class="sourceFileNameInput" type="text" />
+   to <input class="destinationFileNameInput" type="text" />
+   <input type="submit" value="copy" />
+   (Start the filename with a "/" for an absolute path, or omit a path to copy from this directory)
+</form>
+
+<form method="post" action="[_FileName_]?Method=Upload" name="submit" enctype="multipart/form-data" target="uploadtarget">
+   <h3>Upload</h3>
+
+   <input type="file" name="File" onchange="this.parentNode.submit()" />
+   <iframe width="90%" height="75px" name="uploadtarget"></iframe>
+</form>
+
+<h3>Set default file</h3>
+
+<form class="setIndexFile">
+   <input type="text" class="indexFile" value="[_value_]" />
+   (Set to blank to disable)
+   <input type="submit" value="set index file" /><br />
+</form>
+
+<script>
+   $(document).ready(function()
+   {
+      $('input.indexFile').val('<oc:component oc:url="[_FileName_]" Method="GetIndexFile" />');
+   });
+</script>
+
+</oc:componentdef>
