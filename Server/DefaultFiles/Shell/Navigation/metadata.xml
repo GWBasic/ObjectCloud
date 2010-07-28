@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Directory>
 	<File
 		Name="Directory.js"
@@ -36,50 +36,6 @@
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 	<File
 		Name="Directory.occ"
-		TypeId="text"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
-	<File
-		Name="Directory.wchtml"
-		TypeId="text"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
-		<Permission
-			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
-			Level="Administer"
-			Inherit="False"
-			SendNotifications="False" />
-		<Permission
-			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
-			Level="Administer"
-			Inherit="False"
-			SendNotifications="False" />
-		<Permission
-			UserOrGroupId="00000000-0000-0000-0000-000000000000"
-			Level="Read"
-			Inherit="False"
-			SendNotifications="False" />
-	</File>
-	<File
-		Name="Directory.webcomponent"
-		TypeId="text"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
-		<Permission
-			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
-			Level="Administer"
-			Inherit="False"
-			SendNotifications="False" />
-		<Permission
-			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
-			Level="Administer"
-			Inherit="False"
-			SendNotifications="False" />
-		<Permission
-			UserOrGroupId="00000000-0000-0000-0000-000000000000"
-			Level="Read"
-			Inherit="False"
-			SendNotifications="False" />
-	</File>
-	<File
-		Name="Directory_OLD.js"
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 	<File
