@@ -1,7 +1,7 @@
 <oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
 <oc:inserthead>
    <oc:script src="/API/jquery.js" />
-   <oc:script src="Directory.js" />
+   <oc:script src="/Shell/Navigation/Directory.js" />
    <oc:open filename="[_FileName_]" varname="object_target" />
    <script>
       doDirectory(
@@ -14,15 +14,19 @@
 
 <!-- This code is released under the Simple Public License (SimPL) 2.0.  Some additional privelages are granted., See /Docs/license.wchtml -->
 
+   <div class="objectbar" id="objectbar" style="position: relative;">
+      <oc:component oc:src="/Shell/Viewers/EditShare.oc" FileName="[_FileName_]" />
+   </div>
+
 <div class="title" id="title">[_FileName_]</div>
 
-<oc:component oc:src="Directory.occ" />
+<oc:component oc:src="/Shell/Navigation/Directory.occ" />
 
 <h3>New File</h3>
 
 <form class="newFile">
    <select class="SelectFileType">
-      <oc:jsontemplate oc:datafile="Directory.json">
+      <oc:jsontemplate oc:datafile="/Shell/Navigation/Directory.json">
          <option value="[_i_]">[_Display_]</option>
       </oc:jsontemplate>
    </select>

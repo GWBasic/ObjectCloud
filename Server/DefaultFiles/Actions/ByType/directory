@@ -1,6 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <NameValuePairs>
 	<NameValuePair Name="ShellToIndexFile" Value="[Target]?Method=ShellToIndexFile&amp;[Arguments]" />
-	<NameValuePair Name="View" Value="/Shell/Navigation/Directory.wchtml?Directory=[Target]" />
-	<NameValuePair Name="Edit" Value="/Shell/Navigation/Directory.wchtml?Method=ResolveComponents&amp;Directory=[Target]" />
+	<NameValuePair Name="View" Value="/Shell/Navigation/Directory.oc?FileName=[Target]" />
 </NameValuePairs>

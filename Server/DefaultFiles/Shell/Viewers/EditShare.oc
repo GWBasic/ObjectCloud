@@ -2,6 +2,7 @@
 <oc:inserthead>
    <oc:script src="/API/jquery.js" />
    <oc:script src="/API/prettyPrintDates.js" />
+   <oc:script src="/API/shareDialog.js" />
 </oc:inserthead>
 
    <oc:if>

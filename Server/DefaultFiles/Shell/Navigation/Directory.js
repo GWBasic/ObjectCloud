@@ -1,4 +1,4 @@
-// Scripts: /API/jquery.js, /API/Url.js
+// Scripts: /API/jquery.js, /API/Url.js, /API/jquery.contextButton.js, /API/jquery.ui.menu.js, /API/AJAX.js
 
 // Updates the various inputs to match the selected file type
 function UpdateCreateNewFile(filetypes, me)
@@ -118,10 +118,8 @@ function doDirectory(directory, filetypes, dir)
    });
 }
 
-function displayFiles(directory, files)
+function displayFiles(directory, files, dir)
 {
-   var htmlBuilder = '<table><tr><th>File name</th><th>My Permission</th><th>Owner</th><th>Last Modified</th><th>Created</th></tr>';
-      
    // Sort by name
    files.sort(function(a, b)
    {
@@ -136,145 +134,118 @@ function displayFiles(directory, files)
       return 0;
    });
 
-   var menus = {};
+//   var menus = {};
+   var filesDiv = $(".filesDiv");
+   filesDiv.empty();
+   var table = $('<table />');
+   filesDiv.append(table);
 
-   for (var i = 0; i < files.length; i++)
+   table.append('<tr><th>File name</th><th>Permission</th><th>Owner</th><th>Last Modified</th><th>Created</th></tr>');
+
+   function createFileRow(file)
    {
-      var file = files[i];
+      var row = $('<tr></tr>');
+      table.append(row);
 
-      // Filename and menu
-      htmlBuilder += '<tr><td><span style="font-size: 2em"><a id="' + i + '_link' + '" href="' + directory + '/' + file.Filename + '"';
+      var filenameCell = $('<td />');
+      var filenameLink = $('<a style="font-size: 1.5em" href="' + directory + file.Filename + '">' + file.Filename + '</a>');
 
       if (file.TypeId != "directory")
-         htmlBuilder += ' target="_blank"';
+         filenameLink.attr('target', '_blank'); 
 
-      htmlBuilder += '>' + file.Filename + '</a></span></td>';
+      filenameCell.append(filenameLink);
+
+      var menuList = $('<ul />');
+      filenameCell.append(menuList);
+
+      row.append(filenameCell);
 
       // Metadata
-      htmlBuilder += "<td>" + file.Permission + "</td>";
-      htmlBuilder += "<td>" + file.Owner + "</td>";
-      htmlBuilder += "<td>" + new Date(file.LastModified) + "</td>";
-      htmlBuilder += "<td>" + new Date(file.Created) + "</td>";
-      htmlBuilder += "</tr>";
+      row.append("<td>" + file.Permission + "</td>");
+      row.append("<td>" + file.Owner + "</td>");
+      row.append("<td>" + new Date(file.LastModified) + "</td>");
+      row.append("<td>" + new Date(file.Created) + "</td>");
 
       // Create the menu.
-      var menuItems = [];
 
       if (("Read" == file.Permission) || ("Write" == file.Permission) || ("Administer" == file.Permission))
-         menuItems.push(
+         menuList.append($('<li><a>View</a></li>').click(function()
          {
-            name: 'View',
-            callback: function()
-            {
-               window.open(directory + file.Filename);
-            }
-         });
+            window.open(directory + file.Filename);
+         }));
 
       if (("Write" == file.Permission) || ("Administer" == file.Permission))
-         menuItems.push(
+         menuList.append($('<li><a>Edit</a></li>').click(function()
          {
-            name: 'Edit',
-            callback: function()
-            {
-               window.open(directory + file.Filename + '?Action=Edit');
-            }
-         });
+            window.open(directory + file.Filename + '?Action=Edit');
+         }));
 
       if ("Administer" == file.Permission)
       {
-         menuItems.push(
+         menuList.append($('<li><a>Share</a></li>').click(function()
          {
-            name: 'Permissions',
-            callback: function()
-            {
-               window.open('/Shell/Security/Permissions.oc?FileName=' + directory + file.Filename);
-            }
-         });
+            window.open('/Shell/Security/Permissions.oc?FileName=' + directory + file.Filename);
+         }));
 
-         menuItems.push(
-         {
-            separator: true
-         });
+         menuList.append($('<li>---------</li>'));
 
-         menuItems.push(
+         menuList.append($('<li><a>Rename</a></li>').click(function()
          {
-            name: 'Rename',
-            callback: function()
+            var newFilename = prompt("Enter new file name", file.Filename);
+            if (null != newFilename)
             {
-               var newFilename = prompt("Enter new file name", file.Filename);
-               if (null != newFilename)
-               {
-                  Dir.RenameFile(
-                     {
-                        OldFileName: file.Filename,
-                        NewFileName: newFilename
-                     },
-                     function() {});
-               }
-            }
-         });
-
-         menuItems.push(
-         {
-            name: 'Defrag',
-            callback: function()
-            {
-               new Ajax.Request(
-                  directory + file.Filename + '?Method=Vacuum',
+               dir.RenameFile(
                   {
-                     method: 'post',
-                     onSuccess: function(transport)
-                     {
-                        alert("Vacuum successful");
-                     },
-                     onFailure: function(transport)
-                     {
-                        alert("Vacuum failed");
-                     }
-                  });
+                     OldFileName: file.Filename,
+                     NewFileName: newFilename
+                  },
+                  function() {});
             }
-         });
+         }));
 
-         menuItems.push(
+         menuList.append($('<li><a>Defrag</a></li>').click(function()
          {
-            name: 'Get Server-Side Javascript Errors',
-            callback: function()
-            {
-               window.open(directory + file.Filename + '?Method=GetServersideJavascriptErrors');
-            }
-         });
-
-         menuItems.push(
-         {
-            separator: true
-         });
-
-         menuItems.push(
-         {
-            name: 'Delete',
-            callback: function()
-            {
-               if (confirm("Delete " + file.Filename))
+            POST(
+               directory + file.Filename + '?Method=Vacuum',
+               null,
+               null,
+               function(transport)
                {
-                  Dir.DeleteFile(
-                     {
-                        FileName: file.Filename,
-                     },
-                     function() {});
-               }
+                  alert("Defrag successful");
+               },
+               function(transport)
+               {
+                  alert("Defrag failed");
+               });
+         }));
+
+         menuList.append($('<li><a>Get Server-Side Javascript Errors</a></li>').click(function()
+         {
+            window.open(directory + file.Filename + '?Method=GetServersideJavascriptErrors');
+         }));
+
+         menuList.append($('<li>---------</li>'));
+
+         menuList.append($('<li><a>Delete</a></li>').click(function()
+         {
+            if (confirm("Delete " + file.Filename))
+            {
+               dir.DeleteFile(
+                  {
+                     FileName: file.Filename,
+                  },
+                  function() {});
             }
-         });
+         }));
       }
 
-      menus[i + '_link'] = menuItems;
+      menuList.contextMenu();
    }
 
-   htmlBuilder += '</table>';
+   for (var i = 0; i < files.length; i++)
+      createFileRow(files[i]);
+   //{
+     // var file = files[i];
 
-   $(".filesDiv").html(htmlBuilder);
-
-   /*for (var element in menus)
-   {
-      Proto.CreateMenu(menus[element], $(element));
-   }*/
+   //}
 }
