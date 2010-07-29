@@ -24,8 +24,9 @@ namespace ObjectCloud.Common
 
         public Set(IEnumerable<T> contents)
         {
-            foreach (T item in contents)
-                Add(item);
+            if (null != contents)
+                foreach (T item in contents)
+                    Add(item);
         }
 
         private Dictionary<T, T> InnerDictionary = new Dictionary<T, T>();
