@@ -122,9 +122,9 @@ namespace ObjectCloud.WebServer.Implementation
             {
                 Close();
             }
-			// Exceptions that occur when a socket is closed are just swallowed; this keeps the logs clean
-			catch (ObjectDisposedException)
-			{
+            // Exceptions that occur when a socket is closed are just swallowed; this keeps the logs clean
+            catch (ObjectDisposedException)
+            {
                 WebConnectionIOState = WebConnectionIOState.Disconnected;
                 Close();
             }
@@ -210,7 +210,7 @@ namespace ObjectCloud.WebServer.Implementation
             byte[] headerBytes = new byte[headerEnd];
             Array.Copy(Buffer, headerBytes, headerBytes.Length);
             string header = Encoding.UTF8.GetString(headerBytes);
-            
+
             // If more data was read into the buffer then the length of the header, then move it to the front of the buffer
             if (BufferBytesRead > headerEnd + HeaderEndMarker.Length)
             {
@@ -425,6 +425,17 @@ namespace ObjectCloud.WebServer.Implementation
             /*using (TimedLock.Lock(NumBusyConnections))
                 NumBusyConnections.Value++;*/
 
+            if (!WebServer.KeepAlive || !Socket.Connected || !WebServer.Running)
+                KeepAlive = false;
+            else if (!WebConnection.Headers.ContainsKey("CONNECTION"))
+                KeepAlive = false;
+            else if ("keep-alive" != WebConnection.Headers["CONNECTION"].ToLower())
+                KeepAlive = false;
+            else
+                KeepAlive = true;
+
+            // (I think) this ensures that the web connection is garbage collected
+            // I forget why I did this, but it seems that there shouldn't be a reference to the webconnection while the request is being handled
             WebConnection webConnection = WebConnection;
             WebConnection = null;
 
@@ -465,6 +476,11 @@ namespace ObjectCloud.WebServer.Implementation
                     SendToBrowserInt(stream);
                 });
         }
+
+        /// <summary>
+        /// This is set to true if a request will support keepalive
+        /// </summary>
+        private bool KeepAlive;
 
         /// <summary>
         /// Sends the stream to the browser.  This should be called on the same thread that owns this web connection
@@ -509,9 +525,7 @@ namespace ObjectCloud.WebServer.Implementation
                         return;
                     }
 
-                    if (!WebServer.KeepAlive || !Socket.Connected || !WebServer.Running)
-                        Close();
-                    else
+                    if (KeepAlive)
                     {
                         ReadStartTime = DateTime.UtcNow;
 
@@ -556,10 +570,13 @@ namespace ObjectCloud.WebServer.Implementation
                             });
                         }
                     }
+                    else
+                        Close();
                 }
                 catch (Exception e)
                 {
                     log.Error("Error Occurred", e);
+                    Close();
                 }
                 finally
                 {
