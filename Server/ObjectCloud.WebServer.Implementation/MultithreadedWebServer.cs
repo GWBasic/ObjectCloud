@@ -41,6 +41,10 @@ namespace ObjectCloud.WebServer.Implementation
 
             try
             {
+				RequestTokens = new LockFreeQueue<object>();
+				for (int ctr = 0; ctr < NumConcurrentRequests; ctr++)
+					RequestTokens.Enqueue(new object());
+				
                 FileHandlerFactoryLocator.FileSystemResolver.Start();
 
                 _Running = true;
@@ -113,6 +117,7 @@ namespace ObjectCloud.WebServer.Implementation
             finally
             {
                 FileHandlerFactoryLocator.FileSystemResolver.Stop();
+				RequestTokens = null;
             }
 
 #if DEBUG
@@ -166,5 +171,20 @@ namespace ObjectCloud.WebServer.Implementation
             }
             catch { }
         }
-    }
+
+		/// <summary>
+		/// The number of concurrent requests that the web server will handle.  Defaults to 1.5 per core 
+		/// </summary>
+		public int NumConcurrentRequests
+		{
+			get { return this._NumConcurrentRequests; }
+			set { _NumConcurrentRequests = value; }
+		}
+		private int _NumConcurrentRequests = (3 * Environment.ProcessorCount) / 2;
+		
+		/// <summary>
+		/// The request tokens.  A request must grab a token in order to handle so that the CPU doesn't become overloaded 
+		/// </summary>
+		internal LockFreeQueue<object> RequestTokens;
+	}
 }

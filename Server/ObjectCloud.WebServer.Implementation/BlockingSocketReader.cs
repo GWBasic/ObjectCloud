@@ -26,7 +26,7 @@ namespace ObjectCloud.WebServer.Implementation
         /// </summary>
         /// <param name="s"></param>
         /// <param name="webServer"></param>
-        public BlockingSocketReader(IWebServer webServer, Socket socket)
+        public BlockingSocketReader(MultithreadedWebServer webServer, Socket socket)
         {
             WebServer = webServer;
             Socket = socket;
@@ -44,7 +44,7 @@ namespace ObjectCloud.WebServer.Implementation
         /// <summary>
         /// The web server
         /// </summary>
-        private IWebServer WebServer;
+        private MultithreadedWebServer WebServer;
 
         /// <summary>
         /// The state that the SocketReader is currently in
@@ -438,9 +438,24 @@ namespace ObjectCloud.WebServer.Implementation
             // I forget why I did this, but it seems that there shouldn't be a reference to the webconnection while the request is being handled
             WebConnection webConnection = WebConnection;
             WebConnection = null;
-
-            webConnection.HandleConnection(Content);
-
+			
+			// This makes sure only a limited number of requests are handled concurrently
+			object requestToken;
+			while (!WebServer.RequestTokens.Dequeue(out requestToken))
+				lock (WebServer.RequestTokens)
+					Monitor.Wait(WebServer.RequestTokens, 250);
+			
+			try
+			{
+            	webConnection.HandleConnection(Content);
+			}
+			finally
+			{
+				WebServer.RequestTokens.Enqueue(requestToken);
+				lock (WebServer.RequestTokens)
+					Monitor.Pulse(WebServer.RequestTokens);
+			}
+			
             // GC.Collect screws with caching wich is important for server-side javascript
             /*using (TimedLock.Lock(NumBusyConnections))
             {
