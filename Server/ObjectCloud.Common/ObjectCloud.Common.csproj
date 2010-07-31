@@ -90,7 +90,6 @@
     <Compile Include="DictionaryFunctions.cs" />
     <Compile Include="StringParser.cs" />
     <Compile Include="Threading\DelegateQueue.cs" />
-    <Compile Include="Threading\InterrupThread.cs" />
     <Compile Include="Threading\LockFreeQueue.cs" />
     <Compile Include="Threading\LockFreeStack.cs" />
     <Compile Include="Threading\NonBlockingConsoleWriter.cs" />

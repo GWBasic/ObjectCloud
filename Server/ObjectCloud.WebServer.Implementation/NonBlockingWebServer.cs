@@ -57,12 +57,7 @@ namespace ObjectCloud.WebServer.Implementation
 
             AcceptingSockets = true;
 
-            SocketReaderDelegateQueue = new DelegateQueue("Socket reader", NumSocketReadingThreads);
-
-            SocketReaderDelegateQueue.QueueUserWorkItem(delegate(object state)
-            {
-                TcpListener.BeginAcceptSocket(AcceptSocket, null);
-            });
+            TcpListener.BeginAcceptSocket(AcceptSocket, null);
         }
 
         private void AcceptSocket(IAsyncResult ar)
@@ -76,26 +71,16 @@ namespace ObjectCloud.WebServer.Implementation
 
                     log.Info("Accepted connection form: " + socket.RemoteEndPoint);
 
-                    BlockingSocketReader socketReader = new BlockingSocketReader(this, socket, SocketReaderDelegateQueue);
+                    BlockingSocketReader socketReader = new BlockingSocketReader(this, socket);//, SocketReaderDelegateQueue);
 
                     socketReader.Start();
+
+                    tcpListener = TcpListener;
+                    if (null != tcpListener)
+                        tcpListener.BeginAcceptSocket(AcceptSocket, null);
                 }
                 // This is in case the listener is disposed
                 catch (ObjectDisposedException) { }
-
-            DelegateQueue socketReaderDelegateQueue = SocketReaderDelegateQueue;
-            if (null != socketReaderDelegateQueue)
-                socketReaderDelegateQueue.QueueUserWorkItem(delegate(object state)
-                {
-                    TcpListener myTcpListener = TcpListener;
-                    if (null != myTcpListener)
-                        try
-                        {
-                            myTcpListener.BeginAcceptSocket(AcceptSocket, null);
-                        }
-                        // This is in case the listener is disposed
-                        catch (ObjectDisposedException) { }
-                });
         }
 
         /// <summary>
@@ -127,35 +112,7 @@ namespace ObjectCloud.WebServer.Implementation
             }
             catch { }
 
-            ThreadPool.QueueUserWorkItem(
-                delegate(object state)
-                {
-                    try
-                    {
-                        ((DelegateQueue)state).Dispose();
-                    }
-                    catch (Exception e)
-                    {
-                        log.Error("Error stoping all socket reader threads", e);
-                    }
-                },
-                SocketReaderDelegateQueue);
-
-            SocketReaderDelegateQueue = null;
-
             FileHandlerFactoryLocator.FileSystemResolver.Stop();
         }
-
-        /// <summary>
-        /// The number of threads that will read incoming sockets
-        /// </summary>
-        public int NumSocketReadingThreads
-        {
-            get { return _NumSocketReadingThreads; }
-            set { _NumSocketReadingThreads = value; }
-        }
-        private int _NumSocketReadingThreads = 10 * Environment.ProcessorCount;
-
-        internal DelegateQueue SocketReaderDelegateQueue;
     }
 }

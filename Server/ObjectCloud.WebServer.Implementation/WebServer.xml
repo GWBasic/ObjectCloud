@@ -12,7 +12,7 @@
 
   <object
     id="WebServer" 
-    type="ObjectCloud.WebServer.Implementation.MultithreadedWebServer, ObjectCloud.WebServer.Implementation" >
+    type="ObjectCloud.WebServer.Implementation.NonBlockingWebServer, ObjectCloud.WebServer.Implementation" >
     
     <property name="FileSystemResolver" ref="FileSystemResolver" />
     <property name="ServerType" value="ObjectCloud" />

@@ -142,6 +142,9 @@ namespace ObjectCloud.WebServer.Test
                 new KeyValuePair<string, string>("FileType", typeid));
         
             Assert.AreEqual(expectedStatusCode, webResponse.StatusCode, "Bad status code");
+
+            // Read the response so the server isn't left trying to transmit
+            webResponse.AsBytes();
         }
     }
 }

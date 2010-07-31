@@ -56,58 +56,34 @@ namespace ObjectCloud.WebServer.Implementation
 
                 try
                 {
-                    SocketReaderDelegateQueue = new DelegateQueue("Socket reader", NumSocketReadingThreads);
+                    while (Running)
+                        try
+                        {
 
-                    try
-                    {
-
-                        while (Running)
-                            try
+                            if (!tcpListener.Pending())
+                                // TODO...  Not sure how long to wait
+                                Thread.Sleep(TimeSpan.FromMilliseconds(50));
+                            else
                             {
+                                Socket socket = tcpListener.AcceptSocket();
 
-                                if (!tcpListener.Pending())
-                                    // TODO...  Not sure how long to wait
-                                    Thread.Sleep(TimeSpan.FromMilliseconds(50));
-                                else
-                                {
-                                    Socket socket = tcpListener.AcceptSocket();
+                                if (log.IsInfoEnabled)
+                                    log.Info("Accepted connection form: " + socket.RemoteEndPoint);
 
-                                    if (log.IsInfoEnabled)
-                                        log.Info("Accepted connection form: " + socket.RemoteEndPoint);
+                                BlockingSocketReader socketReader = new BlockingSocketReader(this, socket);//, SocketReaderDelegateQueue);
 
-                                    BlockingSocketReader socketReader = new BlockingSocketReader(this, socket, SocketReaderDelegateQueue);
-
-                                    socketReader.Start();
-                                }
+                                socketReader.Start();
                             }
-                            catch (ThreadAbortException)
-                            {
-                                // This will be handled further up, just don't want it to be logged with the general-purpose logger
-                                throw;
-                            }
-                            catch (Exception e1)
-                            {
-                                log.Error("An Exception Occurred while Listening for incoming sockets", e1);
-                            }
-                    }
-                    finally
-                    {
-                        ThreadPool.QueueUserWorkItem(
-                            delegate(object state)
-                            {
-                                try
-                                {
-                                    ((DelegateQueue)state).Dispose();
-                                }
-                                catch (Exception e)
-                                {
-                                    log.Error("Error stoping all socket reader threads", e);
-                                }
-                            },
-                            SocketReaderDelegateQueue);
-
-                        SocketReaderDelegateQueue = null;
-                    }
+                        }
+                        catch (ThreadAbortException)
+                        {
+                            // This will be handled further up, just don't want it to be logged with the general-purpose logger
+                            throw;
+                        }
+                        catch (Exception e1)
+                        {
+                            log.Error("An Exception Occurred while Listening for incoming sockets", e1);
+                        }
                 }
                 finally
                 {
@@ -164,17 +140,5 @@ namespace ObjectCloud.WebServer.Implementation
             }
             catch { }
         }
-
-        /// <summary>
-        /// The number of threads that will read incoming sockets
-        /// </summary>
-        public int NumSocketReadingThreads
-        {
-            get { return _NumSocketReadingThreads; }
-            set { _NumSocketReadingThreads = value; }
-        }
-        private int _NumSocketReadingThreads = 6 * Environment.ProcessorCount;
-
-        private DelegateQueue SocketReaderDelegateQueue;
     }
 }

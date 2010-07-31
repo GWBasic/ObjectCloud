@@ -26,12 +26,11 @@ namespace ObjectCloud.WebServer.Implementation
         /// </summary>
         /// <param name="s"></param>
         /// <param name="webServer"></param>
-        public BlockingSocketReader(IWebServer webServer, Socket socket, DelegateQueue socketReaderDelegateQueue)
+        public BlockingSocketReader(IWebServer webServer, Socket socket)
         {
             WebServer = webServer;
             Socket = socket;
             RemoteEndPoint = socket.RemoteEndPoint;
-            SocketReaderDelegateQueue = socketReaderDelegateQueue;
 
             // Create the header buffer
             Buffer = new byte[webServer.HeaderSize];
@@ -95,11 +94,6 @@ namespace ObjectCloud.WebServer.Implementation
         internal WebConnectionContent Content = null;
 
         /// <summary>
-        /// The delegate queue for reading from sockets
-        /// </summary>
-        internal DelegateQueue SocketReaderDelegateQueue;
-
-        /// <summary>
         /// Marker for when an HTTP header ends
         /// </summary>
         static byte[] HeaderEndMarker = Encoding.UTF8.GetBytes("\r\n\r\n");
@@ -109,19 +103,18 @@ namespace ObjectCloud.WebServer.Implementation
         /// </summary>
         public void Start()
         {
-            SocketReaderDelegateQueue.QueueUserWorkItem(MonitorSocket);
-            //RequestThreadPool.RunThreadStart(MonitorSocket);
+            RequestThreadPool.RunThreadStart(MonitorSocket);
         }
 
-        /*// <summary>
+        /// <summary>
         /// Pool of threads for handling requests
         /// </summary>
-        private static ThreadPoolInstance RequestThreadPool = new ThreadPoolInstance("Request Thread");*/
+        private static ThreadPoolInstance RequestThreadPool = new ThreadPoolInstance("Socket Reading Thread");
 
         /// <summary>
         /// Overall driver for watching the socket.  This is started on its own thread
         /// </summary>
-        public void MonitorSocket(object state)
+        public void MonitorSocket()
         {
             try
             {
@@ -457,44 +450,7 @@ namespace ObjectCloud.WebServer.Implementation
             {
                 webConnection.HandleConnection((IWebConnectionContent)state);
             }, Content);
-
-			/*/ This makes sure only a limited number of requests are handled concurrently
-			object requestToken;
-			while (!WebServer.RequestTokens.Dequeue(out requestToken))
-				lock (WebServer.RequestTokens)
-					Monitor.Wait(WebServer.RequestTokens, 250);
-			
-			try
-			{
-            	webConnection.HandleConnection(Content);
-			}
-			finally
-			{
-				WebServer.RequestTokens.Enqueue(requestToken);
-				lock (WebServer.RequestTokens)
-					Monitor.Pulse(WebServer.RequestTokens);
-			}*/
-			
-            // GC.Collect screws with caching wich is important for server-side javascript
-            /*using (TimedLock.Lock(NumBusyConnections))
-            {
-                NumBusyConnections.Value--;
-
-                // If there are no busy connections, request a garbage collection
-                if (0 == NumBusyConnections.Value)
-                    GC.Collect(GC.MaxGeneration, GCCollectionMode.Optimized);
-            }*/
         }
-
-        /// <summary>
-        /// Watches idle sockets
-        /// </summary>
-        private static InterrupThread InterrupThread = new InterrupThread("Idle socket watcher");
-
-        /*// <summary>
-        /// The thread that the WebConnection is running on
-        /// </summary>
-        private Thread Thread;*/
 
         /// <summary>
         /// Caches the results to send
@@ -502,7 +458,10 @@ namespace ObjectCloud.WebServer.Implementation
         /// <param name="stream"></param>
         private void SendToBrowser(Stream stream)
         {
-            SocketReaderDelegateQueue.QueueUserWorkItem(SendToBrowserInt, stream);
+            RequestThreadPool.RunThreadStart(delegate()
+            {
+                SendToBrowserInt(stream);
+            });
         }
 
         /// <summary>
@@ -514,10 +473,8 @@ namespace ObjectCloud.WebServer.Implementation
         /// Sends the stream to the browser.  This should be called on the same thread that owns this web connection
         /// </summary>
         /// <param name="stream"></param>
-        private void SendToBrowserInt(object state)
+        private void SendToBrowserInt(Stream stream)
         {
-            Stream stream = (Stream)state;
-
             byte[] buffer = new byte[60000];
             DateTime sendEnd = DateTime.UtcNow.AddMinutes(5);
 
@@ -580,24 +537,21 @@ namespace ObjectCloud.WebServer.Implementation
                             // Set the timeout to the total header timeout
                             Socket.ReceiveTimeout = Convert.ToInt32(WebServer.HeaderTimeout.TotalMilliseconds);
 
-                            InterrupThread.QueueItem(delegate()
+                            try
                             {
-                                try
-                                {
-                                    Socket.BeginReceive(
-                                        Buffer,
-                                        0,
-                                        Buffer.Length,
-                                        SocketFlags.None,
-                                        StartNewConnection,
-                                        null);
-                                }
-                                // If there's an exception, it means the socket is disconnected.
-                                catch
-                                {
-                                    WebConnectionIOState = WebConnectionIOState.Disconnected;
-                                }
-                            });
+                                Socket.BeginReceive(
+                                    Buffer,
+                                    0,
+                                    Buffer.Length,
+                                    SocketFlags.None,
+                                    StartNewConnection,
+                                    null);
+                            }
+                            // If there's an exception, it means the socket is disconnected.
+                            catch
+                            {
+                                WebConnectionIOState = WebConnectionIOState.Disconnected;
+                            }
                         }
                     }
                     else
