@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 
 namespace ObjectCloud.Common
 {
@@ -16,26 +17,22 @@ namespace ObjectCloud.Common
     {
 		static SRandom()
 		{
-			Seed = DateTime.UtcNow.Ticks;
+			Seed = DateTime.UtcNow.Ticks.GetHashCode();
 		}
-		private static Wrapped<long> Seed;
+		private static int Seed;
 		
         /// <summary>
         /// The wrapped inner random object
         /// </summary>
         private static Random Random
 		{
-			get
-			{
-				if (null == _Random)
-					lock (Seed)
-					{
-						_Random = new Random(Seed.Value.GetHashCode());
-						Seed.Value = Seed.Value + 1;
-					}
-				
-				return _Random;
-			}
+            get
+            {
+                if (null == _Random)
+                    _Random = new Random(Interlocked.Increment(ref Seed));
+
+                return _Random;
+            }
 		}
         [ThreadStatic]
         static Random _Random = null;

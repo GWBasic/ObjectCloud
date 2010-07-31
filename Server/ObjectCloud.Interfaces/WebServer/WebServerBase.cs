@@ -47,6 +47,8 @@ namespace ObjectCloud.Interfaces.WebServer
 				    Monitor.PulseAll(AcceptingSocketsSignal);
 			};
 
+            _RequestDelegateQueue = new DelegateQueue("Request handler", NumConcurrentRequests);
+
 			try
 			{
 	            Thread thread = new Thread(new ThreadStart(RunServer));
@@ -332,7 +334,33 @@ namespace ObjectCloud.Interfaces.WebServer
 
         public abstract void RunServer();
 
-        public abstract void Stop();
+        public void Stop()
+        {
+            try
+            {
+                StopImpl();
+            }
+            finally
+            {
+                ThreadPool.QueueUserWorkItem(
+                    delegate(object state)
+                    {
+                        try
+                        {
+                            ((DelegateQueue)state).Dispose();
+                        }
+                        catch (Exception e)
+                        {
+                            log.Error("Exception shutting down request handling threads", e);
+                        }
+                    },
+                    RequestDelegateQueue);
+
+                _RequestDelegateQueue = null;
+            }
+        }
+
+        protected abstract void StopImpl();
 
         public bool CachingEnabled
         {
@@ -518,5 +546,24 @@ namespace ObjectCloud.Interfaces.WebServer
 						yield return subToYield;
 			}
 		}
+
+        /// <summary>
+        /// The number of concurrent requests that the web server will handle.  Defaults to 2 per core 
+        /// </summary>
+        public int NumConcurrentRequests
+        {
+            get { return this._NumConcurrentRequests; }
+            set { _NumConcurrentRequests = value; }
+        }
+        private int _NumConcurrentRequests = 2 * Environment.ProcessorCount;
+
+        /// <summary>
+        /// The delegate queue that handles requests
+        /// </summary>
+        public DelegateQueue RequestDelegateQueue
+        {
+            get { return _RequestDelegateQueue; }
+        }
+        private DelegateQueue _RequestDelegateQueue;
     }
 }

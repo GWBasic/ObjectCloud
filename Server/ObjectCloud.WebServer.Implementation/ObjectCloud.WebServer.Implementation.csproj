@@ -47,6 +47,7 @@
   <ItemGroup>
     <Compile Include="BlockingSocketReader.cs" />
     <Compile Include="MultithreadedWebServer.cs" />
+    <Compile Include="NonBlockingWebServer.cs" />
     <Compile Include="WebConnection.cs">
       <SubType>Code</SubType>
     </Compile>

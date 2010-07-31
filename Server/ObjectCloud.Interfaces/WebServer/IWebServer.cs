@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 
 using ObjectCloud.Common;
+using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
 
@@ -190,5 +191,15 @@ namespace ObjectCloud.Interfaces.WebServer
         /// The exception that terminated the web server
         /// </summary>
         Exception TerminatingException { get; }
+
+        /// <summary>
+        /// The number of concurrent requests that the web server will handle.  Defaults to 2 per core 
+        /// </summary>
+        int NumConcurrentRequests { get; set; }
+
+        /// <summary>
+        /// The delegate queue that handles requests
+        /// </summary>
+        DelegateQueue RequestDelegateQueue { get; }
     }
 }

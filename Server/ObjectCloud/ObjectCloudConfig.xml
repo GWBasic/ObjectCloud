@@ -25,6 +25,12 @@ For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/licen
     PreloadedObjects="/Shell,/Docs,/API,/DefaultTemplate"
     />
 
+  <!-- 
+    The following additional tuning parameters are available for WebServer:
+      NumConcurrentRequests:  The number of concurrent requests.  This defaults to 2 * the number of cores.  Setting this too high can lead to contention and lock timeouts
+      NumSocketReadingThreads:  The number of concurrent threads that will read and write sockets.  This is to mitigate DOS issues
+  -->
+
   <!-- When running a real server, this line should be deleted.  Writing to the console really kills performance -->
   <LogHandlerFactory WriteToConsole="true" />
 

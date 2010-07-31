@@ -121,6 +121,8 @@ namespace ObjectCloud.Common
             webRequest.Method = "POST";
             webRequest.ContentType = "application/x-www-form-urlencoded";
             webRequest.CookieContainer = CookieContainer;
+            webRequest.KeepAlive = false;
+            webRequest.UnsafeAuthenticatedConnectionSharing = true;
 
             if (null != Timeout)
                 webRequest.Timeout = Convert.ToInt32(Timeout.Value.TotalMilliseconds);

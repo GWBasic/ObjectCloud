@@ -28,25 +28,46 @@ namespace ObjectCloud.Common.Threading
         /// 
         /// </summary>
         /// <param name="name">The name of the thread that handles delegates</param>
-        public DelegateQueue(string name)
+        public DelegateQueue(string name) : this(name, 1) {}
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name">The name of the thread that handles delegates</param>
+        public DelegateQueue(string name, int numThreads)
         {
+            Name = name;
             QueuedDelegates.ItemAddedToEmptyQueue += new EventHandler<LockFreeQueue<QueuedDelegate>, EventArgs>(QueuedDelegates_ItemAddedToEmptyQueue);
 
-            Thread = new Thread(Work);
-            Thread.Name = name;
-            Thread.Start();
+            Threads = new Thread[numThreads];
+
+            for (int ctr = 0; ctr < numThreads; ctr++)
+            {
+                Thread thread = new Thread(Work);
+
+                if (numThreads == 1)
+                    thread.Name = name;
+                else
+                    thread.Name = name + ' ' + ctr.ToString();
+
+                thread.Start();
+
+                Threads[ctr] = thread;
+            }
         }
 
         void QueuedDelegates_ItemAddedToEmptyQueue(LockFreeQueue<DelegateQueue.QueuedDelegate> sender, EventArgs e)
         {
             lock (pulser)
-                if (Suspended)
+                if (NumSuspendedThreads > 0)
                     Monitor.Pulse(pulser);
         }
 
         LockFreeQueue<QueuedDelegate> QueuedDelegates = new LockFreeQueue<QueuedDelegate>();
 
         private bool KeepRunning = true;
+
+        private string Name;
 
         /// <summary>
         /// Prints the text to the console.  Does not block.  All text is queued up to be printed
@@ -64,7 +85,7 @@ namespace ObjectCloud.Common.Threading
         public void QueueUserWorkItem(WaitCallback callback, object State)
         {
             if (!KeepRunning)
-                throw new ObjectDisposedException(Thread.Name);
+                throw new ObjectDisposedException(Name);
 
             QueuedDelegate queuedDelegate = new QueuedDelegate();
             queuedDelegate.Callback = callback;
@@ -72,16 +93,16 @@ namespace ObjectCloud.Common.Threading
 
             QueuedDelegates.Enqueue(queuedDelegate);
 
-            if (Suspended)
+            if (NumSuspendedThreads > 0)
                 lock (pulser)
-                    if (Suspended)
+                    if (NumSuspendedThreads > 0)
                         Monitor.Pulse(pulser);
         }
 
         /// <summary>
-        /// The thread that runs the delegates
+        /// The threads that run the delegates
         /// </summary>
-        Thread Thread;
+        Thread[] Threads;
 
         /// <summary>
         /// Used to indicate new delegates when a thread is running
@@ -91,25 +112,30 @@ namespace ObjectCloud.Common.Threading
         /// <summary>
         /// This is used to communicate when the delegate queue is suspended
         /// </summary>
-        private volatile bool Suspended;
+        private int NumSuspendedThreads = 0;
 
         /// <summary>
         /// Runs on the Thread to keep printing on the console
         /// </summary>
         void Work()
         {
+            Thread thread = Thread.CurrentThread;
+
             while (KeepRunning)
             {
-                Thread.IsBackground = true;
+                thread.IsBackground = true;
 
+                // Wait until a new request comes in
+                // There's an automatic free to ensure that a request isn't left unfulfilled
+                // It's a random time period for the case when there's many threads handling the queue
                 lock (pulser)
                 {
-                    Suspended = true;
-                    Monitor.Wait(pulser, 180000);
-                    Suspended = false;
+                    Interlocked.Increment(ref NumSuspendedThreads);
+                    Monitor.Wait(pulser, SRandom.Next(150000, 200000));
+                    Interlocked.Decrement(ref NumSuspendedThreads);
                 }
 
-                Thread.IsBackground = false;
+                thread.IsBackground = false;
 
                 QueuedDelegate queuedDelegate;
                 while (QueuedDelegates.Dequeue(out queuedDelegate))
@@ -124,10 +150,11 @@ namespace ObjectCloud.Common.Threading
             KeepRunning = false;
 
             lock (pulser)
-                if (Suspended)
-                    Monitor.Pulse(pulser);
+                if (NumSuspendedThreads > 0)
+                    Monitor.PulseAll(pulser);
 
-            Thread.Join();
+            foreach (Thread thread in Threads)
+                thread.Join();
         }
 
         ~DelegateQueue()
@@ -135,10 +162,11 @@ namespace ObjectCloud.Common.Threading
             KeepRunning = false;
 
             lock (pulser)
-                if (Suspended)
-                    Monitor.Pulse(pulser);
+                if (NumSuspendedThreads > 0)
+                    Monitor.PulseAll(pulser);
 
-            Thread.Join();
+            foreach (Thread thread in Threads)
+                thread.Join();
         }
     }
 }

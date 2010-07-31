@@ -41,10 +41,6 @@ namespace ObjectCloud.WebServer.Implementation
 
             try
             {
-				RequestTokens = new LockFreeQueue<object>();
-				for (int ctr = 0; ctr < NumConcurrentRequests; ctr++)
-					RequestTokens.Enqueue(new object());
-				
                 FileHandlerFactoryLocator.FileSystemResolver.Start();
 
                 _Running = true;
@@ -60,39 +56,58 @@ namespace ObjectCloud.WebServer.Implementation
 
                 try
                 {
-                    while (Running)
-                        try
-                        {
+                    SocketReaderDelegateQueue = new DelegateQueue("Socket reader", NumSocketReadingThreads);
 
-                            if (!tcpListener.Pending())
-                                // TODO...  Not sure how long to wait
-                                Thread.Sleep(TimeSpan.FromMilliseconds(50));
-                            else
+                    try
+                    {
+
+                        while (Running)
+                            try
                             {
-                                Socket socket = tcpListener.AcceptSocket();
 
-                                if (log.IsInfoEnabled)
-                                    log.Info("Accepted connection form: " + socket.RemoteEndPoint);
+                                if (!tcpListener.Pending())
+                                    // TODO...  Not sure how long to wait
+                                    Thread.Sleep(TimeSpan.FromMilliseconds(50));
+                                else
+                                {
+                                    Socket socket = tcpListener.AcceptSocket();
 
-                                BlockingSocketReader socketReader = new BlockingSocketReader(this, socket);
+                                    if (log.IsInfoEnabled)
+                                        log.Info("Accepted connection form: " + socket.RemoteEndPoint);
 
-                                using (TimedLock.Lock(SocketReaders))
-                                    SocketReaders.Add(socketReader);
+                                    BlockingSocketReader socketReader = new BlockingSocketReader(this, socket, SocketReaderDelegateQueue);
 
-                                socketReader.Closed += new EventHandler<BlockingSocketReader, EventArgs>(SocketReader_Closed);
-
-                                socketReader.Start();
+                                    socketReader.Start();
+                                }
                             }
-                        }
-                        catch (ThreadAbortException)
-                        {
-                            // This will be handled further up, just don't want it to be logged with the general-purpose logger
-                            throw;
-                        }
-                        catch (Exception e1)
-                        {
-                            log.Error("An Exception Occurred while Listening for incoming sockets", e1);
-                        }
+                            catch (ThreadAbortException)
+                            {
+                                // This will be handled further up, just don't want it to be logged with the general-purpose logger
+                                throw;
+                            }
+                            catch (Exception e1)
+                            {
+                                log.Error("An Exception Occurred while Listening for incoming sockets", e1);
+                            }
+                    }
+                    finally
+                    {
+                        ThreadPool.QueueUserWorkItem(
+                            delegate(object state)
+                            {
+                                try
+                                {
+                                    ((DelegateQueue)state).Dispose();
+                                }
+                                catch (Exception e)
+                                {
+                                    log.Error("Error stoping all socket reader threads", e);
+                                }
+                            },
+                            SocketReaderDelegateQueue);
+
+                        SocketReaderDelegateQueue = null;
+                    }
                 }
                 finally
                 {
@@ -117,7 +132,6 @@ namespace ObjectCloud.WebServer.Implementation
             finally
             {
                 FileHandlerFactoryLocator.FileSystemResolver.Stop();
-				RequestTokens = null;
             }
 
 #if DEBUG
@@ -127,25 +141,9 @@ namespace ObjectCloud.WebServer.Implementation
         }
 
         /// <summary>
-        /// Removes a socket reader when it's no longer needed
-        /// </summary>
-        /// <param name="socketReader"></param>
-        /// <param name="e"></param>
-        void SocketReader_Closed(BlockingSocketReader socketReader, EventArgs e)
-        {
-            using (TimedLock.Lock(SocketReaders))
-                SocketReaders.Remove(socketReader);
-        }
-
-        /// <summary>
-        /// All of the active socket readers
-        /// </summary>
-        private Set<BlockingSocketReader> SocketReaders = new Set<BlockingSocketReader>();
-		
-        /// <summary>
         /// Stops the server and releases all resources
         /// </summary>
-        public override void Stop()
+        protected override void StopImpl()
         {
             log.Info("Shutting down " + ServerType);
 
@@ -160,11 +158,6 @@ namespace ObjectCloud.WebServer.Implementation
             ServerThread.Join();
             _ServerThread = null;
 
-            // Force all connections closed
-            using (TimedLock.Lock(SocketReaders))
-                foreach (BlockingSocketReader socketReader in new List<BlockingSocketReader>(SocketReaders))
-                    socketReader.Close();
-
             try
             {
                 OnWebServerTerminated(new EventArgs());
@@ -172,19 +165,16 @@ namespace ObjectCloud.WebServer.Implementation
             catch { }
         }
 
-		/// <summary>
-		/// The number of concurrent requests that the web server will handle.  Defaults to 1.5 per core 
-		/// </summary>
-		public int NumConcurrentRequests
-		{
-			get { return this._NumConcurrentRequests; }
-			set { _NumConcurrentRequests = value; }
-		}
-		private int _NumConcurrentRequests = (3 * Environment.ProcessorCount) / 2;
-		
-		/// <summary>
-		/// The request tokens.  A request must grab a token in order to handle so that the CPU doesn't become overloaded 
-		/// </summary>
-		internal LockFreeQueue<object> RequestTokens;
-	}
+        /// <summary>
+        /// The number of threads that will read incoming sockets
+        /// </summary>
+        public int NumSocketReadingThreads
+        {
+            get { return _NumSocketReadingThreads; }
+            set { _NumSocketReadingThreads = value; }
+        }
+        private int _NumSocketReadingThreads = 6 * Environment.ProcessorCount;
+
+        private DelegateQueue SocketReaderDelegateQueue;
+    }
 }

@@ -26,11 +26,12 @@ namespace ObjectCloud.WebServer.Implementation
         /// </summary>
         /// <param name="s"></param>
         /// <param name="webServer"></param>
-        public BlockingSocketReader(MultithreadedWebServer webServer, Socket socket)
+        public BlockingSocketReader(IWebServer webServer, Socket socket, DelegateQueue socketReaderDelegateQueue)
         {
             WebServer = webServer;
             Socket = socket;
             RemoteEndPoint = socket.RemoteEndPoint;
+            SocketReaderDelegateQueue = socketReaderDelegateQueue;
 
             // Create the header buffer
             Buffer = new byte[webServer.HeaderSize];
@@ -39,12 +40,19 @@ namespace ObjectCloud.WebServer.Implementation
             BufferBytesRead = 0;
 
             log.Trace("New socket");
+
+            WebServer.WebServerTerminating += new EventHandler<EventArgs>(WebServer_WebServerTerminating);
+        }
+
+        void WebServer_WebServerTerminating(object sender, EventArgs e)
+        {
+            Close();
         }
 
         /// <summary>
         /// The web server
         /// </summary>
-        private MultithreadedWebServer WebServer;
+        private IWebServer WebServer;
 
         /// <summary>
         /// The state that the SocketReader is currently in
@@ -87,6 +95,11 @@ namespace ObjectCloud.WebServer.Implementation
         internal WebConnectionContent Content = null;
 
         /// <summary>
+        /// The delegate queue for reading from sockets
+        /// </summary>
+        internal DelegateQueue SocketReaderDelegateQueue;
+
+        /// <summary>
         /// Marker for when an HTTP header ends
         /// </summary>
         static byte[] HeaderEndMarker = Encoding.UTF8.GetBytes("\r\n\r\n");
@@ -96,18 +109,19 @@ namespace ObjectCloud.WebServer.Implementation
         /// </summary>
         public void Start()
         {
-            RequestThreadPool.RunThreadStart(MonitorSocket);
+            SocketReaderDelegateQueue.QueueUserWorkItem(MonitorSocket);
+            //RequestThreadPool.RunThreadStart(MonitorSocket);
         }
 
-        /// <summary>
+        /*// <summary>
         /// Pool of threads for handling requests
         /// </summary>
-        private static ThreadPoolInstance RequestThreadPool = new ThreadPoolInstance("Request Thread");
+        private static ThreadPoolInstance RequestThreadPool = new ThreadPoolInstance("Request Thread");*/
 
         /// <summary>
         /// Overall driver for watching the socket.  This is started on its own thread
         /// </summary>
-        public void MonitorSocket()
+        public void MonitorSocket(object state)
         {
             try
             {
@@ -420,7 +434,7 @@ namespace ObjectCloud.WebServer.Implementation
         /// <param name="socketReader"></param>
         protected void PerformRequest()
         {
-            Thread = Thread.CurrentThread;
+            //Thread = Thread.CurrentThread;
 
             /*using (TimedLock.Lock(NumBusyConnections))
                 NumBusyConnections.Value++;*/
@@ -438,8 +452,13 @@ namespace ObjectCloud.WebServer.Implementation
             // I forget why I did this, but it seems that there shouldn't be a reference to the webconnection while the request is being handled
             WebConnection webConnection = WebConnection;
             WebConnection = null;
-			
-			// This makes sure only a limited number of requests are handled concurrently
+
+            WebServer.RequestDelegateQueue.QueueUserWorkItem(delegate(object state)
+            {
+                webConnection.HandleConnection((IWebConnectionContent)state);
+            }, Content);
+
+			/*/ This makes sure only a limited number of requests are handled concurrently
 			object requestToken;
 			while (!WebServer.RequestTokens.Dequeue(out requestToken))
 				lock (WebServer.RequestTokens)
@@ -454,7 +473,7 @@ namespace ObjectCloud.WebServer.Implementation
 				WebServer.RequestTokens.Enqueue(requestToken);
 				lock (WebServer.RequestTokens)
 					Monitor.Pulse(WebServer.RequestTokens);
-			}
+			}*/
 			
             // GC.Collect screws with caching wich is important for server-side javascript
             /*using (TimedLock.Lock(NumBusyConnections))
@@ -472,10 +491,10 @@ namespace ObjectCloud.WebServer.Implementation
         /// </summary>
         private static InterrupThread InterrupThread = new InterrupThread("Idle socket watcher");
 
-        /// <summary>
+        /*// <summary>
         /// The thread that the WebConnection is running on
         /// </summary>
-        private Thread Thread;
+        private Thread Thread;*/
 
         /// <summary>
         /// Caches the results to send
@@ -483,13 +502,7 @@ namespace ObjectCloud.WebServer.Implementation
         /// <param name="stream"></param>
         private void SendToBrowser(Stream stream)
         {
-            if (Thread.CurrentThread == Thread)
-                SendToBrowserInt(stream);
-            else
-                RequestThreadPool.RunThreadStart(delegate()
-                {
-                    SendToBrowserInt(stream);
-                });
+            SocketReaderDelegateQueue.QueueUserWorkItem(SendToBrowserInt, stream);
         }
 
         /// <summary>
@@ -501,8 +514,10 @@ namespace ObjectCloud.WebServer.Implementation
         /// Sends the stream to the browser.  This should be called on the same thread that owns this web connection
         /// </summary>
         /// <param name="stream"></param>
-        private void SendToBrowserInt(Stream stream)
+        private void SendToBrowserInt(object state)
         {
+            Stream stream = (Stream)state;
+
             byte[] buffer = new byte[60000];
             DateTime sendEnd = DateTime.UtcNow.AddMinutes(5);
 
@@ -656,6 +671,8 @@ namespace ObjectCloud.WebServer.Implementation
             catch { }
 
             WebConnectionIOState = WebConnectionIOState.Disconnected;
+
+            WebServer.WebServerTerminating -= new EventHandler<EventArgs>(WebServer_WebServerTerminating);
 
             if (null != Closed)
                 Closed(this, new EventArgs());
