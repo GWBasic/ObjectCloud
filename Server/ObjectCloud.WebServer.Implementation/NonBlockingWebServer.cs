@@ -62,25 +62,25 @@ namespace ObjectCloud.WebServer.Implementation
 
         private void AcceptSocket(IAsyncResult ar)
         {
-            TcpListener tcpListener = TcpListener;
+            try
+            {
+                Socket socket = TcpListener.EndAcceptSocket(ar);
 
-            if (null != tcpListener)
-                try
-                {
-                    Socket socket = tcpListener.EndAcceptSocket(ar);
+                log.Info("Accepted connection form: " + socket.RemoteEndPoint);
 
-                    log.Info("Accepted connection form: " + socket.RemoteEndPoint);
+                NonBlockingSocketReader socketReader = new NonBlockingSocketReader(this, socket);
 
-                    NonBlockingSocketReader socketReader = new NonBlockingSocketReader(this, socket);
+                socketReader.Start();
 
-                    socketReader.Start();
-
-                    tcpListener = TcpListener;
-                    if (null != tcpListener)
-                        tcpListener.BeginAcceptSocket(AcceptSocket, null);
-                }
-                // This is in case the listener is disposed
-                catch (ObjectDisposedException) { }
+                if (Running)
+                    TcpListener.BeginAcceptSocket(AcceptSocket, null);
+            }
+            // This is in case the listener is disposed
+            catch (ObjectDisposedException) { }
+            catch (Exception e)
+            {
+                log.Error("Exception accepting a socket", e);
+            }
         }
 
         /// <summary>
@@ -98,10 +98,7 @@ namespace ObjectCloud.WebServer.Implementation
             }
             catch { }
 
-
-            TcpListener tcpListener = TcpListener;
-            TcpListener = null;
-            tcpListener.Stop();
+            TcpListener.Stop();
 
             ServerThread.Join();
             _ServerThread = null;
