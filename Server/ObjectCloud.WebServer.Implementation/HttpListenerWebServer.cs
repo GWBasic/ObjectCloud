@@ -48,59 +48,41 @@ namespace ObjectCloud.WebServer.Implementation
 
                 _ServerThread = Thread.CurrentThread;
 
-                using (HttpListener = new HttpListener())
-                {
-                    HttpListener.Prefixes.Add("http://+:" + Port.ToString() + "/");
+                HttpListener = new HttpListener();
 
-                    HttpListener.Start();
+                HttpListener.Prefixes.Add("http://*:" + Port.ToString() + "/");
 
-                    log.Info("Server is waiting for a new connection at http://" + FileHandlerFactoryLocator.HostnameAndPort + "/");
+                HttpListener.Start();
 
-                    _Running = true;
-                    AcceptingSockets = true;
+                log.Info("Server is waiting for a new connection at http://" + FileHandlerFactoryLocator.HostnameAndPort + "/");
 
-                    while (HttpListener.IsListening)
-                    {
-                        try
-                        {
-                            HttpListenerContext context = HttpListener.GetContext();
+                _Running = true;
+                AcceptingSockets = true;
 
-                            if (null != context)
-                            {
-                                // TODO:  Prior to handling the connection on the thread-pool, use a single-thread to read all incoming data
-                                // from all pending requests
-
-                                HttpListenerWebConnection webConnection = new HttpListenerWebConnection(this, context);
-
-                                ThreadPool.QueueUserWorkItem(delegate(object webConnectionObj)
-                                {
-                                    HttpListenerWebConnection myWebConnection = (HttpListenerWebConnection)webConnectionObj;
-
-                                    base.OnWebConnectionStarting(new EventArgs<IWebConnection>(myWebConnection));
-                                    
-                                    myWebConnection.Handle();
-
-                                    base.OnWebConnectionComplete(new EventArgs<IWebConnection>(myWebConnection));
-
-                                }, webConnection);
-                            }
-                        }
-                        catch (ObjectDisposedException)
-                        {
-                            return;
-                        }
-                    }
-
-                    log.Info("Server terminated without error");
-                }
+                HttpListener.BeginGetContext(HttpListenerCallback, null);
             }
             catch (Exception e)
             {
-                log.Fatal("The web server aborted with the following exception", e);
+                log.Fatal("Error starting server", e);
+                TerminatingException = e;
             }
         }
 
-        public override void Stop()
+        private void HttpListenerCallback(IAsyncResult ar)
+        {
+            HttpListenerContext context = (HttpListenerContext)HttpListener.EndGetContext(ar);
+            HttpListener.BeginGetContext(HttpListenerCallback, null);
+
+            RequestDelegateQueue.QueueUserWorkItem(HandleHttpListenerContext, context);
+        }
+
+        private void HandleHttpListenerContext(object state)
+        {
+            HttpListenerWebConnection webConnection = new HttpListenerWebConnection(this, (HttpListenerContext)state);
+            webConnection.Handle();
+        }
+
+        protected override void StopImpl()
         {
             _Running = false;
 

@@ -25,7 +25,7 @@ using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.WebServer.Implementation
 {
-    public class HttpListenerWebConnection : WebConnectionCommon
+    public class HttpListenerWebConnection : WebConnectionBase
     {
         private static ILog log = LogManager.GetLogger(typeof(HttpListenerWebConnection));
 
@@ -126,7 +126,7 @@ namespace ObjectCloud.WebServer.Implementation
                 {
                     log.Error("Exception occured while handling a web request", e);
 
-                    webResults = WebResults.FromString(Status._500_Internal_Server_Error, "An unhandled error occured");
+                    webResults = WebResults.From(Status._500_Internal_Server_Error, "An unhandled error occured");
                 }
 
                 if (null != webResults)
@@ -159,7 +159,7 @@ namespace ObjectCloud.WebServer.Implementation
         {
             Response.KeepAlive = WebServer.KeepAlive;
             Response.StatusCode = (int)webResults.Status;
-            Response.ContentLength64 = webResults.Body.LongLength;
+            Response.ContentLength64 = webResults.ResultsAsStream.Length;
 
             foreach (KeyValuePair<string, string> header in webResults.Headers)
                 Response.Headers[header.Key] = header.Value;
@@ -207,7 +207,9 @@ namespace ObjectCloud.WebServer.Implementation
             Response.Headers["Server"] = WebServer.ServerType;
 
             // TODO:  Move these to some kind of a writer thread
-            Response.OutputStream.Write(webResults.Body, 0, webResults.Body.Length);
+            byte[] buffer = new byte[webResults.ResultsAsStream.Length];
+            webResults.ResultsAsStream.Read(buffer, 0, buffer.Length);
+            Response.OutputStream.Write(buffer, 0, buffer.Length);
             Response.OutputStream.Flush();
         }
 
@@ -215,5 +217,11 @@ namespace ObjectCloud.WebServer.Implementation
         {
             get { return Request.RemoteEndPoint; }
         }
+
+        public override Set<IFileContainer> TouchedFiles
+        {
+            get { return _TouchedFiles; }
+        }
+        private readonly Set<IFileContainer> _TouchedFiles = new Set<IFileContainer>();
     }
 }

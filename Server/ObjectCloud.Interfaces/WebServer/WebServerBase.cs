@@ -466,7 +466,12 @@ namespace ObjectCloud.Interfaces.WebServer
         public Exception TerminatingException
         {
             get { return _TerminatingException; }
-            set { _TerminatingException = value; }
+            set 
+            {
+                _TerminatingException = value;
+                using (TimedLock.Lock(AcceptingSocketsSignal))
+                    Monitor.PulseAll(AcceptingSocketsSignal);
+            }
         }
         private Exception _TerminatingException = null;
 		
