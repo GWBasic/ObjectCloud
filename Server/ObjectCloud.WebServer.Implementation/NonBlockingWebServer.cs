@@ -71,7 +71,7 @@ namespace ObjectCloud.WebServer.Implementation
 
                     log.Info("Accepted connection form: " + socket.RemoteEndPoint);
 
-                    BlockingSocketReader socketReader = new BlockingSocketReader(this, socket);//, SocketReaderDelegateQueue);
+                    NonBlockingSocketReader socketReader = new NonBlockingSocketReader(this, socket);
 
                     socketReader.Start();
 

@@ -1,6 +1,11 @@
+// Copyright 2009, 2010 Andrew Rondeau
+// This code is released under the Simple Public License (SimPL) 2.0.  Some additional privelages are granted.
+// For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
+
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -8,49 +13,54 @@ using System.Threading;
 using Common.Logging;
 
 using ObjectCloud.Common;
+using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.WebServer.Implementation
 {
     /// <summary>
-    /// Used when reading from a socket for a NonBlockingWebConnection
+    /// Used when reading from a socket in the Multi-threaded web-server
     /// </summary>
     internal class NonBlockingSocketReader
     {
-        private static ILog log = LogManager.GetLogger<NonBlockingSocketReader>();
-
-        private static InterrupThread IOThread = new InterrupThread("IO Thread");
+        private static ILog log = LogManager.GetLogger<BlockingSocketReader>();
 
         /// <summary>
         /// Initializes the WebConnection
         /// </summary>
         /// <param name="s"></param>
         /// <param name="webServer"></param>
-        public NonBlockingSocketReader(NonBlockingWebServer webServer, Socket socket)
+        public NonBlockingSocketReader(IWebServer webServer, Socket socket)
         {
             WebServer = webServer;
             Socket = socket;
-            ReadStartTime = DateTime.UtcNow;
+            RemoteEndPoint = socket.RemoteEndPoint;
 
             // Create the header buffer
             Buffer = new byte[webServer.HeaderSize];
+            Array.Clear(Buffer, 0, webServer.HeaderSize);
 
             BufferBytesRead = 0;
 
-            WebConnection = new WebConnection(webServer, socket.RemoteEndPoint, SendToBrowser);
+            log.Trace("New socket");
 
-            //StartReadingSocket();
+            WebServer.WebServerTerminating += new EventHandler<EventArgs>(WebServer_WebServerTerminating);
+        }
+
+        void WebServer_WebServerTerminating(object sender, EventArgs e)
+        {
+            Close();
         }
 
         /// <summary>
         /// The web server
         /// </summary>
-        private NonBlockingWebServer WebServer;
+        private IWebServer WebServer;
 
         /// <summary>
         /// The state that the SocketReader is currently in
         /// </summary>
-        internal volatile WebConnectionIOState WebConnectionIOState = WebConnectionIOState.ReadingHeader;
+        internal WebConnectionIOState WebConnectionIOState = WebConnectionIOState.ReadingHeader;
 
         /// <summary>
         /// The socket that this connection is working with
@@ -58,21 +68,19 @@ namespace ObjectCloud.WebServer.Implementation
         internal Socket Socket;
 
         /// <summary>
+        /// The socket's remote endpoint
+        /// </summary>
+        internal EndPoint RemoteEndPoint;
+
+        /// <summary>
         /// The fixed-size buffer for reading headers
         /// </summary>
-        internal volatile byte[] Buffer = null;
-
-#if DEBUG
-        public string DEBUG_ONLY_Buffer
-        {
-            get { return Encoding.UTF8.GetString(Buffer); }
-        }
-#endif
+        internal byte[] Buffer = null;
 
         /// <summary>
         /// The number of bytes read in the header
         /// </summary>
-        internal volatile int BufferBytesRead;
+        internal int BufferBytesRead;
 
         /// <summary>
         /// The time that reading started
@@ -80,7 +88,7 @@ namespace ObjectCloud.WebServer.Implementation
         internal DateTime ReadStartTime;
 
         /// <summary>
-        /// The web connection
+        /// The non-blocking web connection
         /// </summary>
         internal WebConnection WebConnection;
 
@@ -94,107 +102,46 @@ namespace ObjectCloud.WebServer.Implementation
         /// </summary>
         static byte[] HeaderEndMarker = Encoding.UTF8.GetBytes("\r\n\r\n");
 
-        /*// <summary>
-        /// Indicates if the socket is being read
+        /// <summary>
+        /// Starts running the socket reader on its own thread
         /// </summary>
-        bool ReadingSocket = false;*/
-
-        /*// <summary>
-        /// Starts reading the socket
-        /// </summary>
-        private void StartReadingSocket()
+        public void Start()
         {
-            if (!ReadingSocket)
-            {
-#if DEBUG
-                //LastBuffer = Encoding.UTF8.GetString(Buffer);
-                //LastBufferBytesRead = BufferBytesRead;
-
-                /*if (LastBuffer.StartsWith("POST") && LastBuffer.Contains("\r\n\r\n") && BufferBytesRead > 0)
-                    System.Diagnostics.Debugger.Break();*/
-
-                /*/ This helps with debugging so there isn't a lot of cruft when viewing as a string
-                Array.Clear(Buffer, BufferBytesRead, Buffer.Length - BufferBytesRead);
-#endif
-
-                ReadingSocket = true;
-
-                IOThread.QueueItem(delegate()
-                {
-                    Socket.BeginReceive(Buffer, BufferBytesRead, Buffer.Length - BufferBytesRead, SocketFlags.None, ReadCallback, null);
-                });
-            }
-        }*
-
-/*#if DEBUG
-        string LastBuffer;
-        int LastBufferBytesRead;
-        string DoIOName;
-        int Read;
-        //static Set<int> ThreadIds = new Set<int>();
-#endif*/
-
-        /*// <summary>
-        /// Callback for when there's incoming data on the socket
-        /// </summary>
-        /// <param name="ar"></param>
-        private void ReadCallback(IAsyncResult ar)
-        {
-#if DEBUG
-            //ThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
-#endif
-
-            if (!Socket.Connected)
-            {
-                WebConnectionIOState = WebConnectionIOState.Disconnected;
-                return;
-            }
-
             try
             {
-                ReadingSocket = false;
+                // Timeout if the client takes a really long time to send bytes
+                Socket.ReceiveTimeout = Convert.ToInt32(TimeSpan.FromSeconds(15).TotalMilliseconds);
+                ReadStartTime = DateTime.UtcNow;
 
-                int read = Socket.EndReceive(ar);
+                WebConnection = new WebConnection(WebServer, Socket.RemoteEndPoint, SendToBrowser);
 
-                if (read > 0)
-                {
-                    //log.Trace("Contents recieved:\n" + Encoding.UTF8.GetString(Buffer, BufferBytesRead, read));
+                WebConnectionIOState = WebConnectionIOState.Idle;
+                ReadHeader();
+            }
+            catch (ThreadAbortException)
+            {
+                Close();
+            }
+            // Exceptions that occur when a socket is closed are just swallowed; this keeps the logs clean
+            catch (ObjectDisposedException)
+            {
+                WebConnectionIOState = WebConnectionIOState.Disconnected;
+                Close();
+            }
+            catch (SocketException)// se)
+            {
+                //log.InfoFormat("Error when performing IO for a connection from {0}", se, RemoteEndPoint);
 
-                    BufferBytesRead = BufferBytesRead + read;
-
-                    /*if (Encoding.UTF8.GetString(Buffer).StartsWith("POST /TestLargeTextFile"))
-                        if (System.Diagnostics.Debugger.IsAttached)
-                            System.Diagnostics.Debugger.Break();*//*
-
-#if DEBUG
-                    //DoIOName = DoIO.Method.Name;
-                    //Read = read;
-#endif
-
-                    do
-                        DoIO();
-                    while (BufferBytesRead == Buffer.Length);
-                }
-
-                StartReadingSocket();
+                WebConnectionIOState = WebConnectionIOState.Disconnected;
+                Close();
             }
             catch (Exception e)
             {
-                log.Error("Error when reading from a socket", e);
+                log.ErrorFormat("Fatal error when performing IO for a connection from {0}", e, RemoteEndPoint);
 
-                // Attempt to gracefully close the socket
-                try
-                {
-                    Close(WebResults.FromString(Status._500_Internal_Server_Error, "An unhandled error occured"));
-                }
-                catch { }
+                WebConnectionIOState = WebConnectionIOState.Disconnected;
+                Close();
             }
-        }*/
-
-        public void Start()
-        {
-            BufferBytesRead = 0;
-            ReadHeader();
         }
 
         /// <summary>
@@ -203,67 +150,85 @@ namespace ObjectCloud.WebServer.Implementation
         /// <returns></returns>
         public void ReadHeader()
         {
-            GenericVoid startRead = null;
+#if DEBUG
+            int headerHandled = 0;
+#endif
 
-            AsyncCallback readCallback = delegate(IAsyncResult result)
+            if (BufferBytesRead > HeaderEndMarker.Length)
             {
-                int read;
+                int headerEnd = Array<byte>.IndexOf(Buffer, HeaderEndMarker);
 
-                try
+                if (headerEnd != -1)
                 {
-                    if (!Socket.Connected)
-                        return;
+                    WebConnectionIOState = WebConnectionIOState.ParsingHeader;
 
-                    read = Socket.EndReceive(result);
-                }
-                catch (Exception e)
-                {
-                    log.Error("Exception while reading a header", e);
-                    Close();
-                    return;
-                }
+#if DEBUG
+                    headerHandled++;
+#endif
 
-                BufferBytesRead += read;
-
-                int headerEnd = Array<byte>.IndexOf(
-                    Buffer,
-                    HeaderEndMarker,
-                    0,
-                    BufferBytesRead);
-
-                // If the header end is found, then stop reading the socket and start handling the connection
-                if (-1 != headerEnd)
-                {
                     HandleHeader(headerEnd);
                     return;
                 }
+            }
 
-                else if (BufferBytesRead == WebServer.HeaderSize)
-                    // The header is too long
-                    Close(WebResults.FromString(Status._414_Request_URI_Too_Long, "Max header length: " + WebServer.HeaderSize.ToString()));
-
-                else if (ReadStartTime + WebServer.HeaderTimeout < DateTime.UtcNow)
-                    // The sending header timed out
-                    Close(WebResults.FromString(Status._408_Request_Timeout, "Headers time out after: " + WebServer.HeaderTimeout.ToString()));
-
-                else
-                    startRead();
-            };
-
-            startRead = delegate()
+            if (BufferBytesRead >= WebServer.HeaderSize)
             {
-                try
+                // The header is too long
+                Close(WebResults.From(Status._414_Request_URI_Too_Long, "Max header length: " + WebServer.HeaderSize.ToString()));
+                return;
+            }
+
+            else if (ReadStartTime + WebServer.HeaderTimeout < DateTime.UtcNow)
+            {
+                // The sending header timed out
+                Close(WebResults.From(Status._408_Request_Timeout, "Headers time out after: " + WebServer.HeaderTimeout.ToString()));
+                return;
+            }
+
+            // If the header is incomplete, read more of it
+            Socket.BeginReceive(Buffer, BufferBytesRead, Buffer.Length - BufferBytesRead, SocketFlags.None, ReadHeaderCallback, null);
+        }
+
+        private void ReadHeaderCallback(IAsyncResult ar)
+        {
+            WebConnectionIOState = WebConnectionIOState.ReadingHeader;
+
+            try
+            {
+                SocketError socketError;
+                int bytesRead = Socket.EndReceive(ar, out socketError);
+
+                if ((SocketError.Success == socketError) && (bytesRead > 0))
                 {
-                    Socket.BeginReceive(Buffer, 0, Buffer.Length, SocketFlags.None, readCallback, null);
+                    BufferBytesRead += bytesRead;
+                    ReadHeader();
                 }
-                catch (Exception e)
+                else
                 {
-                    log.Error("Error reading from socket", e);
+                    if (log.IsTraceEnabled)
+                        log.Trace("Socket closed: " + socketError.ToString());
+
+                    WebConnectionIOState = WebConnectionIOState.Disconnected;
                     Close();
                 }
-            };
+            }
+            catch (ObjectDisposedException)
+            {
+                WebConnectionIOState = WebConnectionIOState.Disconnected;
+                Close();
+            }
+            catch (SocketException)
+            {
+                WebConnectionIOState = WebConnectionIOState.Disconnected;
+                Close();
+            }
+            catch (Exception e)
+            {
+                log.ErrorFormat("Fatal error when performing IO for a connection from {0}", e, RemoteEndPoint);
 
-            startRead();
+                WebConnectionIOState = WebConnectionIOState.Disconnected;
+                Close();
+            }
         }
 
         /// <summary>
@@ -271,11 +236,21 @@ namespace ObjectCloud.WebServer.Implementation
         /// </summary>
         private void HandleHeader(int headerEnd)
         {
-            WebConnectionIOState = WebConnectionIOState.ParsingHeader;
-
             byte[] headerBytes = new byte[headerEnd];
-            Array.Copy(Buffer, headerBytes, headerEnd);
+            Array.Copy(Buffer, headerBytes, headerBytes.Length);
             string header = Encoding.UTF8.GetString(headerBytes);
+
+            // If more data was read into the buffer then the length of the header, then move it to the front of the buffer
+            if (BufferBytesRead > headerEnd + HeaderEndMarker.Length)
+            {
+                byte[] oldBuffer = Buffer;
+                Buffer = new byte[oldBuffer.Length];
+
+                Array.Copy(oldBuffer, headerEnd + HeaderEndMarker.Length, Buffer, 0, BufferBytesRead - headerEnd - HeaderEndMarker.Length);
+                //System.Buffer.BlockCopy(Buffer, headerEnd + HeaderEndMarker.Length, Buffer, 0, BufferBytesRead - headerEnd - HeaderEndMarker.Length);
+            }
+
+            BufferBytesRead = BufferBytesRead - (headerEnd + HeaderEndMarker.Length);
 
             try
             {
@@ -291,7 +266,7 @@ namespace ObjectCloud.WebServer.Implementation
             catch (Exception e)
             {
                 log.Error("Exception occured while reading the header", e);
-                Close(WebResults.FromString(Status._500_Internal_Server_Error, "An unknown error occured"));
+                Close(WebResults.From(Status._500_Internal_Server_Error, "An unknown error occured"));
 
                 return;
             }
@@ -299,10 +274,10 @@ namespace ObjectCloud.WebServer.Implementation
             switch (WebConnection.Method)
             {
                 case WebMethod.GET:
-                    
+
                     if (WebConnection.Headers.ContainsKey("CONTENT-LENGTH"))
                     {
-                        Close(WebResults.FromString(Status._406_Not_Acceptable, "Content-Length can not be specified in the headers when performing a GET"));
+                        Close(WebResults.From(Status._406_Not_Acceptable, "Content-Length can not be specified in the headers when performing a GET"));
                         return;
                     }
 
@@ -310,12 +285,12 @@ namespace ObjectCloud.WebServer.Implementation
                     break;
 
                 case WebMethod.POST:
-                    SetUpReadingContent(headerEnd);
+                    SetUpReadingContent();
                     break;
 
                 default:
                     if (WebConnection.Headers.ContainsKey("CONTENT-LENGTH"))
-                        SetUpReadingContent(headerEnd);
+                        SetUpReadingContent();
                     else
                         PerformRequest();
 
@@ -331,25 +306,9 @@ namespace ObjectCloud.WebServer.Implementation
         /// <summary>
         /// Sets up the socket reader to read the Content of the HTTP request
         /// </summary>
-        private void SetUpReadingContent(int headerEnd)
+        private void SetUpReadingContent()
         {
-            // If more data was read into the buffer then the length of the header, then move it to the front of the buffer
-            if (BufferBytesRead > headerEnd + HeaderEndMarker.Length)
-            {
-                byte[] oldBuffer = Buffer;
-                Buffer = new byte[oldBuffer.Length];
-
-                Array.Copy(oldBuffer, headerEnd + HeaderEndMarker.Length, Buffer, 0, BufferBytesRead - headerEnd - HeaderEndMarker.Length);
-            }
-
-            int bufferBytesRead = BufferBytesRead - (headerEnd + HeaderEndMarker.Length);
-
             ContentLength = long.Parse(WebConnection.Headers["CONTENT-LENGTH"]);
-
-            if (bufferBytesRead > ContentLength)
-                // I'm not sure if HTTP allows headers to be sent before the request is over
-                // This situation is just too hard in non-blocking mode, only the multi-threaded versiom handles it
-                Close(WebResults.FromString(Status._400_Bad_Request, "This server can't handle sending a header before it completes the request!"));
 
             if (ContentLength <= WebServer.MaxInMemoryContentSize)
                 Content = new WebConnectionContent.InMemory(ContentLength);
@@ -357,90 +316,11 @@ namespace ObjectCloud.WebServer.Implementation
                 Content = new WebConnectionContent.OnDisk();
             else
             {
-                Close(WebResults.FromString(Status._413_Request_Entity_Too_Large, "Too much data, max size: " + WebServer.MaxContentSize.ToString()));
+                Close(WebResults.From(Status._413_Request_Entity_Too_Large, "Too much data, max size: " + WebServer.MaxContentSize.ToString()));
                 return;
             }
 
-            WebConnectionIOState = WebConnectionIOState.ReadingContent;
 
-            ReadStartTime = DateTime.UtcNow;
-
-            GenericVoid startRead = null;
-
-            AsyncCallback readCallback = delegate(IAsyncResult result)
-            {
-                try
-                {
-                    if (!Socket.Connected)
-                        return;
-
-                    bufferBytesRead = Socket.EndReceive(result);
-                }
-                catch (Exception e)
-                {
-                    log.Error("Exception while reading content", e);
-                    Close();
-                    return;
-                }
-
-                startRead();
-            };
-
-            startRead = delegate()
-            {
-                try
-                {
-                    if (bufferBytesRead > 0)
-                    {
-                        byte[] toCopy = new byte[bufferBytesRead];
-                        Array.Copy(Buffer, 0, toCopy, 0, toCopy.Length);
-
-                        Content.TakeBytes(toCopy);
-
-                        if (Content.BytesRead >= ContentLength)
-                        {
-                            PerformRequest();
-                            return;
-                        }
-                    }
-
-                    int bytesToRead = Convert.ToInt32(ContentLength - Content.BytesRead);
-                    if (bytesToRead > Buffer.Length)
-                        bytesToRead = Buffer.Length;
-
-                    if (ReadStartTime + WebServer.ContentTimeout < DateTime.UtcNow)
-                    {
-                        // The sending header timed out
-                        Close(WebResults.FromString(Status._408_Request_Timeout, "Content times out after: " + WebServer.ContentTimeout.ToString()));
-                        return;
-                    }
-
-                    Socket.BeginReceive(Buffer, 0, bytesToRead, SocketFlags.None, readCallback, null);
-                }
-                catch (Exception e)
-                {
-                    log.Error("Error reading from socket", e);
-                    Close();
-                }
-            };
-
-            startRead();
-
-            /*if (0 == BufferBytesRead)
-            {
-                WebConnectionIOState = WebConnectionIOState.ReadingContent;
-                DoIO = ReadContent;
-
-                StartReadingSocket();
-            }
-            else if (BufferBytesRead <= ContentLength)
-            {
-            }
-            else
-
-            /*
-
-            // Give the reader the additional read bytes
             if (BufferBytesRead >= ContentLength)
             {
                 byte[] toCopy = new byte[ContentLength];
@@ -456,23 +336,21 @@ namespace ObjectCloud.WebServer.Implementation
                     Buffer = new byte[oldBuffer.Length];
 
                     Array.Copy(oldBuffer, ContentLength, Buffer, 0, BufferBytesRead - ContentLength);
+                    //System.Buffer.BlockCopy(Buffer, Convert.ToInt32(ContentLength), Buffer, 0, Convert.ToInt32(BufferBytesRead - ContentLength));
 
                     BufferBytesRead = Convert.ToInt32(Convert.ToInt64(BufferBytesRead) - ContentLength);
                 }
 
-                DoIO = NoOp;
                 WebConnectionIOState = WebConnectionIOState.PerformingRequest;
 
                 PerformRequest();
+                return;
             }
             else if (0 == BufferBytesRead)
             {
                 ReadStartTime = DateTime.UtcNow;
 
                 WebConnectionIOState = WebConnectionIOState.ReadingContent;
-                DoIO = ReadContent;
-
-                StartReadingSocket();
             }
             else // Buffer has less bytes then what's needed
             {
@@ -486,160 +364,203 @@ namespace ObjectCloud.WebServer.Implementation
                 ReadStartTime = DateTime.UtcNow;
 
                 WebConnectionIOState = WebConnectionIOState.ReadingContent;
-                DoIO = ReadContent;
+            }
 
-                StartReadingSocket();
-            }*/
+            ReadContent();
         }
 
-        /*// <summary>
+        /// <summary>
         /// Call for when the web connection is reading content
         /// </summary>
         /// <returns></returns>
         private void ReadContent()
         {
-            if (Content.BytesRead + BufferBytesRead <= ContentLength)
+            Socket.BeginReceive(Buffer, BufferBytesRead, Buffer.Length - BufferBytesRead, SocketFlags.None, ReadContentCallback, null);
+        }
+
+        private void ReadContentCallback(IAsyncResult ar)
+        {
+            try
             {
-                byte[] localBuffer = new byte[BufferBytesRead];
-                Array.Copy(Buffer, localBuffer, BufferBytesRead);
+                SocketError socketError;
+                int bytesRead = Socket.EndReceive(ar, out socketError);
 
-                BufferBytesRead = 0;
+                if ((SocketError.Success == socketError) && (bytesRead > 0))
+                {
+                    BufferBytesRead += bytesRead;
 
-                Content.TakeBytes(localBuffer);
+                    if (Content.BytesRead + BufferBytesRead <= ContentLength)
+                    {
+                        byte[] localBuffer = new byte[BufferBytesRead];
+                        Array.Copy(Buffer, localBuffer, BufferBytesRead);
+
+                        BufferBytesRead = 0;
+
+                        Content.TakeBytes(localBuffer);
+                    }
+                    else
+                    {
+                        // Additional data needs to stay on the buffer
+                        byte[] localBuffer = new byte[ContentLength - Content.BytesRead];
+                        Array.Copy(Buffer, localBuffer, localBuffer.Length);
+
+                        byte[] oldBuffer = Buffer;
+                        Buffer = new byte[oldBuffer.Length];
+                        Array.Copy(oldBuffer, localBuffer.Length, Buffer, 0, BufferBytesRead - localBuffer.Length);
+                        //System.Buffer.BlockCopy(Buffer, localBuffer.Length, Buffer, 0, BufferBytesRead - localBuffer.Length);
+
+                        BufferBytesRead = BufferBytesRead - localBuffer.Length;
+
+                        Content.TakeBytes(localBuffer);
+                    }
+
+                    // If the header end is found, then stop reading the socket and start handling the connection
+                    if (Content.BytesRead >= ContentLength)
+                    {
+                        WebConnectionIOState = WebConnectionIOState.PerformingRequest;
+
+                        PerformRequest();
+                        return;
+                    }
+                    else if (ReadStartTime + WebServer.ContentTimeout < DateTime.UtcNow)
+                    {
+                        // The sending header timed out
+
+                        Content.Dispose();
+
+                        WebConnectionIOState = WebConnectionIOState.Disconnected;
+
+                        WebConnection.SendResults(WebResults.From(Status._408_Request_Timeout, "Content times out after: " + WebServer.HeaderTimeout.ToString()));
+                        Socket.Close();
+
+                        return;
+                    }
+
+                    ReadContent();
+                }
+                else
+                {
+                    if (log.IsTraceEnabled)
+                        log.Trace("Socket closed: " + socketError.ToString());
+
+                    WebConnectionIOState = WebConnectionIOState.Disconnected;
+                    Close();
+                }
             }
-            else
+            catch (ObjectDisposedException)
             {
-                // Content.BytesRead + BufferBytesRead > ContentLength
-
-                // I'm not sure if HTTP allows headers to be sent before the request is over
-                // This situation is just too hard in non-blocking mode, only the multi-threaded versiom handles it
-                Close(WebResults.FromString(Status._400_Bad_Request, "This server can't handle sending a header before it completes the request!"));
+                WebConnectionIOState = WebConnectionIOState.Disconnected;
+                Close();
             }
-            /*else
+            catch (SocketException)
             {
-                // Additional data needs to stay on the buffer
-                byte[] localBuffer = new byte[ContentLength - Content.BytesRead];
-                Array.Copy(Buffer, localBuffer, localBuffer.Length);
+                WebConnectionIOState = WebConnectionIOState.Disconnected;
+                Close();
+            }
+            catch (Exception e)
+            {
+                log.ErrorFormat("Fatal error when performing IO for a connection from {0}", e, RemoteEndPoint);
 
-                byte[] oldBuffer = Buffer;
-                Buffer = new byte[oldBuffer.Length];
-                Array.Copy(oldBuffer, localBuffer.Length, Buffer, 0, BufferBytesRead - localBuffer.Length);
-
-                BufferBytesRead = BufferBytesRead - localBuffer.Length;
-
-                Content.TakeBytes(localBuffer);
-            }*/
-
-            /*/ If the header end is found, then stop reading the socket and start handling the connection
-            if (Content.BytesRead == ContentLength)
-                PerformRequest();
-            else
-                StartReadingSocket();
-        }*/
+                WebConnectionIOState = WebConnectionIOState.Disconnected;
+                Close();
+            }
+        }
 
         /// <summary>
         /// Called when the header is completely loaded
         /// </summary>
         /// <param name="socketReader"></param>
-        private void PerformRequest()
+        protected void PerformRequest()
         {
-            WebConnectionIOState = WebConnectionIOState.PerformingRequest;
+            if (!WebServer.KeepAlive || !Socket.Connected || !WebServer.Running)
+                KeepAlive = false;
+            else if (!WebConnection.Headers.ContainsKey("CONNECTION"))
+                KeepAlive = false;
+            else if ("keep-alive" != WebConnection.Headers["CONNECTION"].ToLower())
+                KeepAlive = false;
+            else
+                KeepAlive = true;
 
-            RequestThreadPool.RunThreadStart(delegate()
+            // (I think) this ensures that the web connection is garbage collected
+            // I forget why I did this, but it seems that there shouldn't be a reference to the webconnection while the request is being handled
+            WebConnection webConnection = WebConnection;
+            WebConnection = null;
+
+            WebServer.RequestDelegateQueue.QueueUserWorkItem(delegate(object state)
             {
-                WebConnection.HandleConnection(Content);
-            });
+                webConnection.HandleConnection((IWebConnectionContent)state);
+            }, Content);
         }
 
-        /*// <summary>
-        /// Performs the request.  This must be handled on its own thread
-        /// </summary>
-        private void PerformRequestOnThread()
-        {
-            WebConnection.HandleConnection(Content);
-
-            if (!WebServer.KeepAlive)
-                Close();
-            else
-            {
-                WebConnectionIOState = WebConnectionIOState.ReadingHeader;
-                DoIO = ReadHeader;
-                ReadStartTime = DateTime.UtcNow;
-
-                /*while (BufferBytesRead == Buffer.Length)
-                    DoIO();*/ /*
-            }
-        }*/
-
         /// <summary>
-        /// Pool of threads to handle outstanding requests
+        /// Caches the results to send
         /// </summary>
-        private static ThreadPoolInstance RequestThreadPool = new ThreadPoolInstance("Request Thread");
-
-        /// <summary>
-        /// Queues the result to be sent
-        /// </summary>
-        /// <param name="toSend"></param>
+        /// <param name="stream"></param>
         private void SendToBrowser(Stream stream)
         {
-            IOThread.QueueItem(delegate()
+            if (Socket.Connected)
             {
-                SendToBrowserFromIOThread(stream);
-            });
+                SendEnd = DateTime.UtcNow.AddMinutes(5);
+                ResultStream = stream;
+
+                ReadFromResultStream();
+            }
+            else
+            {
+                log.Debug("Connection Dropped....");
+                stream.Dispose();
+                return;
+            }
         }
 
         /// <summary>
-        /// Called from the send thread to start sending data
+        /// This is set to true if a request will support keepalive
         /// </summary>
-        private void SendToBrowserFromIOThread(Stream stream)
+        private bool KeepAlive;
+
+        /// <summary>
+        /// The stream that's used to get the result from the web request
+        /// </summary>
+        Stream ResultStream;
+
+        /// <summary>
+        /// The buffer used for sending to the client
+        /// </summary>
+        byte[] SendBuffer = new byte[60000];
+
+        /// <summary>
+        /// The number of bytes in the buffer that are being sent
+        /// </summary>
+        int BytesToSend;
+
+        /// <summary>
+        /// The bytes that have been sent
+        /// </summary>
+        int BytesSent;
+
+        /// <summary>
+        /// When sending should end
+        /// </summary>
+        DateTime SendEnd;
+
+        /// <summary>
+        /// Sends the stream to the browser.  This should be called on the same thread that owns this web connection
+        /// </summary>
+        /// <param name="ResultStream"></param>
+        private void ReadFromResultStream()
         {
-            byte[] buffer = new byte[4096];
-            byte[] oldBuffer = new byte[buffer.Length];
-            int bytesRead = 0;
-            int unsentStart = 0;
-            GenericVoid send = null;
-            AsyncCallback callback = null;
-
-            callback = delegate(IAsyncResult result)
+            try
             {
-                try
-                {
-                    if (!Socket.Connected)
-                        return;
+                BytesToSend = ResultStream.Read(SendBuffer, 0, SendBuffer.Length);
+                BytesSent = 0;
 
-                    unsentStart = Socket.EndSend(result);
+                if (BytesToSend > 0)
+                    SendToBrowser();
 
-                    // Keep sending parts that aren't sent
-                    if (unsentStart < bytesRead)
-                    {
-                        byte[] swap = oldBuffer;
-                        oldBuffer = buffer;
-                        buffer = swap;
-
-                        Array.Copy(oldBuffer, unsentStart, buffer, 0, bytesRead - unsentStart);
-                        unsentStart = bytesRead - unsentStart;
-                    }
-                    else
-                        unsentStart = 0;
-
-                    send();
-                }
-                catch (Exception e)
-                {
-                    log.Error("Error when sending data", e);
-                }
-            };
-
-            send = delegate()
-            {
-                bytesRead = unsentStart + stream.Read(buffer, unsentStart, buffer.Length - unsentStart);
-
-                if (bytesRead > 0)
-                    Socket.BeginSend(buffer, 0, bytesRead, SocketFlags.None, callback, null);
                 else
                 {
-                    stream.Close();
-                    stream.Dispose();
+                    ResultStream.Close();
+                    ResultStream = null;
 
                     if (null != Content)
                     {
@@ -647,58 +568,111 @@ namespace ObjectCloud.WebServer.Implementation
                         Content = null;
                     }
 
-                    if (!WebServer.KeepAlive)
-                        Close();
-                    else
-                    {
-                        WebConnectionIOState = WebConnectionIOState.ReadingHeader;
-                        ReadStartTime = DateTime.UtcNow;
-
+                    if (KeepAlive)
                         Start();
-
-                    }
+                    else
+                        Close();
                 }
-            };
-
-            try
-            {
-                send();
             }
             catch (Exception e)
             {
-                log.Error("Error when sending data", e);
+                log.Error("Error Occurred", e);
+                Close();
+            }
+        }
+
+        /// <summary>
+        /// Starts sending the current buffer contents to the browser
+        /// </summary>
+        private void SendToBrowser()
+        {
+            if (DateTime.UtcNow > SendEnd)
+            {
+                log.Warn("Sending timed out");
+                Close();
+            }
+
+            Socket.BeginSend(SendBuffer, BytesSent, BytesToSend - BytesSent, SocketFlags.None, SendToBrowserCallback, null);
+        }
+
+        private void SendToBrowserCallback(IAsyncResult ar)
+        {
+            try
+            {
+                SocketError socketError;
+                int bytesSent = Socket.EndSend(ar, out socketError);
+
+                if ((SocketError.Success == socketError) && (bytesSent > 0))
+                {
+                    BytesSent += bytesSent;
+
+                    if (BytesSent >= BytesToSend)
+                        ReadFromResultStream();
+                    else
+                        SendToBrowser();
+                }
+                else
+                {
+                    if (log.IsTraceEnabled)
+                        log.Trace("Socket closed: " + socketError.ToString());
+
+                    WebConnectionIOState = WebConnectionIOState.Disconnected;
+                    Close();
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+                WebConnectionIOState = WebConnectionIOState.Disconnected;
+                Close();
+            }
+            catch (SocketException)
+            {
+                WebConnectionIOState = WebConnectionIOState.Disconnected;
+                Close();
+            }
+            catch (Exception e)
+            {
+                log.ErrorFormat("Fatal error when performing IO for a connection from {0}", e, RemoteEndPoint);
+
+                WebConnectionIOState = WebConnectionIOState.Disconnected;
+                Close();
             }
         }
 
         /// <summary>
         /// Closes the socket reader after transmitting an error message
         /// </summary>
-        private void Close(IWebResults webResults)
+        internal void Close(IWebResults webResults)
         {
-            WebConnection.SendResults(webResults);
+            if (null != WebConnection)
+                WebConnection.SendResults(webResults);
+
             Close();
         }
 
         /// <summary>
         /// Closes the socket reader, for all intents and purposes
         /// </summary>
-        private void Close()
+        internal void Close()
         {
-            Socket.Close();
+            try
+            {
+                Socket.Shutdown(SocketShutdown.Both);
+                Socket.Close();
+            }
+            catch { }
+
             WebConnectionIOState = WebConnectionIOState.Disconnected;
+
+            WebServer.WebServerTerminating -= new EventHandler<EventArgs>(WebServer_WebServerTerminating);
+
+            if (null != Closed)
+                Closed(this, new EventArgs());
         }
 
-        public override string ToString()
-        {
-            StringBuilder toReturn = new StringBuilder("Connection from: ");
-            toReturn.Append(Socket.RemoteEndPoint.ToString());
-
-            ISession session = WebConnection.Session;
-
-            if (null != session)
-                toReturn.AppendFormat(", Session: {0}", session.SessionId);
-
-            return toReturn.ToString();
-        }
+        /// <summary>
+        /// Occurs whenever the connection is closed
+        /// </summary>
+        public event EventHandler<NonBlockingSocketReader, EventArgs> Closed;
     }
 }
