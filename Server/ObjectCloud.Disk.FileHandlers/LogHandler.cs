@@ -1,3 +1,7 @@
+// Copyright 2009, 2010 Andrew Rondeau
+// This code is released under the Simple Public License (SimPL) 2.0.  Some additional privelages are granted.
+// For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
+
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -21,9 +25,11 @@ namespace ObjectCloud.Disk.FileHandlers
 	{
         private static ILog log = LogManager.GetLogger<LogHandler>();
 
-        public LogHandler(IDatabaseConnector databaseConnector, FileHandlerFactoryLocator fileHandlerFactoryLocator, bool writeToConsole)
+        public LogHandler(IDatabaseConnector databaseConnector, FileHandlerFactoryLocator fileHandlerFactoryLocator, bool writeToConsole, DelegateQueue delegateQueue)
             : base(databaseConnector, fileHandlerFactoryLocator) 
 		{
+            DelegateQueue = delegateQueue;
+
 			foreach (IClasses_Readable classNameAndId in DatabaseConnection.Classes.Select())
 			{
 				ClassNameIds[classNameAndId.Name] = classNameAndId.ClassId;
@@ -116,7 +122,7 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <summary>
         /// Asyncronously runs delegates on a queue where they can't block each other
         /// </summary>
-        private DelegateQueue DelegateQueue = new DelegateQueue("Log Writer");
+        private DelegateQueue DelegateQueue;
 
 		public void WriteLog(
 			string className, 

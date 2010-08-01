@@ -47,6 +47,11 @@ namespace ObjectCloud.Interfaces.Disk
         /// The service locator
         /// </summary>
         FileHandlerFactoryLocator FileHandlerFactoryLocator { get; set; }
+
+        /// <summary>
+        /// Instructs the file handler factory that the file system is shutting down
+        /// </summary>
+        void Stop();
     }
 
     public interface IFileHandlerFactory<TFileHandler> : IFileHandlerFactory

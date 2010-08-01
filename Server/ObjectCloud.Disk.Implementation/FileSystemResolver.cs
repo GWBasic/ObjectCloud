@@ -464,6 +464,9 @@ namespace ObjectCloud.Disk.Implementation
 				log.Info("Logger stopped");
 			}
 
+            foreach (IFileHandlerFactory fileHandlerFactory in FileHandlerFactoryLocator.FileHandlerFactories.Values)
+                fileHandlerFactory.Stop();
+
 			if (null != Stopped)
 				Stopped(this, new EventArgs());
         }

@@ -40,5 +40,9 @@ namespace ObjectCloud.Interfaces.Disk
             set { _FileHandlerFactoryLocator = value; }
         }
         private FileHandlerFactoryLocator _FileHandlerFactoryLocator;
+
+        public void Stop()
+        {
+        }
     }
 }

@@ -1,7 +1,12 @@
+// Copyright 2009, 2010 Andrew Rondeau
+// This code is released under the Simple Public License (SimPL) 2.0.  Some additional privelages are granted.
+// For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
+
 using System;
 using System.IO;
 
 using ObjectCloud.Common;
+using ObjectCloud.Common.Threading;
 using ObjectCloud.DataAccess.Log;
 using ObjectCloud.Disk.FileHandlers;
 using ObjectCloud.Interfaces.Disk;
@@ -70,12 +75,14 @@ namespace ObjectCloud.Disk.Factories
         /// <returns></returns>
         private LogHandler ConstructLogHander(string databaseFilename)
         {
-            LogHandler toReturn = new LogHandler(
+            DelegateQueue delegateQueue = new DelegateQueue("Log Handler");
+            DelegateQueues.Enqueue(delegateQueue);
+
+            return new LogHandler(
                 DataAccessLocator.DatabaseConnectorFactory.CreateConnectorForEmbedded(databaseFilename),
                 FileHandlerFactoryLocator,
-                WriteToConsole);
-
-            return toReturn;
+                WriteToConsole,
+                delegateQueue);
         }
 
         public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID)
@@ -86,6 +93,18 @@ namespace ObjectCloud.Disk.Factories
         public override void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
         {
 			throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// All of the started delegate queues
+        /// </summary>
+        private LockFreeQueue<DelegateQueue> DelegateQueues = new LockFreeQueue<DelegateQueue>();
+
+        public override void Stop()
+        {
+            DelegateQueue delegateQueue;
+            while (DelegateQueues.Dequeue(out delegateQueue))
+                delegateQueue.Dispose();
         }
     }
 }

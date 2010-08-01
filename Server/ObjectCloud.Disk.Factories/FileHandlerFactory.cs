@@ -87,6 +87,10 @@ namespace ObjectCloud.Disk.Factories
         {
             get { return (FileSystem)FileHandlerFactoryLocator.FileSystem; }
         }
+
+        public virtual void Stop()
+        {
+        }
     }
 
     /// <summary>
