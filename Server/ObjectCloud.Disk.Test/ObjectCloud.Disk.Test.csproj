@@ -92,6 +92,7 @@
     <Compile Include="PermissionsTest.cs" />
     <Compile Include="TestBase.cs" />
     <Compile Include="FileDumperTest.cs" />
+    <Compile Include="TestCache.cs" />
     <Compile Include="TestSessionManagerHandler.cs" />
     <Compile Include="TestShell.cs" />
     <Compile Include="TestUserManagerHandler.cs" />
