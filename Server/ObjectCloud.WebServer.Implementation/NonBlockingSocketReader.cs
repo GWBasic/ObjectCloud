@@ -23,7 +23,7 @@ namespace ObjectCloud.WebServer.Implementation
     /// </summary>
     internal class NonBlockingSocketReader
     {
-        private static ILog log = LogManager.GetLogger<BlockingSocketReader>();
+        private static ILog log = LogManager.GetLogger<NonBlockingSocketReader>();
 
         /// <summary>
         /// Initializes the WebConnection

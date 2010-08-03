@@ -7,6 +7,141 @@
  * Released under the SimPL 2.0 license, see http://opensource.org/licenses/simpl-2.0.html
  */
  
+function alert(message)
+{
+	console.log(message);
+}
+ 
+function createObjectCloudConnection(getObjectCloudClient, objectcloudRequestMetadata, objectCloudSessionCookie)
+{
+	/*
+	 * Emulates AJAX.  In the browser, ObjectCloud's CreateHttpRequest() function
+	 * essentailly handles the IE 6 special case; but it also is used in various non-browser JS
+	 * environments to emulate AJAX.  See /API/AJAX.js and /API/AJAX_serverside.js
+	 */
+	function CreateHttpRequest()
+	{
+		var toReturn =
+		{
+			headers: 
+			{
+				host: objectcloudRequestMetadata.host,
+				'Cookie': objectCloudSessionCookie,
+				'User-Agent': objectcloudRequestMetadata["User-Agent"]
+			},
+
+			open: function(webMethod, url, asyncronous)
+			{
+				if (!asyncronous)
+					throw "Node.js doesn't support synchronous javascript";
+
+				this.webMethod = webMethod;
+				this.url = url;
+			},
+
+			setRequestHeader: function(name, value)
+			{
+				// header is currently ignored
+				this.headers[name] = value;
+			},
+
+			send: function(payload)
+			{
+				if (null != payload)
+					this.headers['Content-Length'] = payload.length;
+
+				request = getObjectCloudClient().request(
+					this.webMethod,
+					this.url,
+					this.headers);
+
+				if (null != payload)
+					request.write(payload, 'utf8');
+	
+				request.end();
+				
+				var me = this;
+
+				request.on('response', function (response)
+				{
+					me.responseText = '';
+						
+					response.on('data', function (chunk)
+					{
+						me.responseText += chunk;
+					});
+		
+					response.on('end', function ()
+					{
+						me.readyState = 4;
+			            me.status = response.statusCode;
+						me.onreadystatechange();
+					});
+				});
+			}
+		}
+		
+		return toReturn;
+	}
+
+	var toReturn =
+	{
+		open: function(toOpen, openedCallback, errorCallback)
+		{
+			// Use some default callbacks
+			if (!openedCallback)
+				openedCallback = function(wrapper) { console.log(JSON.stringify(wrapper, null, '\t')); };
+		
+			if (!errorCallback)
+				errorCallback = function(error) { console.log(error); };
+		
+			var request = getObjectCloudClient().request(
+				'GET',
+				toOpen + '?Method=GetJSW',
+				{
+					host: objectcloudRequestMetadata.host,
+					'Cookie': objectCloudSessionCookie,
+					'User-Agent': objectcloudRequestMetadata["User-Agent"]
+				});
+				
+			request.end();
+	
+			request.on('response', function (response)
+			{
+				response.setEncoding('utf8');
+		
+				var result = '';
+		
+				response.on('data', function (chunk)
+				{
+					result += chunk;
+				});
+		
+				response.on('end', function ()
+				{
+					if ('2' == (response.statusCode + '').substring(0,1))
+					{
+						var wrapper = eval('(' + result + ')');
+						
+						// Connect all the functions to CreateHttpRequest						
+						for (var prop in wrapper)
+							if (typeof wrapper[prop] == 'function')
+							{
+								wrapper[prop].prototype.CreateHttpRequest = CreateHttpRequest;
+								wrapper[prop].prototype.alert = console.log;
+							}
+							
+						openedCallback(wrapper);
+					}
+					else
+						errorCallback(result);
+				});
+			});
+		}
+	};
+	return toReturn;
+}
+
 exports.connect = function(args, connectedCallback, errorCallback)
 {
 	if (!args.host)
@@ -93,12 +228,10 @@ exports.connect = function(args, connectedCallback, errorCallback)
 
 			if (null != objectCloudSessionCookie)
 			{
-				connectedCallback(
-				{
-					getObjectCloudClient : getObjectCloudClient,
-					args: args,
-					objectCloudSessionCookie : objectCloudSessionCookie
-				});
+				connectedCallback(createObjectCloudConnection(
+					getObjectCloudClient,
+					objectcloudRequestMetadata,
+					objectCloudSessionCookie));
 			}
 			else
 				errorCallback.log('SESSION cookie not found, cookies returned: \n' + JSON.stringify(response.headers["set-cookie"], null, '\t'));
