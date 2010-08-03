@@ -87,6 +87,11 @@ namespace ObjectCloud.Common
         }
         private bool _Enabled = true;
 #endif
+		
+		/// <summary>
+		/// Every 100 cache hits dead items are looked for
+		/// </summary>
+		private int CleanCtr = 0;
 
         /// <summary>
         /// Gets or creates a cache handle for the given key
@@ -98,18 +103,9 @@ namespace ObjectCloud.Common
             Lock.EnterReadLock();
             try
             {
-                // This little bit checks a cache handle to see if it's alive, and if it's not, deletes it
-                // Basicaly, every time the cache is hit, some randome cache handle is checked to see if it's dead
-                KeyValuePair<TKey, CacheHandle> toCheck;
-                if (CleanQueue.Dequeue(out toCheck))
-                {
-                    if (!toCheck.Value.IsAlive)
-                        new GenericArgument<TKey>(RemoveCollectedCacheHandle).BeginInvoke(toCheck.Key, null, null);
-                }
-                else
-                    // If the clean queue is empty, then re-build it
-                    CleanQueue.EnqueueAll(Dictionary);
-
+				if (0 == (Interlocked.Increment(ref CleanCtr) % 100))
+					DelegateQueue.QueueUserWorkItem(RemoveCollectedCacheHandle, null);
+				
                 CacheHandle cacheHandle;
                 if (Dictionary.TryGetValue(key, out cacheHandle))
                     return cacheHandle;
@@ -138,40 +134,61 @@ namespace ObjectCloud.Common
             }
         }
 
-        private void RemoveCollectedCacheHandle(TKey key)
+		/// <summary>
+		/// This little bit checks a cache handle to see if it's alive, and if it's not, deletes it
+        /// Basicaly, every time the cache is hit, some randome cache handle is checked to see if it's dead
+		/// </summary>
+        private void RemoveCollectedCacheHandle(object state)
         {
-            try
+	        CacheHandle cacheHandle;
+	        try
             {
-                CacheHandle cacheHandle;
-                if (Dictionary.TryGetValue(key, out cacheHandle))
-                {
-                    // If another thread has the cache handle locked, then it's being ressurected and doesn't need to be deleted
-                    if (Monitor.TryEnter(cacheHandle))
-                        try
-                        {
-                            Lock.EnterWriteLock();
+    		    KeyValuePair<TKey, CacheHandle> toCheck;
+		        if (CleanQueue.Dequeue(out toCheck))
+        		{
+		            if (!toCheck.Value.IsAlive)
+		                if (Dictionary.TryGetValue(toCheck.Key, out cacheHandle))
+        		        {
+                		    // If another thread has the cache handle locked, then it's being ressurected and doesn't need to be deleted
+		                    if (Monitor.TryEnter(cacheHandle))
+        		                try
+                		        {
+                        		    Lock.EnterWriteLock();
 
-                            try
-                            {
-                                if (!cacheHandle.IsAlive)
-                                    Dictionary.Remove(key);
+		                            try
+        		                    {
+                		                if (!cacheHandle.IsAlive)
+                        		            Dictionary.Remove(toCheck.Key);
 
-                                cacheHandle.Valid = false;
-                            }
-                            finally
-                            {
-                                Lock.ExitWriteLock();
-                            }
-                        }
-                        finally
-                        {
-                            Monitor.Exit(cacheHandle);
-                        }
-                }
-            }
+		                                cacheHandle.Valid = false;
+        		                    }
+                		            finally
+                        		    {
+		                                Lock.ExitWriteLock();
+        		                    }
+               			        }
+			                	finally
+	            	            {
+    	            	            Monitor.Exit(cacheHandle);
+        	            	    }
+            	    	}
+				}
+				else
+				{
+		            Lock.EnterReadLock();
+		            try
+		            {
+						CleanQueue.EnqueueAll(Dictionary);
+		            }
+		            finally
+		            {
+		                Lock.ExitReadLock();
+		            }
+				}
+			}
             catch (Exception e)
             {
-                log.Warn("Error removing " + key.ToString() + " from the cache", e);
+                log.Warn(e);
             }
         }
 
