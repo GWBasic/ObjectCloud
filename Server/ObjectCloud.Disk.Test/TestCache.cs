@@ -27,7 +27,7 @@ namespace ObjectCloud.Disk.Test
         private class CachedObject
         {
             public long Val;
-            byte[] Memory = new byte[1024 * 1024];
+            public byte[] Memory = new byte[1024 * 1024];
         }
 
         long MaxIterations = long.MinValue;
@@ -119,6 +119,7 @@ namespace ObjectCloud.Disk.Test
                     long val = Interlocked.Increment(ref NumIterations) / 4;
                     CachedObject cacheVal = Cache[val];
                     Assert.AreEqual(val, cacheVal.Val);
+					Assert.IsNotNull(cacheVal.Memory);
                 }
                 while (NumIterations < MaxIterations);
             }

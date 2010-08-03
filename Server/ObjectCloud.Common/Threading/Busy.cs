@@ -30,11 +30,6 @@ namespace ObjectCloud.Common.Threading
         }
 
         /// <summary>
-        /// Join this thread whenever the server is busy as a means of blocking while other threads "catch up"
-        /// </summary>
-        private static Thread BlockThread = null;
-
-        /// <summary>
         /// This is locked while the server is busy, leading to easy blocking of all threads
         /// </summary>
         private static object BusyKey = new object();
@@ -72,8 +67,6 @@ namespace ObjectCloud.Common.Threading
                         thread.Priority = ThreadPriority.Highest;
                         thread.Start();
 
-                        BlockThread = thread;
-
                         Monitor.Wait(BusyThreadStartedPulser);
                     }
 
@@ -93,10 +86,7 @@ namespace ObjectCloud.Common.Threading
                 if (0 == BusyCount)
                     // If no more threads are busy, end the busy thread
                     lock (EndBusyThreadPulser)
-                    {
                         Monitor.Pulse(EndBusyThreadPulser);
-                        BlockThread = null;
-                    }
             }
         }
 

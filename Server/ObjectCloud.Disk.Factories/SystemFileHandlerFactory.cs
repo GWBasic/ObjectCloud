@@ -24,9 +24,5 @@ namespace ObjectCloud.Disk.Factories
         {
             throw new SecurityException("This kind of file is a system file and can not be created");
         }
-
-        public virtual void Stop()
-        {
-        }
     }
 }
