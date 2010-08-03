@@ -62,11 +62,11 @@ namespace ObjectCloud.Disk.WebHandlers
         /// Helps in creating a file
         /// </summary>
         /// <param name="webConnection"></param>
-        /// <param name="FileName"></param>
+        /// <param name="FileName">Filename, this or fileNameSuggestion must be specified</param>
         /// <param name="extension"></param>
-        /// <param name="fileNameSuggestion"></param>
+        /// <param name="fileNameSuggestion">Suggestion for a filename.  This can be any string, when specified, extension must also be specified.</param>
         /// <param name="FileType"></param>
-        /// <param name="ErrorIfExists"></param>
+        /// <param name="ErrorIfExists">True to throw an error if there already is an existing file with the same filename.  False if ObjectCloud should silently return a wrapper if the file already exists.  If fileNameSuggestion is used instead of FileName, then if there is an existing filename with the first generated filename, then it will be returned instead of created.</param>
         /// <returns></returns>
         protected IFileHandler CreateFileHelper(
             IWebConnection webConnection,
@@ -76,6 +76,10 @@ namespace ObjectCloud.Disk.WebHandlers
             string FileType,
             bool? ErrorIfExists)
         {
+			bool errorIfExists = true;
+                if (null != ErrorIfExists)
+					errorIfExists = ErrorIfExists.Value;			
+			
             using (TimedLock.Lock(CreateFileLock))
             {
                 // It's an error if both FileName and extension are null, or if both are set
@@ -89,7 +93,7 @@ namespace ObjectCloud.Disk.WebHandlers
                         throw new WebResultsOverrideException(
                             WebResults.From(Status._400_Bad_Request, "The extension must be at least one character long"));
 
-                    FileName = GenerateFilename(extension, fileNameSuggestion);
+                    FileName = GenerateFilename(extension, fileNameSuggestion, errorIfExists);
                 }
                 else
                 {
@@ -152,7 +156,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="extension"></param>
         /// <param name="fileNameSuggestion"></param>
         /// <returns></returns>
-        private string GenerateFilename(string extension, string fileNameSuggestion)
+        private string GenerateFilename(string extension, string fileNameSuggestion, bool unique)
         {
             DateTime timestamp = DateTime.UtcNow;
 
@@ -174,7 +178,7 @@ namespace ObjectCloud.Disk.WebHandlers
                     extension);
 
                 // If that doesn't work, then just keep using the time to find something unique
-                if (FileHandler.IsFilePresent(fileName))
+                if (FileHandler.IsFilePresent(fileName) && unique)
                 {
                     long ticks = timestamp.Ticks;
 
@@ -457,7 +461,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 generateFilename = true;
 
             if (generateFilename)
-                DestinationFilename = GenerateFilename(toCopy.Extension, toCopy.Filename);
+                DestinationFilename = GenerateFilename(toCopy.Extension, toCopy.Filename, true);
 
             FilePermissionEnum? permissionToSource = toCopy.LoadPermission(webConnection.Session.User.Id);
 
