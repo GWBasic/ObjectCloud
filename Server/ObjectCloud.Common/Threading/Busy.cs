@@ -64,7 +64,7 @@ namespace ObjectCloud.Common.Threading
                     {
                         Thread thread = new Thread(BusyThread);
                         thread.Name = "Busy blocker";
-                        thread.Priority = ThreadPriority.Highest;
+                        //thread.Priority = ThreadPriority.Highest;
                         thread.Start();
 
                         Monitor.Wait(BusyThreadStartedPulser);

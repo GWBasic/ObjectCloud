@@ -115,7 +115,12 @@ namespace ObjectCloud.Common.Threading
 
             if (QueuedDelegates.Count > BusyThreshold)
                 if (0 == Interlocked.CompareExchange(ref BeganBusy, 1, 0))
+                {
                     Busy.BeginBusy();
+
+                    foreach (Thread thread in Threads)
+                        thread.Priority = ThreadPriority.Highest;
+                }
         }
 
         /// <summary>
@@ -138,11 +143,11 @@ namespace ObjectCloud.Common.Threading
         /// </summary>
         void Work()
         {
-            Thread thread = Thread.CurrentThread;
+            //Thread thread = Thread.CurrentThread;
 
             while (KeepRunning)
             {
-                thread.IsBackground = true;
+                //thread.IsBackground = true;
 
                 // Wait until a new request comes in
                 // There's an automatic free to ensure that a request isn't left unfulfilled
@@ -154,7 +159,7 @@ namespace ObjectCloud.Common.Threading
                     Interlocked.Decrement(ref NumSuspendedThreads);
                 }
 
-                thread.IsBackground = false;
+                //thread.IsBackground = false;
 
                 QueuedDelegate queuedDelegate;
                 while (QueuedDelegates.Dequeue(out queuedDelegate))
@@ -163,7 +168,12 @@ namespace ObjectCloud.Common.Threading
                 // If throttling requests was started, end throttling requests
                 if (BeganBusy > 0)
                     if (1 == Interlocked.CompareExchange(ref BeganBusy, 0, 1))
+                    {
                         Busy.ExitBusy();
+
+                        foreach (Thread thread in Threads)
+                            thread.Priority = ThreadPriority.Normal;
+                    }
             }
         }
 

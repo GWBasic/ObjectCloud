@@ -454,7 +454,22 @@ namespace ObjectCloud.Common
     {
         internal static ILog log = LogManager.GetLogger<Cache>();
 
-        internal Cache() { }
+        private static long NumCaches = 0;
+
+        internal Cache() 
+        {
+            if (1 == Interlocked.Increment(ref NumCaches))
+                DelegateQueue = new DelegateQueue("Cache manager");
+        }
+
+        ~Cache()
+        {
+            if (0 == Interlocked.Decrement(ref NumCaches))
+            {
+                DelegateQueue.Dispose();
+                DelegateQueue = null;
+            }
+        }
 
         /// <summary>
         /// Sets the percentage of the working set that ObjectCloud will attempt to work with.  This adjusts the default memory use parameters
@@ -469,7 +484,7 @@ namespace ObjectCloud.Common
         /// <summary>
         /// Sub-thread for managing memory.  Allows the queue of memory to be managed without blocking the requesting threads, and in a synchronized manner
         /// </summary>
-        protected static DelegateQueue DelegateQueue = new DelegateQueue("Cache manager");
+        protected static DelegateQueue DelegateQueue;
 
         /// <summary>
         /// These values tune the cache with regard to when it will start de-referencing objects.  For each value in here, if the process takes more memory then the value, an object
