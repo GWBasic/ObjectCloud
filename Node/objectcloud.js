@@ -3,6 +3,28 @@
  *
  * Driver for consuming ObjectCloud objects in Node
  *
+ * usage:
+
+require("./objectcloud").connect(
+	{
+		username: 'username',
+		password: 'password',
+		port: 1080, // defaults to 80
+		host: 'hostname' // NOTE:  This must be exact; ObjectCloud by default redirects to its
+		// configured host; and this driver doesn't yet handle redirects
+	},
+	function(objectCloudConnection)
+	{
+		console.log("Successfully connected to ObjectCloud");
+		
+		objectCloudConnection.open(
+			'/path to a file in ObjectCloud',
+			function(wrapper)
+			{
+				// You can now use wrapper with the same API that's available to in-browser Javascript
+			});
+	});
+ *
  * (C) 2010 Andrew Rondeau
  * Released under the SimPL 2.0 license, see http://opensource.org/licenses/simpl-2.0.html
  */
@@ -144,6 +166,15 @@ function createObjectCloudConnection(getObjectCloudClient, objectcloudRequestMet
 
 exports.connect = function(args, connectedCallback, errorCallback)
 {
+	if (null == connectedCallback)
+		throw "callback unspecified";
+		
+	if (null == errorCallback)
+		errorCallback = function(objectCloudError)
+		{
+			console.log("Error connecting to ObjectCloud:\n" + objectCloudError);
+		};
+
 	if (!args.host)
 		args.host = "localhost";
       

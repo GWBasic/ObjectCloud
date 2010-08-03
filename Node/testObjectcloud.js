@@ -36,10 +36,6 @@ require("./objectcloud").connect(
 						testWritingFile(objectCloudConnection);
 					});
 			});
-	},
-	function(objectCloudError)
-	{
-		console.log("Error connecting to ObjectCloud:\n" + objectCloudError);
 	});
 	
 function testWritingFile(objectCloudConnection)
