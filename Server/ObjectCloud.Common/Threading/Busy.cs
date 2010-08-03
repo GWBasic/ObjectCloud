@@ -16,8 +16,6 @@ namespace ObjectCloud.Common.Threading
     /// </summary>
     public static class Busy
     {
-        private static ILog log = LogManager.GetLogger(typeof(Busy));
-
         /// <summary>
         /// The number of threads that indicate that the server is busy
         /// </summary>

@@ -650,11 +650,6 @@ namespace ObjectCloud.Common
         static private Process MyProcess = Process.GetCurrentProcess();
 
         /// <summary>
-        /// The number of collections that had occured after cleaning up dead weak referecnes.  When there are more MaxGeneration collections, dead weak references will be cleaned
-        /// </summary>
-        private static int LastCleanCollectionCount = GC.CollectionCount(GC.MaxGeneration);
-
-        /// <summary>
         /// Manages deallocation of memory
         /// </summary>
         internal static void ManageCacheDeallocationRate(object state)
