@@ -62,11 +62,6 @@ namespace ObjectCloud.Common
         private readonly Dictionary<TKey, CacheHandle> Dictionary =
             new Dictionary<TKey, CacheHandle>();
 
-        /// <summary>
-        /// Queue of key-value pairs to periodically check to see if they're still alive and thus valid
-        /// </summary>
-        private LockFreeQueue<KeyValuePair<TKey, CacheHandle>> CleanQueue = new LockFreeQueue<KeyValuePair<TKey, CacheHandle>>();
-
         private ReaderWriterLockSlim Lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 
         protected readonly CreateForCache<TKey, TValue, TConstructorArg> _CreateForCache;
@@ -303,7 +298,6 @@ namespace ObjectCloud.Common
                 }
 
                 Dictionary.Clear();
-                CleanQueue = new LockFreeQueue<KeyValuePair<TKey, CacheHandle>>();
             }
             finally
             {

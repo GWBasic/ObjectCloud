@@ -1,0 +1,1 @@
+This folder contains modules for node that allow it to consume objects on an ObjectCloud server
