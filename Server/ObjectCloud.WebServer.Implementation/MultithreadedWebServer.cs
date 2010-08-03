@@ -65,6 +65,7 @@ namespace ObjectCloud.WebServer.Implementation
                                 Thread.Sleep(TimeSpan.FromMilliseconds(50));
                             else
                             {
+                                Busy.BlockWhileBusy();
                                 Socket socket = tcpListener.AcceptSocket();
 
                                 if (log.IsInfoEnabled)

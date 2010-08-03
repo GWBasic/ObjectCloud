@@ -450,6 +450,8 @@ namespace ObjectCloud.WebServer.Implementation
             WebConnection webConnection = WebConnection;
             WebConnection = null;
 
+            Busy.BlockWhileBusy();
+
             WebServer.RequestDelegateQueue.QueueUserWorkItem(delegate(object state)
             {
                 webConnection.HandleConnection((IWebConnectionContent)state);

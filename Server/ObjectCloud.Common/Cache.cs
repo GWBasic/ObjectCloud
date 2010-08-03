@@ -62,6 +62,11 @@ namespace ObjectCloud.Common
         private readonly Dictionary<TKey, CacheHandle> Dictionary =
             new Dictionary<TKey, CacheHandle>();
 
+        /// <summary>
+        /// Queue of key-value pairs to periodically check to see if they're still alive and thus valid
+        /// </summary>
+        private LockFreeQueue<KeyValuePair<TKey, CacheHandle>> CleanQueue = new LockFreeQueue<KeyValuePair<TKey, CacheHandle>>();
+
         private ReaderWriterLockSlim Lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 
         protected readonly CreateForCache<TKey, TValue, TConstructorArg> _CreateForCache;
@@ -93,10 +98,21 @@ namespace ObjectCloud.Common
             Lock.EnterReadLock();
             try
             {
+                // This little bit checks a cache handle to see if it's alive, and if it's not, deletes it
+                // Basicaly, every time the cache is hit, some randome cache handle is checked to see if it's dead
+                KeyValuePair<TKey, CacheHandle> toCheck;
+                if (CleanQueue.Dequeue(out toCheck))
+                {
+                    if (!toCheck.Value.IsAlive)
+                        new GenericArgument<TKey>(RemoveCollectedCacheHandle).BeginInvoke(toCheck.Key, null, null);
+                }
+                else
+                    // If the clean queue is empty, then re-build it
+                    CleanQueue.EnqueueAll(Dictionary);
+
                 CacheHandle cacheHandle;
-                using (TimedLock.Lock(Dictionary))
-                    if (Dictionary.TryGetValue(key, out cacheHandle))
-                        return cacheHandle;
+                if (Dictionary.TryGetValue(key, out cacheHandle))
+                    return cacheHandle;
             }
             finally
             {
@@ -122,6 +138,43 @@ namespace ObjectCloud.Common
             }
         }
 
+        private void RemoveCollectedCacheHandle(TKey key)
+        {
+            try
+            {
+                CacheHandle cacheHandle;
+                if (Dictionary.TryGetValue(key, out cacheHandle))
+                {
+                    // If another thread has the cache handle locked, then it's being ressurected and doesn't need to be deleted
+                    if (Monitor.TryEnter(cacheHandle))
+                        try
+                        {
+                            Lock.EnterWriteLock();
+
+                            try
+                            {
+                                if (!cacheHandle.IsAlive)
+                                    Dictionary.Remove(key);
+
+                                cacheHandle.Valid = false;
+                            }
+                            finally
+                            {
+                                Lock.ExitWriteLock();
+                            }
+                        }
+                        finally
+                        {
+                            Monitor.Exit(cacheHandle);
+                        }
+                }
+            }
+            catch (Exception e)
+            {
+                log.Warn("Error removing " + key.ToString() + " from the cache", e);
+            }
+        }
+
         /// <summary>
         /// Gets the corresponding object, constructs it if it hasn't been constructed or if it was garbage collected
         /// </summary>
@@ -134,23 +187,29 @@ namespace ObjectCloud.Common
                 return _CreateForCache(key, constructorArg);
 
 #endif
-            CacheHandle cacheHandle = GetCacheHandle(key);
+            TValue toReturn;
+            CacheHandle cacheHandle;
 
-            try
+            do
             {
-                return cacheHandle.GetValue(constructorArg);
-            }
-            catch (OutOfMemoryException oome)
-            {
-                using (TimedLock.Lock(CleanupCacheKey))
+                cacheHandle = GetCacheHandle(key);
+                toReturn = cacheHandle.GetValue(constructorArg);
+
+                /*try
                 {
-                    Cache.CleanupCache();
+                    toReturn = cacheHandle.GetValue(constructorArg);
+                }
+                catch (OutOfMemoryException oome)
+                {
+                    ReleaseAllCachedMemory();
+
                     log.Warn("Out-of-memory when creating object for key " + key.ToString(), oome);
 
-                    return cacheHandle.GetValue(constructorArg);
-                }
-            }
+                    toReturn = cacheHandle.GetValue(constructorArg);
+                }*/
+            } while (!cacheHandle.Valid);
 
+            return toReturn;
         }
 
         /// <summary>
@@ -160,8 +219,14 @@ namespace ObjectCloud.Common
         /// <param name="value"></param>
         public void Set(TKey key, TValue value)
         {
-            CacheHandle cacheHandle = GetCacheHandle(key);
-            cacheHandle.SetValue(value);
+            CacheHandle cacheHandle;
+
+            do
+            {
+                cacheHandle = GetCacheHandle(key);
+                cacheHandle.SetValue(value);
+            }
+            while (!cacheHandle.Valid);
         }
 
         /// <summary>
@@ -181,20 +246,20 @@ namespace ObjectCloud.Common
                     Dictionary.Remove(key);
                 else
                     return false;
-
-                TValue cached = cacheHandle.WeakValue;
-                cacheHandle.SetValue(null);
-
-                if (null == cached)
-                    return false;
-
-                if (cached is IDisposable)
-                    ((IDisposable)cached).Dispose();
             }
             finally
             {
                 Lock.ExitWriteLock();
             }
+
+            TValue cached = cacheHandle.WeakValue;
+            cacheHandle.SetValue(null);
+
+            if (null == cached)
+                return false;
+
+            if (cached is IDisposable)
+                ((IDisposable)cached).Dispose();
 
             return true;
         }
@@ -207,7 +272,7 @@ namespace ObjectCloud.Common
             Lock.EnterWriteLock();
             try
             {
-                foreach (CacheHandle ch in new LinkedList<CacheHandle>(Dictionary.Values))
+                foreach (CacheHandle ch in Enumerable<CacheHandle>.FastCopy(Dictionary.Values))
                 {
                     TValue value = ch.WeakValue;
 
@@ -217,6 +282,7 @@ namespace ObjectCloud.Common
                 }
 
                 Dictionary.Clear();
+                CleanQueue = new LockFreeQueue<KeyValuePair<TKey, CacheHandle>>();
             }
             finally
             {
@@ -231,12 +297,12 @@ namespace ObjectCloud.Common
         {
             get
             {
-                LinkedList<CacheHandle> toEnumerate;
+                IEnumerable<CacheHandle> toEnumerate;
 
                 Lock.EnterReadLock();
                 try
                 {
-                    toEnumerate = new LinkedList<CacheHandle>(Dictionary.Values);
+                    toEnumerate = Enumerable<CacheHandle>.FastCopy(Dictionary.Values);
                 }
                 finally
                 {
@@ -258,7 +324,7 @@ namespace ObjectCloud.Common
         /// </summary>
         /// <typeparam name="TKey"></typeparam>
         /// <typeparam name="TValue"></typeparam>
-        private class CacheHandle : ICacheHandle
+        private new class CacheHandle : Cache.CacheHandle
         {
             /// <summary>
             /// The parent cache
@@ -294,62 +360,6 @@ namespace ObjectCloud.Common
                 get { return (TValue)WeakReference.Target; }
             }
 
-            /// <summary>
-            /// Helper to help the cache get rid of stale CacheHandles, returns false if the object is no longer cached and completely collected
-            /// </summary>
-            /// <returns>True if the object should be removed from HandlesPendingGC</returns>
-            public bool RemoveIfNotAlive()
-            {
-                if (NumAccesses > 0)
-                    return true;
-
-                if (!WeakReference.IsAlive)
-                {
-                    ParentCache.Lock.EnterWriteLock();
-                    try
-                    {
-                        ParentCache.Dictionary.Remove(Key);
-                    }
-                    finally
-                    {
-                        ParentCache.Lock.ExitWriteLock();
-                    }
-
-                    return true;
-                }
-
-                return false;
-            }
-
-            /// <summary>
-            /// The number of times this object has been accessed, minus the times the object was removed from the access queue.  When this is zero, the cache will no longer reference the object
-            /// </summary>
-            int NumAccesses = 0;
-
-            /// <summary>
-            /// Increments the number of accesses to this object, thus helping fix its place in RAM
-            /// </summary>
-            public void IncrementAccesses()
-            {
-                Interlocked.Increment(ref NumAccesses);
-                Cache.MonitorCacheHandle(this);
-            }
-
-            /// <summary>
-            /// Decrements the number of accesses to this object, thus helping free it from in RAM
-            /// </summary>
-            /// <returns>True if the cache handle is no longer holding a strong reference</returns>
-            public bool DecrementAccesses()
-            {
-                if (0 == Interlocked.Decrement(ref NumAccesses))
-                {
-                    Value = null;
-                    return true;
-                }
-
-                return false;
-            }
-
             public override bool Equals(object obj)
             {
                 if (obj is CacheHandle)
@@ -364,6 +374,11 @@ namespace ObjectCloud.Common
             }
 
             /// <summary>
+            /// This is set to false once the CacheHandle is invalid and shouldn't construct new objects
+            /// </summary>
+            internal bool Valid = true;
+
+            /// <summary>
             /// Gets the value, constructing it if needed
             /// </summary>
             internal TValue GetValue(TConstructorArg constructorArg)
@@ -372,39 +387,36 @@ namespace ObjectCloud.Common
                 TValue value = (TValue)WeakReference.Target;
                 if (null != value)
                 {
-                    IncrementAccesses();
                     Value = value;
 
-#if DEBUG
-                    if (null == value)
-                        throw new NullReferenceException("Error in cache");
-#endif
+                    Cache.MoveToHeadOfCache(this);
 
-                    return value;
+                    return Value;
                 }
 
                 using (TimedLock.Lock(this))
-                {
-                    // A context switch could construct the value in another thread
-                    value = (TValue)WeakReference.Target;
-
-                    if (null == value)
+                    if (Valid)
                     {
-                        // Try to force cleaning up memory if we run out
-                        value = ParentCache._CreateForCache(Key, constructorArg);
+                        // A context switch could construct the value in another thread
+                        value = (TValue)WeakReference.Target;
+
+                        if (null == value)
+                        {
+                            // Try to force cleaning up memory if we run out
+                            value = ParentCache._CreateForCache(Key, constructorArg);
+                            WeakReference.Target = value;
+
+                            Cache.AddToCache(this);
+                        }
+                        else
+                            Cache.MoveToHeadOfCache(this);
+
                         Value = value;
-                        WeakReference.Target = value;
+                        return Value;
                     }
-
-                    IncrementAccesses();
-
-#if DEBUG
-                    if (null == value)
-                        throw new NullReferenceException("Error in cache");
-#endif
-
-                    return value;
-                }
+                    else
+                        // The cache handle was invalidated and shouldn't construct a new object
+                        return null;
             }
 
             /// <summary>
@@ -419,10 +431,18 @@ namespace ObjectCloud.Common
                     WeakReference.Target = value;
 
                     if (null != value)
-                        IncrementAccesses();
-
-                    // There's no clean way to remove values from the reference cache...  We can just hope that this gets collected!
+                        Cache.AddToCache(this);
                 }
+            }
+
+            internal override void AllowCollect()
+            {
+                Value = null;
+            }
+
+            internal bool IsAlive
+            {
+                get { return WeakReference.IsAlive; }
             }
         }
     }
@@ -445,6 +465,11 @@ namespace ObjectCloud.Common
             set { Cache._PercentOfMaxWorkingSet = value; }
         }
         private static double _PercentOfMaxWorkingSet = 0.75;
+
+        /// <summary>
+        /// Sub-thread for managing memory.  Allows the queue of memory to be managed without blocking the requesting threads, and in a synchronized manner
+        /// </summary>
+        protected static DelegateQueue DelegateQueue = new DelegateQueue("Cache manager");
 
         /// <summary>
         /// These values tune the cache with regard to when it will start de-referencing objects.  For each value in here, if the process takes more memory then the value, an object
@@ -506,32 +531,117 @@ namespace ObjectCloud.Common
         /// <summary>
         /// The number of objects to dequeue every time there is a cache hit
         /// </summary>
-        public static uint NumObjectsToDequeue = 0;
+        private static uint NumObjectsToDequeue = 0;
 
         /// <summary>
-        /// A queue of all of the cached objects.  Weak references are used in case a cache instance removes an item, or in case a cache instance is de-referenced.
+        /// The head of a doubly-linked queue of all cache handles
         /// </summary>
-        private static LockFreeQueue_WithCount<WeakReference> CachedReferences = new LockFreeQueue_WithCount<WeakReference>();
-
-        private static GenericVoid CleanupCacheDelegate = new GenericVoid(CleanupCache);
+        private static CacheHandle Head = null;
 
         /// <summary>
-        /// Adds the cache handle to the set of monitored cache handles in a non-blocking way
+        /// The tail of a double-linked queue of all cache handles
         /// </summary>
-        /// <param name="toMonitor"></param>
-        internal static void MonitorCacheHandle(ICacheHandle toMonitor)
+        private static CacheHandle Tail = null;
+
+        private static long NumCacheReferences = 0;
+
+        /// <summary>
+        /// Moves the cache handle to the head of the cache queue
+        /// </summary>
+        /// <param name="cacheHandle"></param>
+        protected static void MoveToHeadOfCache(CacheHandle cacheHandle)
         {
-            CachedReferences.Enqueue(new WeakReference(toMonitor));
+            DelegateQueue.QueueUserWorkItem(MoveToHeadOfCacheImpl, cacheHandle);
+        }
 
-            WeakReference wr;
-            for (uint ctr = 0; ctr < NumObjectsToDequeue; ctr++)
-                // Don't clean if we haven't reached the minimum
-                if (CachedReferences.Count > MinCacheReferences)
-                    if (CachedReferences.Dequeue(out wr))
-                        Decrement(wr);
+        private static void MoveToHeadOfCacheImpl(object state)
+        {
+            CacheHandle cacheHandle = (CacheHandle)state;
 
-            if (0 == Interlocked.Increment(ref CacheHitCount) % CacheHitsPerInspection)
-                CleanupCacheDelegate.BeginInvoke(null, null);
+            // The algorithm screws up when it's passed the head
+            if (cacheHandle == Head)
+                return;
+
+            // If this handle isn't in the cache, increase the count
+            if ((null == cacheHandle.Next) && (null == cacheHandle.Previous) && (Head != cacheHandle))
+                NumCacheReferences++;
+
+            else
+            {
+                // Remove from the cache
+
+                if (Tail == cacheHandle)
+                    Tail = cacheHandle.Previous;
+
+                // Remove from the list
+                if (null != cacheHandle.Previous)
+                    cacheHandle.Previous.Next = cacheHandle.Next;
+
+                if (null != cacheHandle.Next)
+                    cacheHandle.Next.Previous = cacheHandle.Previous;
+            }
+
+            // Set up cache handle as head
+            cacheHandle.Previous = null;
+            cacheHandle.Next = Head;
+
+            if (null != Head)
+                Head.Previous = cacheHandle;
+
+            Head = cacheHandle;
+
+            if (null == Tail)
+                Tail = cacheHandle;
+        }
+
+        /// <summary>
+        /// Adds the cache handle to the cache, removing the least-recently-used cache handles from the cache
+        /// </summary>
+        /// <param name="cacheHandle"></param>
+        protected static void AddToCache(CacheHandle cacheHandle)
+        {
+            // Queue a cache cleanup, if needed
+            if ((Interlocked.Increment(ref CacheHitCount) % _CacheHitsPerInspection) == 0)
+                DelegateQueue.QueueUserWorkItem(ManageCacheDeallocationRate);
+
+            DelegateQueue.QueueUserWorkItem(MoveToHeadOfCacheImpl, cacheHandle);
+            DelegateQueue.QueueUserWorkItem(DequeueImpl);
+        }
+
+        /// <summary>
+        /// Dequeues from the cache
+        /// </summary>
+        /// <param name="state"></param>
+        private static void DequeueImpl(object state)
+        {
+            // If there are too many objects in the cache, then extra need to be dequeued
+            long numObjectsToDequeue = NumCacheReferences - MaxCacheReferences;
+            if (numObjectsToDequeue > 0)
+                numObjectsToDequeue += NumObjectsToDequeue;
+            else
+                numObjectsToDequeue = NumObjectsToDequeue;
+
+            for (int ctr = 0; ctr < numObjectsToDequeue; ctr++)
+                if (NumCacheReferences > MinCacheReferences)
+                    if (null != Tail)
+                    {
+                        CacheHandle tail = Tail;
+
+                        Tail = tail.Previous;
+
+                        if (null != Tail)
+                            Tail.Next = null;
+                        else
+                            Head = null;
+
+                        tail.AllowCollect();
+
+                        // In case the handle is re-used, setting these both to null ensures that it will be counted as a new handle
+                        tail.Next = null;
+                        tail.Previous = null;
+
+                        NumCacheReferences--;
+                    }
         }
 
         /// <summary>
@@ -544,155 +654,119 @@ namespace ObjectCloud.Common
         /// </summary>
         private static int LastCleanCollectionCount = GC.CollectionCount(GC.MaxGeneration);
 
-		/// <summary>
-		/// Synchronizes CleanupCache 
-		/// </summary>
-		internal static object CleanupCacheKey = new object();
-		
         /// <summary>
-        /// Adds a cache handle to the queue, and removes any references if memory use is getting high
+        /// Manages deallocation of memory
         /// </summary>
-        internal static void CleanupCache()
+        internal static void ManageCacheDeallocationRate(object state)
         {
-            // TODO:  So, this really should be a doubly-linked list that always moves itself to the head once it's referenced.
-            // It should somehow use weak references to the containing Cache object so it isn't kept alive.  The Cache object's finalizer could
-            // remove all of its entries, thus making cleanup smoother.
-            // Likewise, when switching to doubly-linked-lists, the system should be less likely to de-reference an object when
-            // moving within the doubly-linked list; as opposed to creating a new reference.
-
             // Only let one thread perform cleanup at a time, and don't let blocked iterations sit around
-            if (Monitor.TryEnter(CleanupCacheKey))
-                try
+            try
+            {
+                long maxMemory;
+
+                if (null == MaxMemory)
                 {
-                    // Get rid of any excess cahced references
-                    WeakReference wr;
-                    while (CachedReferences.Count > MaxCacheReferences)
-                        if (CachedReferences.Dequeue(out wr))
-                            Decrement(wr);
-
                     double maxWorkingSet = PercentOfMaxWorkingSet * (Convert.ToDouble(MyProcess.MaxWorkingSet.ToInt64()) / 0.001024);
+                    maxMemory = Convert.ToInt64(maxWorkingSet);
+                }
+                else
+                    maxMemory = MaxMemory.Value;
 
-                    long maxMemory = null != MaxMemory ? MaxMemory.Value : Convert.ToInt64(maxWorkingSet);
+                long processMemorySize = GC.GetTotalMemory(false);
 
-                    long processMemorySize = GC.GetTotalMemory(false);
+                // If too much memory is used, force a GC to get a better estimate
+                if (processMemorySize >= maxMemory)
+                    processMemorySize = GC.GetTotalMemory(true);
 
-                    // If too much memory is used, force a GC to get a better estimate
-                    if (processMemorySize >= maxMemory)
+                if (processMemorySize >= maxMemory)
+                {
+                    log.WarnFormat("Dumping Cache:\tProcess Memory Estimate: {0}\n\tMax Memory: {1}\n\tMax Working Set: {2}",
+                        processMemorySize, maxMemory, MyProcess.MaxWorkingSet);
+
+                    NumObjectsToDequeue = Convert.ToUInt32(NumCacheReferences / 10);
+
+                    do
                     {
+                        DequeueImpl(null);
                         processMemorySize = GC.GetTotalMemory(true);
-
-                        if (processMemorySize >= maxMemory)
-                        {
-                            log.WarnFormat("Dumping Cache:\tProcess Memory: {0}\n\tMax Memory: {1}\n\tMax Working Set: {2}",
-                                processMemorySize, maxMemory, MyProcess.MaxWorkingSet);
-
-                            while ((CachedReferences.Count > MinCacheReferences) && (GC.GetTotalMemory(false) > processMemorySize))
-                                if (CachedReferences.Dequeue(out wr))
-                                {
-                                    Decrement(wr);
-
-                                    if (CachedReferences.Count <= MinCacheReferences)
-                                        GC.Collect();
-                                }
-                        }
                     }
+                    while ((NumCacheReferences > MinCacheReferences) && (processMemorySize > maxMemory));
+                }
 
-                    IEnumerable<long> memorySizeLimits;
+                IEnumerable<long> memorySizeLimits;
 
-                    if (null != MemorySizeLimits)
-                        memorySizeLimits = MemorySizeLimits;
-                    else
-                        memorySizeLimits = new long[]
+                if (null != MemorySizeLimits)
+                    memorySizeLimits = MemorySizeLimits;
+                else
+                    memorySizeLimits = new long[]
                     {
-                        Convert.ToInt64(maxWorkingSet * 0.6),
-                        Convert.ToInt64(maxWorkingSet * 0.8),
-                        Convert.ToInt64(maxWorkingSet * 0.85),
-                        Convert.ToInt64(maxWorkingSet * 0.9),
-                        Convert.ToInt64(maxWorkingSet * 0.95)
+                        (maxMemory * 60) / 100,
+                        (maxMemory * 80) / 100,
+                        (maxMemory * 85) / 100,
+                        (maxMemory * 90) / 100,
+                        (maxMemory * 95) / 100
                     };
 
-                    uint numObjectsToDequeue = 0;
-                    foreach (long memoryLevel in memorySizeLimits)
-                        if (processMemorySize >= memoryLevel)
-                            numObjectsToDequeue++;
+                uint numObjectsToDequeue = 0;
+                foreach (long memoryLevel in memorySizeLimits)
+                    if (processMemorySize >= memoryLevel)
+                        numObjectsToDequeue++;
 
-                    NumObjectsToDequeue = numObjectsToDequeue;
-
-                    // If the garbage collector has run, clean up dead weak references
-                    try
-                    {
-                        if (LastCleanCollectionCount != GC.CollectionCount(GC.MaxGeneration))
-                        {
-                            CachedReferences.ScanForRemoval(delegate(WeakReference wrr)
-                            {
-                                return wrr.IsAlive;
-                            });
-
-                            // Next, look at all of the cache handles that are pending GC.  If their cached value is collected, then
-                            // remove the handle completely from memory
-                            HandlesPendingGC.ScanForRemoval(delegate(WeakReference wrr)
-                            {
-                                ICacheHandle cacheHandle = (ICacheHandle)wrr.Target;
-
-                                if (null == cacheHandle)
-                                    return false;
-
-                                return !cacheHandle.RemoveIfNotAlive();
-                            });
-
-                            LastCleanCollectionCount = GC.CollectionCount(GC.MaxGeneration);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        log.Error("Error cleaning out old handles", e);
-                    }
-                }
-                catch (Exception e)
-                {
-                    log.Error("Error in the RAM cache!!!", e);
-                }
-                finally
-                {
-                    Monitor.Exit(CleanupCacheKey);
-                }
+                NumObjectsToDequeue = numObjectsToDequeue;
+            }
+            catch (Exception e)
+            {
+                log.Error("Error in the RAM cache!!!", e);
+            }
         }
 
         /// <summary>
-        /// Decrements a reference to a cache handle
+        /// Clears all in-memory cached objects, except those which have strong references elsewhere
         /// </summary>
-        /// <param name="cacheHandleWR"></param>
-        private static void Decrement(WeakReference cacheHandleWR)
+        public static void ReleaseAllCachedMemory()
         {
-            ICacheHandle cacheHandle = (ICacheHandle)cacheHandleWR.Target;
+            object signal = new object();
 
-            if (null != cacheHandle)
-                if (cacheHandle.DecrementAccesses())
-                    HandlesPendingGC.Enqueue(new WeakReference(cacheHandle));
+            lock (signal)
+            {
+                DelegateQueue.Cancel();
+                DelegateQueue.QueueUserWorkItem(ReleaseAllCachedMemoryImpl, signal);
+
+                Monitor.Wait(signal, 3000);
+            }
+        }
+
+        private static void ReleaseAllCachedMemoryImpl(object signal)
+        {
+            while (null != Head)
+            {
+                Head.AllowCollect();
+                Head = Head.Next;
+            }
+
+            Tail = null;
+
+            GC.Collect(GC.MaxGeneration);
+
+            ManageCacheDeallocationRate(null);
+
+            lock (signal)
+                Monitor.Pulse(signal);
         }
 
         /// <summary>
-        /// All of the handles that are waiting for a GC
+        /// Represents a doubly-linked list of items that are cached
         /// </summary>
-        private static LockFreeQueue<WeakReference> HandlesPendingGC = new LockFreeQueue<WeakReference>();
-    }
+        protected abstract class CacheHandle
+        {
+            internal CacheHandle Next = null;
+            internal CacheHandle Previous = null;
 
-    /// <summary>
-    /// Interface that allows a generic CacheHandle to utilize a common cleanup system
-    /// </summary>
-    internal interface ICacheHandle
-    {
-        /// <summary>
-        /// Decrements the number of accesses to this object, thus helping free it from in RAM
-        /// </summary>
-        /// <returns>True if the cache handle is no longer holding a strong reference</returns>
-        bool DecrementAccesses();
-
-        /// <summary>
-        /// Instructs the CacheHandle to remove itself from its parent cache if its object is no longer cached and it's been garbage collected
-        /// </summary>
-        /// <returns>True if monitoring should stop</returns>
-        bool RemoveIfNotAlive();
+            /// <summary>
+            /// Indicates that the cache handle will only keep a weak reference to the object, thus allowing it be collected
+            /// </summary>
+            internal abstract void AllowCollect();
+        }
     }
 
     /// <summary>

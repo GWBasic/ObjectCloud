@@ -446,6 +446,32 @@ namespace ObjectCloud.Interfaces.WebServer
 
                 return webResults;
             }
+            catch (OutOfMemoryException oome)
+            {
+                // If there's an out-of-memory error, clear the cache and log it
+                long maxMemory = GC.GetTotalMemory(false);
+
+                /*/ Set the max memory to be 70% of what's being used
+                long potentialMaxMemory = (GC.GetTotalMemory(true) * 7) / 10;
+                if (null == Cache.MaxMemory)
+                    Cache.MaxMemory = potentialMaxMemory;
+                else if (potentialMaxMemory <= Cache.MaxMemory)
+                    Cache.MaxMemory = potentialMaxMemory;*/
+
+                Cache.ReleaseAllCachedMemory();
+                log.Warn("Out-of-memory, estimated memory usage before trashing the cache" + maxMemory.ToString(), oome);
+
+                Cache.MaxMemory = (maxMemory * 7) / 10;
+                Cache.MemorySizeLimits = new long[]
+                {
+                    (maxMemory * 2) / 10,
+                    (maxMemory * 3) / 10,
+                    (maxMemory * 4) / 10,
+                    (maxMemory * 5) / 10
+                };
+
+                return WebResults.From(Status._500_Internal_Server_Error);
+            }
             catch (JsonDeserializationException e)
             {
                 log.Error(e);

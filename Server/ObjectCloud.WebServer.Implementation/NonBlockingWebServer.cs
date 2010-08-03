@@ -66,6 +66,8 @@ namespace ObjectCloud.WebServer.Implementation
             {
                 Socket socket = TcpListener.EndAcceptSocket(ar);
 
+                Busy.BlockWhileBusy();
+
                 log.Info("Accepted connection form: " + socket.RemoteEndPoint);
 
                 NonBlockingSocketReader socketReader = new NonBlockingSocketReader(this, socket);

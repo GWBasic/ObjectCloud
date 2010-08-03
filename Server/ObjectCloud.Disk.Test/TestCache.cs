@@ -10,6 +10,7 @@ using System.Threading;
 using NUnit.Framework;
 
 using ObjectCloud.Common;
+using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Spring.Config;
 
@@ -18,6 +19,8 @@ namespace ObjectCloud.Disk.Test
     [TestFixture]
     public class TestCache
     {
+        private Set<long> CreatedObjects;
+
         /// <summary>
         /// Object that holds some memory in the cache
         /// </summary>
@@ -60,9 +63,10 @@ namespace ObjectCloud.Disk.Test
             long? oldMaxMemory = ObjectCloud.Common.Cache.MaxMemory;
             int oldCacheHitsPerInspection = ObjectCloud.Common.Cache.CacheHitsPerInspection;
 
-            ObjectCloud.Common.Cache.MemorySizeLimits = new long[] { 1024 * 1024 * 30, 1024 * 1024 * 100, 1024 * 1024 * 110 };
-            ObjectCloud.Common.Cache.MaxMemory = 1024 * 1024 * 120;
+            ObjectCloud.Common.Cache.MemorySizeLimits = new long[] { 210959812, 3000000000, 4000000000 };
+            ObjectCloud.Common.Cache.MaxMemory = 2 * 210959812;
             ObjectCloud.Common.Cache.CacheHitsPerInspection = 100;
+            CreatedObjects = new Set<long>();
 
             try
             {
@@ -86,6 +90,7 @@ namespace ObjectCloud.Disk.Test
                 ObjectCloud.Common.Cache.MemorySizeLimits = oldMemorySizeLimits;
                 ObjectCloud.Common.Cache.MaxMemory = oldMaxMemory;
                 ObjectCloud.Common.Cache.CacheHitsPerInspection = oldCacheHitsPerInspection;
+                CreatedObjects = null;
             }
 
             if (null != Exception)
@@ -94,6 +99,9 @@ namespace ObjectCloud.Disk.Test
 
         CachedObject CreateForCache(long val)
         {
+            Assert.IsFalse(CreatedObjects.Contains(val));
+            CreatedObjects.Add(val);
+
             CachedObject toReturn = new CachedObject();
             toReturn.Val = val;
 
@@ -106,6 +114,8 @@ namespace ObjectCloud.Disk.Test
             {
                 do
                 {
+                    Busy.BlockWhileBusy();
+
                     long val = Interlocked.Increment(ref NumIterations) / 4;
                     CachedObject cacheVal = Cache[val];
                     Assert.AreEqual(val, cacheVal.Val);

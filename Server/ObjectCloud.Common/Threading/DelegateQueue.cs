@@ -63,11 +63,26 @@ namespace ObjectCloud.Common.Threading
                     Monitor.Pulse(pulser);
         }
 
-        LockFreeQueue<QueuedDelegate> QueuedDelegates = new LockFreeQueue<QueuedDelegate>();
+        LockFreeQueue_WithCount<QueuedDelegate> QueuedDelegates = new LockFreeQueue_WithCount<QueuedDelegate>();
 
         private bool KeepRunning = true;
 
         private string Name;
+
+        /// <summary>
+        /// If there are more queued delegates then this threshold, the server will be marked as busy and requests throttled
+        /// </summary>
+        public int BusyThreshold
+        {
+            get { return _BusyThreshold; }
+            set { _BusyThreshold = value; }
+        }
+        private int _BusyThreshold = 1000;
+
+        /// <summary>
+        /// Set to 1 if BeginBusy was ever called
+        /// </summary>
+        private int BeganBusy = 0;
 
         /// <summary>
         /// Prints the text to the console.  Does not block.  All text is queued up to be printed
@@ -97,6 +112,10 @@ namespace ObjectCloud.Common.Threading
                 lock (pulser)
                     if (NumSuspendedThreads > 0)
                         Monitor.Pulse(pulser);
+
+            if (QueuedDelegates.Count > BusyThreshold)
+                if (0 == Interlocked.CompareExchange(ref BeganBusy, 1, 0))
+                    Busy.BeginBusy();
         }
 
         /// <summary>
@@ -140,6 +159,11 @@ namespace ObjectCloud.Common.Threading
                 QueuedDelegate queuedDelegate;
                 while (QueuedDelegates.Dequeue(out queuedDelegate))
                     queuedDelegate.Callback(queuedDelegate.state);
+
+                // If throttling requests was started, end throttling requests
+                if (BeganBusy > 0)
+                    if (1 == Interlocked.CompareExchange(ref BeganBusy, 0, 1))
+                        Busy.ExitBusy();
             }
         }
 
@@ -167,6 +191,14 @@ namespace ObjectCloud.Common.Threading
 
             foreach (Thread thread in Threads)
                 thread.Join();
+        }
+
+        /// <summary>
+        /// Cancels all of the queued delegates, except for ones that are currently running
+        /// </summary>
+        public void Cancel()
+        {
+            QueuedDelegates = new LockFreeQueue_WithCount<QueuedDelegate>();
         }
     }
 }

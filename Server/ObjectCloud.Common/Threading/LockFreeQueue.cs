@@ -77,6 +77,12 @@ namespace ObjectCloud.Common.Threading
 
         }
 
+        public void EnqueueAll(IEnumerable<T> items)
+        {
+            foreach (T item in items)
+                Enqueue(item);
+        }
+
         /// <summary>
         /// Occurs whenever an item is added to an empty queue.  This is useful for starting threads that run while a queue has items
         /// </summary>

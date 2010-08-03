@@ -89,6 +89,7 @@
     <Compile Include="SRandom.cs" />
     <Compile Include="DictionaryFunctions.cs" />
     <Compile Include="StringParser.cs" />
+    <Compile Include="Threading\Busy.cs" />
     <Compile Include="Threading\DelegateQueue.cs" />
     <Compile Include="Threading\LockFreeQueue.cs" />
     <Compile Include="Threading\LockFreeStack.cs" />
