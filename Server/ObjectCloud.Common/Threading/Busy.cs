@@ -52,28 +52,32 @@ namespace ObjectCloud.Common.Threading
         }
 
         /// <summary>
+        /// Syncronizes starting / stopping of busy
+        /// </summary>
+        private static object BeginEndKey = new object();
+
+        /// <summary>
         /// Indicates that a thread needs other system operations halted
         /// </summary>
         public static void BeginBusy()
         {
-            if (1 == Interlocked.Increment(ref BusyCount))
+            lock (BeginEndKey)
             {
-                // Spin in the event that any other threads are ending the busy thread
-                while (null != BlockThread)
-                    Thread.Sleep(0);
+                if (0 == BusyCount)
+                    // start busy thread
+                    lock (BusyThreadStartedPulser)
+                    {
+                        Thread thread = new Thread(BusyThread);
+                        thread.Name = "Busy blocker";
+                        thread.Priority = ThreadPriority.Highest;
+                        thread.Start();
 
-                // start busy thread
-                lock (BusyThreadStartedPulser)
-                {
-                    Thread thread = new Thread(BusyThread);
-                    thread.Name = "Busy blocker";
-                    thread.Priority = ThreadPriority.Highest;
-                    thread.Start();
+                        BlockThread = thread;
 
-                    BlockThread = thread;
+                        Monitor.Wait(BusyThreadStartedPulser);
+                    }
 
-                    Monitor.Wait(BusyThreadStartedPulser);
-                }
+                BusyCount++;
             }
         }
 
@@ -82,13 +86,17 @@ namespace ObjectCloud.Common.Threading
         /// </summary>
         public static void ExitBusy()
         {
-            if (0 == Interlocked.Decrement(ref BusyCount))
+            lock (BeginEndKey)
             {
-                lock (EndBusyThreadPulser)
-                {
-                    Monitor.Pulse(EndBusyThreadPulser);
-                    BlockThread = null;
-                }
+                BusyCount--;
+
+                if (0 == BusyCount)
+                    // If no more threads are busy, end the busy thread
+                    lock (EndBusyThreadPulser)
+                    {
+                        Monitor.Pulse(EndBusyThreadPulser);
+                        BlockThread = null;
+                    }
             }
         }
 

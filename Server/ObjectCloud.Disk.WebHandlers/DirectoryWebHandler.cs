@@ -704,7 +704,14 @@ namespace ObjectCloud.Disk.WebHandlers
                 ThreadPool.QueueUserWorkItem(
                     delegate(object state)
                     {
-                        UpdateConnectionFiles((IQueuingReliableCometTransport)state, files);
+                        try
+                        {
+                            UpdateConnectionFiles((IQueuingReliableCometTransport)state, files);
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Error("Error occured while sending comet update of files after a directory changed", ex);
+                        }
                     },
                     channel);
         }
