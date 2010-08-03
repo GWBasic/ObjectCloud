@@ -1772,11 +1772,11 @@
             Helps in creating a file
             </summary>
             <param name="webConnection"></param>
-            <param name="FileName"></param>
+            <param name="FileName">Filename, this or fileNameSuggestion must be specified</param>
             <param name="extension"></param>
-            <param name="fileNameSuggestion"></param>
+            <param name="fileNameSuggestion">Suggestion for a filename.  This can be any string, when specified, extension must also be specified.</param>
             <param name="FileType"></param>
-            <param name="ErrorIfExists"></param>
+            <param name="ErrorIfExists">True to throw an error if there already is an existing file with the same filename.  False if ObjectCloud should silently return a wrapper if the file already exists.  If fileNameSuggestion is used instead of FileName, then if there is an existing filename with the first generated filename, then it will be returned instead of created.</param>
             <returns></returns>
         </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.DetermineFileType(System.String)">
@@ -1786,12 +1786,13 @@
             <param name="extension"></param>
             <returns></returns>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.GenerateFilename(System.String,System.String)">
+        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.GenerateFilename(System.String,System.String,System.Boolean)">
             <summary>
             Assists in generating a filename
             </summary>
             <param name="extension"></param>
             <param name="fileNameSuggestion"></param>
+            <param name="unique"></param>
             <returns></returns>
         </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.DeleteFile(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">

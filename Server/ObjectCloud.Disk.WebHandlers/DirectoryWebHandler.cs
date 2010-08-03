@@ -155,6 +155,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// </summary>
         /// <param name="extension"></param>
         /// <param name="fileNameSuggestion"></param>
+        /// <param name="unique"></param>
         /// <returns></returns>
         private string GenerateFilename(string extension, string fileNameSuggestion, bool unique)
         {
