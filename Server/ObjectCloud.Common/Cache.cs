@@ -89,7 +89,7 @@ namespace ObjectCloud.Common
 #endif
 		
 		/// <summary>
-		/// Every 100 cache hits dead items are looked for
+		/// Every 250 cache hits dead items are looked for
 		/// </summary>
 		private int CleanCtr = 0;
 
@@ -103,8 +103,8 @@ namespace ObjectCloud.Common
             Lock.EnterReadLock();
             try
             {
-				if (0 == (Interlocked.Increment(ref CleanCtr) % 100))
-					DelegateQueue.QueueUserWorkItem(RemoveCollectedCacheHandle, null);
+				if (0 == (Interlocked.Increment(ref CleanCtr) % 250))
+					DelegateQueue.QueueUserWorkItem(RemoveCollectedCacheHandles, null);
 				
                 CacheHandle cacheHandle;
                 if (Dictionary.TryGetValue(key, out cacheHandle))
@@ -138,57 +138,61 @@ namespace ObjectCloud.Common
 		/// This little bit checks a cache handle to see if it's alive, and if it's not, deletes it
         /// Basicaly, every time the cache is hit, some randome cache handle is checked to see if it's dead
 		/// </summary>
-        private void RemoveCollectedCacheHandle(object state)
+        private void RemoveCollectedCacheHandles(object state)
         {
-	        CacheHandle cacheHandle;
-	        try
+            try
             {
-    		    KeyValuePair<TKey, CacheHandle> toCheck;
-		        if (CleanQueue.Dequeue(out toCheck))
-        		{
-		            if (!toCheck.Value.IsAlive)
-		                if (Dictionary.TryGetValue(toCheck.Key, out cacheHandle))
-        		        {
-                		    // If another thread has the cache handle locked, then it's being ressurected and doesn't need to be deleted
-		                    if (Monitor.TryEnter(cacheHandle))
-        		                try
-                		        {
-                        		    Lock.EnterWriteLock();
+                // First, figure out which items might be ready for removal
 
-		                            try
-        		                    {
-                		                if (!cacheHandle.IsAlive)
-                        		            Dictionary.Remove(toCheck.Key);
+                LinkedList<TKey> toRemove = new LinkedList<TKey>();
 
-		                                cacheHandle.Valid = false;
-        		                    }
-                		            finally
-                        		    {
-		                                Lock.ExitWriteLock();
-        		                    }
-               			        }
-			                	finally
-	            	            {
-    	            	            Monitor.Exit(cacheHandle);
-        	            	    }
-            	    	}
-				}
-				else
-				{
-		            Lock.EnterReadLock();
-		            try
-		            {
-						CleanQueue.EnqueueAll(Dictionary);
-		            }
-		            finally
-		            {
-		                Lock.ExitReadLock();
-		            }
-				}
+                Lock.EnterReadLock();
+                try
+                {
+                    foreach (KeyValuePair<TKey, CacheHandle> kvp in Dictionary)
+                        if (!(kvp.Value.IsAlive))
+                            toRemove.AddLast(kvp.Key);
+                }
+                finally
+                {
+                    Lock.ExitReadLock();
+                }
+
+                // Next, remove them
+                if (toRemove.Count > 0)
+                {
+                    Lock.EnterWriteLock();
+
+                    try
+                    {
+                        CacheHandle cacheHandle;
+                        foreach (TKey key in toRemove)
+                            if (Dictionary.TryGetValue(key, out cacheHandle))
+                            {
+                                // If another thread has the cache handle locked, then it's being ressurected and doesn't need to be deleted
+                                if (Monitor.TryEnter(cacheHandle))
+                                    try
+                                    {
+                                        if (!cacheHandle.IsAlive)
+                                            Dictionary.Remove(key);
+
+                                        cacheHandle.Valid = false;
+                                    }
+                                    finally
+                                    {
+                                        Monitor.Exit(cacheHandle);
+                                    }
+                            }
+                    }
+                    finally
+                    {
+                        Lock.ExitWriteLock();
+                    }
+                }
 			}
             catch (Exception e)
             {
-                log.Warn(e);
+                log.Warn("Exception when cleaning cache", e);
             }
         }
 
