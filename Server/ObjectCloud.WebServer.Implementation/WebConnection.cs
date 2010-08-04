@@ -180,10 +180,10 @@ namespace ObjectCloud.WebServer.Implementation
                             string redirectUrl = "http://" + WebServer.FileHandlerFactoryLocator.HostnameAndPort + RequestedFile;
 
                             if (GetParameters.Count > 0)
-								if (redirectUrl.Contains("?"))
-	                                redirectUrl += "&" + GetParameters.ToURLEncodedString();
-								else
-        		                        redirectUrl += "?" + GetParameters.ToURLEncodedString();
+                                if (redirectUrl.Contains("?"))
+                                    redirectUrl += "&" + GetParameters.ToURLEncodedString();
+                                else
+                                    redirectUrl += "?" + GetParameters.ToURLEncodedString();
 
                             webResults = WebResults.Redirect(redirectUrl);
                         }
@@ -226,17 +226,26 @@ namespace ObjectCloud.WebServer.Implementation
                 catch (WebResultsOverrideException wroe)
                 {
                     log.Error("WebResultsOverrideException exception while handling a web connection", wroe);
-                    SendResults(wroe.WebResults);
+
+                    using (TimedLock.Lock(_Connected))
+                        if (_Connected.Value)
+                            SendResults(wroe.WebResults);
                 }
                 catch (NotImplementedException ne)
                 {
                     log.Error("NotImplementedUnhandled exception while handling a web connection", ne);
-                    SendResults(WebResults.From(Status._501_Not_Implemented));
+
+                    using (TimedLock.Lock(_Connected))
+                        if (_Connected.Value)
+                            SendResults(WebResults.From(Status._501_Not_Implemented));
                 }
                 catch (Exception e)
                 {
                     log.Error("Unhandled exception while handling a web connection", e);
-                    SendResults(WebResults.From(Status._500_Internal_Server_Error, "An unhandled error occured"));
+
+                    using (TimedLock.Lock(_Connected))
+                        if (_Connected.Value)
+                            SendResults(WebResults.From(Status._500_Internal_Server_Error, "An unhandled error occured"));
                 }
             }
             finally
