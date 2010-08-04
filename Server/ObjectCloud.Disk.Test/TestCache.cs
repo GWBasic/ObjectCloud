@@ -114,7 +114,7 @@ namespace ObjectCloud.Disk.Test
             {
                 do
                 {
-                    Busy.BlockWhileBusy();
+                    Busy.BlockWhileBusy("test thread");
 
                     long val = Interlocked.Increment(ref NumIterations) / 4;
                     CachedObject cacheVal = Cache[val];
