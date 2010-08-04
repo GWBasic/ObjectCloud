@@ -29,7 +29,10 @@ require("./objectcloud").connect(
  * (C) 2010 Andrew Rondeau
  * Released under the SimPL 2.0 license, see http://opensource.org/licenses/simpl-2.0.html
  */
- 
+
+// Node doesn't put Content-Length into headers, but ObjectCloud requires it
+Buffer = require('buffer').Buffer;
+
 function alert(message)
 {
 	console.log(message);
@@ -70,9 +73,13 @@ function createObjectCloudConnection(getObjectCloudClient, objectcloudRequestMet
 
 			send: function(payload)
 			{
-				if (null != payload)
-					this.headers['Content-Length'] = payload.length;
+				console.log('sending');
 
+				if (null != payload)
+					this.headers['Content-Length'] = Buffer.byteLength(payload, 'utf8');
+				else if (this.webMethod == 'POST')
+					console.log('WARNING!!!  POSTing NULL DATA');
+				
 				request = getObjectCloudClient().request(
 					this.webMethod,
 					this.url,
@@ -83,19 +90,25 @@ function createObjectCloudConnection(getObjectCloudClient, objectcloudRequestMet
 	
 				request.end();
 				
+				console.log('sent');
+
 				var me = this;
 
 				request.on('response', function (response)
 				{
+					console.log('response');
+					
 					me.responseText = '';
 						
 					response.on('data', function (chunk)
 					{
+						console.log('data');
 						me.responseText += chunk;
 					});
 		
 					response.on('end', function ()
 					{
+						console.log('end');
 						me.readyState = 4;
 			            me.status = response.statusCode;
 						me.onreadystatechange();

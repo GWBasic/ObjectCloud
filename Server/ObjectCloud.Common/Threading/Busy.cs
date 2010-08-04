@@ -16,6 +16,8 @@ namespace ObjectCloud.Common.Threading
     /// </summary>
     public static class Busy
     {
+		private static ILog log = LogManager.GetLogger(typeof(Busy));
+		
         /// <summary>
         /// The number of threads that indicate that the server is busy
         /// </summary>
@@ -37,11 +39,14 @@ namespace ObjectCloud.Common.Threading
         /// <summary>
         /// Blocks while the server is under load, thus allowing important queued operations to complete
         /// </summary>
-        public static void BlockWhileBusy()
+        public static void BlockWhileBusy(string message)
         {
             while (IsBusy)
             {
                 Thread.Sleep(0);
+				
+				log.Warn("Blocking " + message + " while busy");
+				
                 lock (BusyKey) { }
             }
         }
@@ -109,7 +114,11 @@ namespace ObjectCloud.Common.Threading
                     Monitor.Pulse(BusyThreadStartedPulser);
 
                 lock (BusyKey)
+				{
+					log.Warn("Server is busy");
                     Monitor.Wait(EndBusyThreadPulser);
+					log.Warn("Server is no longer busy");
+				}
             }
         }
     }

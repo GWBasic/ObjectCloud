@@ -21,16 +21,16 @@ namespace ObjectCloud.WebServer.Implementation
     /// <summary>
     /// Used when reading from a socket in the Multi-threaded web-server
     /// </summary>
-    internal class NonBlockingSocketReader
+    internal class SocketReader
     {
-        private static ILog log = LogManager.GetLogger<NonBlockingSocketReader>();
+        private static ILog log = LogManager.GetLogger<SocketReader>();
 
         /// <summary>
         /// Initializes the WebConnection
         /// </summary>
         /// <param name="s"></param>
         /// <param name="webServer"></param>
-        public NonBlockingSocketReader(IWebServer webServer, Socket socket)
+        public SocketReader(IWebServer webServer, Socket socket)
         {
             WebServer = webServer;
             Socket = socket;
@@ -308,7 +308,18 @@ namespace ObjectCloud.WebServer.Implementation
         /// </summary>
         private void SetUpReadingContent()
         {
-            ContentLength = long.Parse(WebConnection.Headers["CONTENT-LENGTH"]);
+			string contentLenth;
+			if (!WebConnection.Headers.TryGetValue("CONTENT-LENGTH", out contentLenth))
+			{
+                Close(WebResults.From(Status._411_Length_Required, "Content-Lenth required" + WebServer.MaxContentSize.ToString()));
+                return;
+			}
+			
+			if (!long.TryParse(contentLenth, out ContentLength))
+			{
+                Close(WebResults.From(Status._400_Bad_Request, "Invalid Content-Length: " + contentLenth.ToString()));
+                return;
+			}
 
             if (ContentLength <= WebServer.MaxInMemoryContentSize)
                 Content = new WebConnectionContent.InMemory(ContentLength);
@@ -486,7 +497,7 @@ namespace ObjectCloud.WebServer.Implementation
             WebConnection webConnection = WebConnection;
             WebConnection = null;
 
-            Busy.BlockWhileBusy();
+            Busy.BlockWhileBusy("Socket Reader after HTTP request read");
 
             WebServer.RequestDelegateQueue.QueueUserWorkItem(delegate(object state)
             {
@@ -675,6 +686,6 @@ namespace ObjectCloud.WebServer.Implementation
         /// <summary>
         /// Occurs whenever the connection is closed
         /// </summary>
-        public event EventHandler<NonBlockingSocketReader, EventArgs> Closed;
+        public event EventHandler<SocketReader, EventArgs> Closed;
     }
 }
