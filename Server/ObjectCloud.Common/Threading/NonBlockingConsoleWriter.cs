@@ -12,50 +12,49 @@ namespace ObjectCloud.Common.Threading
     public static class NonBlockingConsoleWriter
     {
         /// <summary>
-        /// Queue of strings to print
+        /// The queue that prints to the console
         /// </summary>
-        static LockFreeQueue<string> QueuedStrings = new LockFreeQueue<string>();
+        private static DelegateQueue DelegateQueue = null;
 
-        static NonBlockingConsoleWriter()
+        private static object Key = new object();
+
+        /// <summary>
+        /// Stops the thread used to print to the console.
+        /// </summary>
+        static public void EndThread()
         {
-            EventHandler<LockFreeQueue<string>, EventArgs> itemAddedToEmptyQueue = delegate(LockFreeQueue<string> q, EventArgs e)
+            lock (Key)
             {
-                ThreadPool.QueueUserWorkItem(Work);
-            };
-
-            QueuedStrings.ItemAddedToEmptyQueue += itemAddedToEmptyQueue;
+                DelegateQueue delegateQueue = DelegateQueue;
+                DelegateQueue = null;
+                delegateQueue.Dispose();
+            }
         }
 
         /// <summary>
-        /// Prints the text to the console.  Does not block.  All text is queued up to be printed.  There is a small chance that text will sit in the buffer until the next write, thus it is assumed that this will be called on a regular basis
+        /// Prints the text to the console.  Does not block.  Starts a thread if one isn't started
         /// </summary>
         /// <param name="toPrint"></param>
         static public void Print(string toPrint)
         {
-            QueuedStrings.Enqueue(toPrint);
-        }
+            DelegateQueue delegateQueue = DelegateQueue;
 
-        /// <summary>
-        /// Runs on the Thread to keep printing on the console
-        /// </summary>
-        static void Work(object state)
-        {
-            StringBuilder toWrite = new StringBuilder(3000);
+            if (null == delegateQueue)
+                lock (Key)
+                    if (null == delegateQueue)
+                    {
+                        DelegateQueue = new DelegateQueue("Console Writer");
+                        delegateQueue = DelegateQueue;
+                    }
 
-            string toPrint;
-            while (QueuedStrings.Dequeue(out toPrint))
+            try
             {
-                toWrite.Append(toPrint);
-
-                if (toWrite.Length > 2500)
+                delegateQueue.QueueUserWorkItem(delegate(object state)
                 {
-                    Console.Write(toWrite);
-                    toWrite = new StringBuilder(3000);
-                }
+                    Console.Write(toPrint);
+                });
             }
-
-            if (toWrite.Length > 0)
-                Console.Write(toWrite.ToString());
+            catch (ObjectDisposedException) { }
         }
     }
 }

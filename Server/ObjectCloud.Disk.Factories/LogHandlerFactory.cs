@@ -32,7 +32,13 @@ namespace ObjectCloud.Disk.Factories
         public bool WriteToConsole
         {
             get { return _WriteToConsole; }
-            set { _WriteToConsole = value; }
+            set
+            {
+                _WriteToConsole = value;
+
+                if (!value)
+                    NonBlockingConsoleWriter.EndThread();
+            }
         }
         private bool _WriteToConsole = false;
 
