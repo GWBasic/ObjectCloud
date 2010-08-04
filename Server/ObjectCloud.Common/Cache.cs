@@ -581,7 +581,9 @@ namespace ObjectCloud.Common
                 return;
 
             // If this handle isn't in the cache, increase the count
-            if ((null == cacheHandle.Next) && (null == cacheHandle.Previous) && (Head != cacheHandle))
+            bool addRef = ((null == cacheHandle.Next) && (null == cacheHandle.Previous) && (Head != cacheHandle));
+
+            if (addRef)
                 NumCacheReferences++;
 
             else
@@ -610,6 +612,13 @@ namespace ObjectCloud.Common
 
             if (null == Tail)
                 Tail = cacheHandle;
+
+#if DEBUG
+            //if (addRef)
+            //    throw new NotImplementedException("double-check counts");
+
+            // Consider "adding" when de-queing, and explicitly adding upon creation instead of moving to the head
+#endif
         }
 
         /// <summary>
@@ -660,6 +669,10 @@ namespace ObjectCloud.Common
 
                         NumCacheReferences--;
                     }
+
+#if DEBUG
+            //throw new NotImplementedException("Double-check counts");
+#endif
         }
 
         /// <summary>
@@ -701,12 +714,26 @@ namespace ObjectCloud.Common
                     if (NumObjectsToDequeue < 30)
                         NumObjectsToDequeue = 30;
 
+                    int iterations = 0;
+
                     do
                     {
                         DequeueImpl(null);
                         processMemorySize = GC.GetTotalMemory(true);
+
+                        iterations++;
                     }
-                    while ((NumCacheReferences > MinCacheReferences) && (processMemorySize > maxMemory));
+                    while ((NumCacheReferences > MinCacheReferences) && (processMemorySize > maxMemory) && (iterations < 10));
+
+                    //throw new NotImplementedException("Raise event when this error condition occurs in case there's a way to reset the process");
+                    // For now, if too many iterations occur, try to kill the entire cache
+                    if (iterations >= 10)
+                    {
+                        log.Warn("Possible memory leak, killing cache");
+                        DelegateQueue.Cancel();
+                        ReleaseAllCachedMemoryImpl(null);
+                    }
+
                 }
 
                 IEnumerable<long> memorySizeLimits;
@@ -761,6 +788,7 @@ namespace ObjectCloud.Common
             }
 
             Tail = null;
+            NumCacheReferences = 0;
 
             GC.Collect(GC.MaxGeneration);
 
