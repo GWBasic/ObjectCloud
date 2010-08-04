@@ -7,6 +7,7 @@
 
 require("./objectcloud").connect(
 	{
+		numConnections: 1, // The number of concurrent requests to send to ObjectCloud
 		username: 'username',
 		password: 'password',
 		port: 1080, // defaults to 80
