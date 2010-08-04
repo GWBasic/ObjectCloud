@@ -698,6 +698,9 @@ namespace ObjectCloud.Common
 
                     NumObjectsToDequeue = Convert.ToUInt32(NumCacheReferences / 10);
 
+                    if (NumObjectsToDequeue < 30)
+                        NumObjectsToDequeue = 30;
+
                     do
                     {
                         DequeueImpl(null);
