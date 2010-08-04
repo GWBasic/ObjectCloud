@@ -382,57 +382,8 @@ namespace ObjectCloud.Disk.Implementation
 
             log.Info("...ObjectCloud's File System is started!");
 
-            log.Info("Converting old .page files to new format.  TODO:  This needs to go away");
-            ConvertOldPageFiles(RootDirectoryHandler);
-
 			if (null != Started)
 				Started(this, new EventArgs());
-        }
-
-        /// <summary>
-        /// Changes page files from HTML blob to JSON
-        /// TODO:  Delete this once all environments are updated
-        /// </summary>
-        /// <param name="directory"></param>
-        private void ConvertOldPageFiles(IDirectoryHandler directory)
-        {
-            foreach (IFileContainer fileContainer in Enumerable<IFileContainer>.FastCopy(directory.Files))
-                try
-                {
-                    if (fileContainer.FileHandler is IDirectoryHandler)
-                        ConvertOldPageFiles(fileContainer.CastFileHandler<IDirectoryHandler>());
-                    else if (fileContainer.FileHandler is ITextHandler)
-                        if ("page" == fileContainer.Extension)
-                            ConvertOldPageFile(fileContainer.CastFileHandler<ITextHandler>());
-                }
-                catch (UnknownFileType)
-                {
-                    log.Info("Deleting \"" + fileContainer.FullPath + "\" because it is of unknown file type " + fileContainer.TypeId);
-                    directory.DeleteFile(null, fileContainer.Filename);
-                }
-        }
-
-
-        /// <summary>
-        /// Changes page files from HTML blob to JSON
-        /// TODO:  Delete this once all environments are updated
-        /// </summary>
-        /// <param name="directory"></param>
-        private void ConvertOldPageFile(ITextHandler pageHandler)
-        {
-            string text = pageHandler.ReadAll();
-            if (!text.StartsWith("<div>"))
-                return;
-
-            log.Info("Converting \"" + pageHandler.FileContainer.FullPath + "\" to the new page format");
-
-            Dictionary<string, object> newPage = new Dictionary<string, object>();
-
-            int titleEnd = text.IndexOf("</div>");
-            newPage["Title"] = text.Substring(5, titleEnd - 5);
-            newPage["Contents"] = text.Substring(titleEnd + 6);
-
-            pageHandler.WriteAll(null, JsonFx.Json.JsonWriter.Serialize(newPage));
         }
 
         public void Stop()
