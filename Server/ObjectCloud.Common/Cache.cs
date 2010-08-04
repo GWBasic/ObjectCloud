@@ -211,19 +211,6 @@ namespace ObjectCloud.Common
             {
                 cacheHandle = GetCacheHandle(key);
                 toReturn = cacheHandle.GetValue(constructorArg);
-
-                /*try
-                {
-                    toReturn = cacheHandle.GetValue(constructorArg);
-                }
-                catch (OutOfMemoryException oome)
-                {
-                    ReleaseAllCachedMemory();
-
-                    log.Warn("Out-of-memory when creating object for key " + key.ToString(), oome);
-
-                    toReturn = cacheHandle.GetValue(constructorArg);
-                }*/
             } while (!cacheHandle.Valid);
 
             return toReturn;
