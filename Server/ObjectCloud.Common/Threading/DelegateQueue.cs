@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
+using Common.Logging;
+
 namespace ObjectCloud.Common.Threading
 {
     /// <summary>
@@ -15,6 +17,8 @@ namespace ObjectCloud.Common.Threading
     /// </summary>
     public class DelegateQueue : IDisposable
     {
+        private ILog log = LogManager.GetLogger<DelegateQueue>();
+
         /// <summary>
         /// Holds a delegate and its state in the queue
         /// </summary>
@@ -163,7 +167,14 @@ namespace ObjectCloud.Common.Threading
 
                 QueuedDelegate queuedDelegate;
                 while (QueuedDelegates.Dequeue(out queuedDelegate))
-                    queuedDelegate.Callback(queuedDelegate.state);
+                    try
+                    {
+                        queuedDelegate.Callback(queuedDelegate.state);
+                    }
+                    catch (Exception e)
+                    {
+                        log.Error("Unhandled exception in queued delegate", e);
+                    }
 
                 // If throttling requests was started, end throttling requests
                 if (BeganBusy > 0)

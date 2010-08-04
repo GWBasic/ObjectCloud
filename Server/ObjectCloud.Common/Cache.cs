@@ -730,8 +730,12 @@ namespace ObjectCloud.Common
                     if (iterations >= 10)
                     {
                         log.Warn("Possible memory leak, killing cache");
+
                         DelegateQueue.Cancel();
                         ReleaseAllCachedMemoryImpl(null);
+
+                        // Releasing all memory re-queues this function
+                        return;
                     }
 
                 }
