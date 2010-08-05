@@ -557,7 +557,7 @@ namespace ObjectCloud.Common
             get { return Cache._CacheHitsPerInspection; }
             set { Cache._CacheHitsPerInspection = value; }
         }
-        private static int _CacheHitsPerInspection = 5000;
+        private static int _CacheHitsPerInspection = 500;
 
         /// <summary>
         /// Counter that is maintained to count cache hits.  When 0 == CacheHitsPerInspection mod CacheHitCount, then memory use is inspected
