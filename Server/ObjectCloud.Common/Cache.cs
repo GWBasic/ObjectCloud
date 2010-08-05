@@ -259,6 +259,9 @@ namespace ObjectCloud.Common
             TValue cached = cacheHandle.WeakValue;
             cacheHandle.SetValue(null);
 
+            // Removes the cache handle from the queue of cached objects, this ensures that memory is free for other objects
+            Remove(cacheHandle);
+
             if (null == cached)
                 return false;
 
@@ -276,13 +279,15 @@ namespace ObjectCloud.Common
             Lock.EnterWriteLock();
             try
             {
-                foreach (CacheHandle ch in Enumerable<CacheHandle>.FastCopy(Dictionary.Values))
+                foreach (CacheHandle cacheHandle in Enumerable<CacheHandle>.FastCopy(Dictionary.Values))
                 {
-                    TValue value = ch.WeakValue;
+                    TValue value = cacheHandle.WeakValue;
 
                     if (null != value)
                         if (value is IDisposable)
                             ((IDisposable)value).Dispose();
+
+                    Remove(cacheHandle);
                 }
 
                 Dictionary.Clear();
@@ -323,6 +328,19 @@ namespace ObjectCloud.Common
         }
 
         /// <summary>
+        /// If the cache is GCed, then it'll attempt to remove its cache handles from the cache
+        /// </summary>
+        ~Cache()
+        {
+            try
+            {
+                foreach (CacheHandle cacheHandle in Dictionary.Values)
+                    Remove(cacheHandle);
+            }
+            catch { }
+        }
+
+        /// <summary>
         /// Handle to an object that manages constructing it if needed
         /// </summary>
         /// <typeparam name="TKey"></typeparam>
@@ -330,9 +348,9 @@ namespace ObjectCloud.Common
         private new class CacheHandle : Cache.CacheHandle
         {
             /// <summary>
-            /// The parent cache
+            /// The parent cache.  This is a weak reference so that, if the only reference to this object is in the cache, it is collected
             /// </summary>
-            internal Cache<TKey, TValue, TConstructorArg> ParentCache;
+            internal WeakReference ParentCache;
 
             /// <summary>
             /// The key
@@ -341,7 +359,7 @@ namespace ObjectCloud.Common
 
             internal CacheHandle(Cache<TKey, TValue, TConstructorArg> parentCache, TKey key)
             {
-                ParentCache = parentCache;
+                ParentCache = new WeakReference(parentCache);
                 Key = key;
             }
 
@@ -406,7 +424,7 @@ namespace ObjectCloud.Common
                         if (null == value)
                         {
                             // Try to force cleaning up memory if we run out
-                            value = ParentCache._CreateForCache(Key, constructorArg);
+                            value = ((Cache<TKey, TValue, TConstructorArg>)ParentCache.Target)._CreateForCache(Key, constructorArg);
                             WeakReference.Target = value;
 
                             Cache.AddToCache(this);
@@ -581,10 +599,11 @@ namespace ObjectCloud.Common
                 return;
 
             // If this handle isn't in the cache, increase the count
-            bool addRef = ((null == cacheHandle.Next) && (null == cacheHandle.Previous) && (Head != cacheHandle));
-
-            if (addRef)
+            if (!cacheHandle.InQueue)
+            {
                 NumCacheReferences++;
+                cacheHandle.InQueue = true;
+            }
 
             else
             {
@@ -612,13 +631,6 @@ namespace ObjectCloud.Common
 
             if (null == Tail)
                 Tail = cacheHandle;
-
-#if DEBUG
-            //if (addRef)
-            //    throw new NotImplementedException("double-check counts");
-
-            // Consider "adding" when de-queing, and explicitly adding upon creation instead of moving to the head
-#endif
         }
 
         /// <summary>
@@ -651,28 +663,55 @@ namespace ObjectCloud.Common
             for (int ctr = 0; ctr < numObjectsToDequeue; ctr++)
                 if (NumCacheReferences > MinCacheReferences)
                     if (null != Tail)
-                    {
-                        CacheHandle tail = Tail;
-
-                        Tail = tail.Previous;
-
-                        if (null != Tail)
-                            Tail.Next = null;
-                        else
-                            Head = null;
-
-                        tail.AllowCollect();
-
-                        // In case the handle is re-used, setting these both to null ensures that it will be counted as a new handle
-                        tail.Next = null;
-                        tail.Previous = null;
-
-                        NumCacheReferences--;
-                    }
+                        RemoveImpl(Tail);
 
 #if DEBUG
             //throw new NotImplementedException("Double-check counts");
 #endif
+        }
+
+        /// <summary>
+        /// Removes the cache handle from the queue
+        /// </summary>
+        /// <param name="toRemove"></param>
+        protected static void Remove(CacheHandle toRemove)
+        {
+            DelegateQueue.QueueUserWorkItem(RemoveImpl, toRemove);
+        }
+
+        private static void RemoveImpl(object state)
+        {
+            CacheHandle toRemove = (CacheHandle)state;
+
+            // Removing a cache handle that's not in the queue can screw things up
+            if (!toRemove.InQueue)
+                return;
+
+            NumCacheReferences--;
+
+            toRemove.InQueue = false;
+            toRemove.AllowCollect();
+
+            // If removing the tail, then move it back one
+            if (Tail == toRemove)
+                Tail = toRemove.Previous;
+
+            // If the tail was set to null, then the head also needs to be null
+            if (null == Tail)
+            {
+                Head = null;
+                return;
+            }
+
+            if (null != toRemove.Previous)
+                toRemove.Previous.Next = toRemove.Next;
+
+            if (null != toRemove.Next)
+                toRemove.Next.Previous = toRemove.Previous;
+
+            // Make sure that references to other handles aren't kept as this can impede garbage collection
+            toRemove.Next = null;
+            toRemove.Previous = null;
         }
 
         /// <summary>
@@ -814,6 +853,11 @@ namespace ObjectCloud.Common
             /// Indicates that the cache handle will only keep a weak reference to the object, thus allowing it be collected
             /// </summary>
             internal abstract void AllowCollect();
+
+            /// <summary>
+            /// True when the cache handle is in the queue, false when it's out of the queue
+            /// </summary>
+            internal bool InQueue = false;
         }
     }
 
