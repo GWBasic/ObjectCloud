@@ -111,6 +111,11 @@ namespace ObjectCloud.WebServer.Implementation
 		/// </summary>
 		private static int NumActiveConnections = 0;
 		
+		/// <summary>
+		/// The number of requests since a full GC was run 
+		/// </summary>
+		private static int NumRequestsSinceLastGC = 0;
+		
         /// <summary>
         /// Entry-point to handle the connection that's established on the socket
         /// </summary>
@@ -273,8 +278,13 @@ namespace ObjectCloud.WebServer.Implementation
                     ((IObjectCloudLoggingFactoryAdapter)loggerFactoryAdapter).RemoteEndPoint = null;
 				
 				// If there are no running web connections, then force a garbage collection
-				if (0 == Interlocked.Decrement(ref NumActiveConnections))
+				if ((0 == Interlocked.Decrement(ref NumActiveConnections)) && (NumRequestsSinceLastGC > 100))
+				{
 					Cache.QueueGC();
+					NumRequestsSinceLastGC = 0;
+				}
+				else
+					Interlocked.Increment(ref NumRequestsSinceLastGC);
             }
         }
 
