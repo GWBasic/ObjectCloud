@@ -402,10 +402,8 @@ namespace ObjectCloud.Common
                 if (null != value)
                 {
                     Value = value;
-
                     Cache.MoveToHeadOfCache(this);
-
-                    return Value;
+                    return value;
                 }
 
                 using (TimedLock.Lock(this))
