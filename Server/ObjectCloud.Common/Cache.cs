@@ -69,6 +69,7 @@ namespace ObjectCloud.Common
         public Cache(CreateForCache<TKey, TValue, TConstructorArg> createForCache)
         {
             _CreateForCache = createForCache;
+			AllCaches.Enqueue(new WeakReference(this));
         }
 
 #if DEBUG
@@ -82,11 +83,6 @@ namespace ObjectCloud.Common
         }
         private bool _Enabled = true;
 #endif
-		
-		/// <summary>
-		/// Every 250 cache hits dead items are looked for
-		/// </summary>
-		private int CleanCtr = 0;
 
         /// <summary>
         /// Gets or creates a cache handle for the given key
@@ -98,9 +94,6 @@ namespace ObjectCloud.Common
             Lock.EnterReadLock();
             try
             {
-				if (0 == (Interlocked.Increment(ref CleanCtr) % 250))
-					DelegateQueue.QueueUserWorkItem(RemoveCollectedCacheHandles, null);
-				
                 CacheHandle cacheHandle;
                 if (Dictionary.TryGetValue(key, out cacheHandle))
                     return cacheHandle;
@@ -133,7 +126,7 @@ namespace ObjectCloud.Common
 		/// This little bit checks a cache handle to see if it's alive, and if it's not, deletes it
         /// Basicaly, every time the cache is hit, some randome cache handle is checked to see if it's dead
 		/// </summary>
-        private void RemoveCollectedCacheHandles(object state)
+        protected override void RemoveCollectedCacheHandles()
         {
             try
             {
@@ -560,11 +553,6 @@ namespace ObjectCloud.Common
         private static int _CacheHitsPerInspection = 500;
 
         /// <summary>
-        /// Counter that is maintained to count cache hits.  When 0 == CacheHitsPerInspection mod CacheHitCount, then memory use is inspected
-        /// </summary>
-        private static int CacheHitCount = int.MinValue;
-
-        /// <summary>
         /// The number of objects to dequeue every time there is a cache hit
         /// </summary>
         private static uint NumObjectsToDequeue = 0;
@@ -639,13 +627,14 @@ namespace ObjectCloud.Common
         /// <param name="cacheHandle"></param>
         protected static void AddToCache(CacheHandle cacheHandle)
         {
-            // Queue a cache cleanup, if needed
-            if ((Interlocked.Increment(ref CacheHitCount) % _CacheHitsPerInspection) == 0)
-                DelegateQueue.QueueUserWorkItem(ManageCacheDeallocationRate);
-
             DelegateQueue.QueueUserWorkItem(MoveToHeadOfCacheImpl, cacheHandle);
             DelegateQueue.QueueUserWorkItem(DequeueImpl);
         }
+		
+		/// <summary>
+		/// Used to monitor the garbage collector.  Whenever a collection occurs, memory is managed 
+		/// </summary>
+		private static int LastCollectionCount = 0;
 
         /// <summary>
         /// Dequeues from the cache
@@ -653,6 +642,14 @@ namespace ObjectCloud.Common
         /// <param name="state"></param>
         private static void DequeueImpl(object state)
         {
+			// Only manage the deallocation rate as the garbage is collected
+			int currentCollectionCount = GC.GetGeneration(GC.MaxGeneration);
+			if (currentCollectionCount != LastCollectionCount)
+			{
+				currentCollectionCount = LastCollectionCount;
+				ManageCacheDeallocationRate(null);
+			}
+			
             // If there are too many objects in the cache, then extra need to be dequeued
             long numObjectsToDequeue = NumCacheReferences - MaxCacheReferences;
             if (numObjectsToDequeue > 0)
@@ -664,10 +661,6 @@ namespace ObjectCloud.Common
                 if (NumCacheReferences > MinCacheReferences)
                     if (null != Tail)
                         RemoveImpl(Tail);
-
-#if DEBUG
-            //throw new NotImplementedException("Double-check counts");
-#endif
         }
 
         /// <summary>
@@ -724,10 +717,37 @@ namespace ObjectCloud.Common
         /// </summary>
         internal static void ManageCacheDeallocationRate(object state)
         {
-            // Only let one thread perform cleanup at a time, and don't let blocked iterations sit around
             try
             {
-                long maxMemory;
+				// Calls RemoveCollectedCacheHandles on all Caches 
+
+				LockFreeQueue<WeakReference> allCaches = AllCaches;
+				AllCaches = new LockFreeQueue<WeakReference>();
+				
+				WeakReference wr;
+				while (allCaches.Dequeue(out wr))
+				{
+					Cache cache = (Cache)wr.Target;
+					
+					if (null != cache)
+					{
+						// When the server is busy, clean out collected cache handles on multiple threads
+						// This will end the "busy" state sooner so the server can continue accepting requests
+						if (Busy.IsBusy)
+						{
+							GenericVoid removeCollectedCacheHandlesDelegate = cache.RemoveCollectedCacheHandles;
+							removeCollectedCacheHandlesDelegate.BeginInvoke(null, null);
+						}
+						else
+							// When the server isn't busy, do all cleaning on a single thread so more CPU power
+							// is available for requests
+							cache.RemoveCollectedCacheHandles();
+						
+						AllCaches.Enqueue(wr);
+					}
+				}
+
+				long maxMemory;
 
                 if (null == MaxMemory)
                 {
@@ -840,6 +860,32 @@ namespace ObjectCloud.Common
             lock (signal)
                 Monitor.Pulse(signal);
         }
+		
+		/// <summary>
+		/// Queues a garbage collection on the cache's memory management thread, and then manages the cache afterwards 
+		/// </summary>
+		public static void QueueGC()
+		{
+			DelegateQueue.QueueUserWorkItem(DoGC);
+		}
+		
+		private static void DoGC(object state)
+		{
+			DateTime start = DateTime.UtcNow;
+			
+			GC.Collect(GC.MaxGeneration);
+			
+			TimeSpan collectionTime = DateTime.UtcNow - start;
+			
+			string logString = "Idle garbage collection took " + collectionTime.TotalSeconds.ToString() + " seconds";
+			
+			if (collectionTime.TotalMilliseconds <= 250)
+				log.Info(logString);
+			else
+				log.Warn(logString);
+			
+			ManageCacheDeallocationRate(state);
+		}
 
         /// <summary>
         /// Represents a doubly-linked list of items that are cached
@@ -859,6 +905,16 @@ namespace ObjectCloud.Common
             /// </summary>
             internal bool InQueue = false;
         }
+		
+		/// <summary>
+		/// Weak references to all in-memory caches
+		/// </summary>
+		protected static LockFreeQueue<WeakReference> AllCaches = new LockFreeQueue<WeakReference>();
+		
+		/// <summary>
+		/// Removes all of the collected cache handles from the cache 
+		/// </summary>
+		protected abstract void RemoveCollectedCacheHandles();
     }
 
     /// <summary>

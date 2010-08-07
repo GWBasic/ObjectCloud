@@ -48,7 +48,8 @@ namespace ObjectCloud.Interfaces.WebServer
 			};
 
             _RequestDelegateQueue = new DelegateQueue("Request handler", NumConcurrentRequests);
-
+			RequestDelegateQueue.BusyThreshold = BusyThreshold;
+			
 			try
 			{
 	            Thread thread = new Thread(new ThreadStart(RunServer));
@@ -570,5 +571,15 @@ namespace ObjectCloud.Interfaces.WebServer
             get { return _RequestDelegateQueue; }
         }
         private DelegateQueue _RequestDelegateQueue;
-    }
+
+		/// <summary>
+		/// The busy threshold for queued web requests.  Defaults to 6 times the processor count.  When this limit is hit, the server will stop accepting incoming requests 
+		/// </summary>
+		public int BusyThreshold
+		{
+			get { return this._BusyThreshold; }
+			set { _BusyThreshold = value; }
+		}
+		private int _BusyThreshold = 6 * Environment.ProcessorCount;
+	}
 }

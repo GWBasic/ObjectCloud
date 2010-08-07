@@ -106,6 +106,11 @@ namespace ObjectCloud.WebServer.Implementation
             ReadPropertiesFromHeader();
         }
 
+		/// <summary>
+		/// The number of active web connections 
+		/// </summary>
+		private static int NumActiveConnections = 0;
+		
         /// <summary>
         /// Entry-point to handle the connection that's established on the socket
         /// </summary>
@@ -123,6 +128,8 @@ namespace ObjectCloud.WebServer.Implementation
             if (loggerFactoryAdapter is IObjectCloudLoggingFactoryAdapter)
                 ((IObjectCloudLoggingFactoryAdapter)loggerFactoryAdapter).RemoteEndPoint = RemoteEndPoint;
 
+			Interlocked.Increment(ref NumActiveConnections);
+			
             try
             {
                 try
@@ -264,6 +271,10 @@ namespace ObjectCloud.WebServer.Implementation
 
                 if (loggerFactoryAdapter is IObjectCloudLoggingFactoryAdapter)
                     ((IObjectCloudLoggingFactoryAdapter)loggerFactoryAdapter).RemoteEndPoint = null;
+				
+				// If there are no running web connections, then force a garbage collection
+				if (0 == Interlocked.Decrement(ref NumActiveConnections))
+					Cache.QueueGC();
             }
         }
 

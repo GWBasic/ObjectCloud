@@ -58,6 +58,8 @@ namespace ObjectCloud.WebServer.Implementation
             AcceptingSockets = true;
 			
             TcpListener.BeginAcceptSocket(AcceptSocket, null);
+
+			System.Runtime.GCSettings.LatencyMode = System.Runtime.GCLatencyMode.Batch;
         }
 
         private void AcceptSocket(IAsyncResult ar)
