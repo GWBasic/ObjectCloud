@@ -106,6 +106,10 @@ Javascript AJAX wrappers.  Note:  I chose Prototype because it was very easy to 
       <td><a href="http://plugins.jquery.com/project/lwRTE/">LIGHTWEIGHT RICH TEXT EDITOR (RTE / WYSIWYG) FOR JQUERY/</a></td><td><a href="http://code.google.com/p/lwrte/">http://code.google.com/p/lwrte/</a></td><td>jQuery-based rich text editor</td><td><a href="http://www.opensource.org/licenses/mit-license.php">MIT</a></td><td>Rich ext editor for use on jQuery-based xhtml pages.</td><td><a href="/API/jquery.rte.js">/API/jquery.rte.js</a>, <a href="/API/jquery.rte.tb.js">/API/jquery.rte.tb.js</a>, and <a href="/API/jquery_rte">/API/jquery_rte</a></td><td>Fixed bugs that prevented use with xhtml and removed php bindings</td>
    </tr>
 
+   <tr>
+      <td><a href="http://code.google.com/p/geo-location-javascript/">geo-location-javascript v0.4.3</a></td><td><a href="http://code.google.com/u/whoisstan/">Stan Wiechers</a></td><td>Javascript geolocation API that handles non-HTML5 compliant devices.</td><td><a href="http://www.opensource.org/licenses/mit-license.php">MIT</a></td><td></td><td><a href="/API/geo.js">/API/geo.js</a></td>
+   </tr>
+
 </table>
 
 <p>
