@@ -23,11 +23,15 @@ For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/licen
     CheckDeadConnectionsFrequencySeconds="15"
     MaxConnectionIdleSeconds="45"
     PreloadedObjects="/Shell,/Docs,/API,/DefaultTemplate"
+    CacheRAMMinReferences="0"
+    CacheRAMMaxReferences="500"
     />
 
   <!-- 
     The following additional tuning parameters are available for WebServer:
       NumConcurrentRequests:  The number of concurrent requests.  This defaults to 2 * the number of cores.  Setting this too high can lead to contention and lock timeouts
+      MaxRequestsBeforeGarbageCollection:  The maximum number of requests before the server forces a full garbage collection
+      MinRequestsBeforeGarbageCollection:  The minimum number of requests before the server forces a full garbage collection when it is idle
   -->
 
   <!-- When running a real server, this line should be deleted.  Writing to the console really kills performance -->

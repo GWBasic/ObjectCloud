@@ -33,7 +33,7 @@ namespace ObjectCloud.WebServer.Implementation
         /// </summary>
         /// <param name="s"></param>
         /// <param name="webServer"></param>
-        public WebConnection(IWebServer webServer, EndPoint remoteEndPoint, GenericArgument<Stream> sendToBrowser)
+        public WebConnection(WebServer webServer, EndPoint remoteEndPoint, GenericArgument<Stream> sendToBrowser)
             : base(webServer, CallingFrom.Web)
         {
             _RemoteEndPoint = remoteEndPoint;
@@ -277,11 +277,18 @@ namespace ObjectCloud.WebServer.Implementation
                 if (loggerFactoryAdapter is IObjectCloudLoggingFactoryAdapter)
                     ((IObjectCloudLoggingFactoryAdapter)loggerFactoryAdapter).RemoteEndPoint = null;
 				
-				// If there are no running web connections, then force a garbage collection
-				if ((0 == Interlocked.Decrement(ref NumActiveConnections)) && (NumRequestsSinceLastGC > 100))
+				// Decrement the number of active connections
+				int numActiveConnections = Interlocked.Decrement(ref NumActiveConnections);
+				
+				// If there are no running web connections and we've hit the MinRequestsBeforeGarbageCollection threshold, force a garbage collection
+				// Else, if we've hit the MaxRequestsBeforeGarbageCollection threshold, force a garbage collection
+				int numRequestsSinceLastGC = NumRequestsSinceLastGC;
+				if (((0 == numActiveConnections) && (numRequestsSinceLastGC > WebServer.MinRequestsBeforeGarbageCollection))
+				    || (numRequestsSinceLastGC > WebServer.MaxRequestsBeforeGarbageCollection))
 				{
-					Cache.QueueGC();
-					NumRequestsSinceLastGC = 0;
+					// Interlocked makes sure that we only schedule the GC if this is the thread that sets NumRequestsSinceLastGC
+					if (numRequestsSinceLastGC == Interlocked.CompareExchange(ref NumRequestsSinceLastGC, 0, numRequestsSinceLastGC))
+						Cache.QueueGC();
 				}
 				else
 					Interlocked.Increment(ref NumRequestsSinceLastGC);
@@ -408,6 +415,14 @@ namespace ObjectCloud.WebServer.Implementation
             get { return _TouchedFiles; }
         }
         private readonly Set<IFileContainer> _TouchedFiles = new Set<IFileContainer>();
+		
+		/// <summary>
+		/// The web server 
+		/// </summary>
+		public new WebServer WebServer
+		{
+			get { return (WebServer)base.WebServer; }
+		}
     }
 }
 

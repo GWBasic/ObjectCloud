@@ -115,5 +115,25 @@ namespace ObjectCloud.WebServer.Implementation
 
             FileHandlerFactoryLocator.FileSystemResolver.Stop();
         }
-    }
+		
+		/// <summary>
+		/// The maximum number of requests before a garbage collection is forced
+		/// </summary>
+		public int MaxRequestsBeforeGarbageCollection
+		{
+			get { return _MaxRequestsBeforeGarbageCollection; }
+			set { _MaxRequestsBeforeGarbageCollection = value; }
+		}
+		private int _MaxRequestsBeforeGarbageCollection = 1000;
+
+		/// <summary>
+		/// The minimum number of requests before a garbage collection is forced 
+		/// </summary>
+		public int MinRequestsBeforeGarbageCollection
+		{
+			get { return _MinRequestsBeforeGarbageCollection; }
+			set { _MinRequestsBeforeGarbageCollection = value; }
+		}
+		private int _MinRequestsBeforeGarbageCollection = 100;
+	}
 }

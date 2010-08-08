@@ -30,7 +30,7 @@ namespace ObjectCloud.WebServer.Implementation
         /// </summary>
         /// <param name="s"></param>
         /// <param name="webServer"></param>
-        public SocketReader(IWebServer webServer, Socket socket)
+        public SocketReader(WebServer webServer, Socket socket)
         {
             WebServer = webServer;
             Socket = socket;
@@ -55,7 +55,7 @@ namespace ObjectCloud.WebServer.Implementation
         /// <summary>
         /// The web server
         /// </summary>
-        private IWebServer WebServer;
+        private WebServer WebServer;
 
         /// <summary>
         /// The state that the SocketReader is currently in
