@@ -239,7 +239,12 @@ function displayFiles(directory, files, dir)
          }));
       }
 
-      menuList.contextMenu();
+      try
+      {
+         menuList.contextMenu();
+      }
+      // The context menu doesn't work on Safari
+      catch (exception) {}
    }
 
    for (var i = 0; i < files.length; i++)
