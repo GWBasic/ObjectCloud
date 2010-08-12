@@ -1,4 +1,4 @@
-// Scripts: /API/jquery.js, /API/Url.js, /API/jquery.contextButton.js, /API/jquery.ui.menu.js, /API/AJAX.js
+// Scripts: /API/jquery.js, /API/Url.js, /API/jquery.contextButton.js, /API/jquery.ui.menu.js, /API/AJAX.js, /API/shareDialog.js
 
 // Updates the various inputs to match the selected file type
 function UpdateCreateNewFile(filetypes, me)
@@ -184,7 +184,7 @@ function displayFiles(directory, files, dir)
       {
          menuList.append($('<li><a>Share</a></li>').click(function()
          {
-            window.open('/Shell/Security/Permissions.oc?FileName=' + directory + file.Filename);
+            shareDialog_show(directory + file.Filename);
          }));
 
          menuList.append($('<li>---------</li>'));
