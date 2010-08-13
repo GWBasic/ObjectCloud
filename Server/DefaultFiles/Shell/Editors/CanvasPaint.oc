@@ -1,23 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
 <head>
-
-	<title>CanvasPaint: <? $_GET["FileName"] ?></title>
-        <meta http-equiv="X-UA-Compatible" content="chrome=1">
+	<title>CanvasPaint: [_FileName_]</title>
+        <meta http-equiv="X-UA-Compatible" content="chrome=1" />
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 	<meta name="description" content="A clone of Microsoft Paint in JavaScript, using the WHATWG Canvas." />
 
 	<link rel="shortcut icon" href="paint.ico" />
-	<link rel="stylesheet" type="text/css" href="/Shell/Editors/CanvasPaint.css" />
-	<script type="text/javascript" src="/Shell/Editors/CanvasPaint.js"></script>
-	<? Scripts(<? $_GET["FileName"] ?>?Method=GetJSW&assignToVariable=Image) ?>
+        <oc:css src="CanvasPaint.css" />
+        <oc:script src="CanvasPaint.js" />
+        <oc:open filename="[_FileName_]" varname="Image" />
 
 </head>
 
 <body id="body">
-      <? WebComponent("/Shell/Legacy/PromptForChromeFrame.webcomponent") ?>
 
-<input type="button" value="Save" onclick="save(Image, '<? $_GET["Format"] ?>')" />
+<input type="button" value="Save" onclick="save(Image, '[_Format_]')" />
 This code originated from <a href="http://canvaspaint.org">http://canvaspaint.org</a>
 <div id="window" oncontextmenu="return false"><div id="innerwindow"><div id="innerinnerwindow">
 
@@ -103,10 +100,10 @@ This code originated from <a href="http://canvaspaint.org">http://canvaspaint.or
 				<div onclick="selSetting(this, 'c.selectedzoom=8;zoomTo(8)')"><label>8x</label><div style="width:8px;height:8px;margin-top:3px;margin-left:3px"></div></div>
 			</div>
 			<div id="brush-settings">
-				<div onclick="selSetting(this, 'c.lineWidth=8;c.lineCap=\'round\'')" style="font-size:170%;line-height:11px">&bull;</div>
-				<div onclick="selSetting(this, 'c.lineWidth=5;c.lineCap=\'round\'')" style="font-size:100%;line-height:10px">&bull;</div>
+				<div onclick="selSetting(this, 'c.lineWidth=8;c.lineCap=\'round\'')" style="font-size:170%;line-height:11px">&#8226;</div>
+				<div onclick="selSetting(this, 'c.lineWidth=5;c.lineCap=\'round\'')" style="font-size:100%;line-height:10px">&#8226;</div>
 
-				<div onclick="selSetting(this, 'c.lineWidth=1;c.lineCap=\'round\'')" class="sel" style="font-size:30%;line-height:13px">&bull;</div>
+				<div onclick="selSetting(this, 'c.lineWidth=1;c.lineCap=\'round\'')" class="sel" style="font-size:30%;line-height:13px">&#8226;</div>
 
 				<div onclick="selSetting(this, 'c.lineWidth=8;c.lineCap=\'square\'')" style="font-size:160%;line-height:8px">&#9632;</div>
 				<div onclick="selSetting(this, 'c.lineWidth=5;c.lineCap=\'square\'')" style="font-size:100%;line-height:10px">&#9632;</div>
@@ -201,9 +198,9 @@ This code originated from <a href="http://canvaspaint.org">http://canvaspaint.or
 	</div>
 
 	<div id="statusbar"><div id="statusbar2">
-		<div id="status"><div>&nbsp;</div></div>
-		<div id="xy"><div>&nbsp;</div></div>
-		<div id="txy"><div>&nbsp;</div></div>
+		<div id="status"><div>&#160;</div></div>
+		<div id="xy"><div>&#160;</div></div>
+		<div id="txy"><div>&#160;</div></div>
 	</div></div>
 
 	<div id="resize" onmousedown="windowResize(event, this)"></div>
@@ -228,7 +225,7 @@ This code originated from <a href="http://canvaspaint.org">http://canvaspaint.or
     <a class="navitab" href="/blog" style="padding: 4px 8px 4px 8px; text-decoration: none; background: #39F; color:#FFF !important; border:2px solid #06C; border-top:2px solid #6CF;border-left:2px solid #6CF">
       <img src="paint.ico" style="margin: 0pt; padding: 0pt; position: relative; top: 3px; border:0" height="16" width="16" alt="" /> 
       Visit the blog
-    </a> <!--&nbsp; <strong style="color:red;">UPDATED</strong>-->
+    </a> <!--&#160; <strong style="color:red;">UPDATED</strong>-->
 
   </p>
   
@@ -357,7 +354,7 @@ This code originated from <a href="http://canvaspaint.org">http://canvaspaint.or
       if (null != oldonload)
          oldonload();
 
-      var toEdit = "<? $_GET["FileName"] ?>";
+      var toEdit = "[_FileName_]";
       paint.open(toEdit);
 
       if(!canvas.toDataURL)

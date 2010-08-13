@@ -76,6 +76,10 @@
 			SendNotifications="False" />
 	</File>
 	<File
+		Name="CanvasPaint.oc"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
 		Name="CanvasPaint.wchtml"
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
