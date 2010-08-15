@@ -12,6 +12,7 @@ using System.Threading;
 using System.Xml;
 
 using Common.Logging;
+using JsonFx.Json;
 
 using ObjectCloud.Common;
 using ObjectCloud.Disk.WebHandlers.Template;
@@ -142,7 +143,17 @@ namespace ObjectCloud.Disk.WebHandlers
             foreach (XmlNode xmlNode in Enumerable<XmlNode>.FastCopy(XmlHelper.IterateAllElementsAndComments(templateDocument)))
             {
                 if (xmlNode is XmlElement)
-                    templateParsingState.OnPostProcessElement(getParameters, (XmlElement)xmlNode);
+                {
+                    // This is to work around a bug where oc:... nodes show up
+                    if (xmlNode.NamespaceURI ==
+                        webConnection.WebServer.FileHandlerFactoryLocator.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace)
+                    {
+                        if (null != xmlNode.ParentNode)
+                            xmlNode.ParentNode.RemoveChild(xmlNode);
+                    }
+                    else
+                        templateParsingState.OnPostProcessElement(getParameters, (XmlElement)xmlNode);
+                }
                 else if (removeComments)
                     xmlNode.ParentNode.RemoveChild(xmlNode);
             }
@@ -305,7 +316,7 @@ namespace ObjectCloud.Disk.WebHandlers
             return headNode;
         }
 
-        private static void GenerateScriptAndCssTags(ITemplateParsingState templateParsingState, XmlNode headNode)
+        private void GenerateScriptAndCssTags(ITemplateParsingState templateParsingState, XmlNode headNode)
         {
             XmlDocument templateDocument = templateParsingState.TemplateDocument;
             LinkedList<string> cssFiles = templateParsingState.CssFiles;
@@ -353,6 +364,52 @@ namespace ObjectCloud.Disk.WebHandlers
 
                     addedCssFiles.Add(cssFile);
                 }
+
+            // If javascript debug mode is off, combile all of the scripts into one that loads all at once
+            if (!(templateParsingState.WebConnection.CookiesFromBrowser.ContainsKey(
+                templateParsingState.FileHandlerFactoryLocator.TemplateHandlerLocator.TemplatingConstants.JavascriptDebugModeCookie)))
+            {
+                // Generate composite script tag
+                XmlElement lastLocalScriptTag = null;
+
+                LinkedList<string> scriptUrls = new LinkedList<string>();
+                LinkedList<XmlElement> scriptElements = new LinkedList<XmlElement>();
+
+                foreach (XmlElement node in XmlHelper.IterateAllElements(headNode))
+                    if (node.LocalName == "script")
+                        if (templateParsingState.FileHandlerFactoryLocator.TemplateHandlerLocator.TemplatingConstants.HtmlNamespaces.Contains(node.NamespaceURI))
+                        {
+                            // This is a script node
+                            // get the script that's being loaded
+                            string src = node.GetAttribute("src");
+
+                            if (null != src)
+                                if (src.Length > 0)
+                                    if (src.StartsWith("/"))
+                                    {
+                                        lastLocalScriptTag = node;
+                                        scriptElements.AddLast(node);
+                                        scriptUrls.AddLast(src);
+                                    }
+                        }
+
+                // Remove dead script tags and update the last one to load a composite script
+                if (null != lastLocalScriptTag)
+                {
+                    foreach (XmlElement node in scriptElements)
+                        if (node != lastLocalScriptTag)
+                            node.ParentNode.RemoveChild(node);
+
+                    string serializedScriptList = JsonWriter.Serialize(scriptUrls);
+                    int hashCode = GenerateCompositeJavascript(templateParsingState.WebConnection, scriptUrls).GetHashCode();
+
+                    string url = FileContainer.FullPath + "?Method=GetCompositeScript";
+                    url = HTTPStringFunctions.AppendGetParameter(url, "scriptUrls", serializedScriptList);
+                    url = HTTPStringFunctions.AppendGetParameter(url, "BrowserCache", hashCode.ToString());
+
+                    lastLocalScriptTag.SetAttribute("src", url);
+                }
+            }
         }
 
         private static void GenerateHeadTags(ITemplateParsingState templateParsingState, XmlNode headNode)
@@ -467,6 +524,63 @@ namespace ObjectCloud.Disk.WebHandlers
             templateParsingState.SetCWD(templateDocument.ChildNodes, templateFileContainer.ParentDirectoryHandler.FileContainer.FullPath);
 
             return templateDocument;
+        }
+
+        /// <summary>
+        /// Generates composite Javascript from a list of scripts
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="scriptUrls"></param>
+        /// <returns></returns>
+        private string GenerateCompositeJavascript(IWebConnection webConnection, IEnumerable<string> scriptUrls)
+        {
+            StringBuilder scriptBuilder = new StringBuilder();
+
+            foreach (string scriptUrl in scriptUrls)
+            {
+                try
+                {
+                    IWebResults webResult = webConnection.ShellTo(scriptUrl);
+
+                    int statusCode = (int)webResult.Status;
+
+                    if ((statusCode >= 200) && (statusCode < 300))
+                    {
+                        string script = webResult.ResultsAsString;
+                        script = JavaScriptMinifier.Instance.Minify(script);
+
+                        scriptBuilder.AppendFormat("\n// {0}\n", scriptUrl);
+                        scriptBuilder.Append("try {");
+                        scriptBuilder.Append(script);
+                        scriptBuilder.Append("} catch (exception) { }");
+
+                        // Note: exceptions are swallowed
+                        // This form of compression shouldn't be used when a developer is trying to debug, instead, they should
+                        // turn on Javascript debug mode, which disables this compression and allows them to use the browser's
+                        // debugger
+                    }
+                }
+                catch (Exception e)
+                {
+                    log.Error("Error loading script in GenerateCompositeJavascript for script " + scriptUrl, e);
+                }
+            }
+
+            return scriptBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Returns a composite script that contains all of the scripts passed in for low-latency loading
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="scriptUrls"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.Primitive, FilePermissionEnum.Read)]
+        public IWebResults GetCompositeScript(IWebConnection webConnection, string[] scriptUrls)
+        {
+            return WebResults.From(
+                Status._200_OK,
+                GenerateCompositeJavascript(webConnection, scriptUrls));
         }
     }
 }

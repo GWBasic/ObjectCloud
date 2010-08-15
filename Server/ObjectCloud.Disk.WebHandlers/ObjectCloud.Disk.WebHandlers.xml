@@ -1160,6 +1160,22 @@
             <param name="templateParsingState"></param>
             <returns></returns>
         </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.GenerateCompositeJavascript(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Generates composite Javascript from a list of scripts
+            </summary>
+            <param name="webConnection"></param>
+            <param name="scriptUrls"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.GetCompositeScript(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String[])">
+            <summary>
+            Returns a composite script that contains all of the scripts passed in for low-latency loading
+            </summary>
+            <param name="webConnection"></param>
+            <param name="scriptUrls"></param>
+            <returns></returns>
+        </member>
         <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsLoggedIn">
             <summary>
             
