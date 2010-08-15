@@ -39,7 +39,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             internal void PostProcessElement(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
             {
                 if (templateParsingState.TemplateHandlerLocator.TemplatingConstants.HtmlNamespaces.Contains(element.NamespaceURI))
-                    if (element.LocalName == "script")
+                    /*if (element.LocalName == "script")
                     {
                         // Don't allow empty <script /> tags
                         if (null == element.InnerText)
@@ -105,8 +105,9 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                                         log.Warn("Exception minimizing Javascript:\n" + scriptContentsNode.InnerText, e);
                                     }*/
 
-                    }
-                    else if (element.LocalName == "link")
+                    /*}
+                    else */
+                    if (element.LocalName == "link")
                         AddBrowserCache(templateParsingState, element.Attributes["href"]);
 
                     else if (element.LocalName == "img")

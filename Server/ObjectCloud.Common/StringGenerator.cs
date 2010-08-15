@@ -5,6 +5,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace ObjectCloud.Common
@@ -102,6 +104,33 @@ namespace ObjectCloud.Common
         {
             foreach (object subToWrap in toWrap)
                 yield return string.Format("{0}{1}{2}", prefix, subToWrap.ToString(), postfix);
+        }
+
+        /// <summary>
+        /// Generates a hash of a string
+        /// </summary>
+        /// <param name="toHash"></param>
+        /// <returns></returns>
+        public static string GenerateHash(string toHash)
+        {
+            using (MemoryStream ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(toHash)))
+            {
+                // Get a free hash calculator
+                MD5CryptoServiceProvider hashAlgorithm = Recycler<MD5CryptoServiceProvider>.Get();
+
+                byte[] scriptHash;
+                try
+                {
+                    scriptHash = hashAlgorithm.ComputeHash(ms);
+                }
+                finally
+                {
+                    // Save the hash calculator for reuse
+                    Recycler<MD5CryptoServiceProvider>.Recycle(hashAlgorithm);
+                }
+
+                return Convert.ToBase64String(scriptHash);
+            }
         }
     }
 }

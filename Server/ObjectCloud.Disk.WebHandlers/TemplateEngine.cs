@@ -401,14 +401,37 @@ namespace ObjectCloud.Disk.WebHandlers
                             node.ParentNode.RemoveChild(node);
 
                     string serializedScriptList = JsonWriter.Serialize(scriptUrls);
-                    int hashCode = GenerateCompositeJavascript(templateParsingState.WebConnection, scriptUrls).GetHashCode();
+                    string compositeScript = GenerateCompositeJavascript(templateParsingState.WebConnection, scriptUrls);
+                    string hash = StringGenerator.GenerateHash(compositeScript);
 
                     string url = FileContainer.FullPath + "?Method=GetCompositeScript";
                     url = HTTPStringFunctions.AppendGetParameter(url, "scriptUrls", serializedScriptList);
-                    url = HTTPStringFunctions.AppendGetParameter(url, "BrowserCache", hashCode.ToString());
+                    url = HTTPStringFunctions.AppendGetParameter(url, "BrowserCache", hash);
 
                     lastLocalScriptTag.SetAttribute("src", url);
                 }
+            }
+            else
+            {
+                // Warn when including a missing script
+                foreach (XmlElement node in XmlHelper.IterateAllElements(headNode))
+                    if (node.LocalName == "script")
+                    {
+                        string src = node.GetAttribute("src");
+
+                        if (null != src)
+                            if (src.Length > 0)
+                                if (src.StartsWith("/"))
+                                {
+                                    src = src.Split('?')[0];
+
+                                    if (!templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.IsFilePresent(src))
+                                    {
+                                        node.InnerText = "alert('" + (src + " doesn't exist: " + node.OuterXml).Replace("'", "\\'") + "');";
+                                        node.RemoveAttribute("src");
+                                    }
+                                }
+                    }
             }
         }
 
