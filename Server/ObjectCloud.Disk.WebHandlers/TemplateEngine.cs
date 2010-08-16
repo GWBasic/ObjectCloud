@@ -145,13 +145,23 @@ namespace ObjectCloud.Disk.WebHandlers
                 if (xmlNode is XmlElement)
                 {
                     // This is to work around a bug where oc:... nodes show up
-                    if (xmlNode.NamespaceURI ==
+                    // Unfortunately, it's commented out because it's causing some weird behavior.  Sometimes components depend on
+                    // these tags being present, thus the bugs for oc: tags being left around need to be fixed at a lower level
+                    /*if (xmlNode.NamespaceURI ==
                         webConnection.WebServer.FileHandlerFactoryLocator.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace)
                     {
                         if (null != xmlNode.ParentNode)
-                            xmlNode.ParentNode.RemoveChild(xmlNode);
+                        {
+                            XmlNode parentNode = xmlNode.ParentNode;
+
+                            if (xmlNode.ChildNodes.Count > 0)
+                                foreach (XmlNode childNode in Enumerable<XmlNode>.FastCopy(Enumerable<XmlNode>.Filter(xmlNode.ChildNodes)))
+                                    parentNode.InsertBefore(childNode, xmlNode);
+
+                            parentNode.RemoveChild(xmlNode);
+                        }
                     }
-                    else
+                    else */
                         templateParsingState.OnPostProcessElement(getParameters, (XmlElement)xmlNode);
                 }
                 else if (removeComments)
