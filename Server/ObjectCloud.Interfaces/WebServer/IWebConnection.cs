@@ -10,6 +10,7 @@ using System.Text;
 using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
+using ObjectCloud.Interfaces.WebServer.UserAgent;
 
 namespace ObjectCloud.Interfaces.WebServer
 {
@@ -263,5 +264,11 @@ namespace ObjectCloud.Interfaces.WebServer
         /// <param name="url"></param>
         /// <returns></returns>
         string GetBrowserCacheUrl(string url);
+
+        /// <summary>
+        /// Object that contains information about the user's browser
+        /// See the ObjectCloud.Interfaces.WebServer.UserAgent namespace for different classes
+        /// </summary>
+        IBrowser UserAgent { get; }
     }
 }

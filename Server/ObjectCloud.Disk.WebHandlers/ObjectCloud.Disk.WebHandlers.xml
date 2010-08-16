@@ -2211,5 +2211,44 @@
             <param name="namedPermission"></param>
             <returns></returns>
         </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsHandheld">
+            <summary>
+            Condition for determining if a browser is a handheld
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsHandheld.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
+            <summary>
+            
+            </summary>
+            <param name="templateParsingState"></param>
+            <param name="me"></param>
+            <returns></returns>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsPad">
+            <summary>
+            Class for determining if the user's browser is a pad
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsPad.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
+            <summary>
+            
+            </summary>
+            <param name="templateParsingState"></param>
+            <param name="me"></param>
+            <returns></returns>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsMobile">
+            <summary>
+            Allows a template to determine if the user is using a mobile device, such as a handheld or a pad
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsMobile.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
+            <summary>
+            
+            </summary>
+            <param name="templateParsingState"></param>
+            <param name="me"></param>
+            <returns></returns>
+        </member>
     </members>
 </doc>

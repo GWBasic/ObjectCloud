@@ -139,6 +139,13 @@
     <Compile Include="WebServer\ResultsAlreadySent.cs" />
     <Compile Include="WebServer\Status.cs" />
     <Compile Include="Security\WebCallableAttribute.cs" />
+    <Compile Include="WebServer\UserAgent\Browser.cs" />
+    <Compile Include="WebServer\UserAgent\Handheld.cs" />
+    <Compile Include="WebServer\UserAgent\IBrowser.cs" />
+    <Compile Include="WebServer\UserAgent\IHandheld.cs" />
+    <Compile Include="WebServer\UserAgent\IMobile.cs" />
+    <Compile Include="WebServer\UserAgent\IPad.cs" />
+    <Compile Include="WebServer\UserAgent\Pad.cs" />
     <Compile Include="WebServer\WebCallingConvention.cs" />
     <Compile Include="WebServer\WebDelegate.cs" />
     <Compile Include="WebServer\WebHandlerPlugin.cs" />
@@ -179,6 +186,7 @@
       <Name>ObjectCloud.ORM.DataAccess</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

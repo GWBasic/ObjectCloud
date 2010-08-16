@@ -17,6 +17,7 @@ using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
 using ObjectCloud.Interfaces.WebServer;
+using ObjectCloud.Interfaces.WebServer.UserAgent;
 
 namespace ObjectCloud.Interfaces.WebServer
 {
@@ -1045,5 +1046,17 @@ namespace ObjectCloud.Interfaces.WebServer
 
             return toReturn;
         }
+
+        public virtual IBrowser UserAgent
+        {
+            get
+            {
+                if (null == _UserAgent)
+                    _UserAgent = Browser.GetBrowser(Headers["USER-AGENT"]);
+
+                return _UserAgent;
+            }
+        }
+        private IBrowser _UserAgent = null;
     }
 }

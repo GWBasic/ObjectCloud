@@ -75,10 +75,13 @@
     <Compile Include="TemplateConditions\CanWrite.cs" />
     <Compile Include="TemplateConditions\Else.cs" />
     <Compile Include="TemplateConditions\IsAdministrator.cs" />
+    <Compile Include="TemplateConditions\IsHandheld.cs" />
     <Compile Include="TemplateConditions\IsLocal.cs" />
     <Compile Include="TemplateConditions\IsLoggedIn.cs" />
+    <Compile Include="TemplateConditions\IsMobile.cs" />
     <Compile Include="TemplateConditions\IsOpenID.cs" />
     <Compile Include="TemplateConditions\HasValue.cs" />
+    <Compile Include="TemplateConditions\IsPad.cs" />
     <Compile Include="TemplateConditions\NamedPermissionBase.cs" />
     <Compile Include="TemplateConditions\Supports.cs" />
     <Compile Include="TemplateEngine.cs" />

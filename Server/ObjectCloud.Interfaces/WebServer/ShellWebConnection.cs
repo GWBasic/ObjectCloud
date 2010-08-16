@@ -10,6 +10,7 @@ using System.Threading;
 
 using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Security;
+using ObjectCloud.Interfaces.WebServer.UserAgent;
 
 namespace ObjectCloud.Interfaces.WebServer
 {
@@ -217,6 +218,11 @@ namespace ObjectCloud.Interfaces.WebServer
                 return base.GetBrowserCacheUrl(url);
             else
                 return BaseWebConnection.GetBrowserCacheUrl(url);
+        }
+
+        public override IBrowser UserAgent
+        {
+            get { return BaseWebConnection.UserAgent; }
         }
     }
 }
