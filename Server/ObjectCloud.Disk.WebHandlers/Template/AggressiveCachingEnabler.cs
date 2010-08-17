@@ -27,7 +27,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
     /// </summary>
     class AggressiveCachingEnabler : HasFileHandlerFactoryLocator, ITemplateProcessor
     {
-        private static ILog log = LogManager.GetLogger<AggressiveCachingEnabler>();
+        //private static ILog log = LogManager.GetLogger<AggressiveCachingEnabler>();
 
         void ITemplateProcessor.Register(ITemplateParsingState templateParsingState)
         {
