@@ -396,12 +396,13 @@ namespace ObjectCloud.Disk.WebHandlers
                             if (null != src)
                                 if (src.Length > 0)
                                     if (src.StartsWith("/"))
-                                    {
-                                        lastLocalScriptTag = node;
-                                        scriptElements.AddLast(node);
-                                        scriptUrls.AddLast(src);
-                                    }
-                        }
+										if (!(src.Contains("?")))
+	                                    {
+	                                        lastLocalScriptTag = node;
+	                                        scriptElements.AddLast(node);
+	                                        scriptUrls.AddLast(src);
+	                                    }
+                }
 
                 // Remove dead script tags and update the last one to load a composite script
                 if (null != lastLocalScriptTag)
