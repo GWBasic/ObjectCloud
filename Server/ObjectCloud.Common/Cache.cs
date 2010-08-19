@@ -419,6 +419,9 @@ namespace ObjectCloud.Common
                             WeakReference.Target = value;
 
                             Cache.AddToCache(this);
+
+                            if (Value is Cache.IAware)
+                                ((Cache.IAware)Value).IncrementCacheCount();
                         }
                         else
                             Cache.MoveToHeadOfCache(this);
@@ -444,11 +447,17 @@ namespace ObjectCloud.Common
 
                     if (null != value)
                         Cache.AddToCache(this);
+
+                    if (Value is Cache.IAware)
+                        ((Cache.IAware)Value).IncrementCacheCount();
                 }
             }
 
             internal override void AllowCollect()
             {
+                if (Value is Cache.IAware)
+                    ((Cache.IAware)Value).DecrementCacheCount();
+
                 Value = null;
             }
 
@@ -913,6 +922,22 @@ namespace ObjectCloud.Common
 		/// Removes all of the collected cache handles from the cache 
 		/// </summary>
 		protected abstract void RemoveCollectedCacheHandles();
+
+        /// <summary>
+        /// Interface for objects that need to know if they are being handled in the cache
+        /// </summary>
+        public interface IAware
+        {
+            /// <summary>
+            /// Called whenever the object is being stored in the cache
+            /// </summary>
+            void IncrementCacheCount();
+
+            /// <summary>
+            /// Called whenever the object is released from the cache
+            /// </summary>
+            void DecrementCacheCount();
+        }
     }
 
     /// <summary>
