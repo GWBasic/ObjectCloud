@@ -15,6 +15,13 @@ namespace ObjectCloud.Disk.Test
 {
     public abstract class TestBase
     {
+        public TestBase()
+        {
+            FileHandlerFactoryLocator.FileSystemResolver.Start();
+
+            DoAdditionalSetup();
+        }
+
         public FileHandlerFactoryLocator FileHandlerFactoryLocator
         {
             get
@@ -28,27 +35,25 @@ namespace ObjectCloud.Disk.Test
         }
         private FileHandlerFactoryLocator _FileHandlerFactoryLocator = null;
 
-        [TestFixtureSetUp]
+/*        [TestFixtureSetUp]
         public void SetUpFileSystem()
         {
             FileHandlerFactoryLocator.FileSystemResolver.Start();
 
             DoAdditionalSetup();
-        }
+        }*/
 
         protected virtual void DoAdditionalSetup()
         {
         }
 
-        [TestFixtureTearDown]
+        /*[TestFixtureTearDown]
         public void TearDownFileSystem()
         {
             DoAdditionalTearDown();
 
             FileHandlerFactoryLocator.FileSystemResolver.Stop();
-
-            GC.Collect();
-        }
+        }*/
 
         protected virtual void DoAdditionalTearDown()
         {
