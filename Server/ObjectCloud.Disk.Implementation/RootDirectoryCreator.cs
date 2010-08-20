@@ -53,6 +53,11 @@ namespace ObjectCloud.Disk.Implementation
 			rootUser.UserHandler.Set(rootUser, "Avatar", "/Users/root/Root Avatar.jpg");
 			rootUserDirectoryHandler.SetPermission(null, "Root Avatar.jpg", userFactory.Everybody.Id, FilePermissionEnum.Read, false, false);
 
+			// Let the root user see information about the anonymous user
+			IFileContainer anonymousUserFileContainer = usersDirectory.OpenFile("anonymous.user");
+			usersDirectory.Chown(null, anonymousUserFileContainer.FileId, rootUser.Id);
+			usersDirectory.RemovePermission("anonymous.user", anonymousUser.Id);
+			
             // Create groups
             IGroup everybody = userManager.CreateGroup(userFactory.Everybody.Name, null, userFactory.Everybody.Id, true, true, GroupType.Private);
             userManager.CreateGroup(userFactory.AuthenticatedUsers.Name, null, userFactory.AuthenticatedUsers.Id, true, true, GroupType.Private);
@@ -514,7 +519,12 @@ insert into Metadata (Name, Value) values ('GroupId', @groupId);
                     true,
                     false);
             }
-        }
+
+			// Let the root user see information about the anonymous user
+			IFileContainer anonymousUserFileContainer = usersDirectory.OpenFile("anonymous.user");
+			usersDirectory.Chown(null, anonymousUserFileContainer.FileId, FileHandlerFactoryLocator.UserFactory.RootUser.Id);
+			usersDirectory.RemovePermission("anonymous.user", FileHandlerFactoryLocator.UserFactory.AnonymousUser.Id);
+		}
 
         /// <summary>
         /// The default root password
