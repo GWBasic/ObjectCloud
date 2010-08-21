@@ -650,10 +650,14 @@ namespace ObjectCloud.Common
         private static void DequeueImpl(object state)
         {
 			// Only manage the deallocation rate as the garbage is collected
-			int currentCollectionCount = GC.GetGeneration(GC.MaxGeneration);
+            int generation = GC.MaxGeneration - 1;
+            if (generation < 0)
+                generation = 0;
+
+			int currentCollectionCount = GC.CollectionCount(generation);
 			if (currentCollectionCount != LastCollectionCount)
 			{
-				currentCollectionCount = LastCollectionCount;
+                LastCollectionCount = currentCollectionCount;
 				ManageCacheDeallocationRate(null);
 			}
 			

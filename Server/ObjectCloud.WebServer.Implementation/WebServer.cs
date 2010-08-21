@@ -124,7 +124,7 @@ namespace ObjectCloud.WebServer.Implementation
 			get { return _MaxRequestsBeforeGarbageCollection; }
 			set { _MaxRequestsBeforeGarbageCollection = value; }
 		}
-		private int _MaxRequestsBeforeGarbageCollection = 1000;
+		private int _MaxRequestsBeforeGarbageCollection = 100000;
 
 		/// <summary>
 		/// The minimum number of requests before a garbage collection is forced 
@@ -134,6 +134,6 @@ namespace ObjectCloud.WebServer.Implementation
 			get { return _MinRequestsBeforeGarbageCollection; }
 			set { _MinRequestsBeforeGarbageCollection = value; }
 		}
-		private int _MinRequestsBeforeGarbageCollection = 100;
+		private int _MinRequestsBeforeGarbageCollection = 3000;
 	}
 }
