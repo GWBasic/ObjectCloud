@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 using Common.Logging;
 
@@ -12,6 +13,7 @@ using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Javascript;
+using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.Javascript.SubProcess
 {
@@ -85,6 +87,38 @@ namespace ObjectCloud.Javascript.SubProcess
             ParentScopeFactories.Enqueue(parentScopeFactory);
 
             return parentScopeFactory;
+        }
+
+        public IWebResults Run(IWebConnection webConnection, IFileContainer javascriptContainer)
+        {
+            ParentScopeFactory parentScopeFactory  = GetParentScopeFactory();
+            ParentScope parentScope = parentScopeFactory.GetParentScope(javascriptContainer);
+
+            int scopeId = ScopeWrapper.GetScopeID();
+
+            SubProcess.CreateScopeResults data;
+
+            try
+            {
+                data = FunctionCaller.UseTemporaryCaller<SubProcess.CreateScopeResults>(
+                    null, javascriptContainer, webConnection, delegate()
+                    {
+                        return parentScopeFactory.SubProcess.CreateScope(
+                            scopeId,
+                            parentScope.ParentScopeId,
+                            Thread.CurrentThread.ManagedThreadId,
+                            ScopeWrapper.CreateMetadata(FileHandlerFactoryLocator, javascriptContainer));
+                    });
+            }
+            finally
+            {
+                parentScopeFactory.SubProcess.DisposeScope(scopeId, Thread.CurrentThread.ManagedThreadId);
+            }
+
+            if (data.Result is IWebResults)
+                return (IWebResults)data.Result;
+            else
+                return WebResults.ToJson(data.Result);
         }
     }
 }

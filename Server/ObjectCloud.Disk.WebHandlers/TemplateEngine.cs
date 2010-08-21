@@ -114,6 +114,9 @@ namespace ObjectCloud.Disk.WebHandlers
             {
                 IFileContainer templateFileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(filename);
 
+                if (null == templateFileContainer.LoadPermission(webConnection.Session.User.Id))
+                    throw new WebResultsOverrideException(WebResults.From(Status._401_Unauthorized, "Permission denied"));
+
                 webConnection.TouchedFiles.Add(templateFileContainer);
 
                 templateDocument = ResolveHeaderFooter(webConnection, getParameters, templateFileContainer, templateParsingState);

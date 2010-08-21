@@ -151,6 +151,9 @@
         <entry key="templateengine">
           <ref object="FileHandlerFactory" />
         </entry>
+        <entry key="javascriptinterpreter">
+          <ref object="FileHandlerFactory" />
+        </entry>
       </dictionary>
     </property>
 
@@ -253,7 +256,11 @@
             <constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.TemplateEngine, ObjectCloud.Disk.WebHandlers" />
           </object>
         </entry>
-
+        <entry key="javascriptinterpreter">
+          <object type="System.Type" factory-method="GetType" id="javascriptinterpreterType">
+            <constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.JavascriptInterpreterWebHandler, ObjectCloud.Disk.WebHandlers" />
+          </object>
+        </entry>
       </dictionary>
     </property>
 

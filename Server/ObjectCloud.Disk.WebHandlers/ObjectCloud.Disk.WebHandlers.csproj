@@ -65,6 +65,7 @@
     <Compile Include="HTTPWebProxy.cs" />
     <Compile Include="Comet\MultiplexingCometWebHandler.cs" />
     <Compile Include="ImageWebHandler.cs" />
+    <Compile Include="JavascriptInterpreterWebHandler.cs" />
     <Compile Include="NameValuePairsWebHandler.cs" />
     <Compile Include="SessionManagerWebHandler.cs" />
     <Compile Include="TemplateConditions\Can.cs" />

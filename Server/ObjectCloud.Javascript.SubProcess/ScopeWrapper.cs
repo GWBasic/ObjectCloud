@@ -29,6 +29,10 @@ namespace ObjectCloud.Javascript.SubProcess
         private static ILog log = LogManager.GetLogger<ScopeWrapper>();
 
         private static int ScopeIdCtr = int.MinValue;
+        internal static int GetScopeID()
+        {
+            return Interlocked.Increment(ref ScopeIdCtr);
+        }
 
         public int ScopeId
         {
@@ -111,7 +115,7 @@ namespace ObjectCloud.Javascript.SubProcess
             _SubProcess = subProcess;
             _ParentScope = parentScope;
 
-            _ScopeId = Interlocked.Increment(ref ScopeIdCtr);
+            _ScopeId = GetScopeID();
 
             _FileHandlerFactoryLocator = fileHandlerFactoryLocator;
 
@@ -152,7 +156,7 @@ namespace ObjectCloud.Javascript.SubProcess
                             ScopeId,
                             ParentScope.ParentScopeId,
                             Thread.CurrentThread.ManagedThreadId,
-                            CreateMetadata());
+                            CreateMetadata(FileHandlerFactoryLocator, FileContainer));
                     });
             }
             finally
@@ -219,21 +223,21 @@ namespace ObjectCloud.Javascript.SubProcess
         /// </summary>
         /// <param name="webConnection"></param>
         /// <param name="context"></param>
-        private Dictionary<string, object> CreateMetadata()
+        internal static Dictionary<string, object> CreateMetadata(FileHandlerFactoryLocator fileHandlerFactoryLocator, IFileContainer fileContainer)
         {
             Dictionary<string, object> toReturn = new Dictionary<string, object>();
 
             //Ability to know the following from within Javascript:  File name, file path, owner name, owner ID, connected user name, connected user id
             Dictionary<string, object> fileMetadata = new Dictionary<string, object>();
-            fileMetadata["filename"] = FileContainer.Filename;
-            fileMetadata["fullpath"] = FileContainer.FullPath;
-            fileMetadata["url"] = FileContainer.ObjectUrl;
+            fileMetadata["filename"] = fileContainer.Filename;
+            fileMetadata["fullpath"] = fileContainer.FullPath;
+            fileMetadata["url"] = fileContainer.ObjectUrl;
 
-            if (null != FileContainer.OwnerId)
+            if (null != fileContainer.OwnerId)
             {
-                fileMetadata["ownerId"] = FileContainer.OwnerId.Value;
+                fileMetadata["ownerId"] = fileContainer.OwnerId.Value;
 
-                IUserOrGroup owner = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupNoException(FileContainer.OwnerId.Value);
+                IUserOrGroup owner = fileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupNoException(fileContainer.OwnerId.Value);
                 if (null != owner)
                 {
                     fileMetadata["owner"] = owner.Name;
@@ -246,9 +250,9 @@ namespace ObjectCloud.Javascript.SubProcess
             toReturn["fileMetadata"] = fileMetadata;
 
             Dictionary<string, object> hostMetadata = new Dictionary<string, object>();
-            hostMetadata["host"] = FileHandlerFactoryLocator.HostnameAndPort;
-            hostMetadata["justHost"] = FileHandlerFactoryLocator.Hostname;
-            hostMetadata["port"] = FileHandlerFactoryLocator.WebServer.Port;
+            hostMetadata["host"] = fileHandlerFactoryLocator.HostnameAndPort;
+            hostMetadata["justHost"] = fileHandlerFactoryLocator.Hostname;
+            hostMetadata["port"] = fileHandlerFactoryLocator.WebServer.Port;
 
             toReturn["hostMetadata"] = hostMetadata;
 

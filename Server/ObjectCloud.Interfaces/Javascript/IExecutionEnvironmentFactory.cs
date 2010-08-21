@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Text;
 
 using ObjectCloud.Interfaces.Disk;
+using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.Interfaces.Javascript
 {
@@ -25,5 +26,12 @@ namespace ObjectCloud.Interfaces.Javascript
         IExecutionEnvironment Create(
             IFileContainer theObject,
             IFileContainer javascriptContainer);
+
+        /// <summary>
+        /// Runs the javascript in the file container
+        /// </summary>
+        /// <param name="javascriptContainer"></param>
+        /// <returns></returns>
+        IWebResults Run(IWebConnection webConnection, IFileContainer javascriptContainer);
     }
 }
