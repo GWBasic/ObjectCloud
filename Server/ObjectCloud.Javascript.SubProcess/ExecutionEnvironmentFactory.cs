@@ -115,10 +115,11 @@ namespace ObjectCloud.Javascript.SubProcess
                 parentScopeFactory.SubProcess.DisposeScope(scopeId, Thread.CurrentThread.ManagedThreadId);
             }
 
-            if (data.Result is IWebResults)
-                return (IWebResults)data.Result;
+            object result = data.Results[data.Results.Length - 2];
+            if (result is IWebResults)
+                return (IWebResults)result;
             else
-                return WebResults.ToJson(data.Result);
+                return WebResults.ToJson(result);
         }
     }
 }

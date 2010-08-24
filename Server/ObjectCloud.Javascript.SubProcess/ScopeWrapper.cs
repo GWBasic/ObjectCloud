@@ -184,8 +184,9 @@ namespace ObjectCloud.Javascript.SubProcess
             }
 
             // Get options
-            if (data.Result is Dictionary<string, object>)
-                ParseOptions((Dictionary<string, object>)data.Result);
+            object result = data.Results[data.Results.Length - 1];
+            if (result is Dictionary<string, object>)
+                ParseOptions((Dictionary<string, object>)result);
         }
 
         ~ScopeWrapper()

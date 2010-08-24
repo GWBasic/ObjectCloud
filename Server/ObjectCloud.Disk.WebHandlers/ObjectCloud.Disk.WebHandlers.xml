@@ -1249,6 +1249,18 @@
             <param name="MaxAge">The maxiumum age, in days</param>
             <returns></returns>
         </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.JavascriptInterpreterWebHandler">
+            <summary>
+            Web handler for interpreting server-side Javascript
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.JavascriptInterpreterWebHandler.Run(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Runs the specified Javascript
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
         <member name="T:ObjectCloud.Disk.WebHandlers.GroupWebHandler">
             <summary>
             Allows manipulation and querying of local users.
@@ -2248,18 +2260,6 @@
             <param name="templateParsingState"></param>
             <param name="fileContainer"></param>
             <param name="namedPermission"></param>
-            <returns></returns>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.JavascriptInterpreterWebHandler">
-            <summary>
-            Web handler for interpreting server-side Javascript
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.JavascriptInterpreterWebHandler.Run(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Runs the specified Javascript
-            </summary>
-            <param name="webConnection"></param>
             <returns></returns>
         </member>
     </members>

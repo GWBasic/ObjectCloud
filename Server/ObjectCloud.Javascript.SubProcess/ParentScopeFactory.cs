@@ -222,7 +222,8 @@ namespace ObjectCloud.Javascript.SubProcess
                 string baseWrapper = GetJavascriptWrapperForBase("base", webHandlerTypes);
 
                 scriptsToEval.Add(baseWrapper);
-                scriptsToEval.Add(javascript + "\nif (this.options) options; else null;");
+                scriptsToEval.Add(javascript);
+                scriptsToEval.Add("if (this.options) options; else null;");
 
                 ParentScope parentScope = new ParentScope(loadedScriptsModifiedTimes, functionsInScope);
 

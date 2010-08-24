@@ -247,7 +247,7 @@ namespace ObjectCloud.Javascript.SubProcess
             /// <summary>
             /// The call's result
             /// </summary>
-            public object Result;
+            public object[] Results;
 
             /// <summary>
             /// The functions that are present in the scope
@@ -326,7 +326,7 @@ namespace ObjectCloud.Javascript.SubProcess
             Dictionary<string, object> dataToReturn = SendCommandAndHandleResponse(command, scopeId);
 
             CreateScopeResults toReturn = new CreateScopeResults();
-            toReturn.Result = dataToReturn["Result"];
+            toReturn.Results = (object[])dataToReturn["Results"];
 
             object functionsObj = dataToReturn["Functions"];
             Dictionary<string, CreateScopeFunctionInfo> functionsToReturn = new Dictionary<string, CreateScopeFunctionInfo>();
@@ -668,6 +668,21 @@ namespace ObjectCloud.Javascript.SubProcess
                                 if (((Dictionary<string, object>)result).TryGetValue("ParentObjectId", out parentObjectId))
                                     if (TrackedObjects.TryGetValue(Convert.ToInt32(parentObjectId), out result))
                                         dataToReturn["Result"] = result;
+                            }
+                            else if (result is object[])
+                            {
+                                object[] results = (object[])result;
+                                for (int ctr = 0; ctr < results.Length; ctr++)
+                                    if (results[ctr] is Dictionary<string, object>)
+                                    {
+                                        object parentObjectId;
+                                        if (((Dictionary<string, object>)results[ctr]).TryGetValue("ParentObjectId", out parentObjectId))
+                                        {
+                                            object parentObject;
+                                            if (TrackedObjects.TryGetValue(Convert.ToInt32(parentObjectId), out parentObject))
+                                                results[ctr] = parentObject;
+                                        }
+                                    }
                             }
                         }
                         else
