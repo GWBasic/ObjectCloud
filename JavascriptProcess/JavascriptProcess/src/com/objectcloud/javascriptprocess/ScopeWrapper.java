@@ -191,6 +191,10 @@ public class ScopeWrapper {
 								
 							});		
 						}
+					else
+						results.put((Object)null);
+				else
+					results.put((Object)null);
 			}
 			
 		} catch (JavaScriptException je) {

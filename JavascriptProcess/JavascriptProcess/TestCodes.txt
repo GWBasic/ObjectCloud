@@ -3,7 +3,7 @@
    "ThreadID": 76,
    "Data":
    {
-      "Scripts": ["foo.a = 123; function foo(a){return a + \"!!!\";} function bar() {} aaa(1,2,'3', function(){});"],
+      "Scripts": ["null", "foo.a = 123; function foo(a){return a + \"!!!\";} function bar() {} aaa(1,2,'3', function(){});"],
       "Functions":["aaa","bbb","ccc"]
    }
 }
