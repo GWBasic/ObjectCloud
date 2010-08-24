@@ -170,11 +170,28 @@ public class ScopeWrapper {
 			scope.put(key, scope, property);
 		}
 
-	    Object result = null;
+		Object result = null;
+		JSONArray results = new JSONArray();
 		try {
 
-			for (NativeFunction script : parentScope.getCompiledScripts())
+			for (NativeFunction script : parentScope.getCompiledScripts()) {
 				result = script.call(context, scope, scope, null);
+				
+				if (result != null)
+					if (!(result instanceof Undefined)) {
+						final Object serializedCallResults = jsonStringifyFunction.call(context, scope, scope, new Object[] { result });
+						
+						if (serializedCallResults instanceof String)
+							results.put(new JSONString() {
+								
+								@Override
+								public String toJSONString() {
+									return (String)serializedCallResults;
+								}
+								
+							});		
+						}
+			}
 			
 		} catch (JavaScriptException je) {
 			returnResult("RespondCreateScope", context, threadID, je.getValue(), outData, "Exception");
@@ -187,6 +204,7 @@ public class ScopeWrapper {
 	    
 	    JSONObject functions = new JSONObject();
 		outData.put("Functions", functions);
+		outData.put("Results", results);
 		
         for (Object id : scope.getIds()) {
 
