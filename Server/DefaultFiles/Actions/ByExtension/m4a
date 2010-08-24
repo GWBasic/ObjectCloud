@@ -1,0 +1,4 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<NameValuePairs>
+	<NameValuePair Name="View" Value="/Shell/Viewers/AudioViewer.oc?FileName=[Target]&amp;Mime=audio/mp4a-latm&amp;[Arguments]" />
+</NameValuePairs>

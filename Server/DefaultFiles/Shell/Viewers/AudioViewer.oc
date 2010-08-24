@@ -1,0 +1,7 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" headerfooter="/DefaultTemplate/objectbar.ochf">
+
+   <!-- embed src="[_FileName_]?Method=ReadAll&amp;MimeOverride=[_Mime_]" autostart="false" hidden="false" width="300px" height="42px" -->
+
+   <audio autoplay="false" controls="true" loop="false" preload="true" src="[_FileName_]?Method=ReadAll&amp;MimeOverride=[_Mime_]" />
+
+</oc:componentdef>
