@@ -19,7 +19,7 @@ namespace ObjectCloud.Javascript.SubProcess
 {
     public class ExecutionEnvironmentFactory : HasFileHandlerFactoryLocator, IExecutionEnvironmentFactory
     {
-		//private static ILog log = LogManager.GetLogger<ExecutionEnvironmentFactory>();
+		private static ILog log = LogManager.GetLogger<ExecutionEnvironmentFactory>();
 
         public IExecutionEnvironment Create(
             IFileContainer fileContainer,
@@ -112,7 +112,18 @@ namespace ObjectCloud.Javascript.SubProcess
             }
             finally
             {
-                parentScopeFactory.SubProcess.DisposeScope(scopeId, Thread.CurrentThread.ManagedThreadId);
+                // Disposing happens on the threadpool as a way to return results sooner.  Why wait for cleanup in a multicore world?
+                ThreadPool.QueueUserWorkItem(delegate(object state)
+                {
+                    try
+                    {
+                        parentScopeFactory.SubProcess.DisposeScope(scopeId, Thread.CurrentThread.ManagedThreadId);
+                    }
+                    catch (Exception e)
+                    {
+                        log.Warn("Error disposing temporary scope", e);
+                    }
+                });
             }
 
             object result = data.Results[data.Results.Length - 2];
