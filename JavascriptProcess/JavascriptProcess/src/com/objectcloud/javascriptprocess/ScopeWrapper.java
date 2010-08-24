@@ -170,12 +170,11 @@ public class ScopeWrapper {
 			scope.put(key, scope, property);
 		}
 
-		Object result = null;
 		JSONArray results = new JSONArray();
 		try {
 
 			for (NativeFunction script : parentScope.getCompiledScripts()) {
-				result = script.call(context, scope, scope, null);
+				Object result = script.call(context, scope, scope, null);
 				
 				if (result != null)
 					if (!(result instanceof Undefined)) {
@@ -249,8 +248,7 @@ public class ScopeWrapper {
             }
         }
 
-		
-	    returnResult("RespondCreateScope", context, threadID, result, outData, "Result");
+	    returnResult("RespondCreateScope", context, threadID, null, outData, null);
 	}
 
 	// Lets javascript call a function in the parent process
