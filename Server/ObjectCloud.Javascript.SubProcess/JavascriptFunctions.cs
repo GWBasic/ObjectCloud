@@ -13,6 +13,7 @@ using JsonFx.Json;
 
 using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
+using ObjectCloud.Disk.WebHandlers;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
 using ObjectCloud.Interfaces.WebServer;
@@ -524,6 +525,41 @@ namespace ObjectCloud.Javascript.SubProcess
             IWebConnection webConnection = functionCallContext.WebConnection;
 
             return webConnection.GetBrowserCacheUrl(url);
+        }
+
+        /// <summary>
+        /// Evaluates the specified template
+        /// </summary>
+        /// <param name="template"></param>
+        /// <param name="arguments"></param>
+        /// <returns></returns>
+        public static IWebResults evaluateTemplate(string template, Dictionary<string, object> arguments)
+        {
+            if (null == template)
+                template = "/DefaultTemplate/headerfooter.ochf";
+
+            FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
+
+            IFileContainer templateEngineFileContainer = functionCallContext.ScopeWrapper.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("/System/TemplateEngine");
+            TemplateEngine templateEngineWebHandler = (TemplateEngine)templateEngineFileContainer.WebHandler;
+
+            RequestParameters requestParameters = new RequestParameters();
+
+            if (null != arguments)
+                foreach (KeyValuePair<string, object> requestParameter in (Dictionary<string, object>)arguments)
+                    requestParameters.Add(requestParameter.Key, requestParameter.Value.ToString());
+
+            IWebConnection webConnection = new BlockingShellWebConnection(
+                functionCallContext.WebConnection,
+                functionCallContext.WebConnection.Session,
+                template,
+                requestParameters,
+                null,
+                null,
+                functionCallContext.WebConnection.CookiesFromBrowser,
+                FunctionCaller.CallingFrom);
+
+            return templateEngineWebHandler.Evaluate(webConnection, template);
         }
     }
 }
