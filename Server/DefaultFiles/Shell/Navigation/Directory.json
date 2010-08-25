@@ -1,10 +1,10 @@
 [
    {"Template":"/Templates/ObjectCloud Template.oc","Extension":".oc","Display":"ObjectCloud Template (HTML5 xml)"},
+   {"Template":"/Templates/ServerSide Javascript Template.ocjs","Extension":".ocjs","Display":"Server-Side Javascript"},
+   {"Template":"/Templates/Directory Template","Extension":"","Display":"Directory"},
+   {"Template":"/Templates/Pairs Template","Extension":"","Display":"Name-Value pairs"},
    {"Template":"/Templates/Page Template.page","Extension":".page","Display":"Web Page"},
    {"Template":"/Templates/Text Template.txt","Extension":".txt","Display":"Text File"},
-   {"Template":"/Templates/Directory Template","Extension":"","Display":"Directory"},
-   {"Template":"/Templates/ServerSide Javascript Template.ssjs","Extension":".ssjs","Display":"Server-Side Javascript"},
-   {"Template":"/Templates/Pairs Template","Extension":"","Display":"Name-Value pairs"},
    {"Template":"/Templates/Database Template","Extension":"","Display":"Database"},
    {"Template":"/Templates/Particle Template","Extension":".ibg","Display":"Particle Discussion (Experimental)"},
    {"Template":"/Templates/Small Image Template.png","Extension":".png","Display":"Small Image (Experimental)"},

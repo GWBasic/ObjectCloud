@@ -1,0 +1,8 @@
+// some javascript
+
+// The Scripts: syntax is supported
+
+// Do not use return statements
+// To return a value, simply make it the last thunk:
+
+"This will be returned";

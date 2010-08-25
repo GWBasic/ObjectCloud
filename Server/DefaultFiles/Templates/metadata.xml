@@ -16,21 +16,6 @@
 			SendNotifications="False" />
 	</File>
 	<File
-		Name="Database Template"
-		TypeId="database"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
-		<Permission
-			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
-			Level="Administer"
-			Inherit="False"
-			SendNotifications="False" />
-		<Permission
-			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
-			Level="Administer"
-			Inherit="False"
-			SendNotifications="False" />
-	</File>
-	<File
 		Name="Directory Template"
 		TypeId="directory"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
@@ -125,20 +110,9 @@
 			SendNotifications="False" />
 	</File>
 	<File
-		Name="ServerSide Javascript Template.ssjs"
+		Name="ServerSide Javascript Template.ocjs"
 		TypeId="text"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
-		<Permission
-			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
-			Level="Administer"
-			Inherit="False"
-			SendNotifications="False" />
-		<Permission
-			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
-			Level="Administer"
-			Inherit="False"
-			SendNotifications="False" />
-	</File>
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 	<File
 		Name="Small Image Template.png"
 		TypeId="image"
@@ -157,21 +131,6 @@
 	<File
 		Name="Text Template.txt"
 		TypeId="text"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
-		<Permission
-			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
-			Level="Administer"
-			Inherit="False"
-			SendNotifications="False" />
-		<Permission
-			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
-			Level="Administer"
-			Inherit="False"
-			SendNotifications="False" />
-	</File>
-	<File
-		Name="Voting Booth Template.vote"
-		TypeId="database"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
 			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
