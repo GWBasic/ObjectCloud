@@ -105,11 +105,13 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <param name="webConnection"></param>
         /// <param name="javascript"></param>
         /// <param name="fileContainer"></param>
+        /// <param name="constructScopeResults"></param>
         public ScopeWrapper(
             FileHandlerFactoryLocator fileHandlerFactoryLocator,
             SubProcess subProcess,
             IFileContainer fileContainer,
-            ParentScope parentScope)
+            ParentScope parentScope,
+            out object constructScopeResults)
         {
             _FileContainer = fileContainer;
             _SubProcess = subProcess;
@@ -119,10 +121,10 @@ namespace ObjectCloud.Javascript.SubProcess
 
             _FileHandlerFactoryLocator = fileHandlerFactoryLocator;
 
-            ConstructScope();
+            constructScopeResults = ConstructScope();
         }
 
-        private void ConstructScope()
+        private object ConstructScope()
         {
             log.Debug("Constructing Javascript scope for " + FileContainer.FullPath);
 
@@ -187,6 +189,8 @@ namespace ObjectCloud.Javascript.SubProcess
             object result = data.Results[data.Results.Length - 1];
             if (result is Dictionary<string, object>)
                 ParseOptions((Dictionary<string, object>)result);
+
+            return data.Results[data.Results.Length - 2];
         }
 
         ~ScopeWrapper()

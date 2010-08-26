@@ -96,37 +96,28 @@ namespace ObjectCloud.Javascript.SubProcess
 
             int scopeId = ScopeWrapper.GetScopeID();
 
-            SubProcess.CreateScopeResults data;
+            object result;
 
-            try
+            ScopeWrapper scopeWrapper = new ScopeWrapper(
+                FileHandlerFactoryLocator,
+                parentScopeFactory.SubProcess,
+                javascriptContainer,
+                parentScope,
+                out result);
+
+            // Disposing happens on the threadpool as a way to return results sooner.  Why wait for cleanup in a multicore world?
+            ThreadPool.QueueUserWorkItem(delegate(object state)
             {
-                data = FunctionCaller.UseTemporaryCaller<SubProcess.CreateScopeResults>(
-                    null, javascriptContainer, webConnection, delegate()
-                    {
-                        return parentScopeFactory.SubProcess.CreateScope(
-                            scopeId,
-                            parentScope.ParentScopeId,
-                            Thread.CurrentThread.ManagedThreadId,
-                            ScopeWrapper.CreateMetadata(FileHandlerFactoryLocator, javascriptContainer));
-                    });
-            }
-            finally
-            {
-                // Disposing happens on the threadpool as a way to return results sooner.  Why wait for cleanup in a multicore world?
-                ThreadPool.QueueUserWorkItem(delegate(object state)
+                try
                 {
-                    try
-                    {
-                        parentScopeFactory.SubProcess.DisposeScope(scopeId, Thread.CurrentThread.ManagedThreadId);
-                    }
-                    catch (Exception e)
-                    {
-                        log.Warn("Error disposing temporary scope", e);
-                    }
-                });
-            }
+                    scopeWrapper.Dispose();
+                }
+                catch (Exception e)
+                {
+                    log.Warn("Error disposing temporary scope", e);
+                }
+            });
 
-            object result = data.Results[data.Results.Length - 2];
             if (result is IWebResults)
                 return (IWebResults)result;
             else

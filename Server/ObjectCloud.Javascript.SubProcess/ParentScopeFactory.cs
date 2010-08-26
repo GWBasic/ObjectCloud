@@ -66,7 +66,15 @@ namespace ObjectCloud.Javascript.SubProcess
             // First try getting the parent scope ID in a read-only lock
             try
             {
-                if (LoadedParentScopes.TryGetValue(javascriptContainer, out parentScope))
+                LoadedParentScopes.TryGetValue(javascriptContainer, out parentScope);
+            }
+            finally
+            {
+                LoadedParentScopesLock.ExitReadLock();
+            }
+
+            if (null != parentScope)
+                if (parentScope.StillValid)
                 {
                     bool stillValid = true;
 
@@ -76,11 +84,6 @@ namespace ObjectCloud.Javascript.SubProcess
                     if (stillValid)
                         return parentScope;
                 }
-            }
-            finally
-            {
-                LoadedParentScopesLock.ExitReadLock();
-            }
 
             // Either there's no parent scope or it's invalid
             using (TimedLock.Lock(javascriptContainer, TimeSpan.FromSeconds(15)))
@@ -213,6 +216,8 @@ namespace ObjectCloud.Javascript.SubProcess
                             scriptsToEval.Add(ownerWebConnection.ShellTo(scriptName).ResultsAsString);
                     }
                 }
+
+                loadedScriptsModifiedTimes.Add(new KeyValuePair<IFileContainer, DateTime>(javascriptContainer, javascriptContainer.LastModified));
 
                 // Construct Javascript to shell to the "base" webHandler
                 Set<Type> webHandlerTypes = new Set<Type>(FileHandlerFactoryLocator.WebHandlerPlugins);

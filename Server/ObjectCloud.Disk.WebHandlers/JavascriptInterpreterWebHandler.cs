@@ -40,6 +40,13 @@ namespace ObjectCloud.Disk.WebHandlers
             if (null == javascriptContainer.LoadPermission(webConnection.Session.User.Id))
                 throw new WebResultsOverrideException(WebResults.From(Status._401_Unauthorized, "Permission denied"));
 
+            if (!(FileHandlerFactoryLocator.UserManagerHandler.IsUserInGroup(
+                webConnection.Session.User.Id,
+                FileHandlerFactoryLocator.UserFactory.Administrators.Id)))
+            {
+                throw new WebResultsOverrideException(WebResults.From(Status._401_Unauthorized, "Only administrators can write server-side Javascript"));
+            }
+
             webConnection.TouchedFiles.Add(javascriptContainer);
 
             return FileHandlerFactoryLocator.ExecutionEnvironmentFactory.Run(webConnection, javascriptContainer);

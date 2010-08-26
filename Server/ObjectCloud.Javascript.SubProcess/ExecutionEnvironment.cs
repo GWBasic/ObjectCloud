@@ -44,13 +44,16 @@ namespace ObjectCloud.Javascript.SubProcess
 
             parentScope.WebHandlersWithThisAsParent.Enqueue(fileContainer.WebHandler);
 
+            object toDiscard;
+
             try
             {
                 ScopeWrapper = new ObjectCloud.Javascript.SubProcess.ScopeWrapper(
                     fileHandlerFactoryLocator,
                     subProcess,
                     fileContainer,
-                    parentScope);
+                    parentScope,
+                    out toDiscard);
             }
             catch (Exception e)
             {

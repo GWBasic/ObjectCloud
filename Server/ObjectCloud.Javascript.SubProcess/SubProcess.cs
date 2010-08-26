@@ -669,7 +669,13 @@ namespace ObjectCloud.Javascript.SubProcess
                                     if (TrackedObjects.TryGetValue(Convert.ToInt32(parentObjectId), out result))
                                         dataToReturn["Result"] = result;
                             }
-                            else if (result is object[])
+                        }
+                        else
+                            dataToReturn["Result"] = Undefined.Value;
+
+                        if (dataToReturn.TryGetValue("Results", out result))
+                        {
+                            if (result is object[])
                             {
                                 object[] results = (object[])result;
                                 for (int ctr = 0; ctr < results.Length; ctr++)
@@ -685,8 +691,6 @@ namespace ObjectCloud.Javascript.SubProcess
                                     }
                             }
                         }
-                        else
-                            dataToReturn["Result"] = Undefined.Value;
 
                         return dataToReturn;
                     }

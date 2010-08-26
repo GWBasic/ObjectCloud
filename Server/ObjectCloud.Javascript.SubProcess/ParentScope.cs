@@ -40,6 +40,8 @@ namespace ObjectCloud.Javascript.SubProcess
 
         void ParentScope_ContentsChanged(ITextHandler sender, EventArgs e)
         {
+            _StillValid = false;
+
             // If code changed within the scope, then reset the execution environment so it'll be recreated next time its used
             IWebHandler webHandler;
             while (WebHandlersWithThisAsParent.Dequeue(out webHandler))
@@ -69,5 +71,14 @@ namespace ObjectCloud.Javascript.SubProcess
             get { return _WebHandlersWithThisAsParent; }
         }
         private readonly LockFreeQueue<IWebHandler> _WebHandlersWithThisAsParent = new LockFreeQueue<IWebHandler>();
+
+        /// <summary>
+        /// Set to false if the parent scope no longer is valid
+        /// </summary>
+        public bool StillValid
+        {
+            get { return _StillValid; }
+        }
+        private bool _StillValid = true;
     }
 }

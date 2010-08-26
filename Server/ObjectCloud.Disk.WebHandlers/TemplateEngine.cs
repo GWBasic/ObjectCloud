@@ -48,27 +48,27 @@ namespace ObjectCloud.Disk.WebHandlers
 
             // Hack to work around a bug in IE handling xhtml
             // What's going on is that I'm using a horrible hack to remove all namespaces from the <html> tag and turn this into an SGML-HTML document instead of xml-html
-            //if (webConnection.Headers["USER-AGENT"].Contains(" Firefox/") || webConnection.Headers["USER-AGENT"].Contains(" MSIE "))
-            if (webConnection.Headers["USER-AGENT"].Contains(" MSIE "))
-            {
-                // <?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" 
+            string userAgent;
+            if (webConnection.Headers.TryGetValue("USER-AGENT", out userAgent))
+                if (userAgent.Contains(" MSIE "))
+                {
+                    // <?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" 
 
-                StreamReader sr = new StreamReader(results);
-                string result = sr.ReadToEnd();
-                //result = result.Replace("<?xml version=\"1.0\" encoding=\"utf-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:oc=\"objectcloud_templating\">", "<!DOCTYPE html>\n<html>");
-                result = result.Replace("<?xml version=\"1.0\" encoding=\"utf-8\"?><html", "");
-                result = result.Split(new char[] { '>' }, 2)[1];
-                result = "<!DOCTYPE html>\n<html>" + result;
+                    StreamReader sr = new StreamReader(results);
+                    string result = sr.ReadToEnd();
+                    result = result.Replace("<?xml version=\"1.0\" encoding=\"utf-8\"?><html", "");
+                    result = result.Split(new char[] { '>' }, 2)[1];
+                    result = "<!DOCTYPE html>\n<html>" + result;
 
-                toReturn = WebResults.From(Status._200_OK, result);
-                toReturn.ContentType = "text/html";
-            }
-            else
-            {
-                // Everyone else gets real XML
-                toReturn = WebResults.From(Status._200_OK, results);
-                toReturn.ContentType = "application/xhtml+xml"; // "text/xml";
-            }
+                    toReturn = WebResults.From(Status._200_OK, result);
+                    toReturn.ContentType = "text/html";
+
+                    return toReturn;
+                }
+
+            // Everyone else gets real XML
+            toReturn = WebResults.From(Status._200_OK, results);
+            toReturn.ContentType = "application/xhtml+xml";
 
             return toReturn;
         }
