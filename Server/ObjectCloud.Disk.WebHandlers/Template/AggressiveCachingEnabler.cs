@@ -27,7 +27,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
     /// </summary>
     class AggressiveCachingEnabler : HasFileHandlerFactoryLocator, ITemplateProcessor
     {
-        //private static ILog log = LogManager.GetLogger<AggressiveCachingEnabler>();
+        private static ILog log = LogManager.GetLogger<AggressiveCachingEnabler>();
 
         void ITemplateProcessor.Register(ITemplateParsingState templateParsingState)
         {
@@ -107,11 +107,74 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
                     /*}
                     else */
-                    if (element.LocalName == "link")
+
+                    if (element.LocalName == "script")
+                    {
+                        // Don't allow empty <script /> tags
+                        if (null == element.InnerText)
+                            element.InnerText = "";
+
+                        if (element.InnerText.Length > 0)
+                            if (!templateParsingState.WebConnection.CookiesFromBrowser.ContainsKey(templateParsingState.TemplateHandlerLocator.TemplatingConstants.JavascriptDebugModeCookie))
+                                try
+                                {
+                                    IEnumerable<XmlNode> toIterate = Enumerable<XmlNode>.FastCopy(Enumerable<XmlNode>.Cast(element.ChildNodes));
+
+                                    // The xml contents of a script tag are minified in case xml is quoted
+                                    StringBuilder scriptBuilder = new StringBuilder((element.InnerXml.Length * 5) / 4);
+                                    foreach (XmlNode node in toIterate)
+                                        if (node is XmlText)
+                                            scriptBuilder.Append(node.InnerText);
+                                        else
+                                            scriptBuilder.Append(node.OuterXml);
+
+                                    string minified = JavaScriptMinifier.Instance.Minify(scriptBuilder.ToString());
+
+                                    foreach (XmlNode node in toIterate)
+                                        element.RemoveChild(node);
+
+                                    element.AppendChild(
+                                        templateParsingState.TemplateDocument.CreateTextNode(minified));
+                                }
+                                catch (Exception e)
+                                {
+                                    log.Warn("Exception minimizing Javascript:\n" + element.InnerXml, e);
+                                }
+                        /*foreach (XmlText scriptContentsNode in Enumerable<XmlText>.Filter(element.ChildNodes))
+                            try
+                            {
+                                scriptContentsNode.InnerText = JavaScriptMinifier.Instance.Minify(scriptContentsNode.InnerText);
+                            }
+                            catch (Exception e)
+                            {
+                                log.Warn("Exception minimizing Javascript:\n" + scriptContentsNode.InnerText, e);
+                            }*/
+
+                    }
+                    else if (element.LocalName == "link")
                         AddBrowserCache(templateParsingState, element.Attributes["href"]);
 
                     else if (element.LocalName == "img")
                         AddBrowserCache(templateParsingState, element.Attributes["src"]);
+
+                    else if (element.LocalName == "embed")
+                        AddBrowserCache(templateParsingState, element.Attributes["src"]);
+
+                    else
+                    {
+                        string browserCacheAttributeName = element.GetAttribute(
+                            "browsercacheattribute",
+                            templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
+
+                        if (browserCacheAttributeName != null)
+                            if (browserCacheAttributeName.Length > 0)
+                            {
+                                AddBrowserCache(templateParsingState, element.Attributes[browserCacheAttributeName]);
+                                element.RemoveAttribute(
+                                    "browsercacheattribute",
+                                    templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
+                            }
+                    }
             }
 
             private enum BrowserCacheEnum

@@ -399,12 +399,28 @@ namespace ObjectCloud.Disk.WebHandlers
                             if (null != src)
                                 if (src.Length > 0)
                                     if (src.StartsWith("/"))
-										if (!(src.Contains("?")))
-	                                    {
-	                                        lastLocalScriptTag = node;
-	                                        scriptElements.AddLast(node);
-	                                        scriptUrls.AddLast(src);
-	                                    }
+
+                                        // Hueristic:  All scripts without a ? are merged into one
+                                        // If a script has a ?, but it's for a system file or the user database, it can also be merged
+                                        if ((!(src.Contains("?"))) || (src.StartsWith("/System/")) || (src.StartsWith("/Users/UserDB?")))
+                                        {
+                                            lastLocalScriptTag = node;
+                                            scriptElements.AddLast(node);
+                                            scriptUrls.AddLast(src);
+                                        }
+                                        else
+                                        {
+                                            // If the script cannot be merged, then add the BrowserCache GET argument so that the browser can cache it
+
+                                            IWebResults scriptResults = templateParsingState.WebConnection.ShellTo(src);
+
+                                            src = HTTPStringFunctions.AppendGetParameter(
+                                                src,
+                                                "BrowserCache",
+                                                StringGenerator.GenerateHash(scriptResults.ResultsAsString));
+
+                                            node.SetAttribute("src", src);
+                                        }
                 }
 
                 // Remove dead script tags and update the last one to load a composite script
