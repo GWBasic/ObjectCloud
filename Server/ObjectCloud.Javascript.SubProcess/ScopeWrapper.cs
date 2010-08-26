@@ -111,6 +111,7 @@ namespace ObjectCloud.Javascript.SubProcess
             SubProcess subProcess,
             IFileContainer fileContainer,
             ParentScope parentScope,
+            IWebConnection constructWebConnection,
             out object constructScopeResults)
         {
             _FileContainer = fileContainer;
@@ -121,10 +122,10 @@ namespace ObjectCloud.Javascript.SubProcess
 
             _FileHandlerFactoryLocator = fileHandlerFactoryLocator;
 
-            constructScopeResults = ConstructScope();
+            constructScopeResults = ConstructScope(constructWebConnection);
         }
 
-        private object ConstructScope()
+        private object ConstructScope(IWebConnection constructWebConnection)
         {
             log.Debug("Constructing Javascript scope for " + FileContainer.FullPath);
 
@@ -133,39 +134,16 @@ namespace ObjectCloud.Javascript.SubProcess
             _SubProcess.RegisterParentFunctionDelegate(ScopeId, CallParentFunction);
             FunctionCallers = new Dictionary<string, FunctionCaller>();
 
-            ISession ownerSession = FileHandlerFactoryLocator.SessionManagerHandler.CreateSession();
-            SubProcess.CreateScopeResults data;
-
-            try
-            {
-				if (null != FileContainer.Owner)
-                		ownerSession.Login(FileContainer.Owner);
-
-                IWebConnection ownerWebConnection = new BlockingShellWebConnection(
-                    FileHandlerFactoryLocator.WebServer,
-                    ownerSession,
-                    FileContainer.FullPath,
-                    null,
-                    null,
-                    new CookiesFromBrowser(),
-                    CallingFrom.Web,
-                    WebMethod.GET);
-
-                data = FunctionCaller.UseTemporaryCaller<SubProcess.CreateScopeResults>(
-                    this, FileContainer, ownerWebConnection, delegate()
-                    {
-                        return _SubProcess.CreateScope(
-                            ScopeId,
-                            ParentScope.ParentScopeId,
-                            Thread.CurrentThread.ManagedThreadId,
-                            CreateMetadata(FileHandlerFactoryLocator, FileContainer));
-                    });
-            }
-            finally
-            {
-                FileHandlerFactoryLocator.SessionManagerHandler.EndSession(ownerSession.SessionId);
-            }
-
+            SubProcess.CreateScopeResults data = FunctionCaller.UseTemporaryCaller<SubProcess.CreateScopeResults>(
+                this, FileContainer, constructWebConnection, delegate()
+                {
+                    return _SubProcess.CreateScope(
+                        ScopeId,
+                        ParentScope.ParentScopeId,
+                        Thread.CurrentThread.ManagedThreadId,
+                        CreateMetadata(FileHandlerFactoryLocator, FileContainer));
+                });
+            
             // Initialize each function caller
             foreach (KeyValuePair<string, SubProcess.CreateScopeFunctionInfo> functionKVP in data.Functions)
             {

@@ -101,6 +101,7 @@ namespace ObjectCloud.Javascript.SubProcess
                 parentScopeFactory.SubProcess,
                 javascriptContainer,
                 parentScope,
+                webConnection,
                 out result);
 
             // Disposing happens on the threadpool as a way to return results sooner.  Why wait for cleanup in a multicore world?

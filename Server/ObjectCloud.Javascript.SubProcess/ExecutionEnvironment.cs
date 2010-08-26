@@ -46,13 +46,29 @@ namespace ObjectCloud.Javascript.SubProcess
 
             object toDiscard;
 
+            ISession ownerSession = FileHandlerFactoryLocator.SessionManagerHandler.CreateSession();
+
             try
             {
-                ScopeWrapper = new ObjectCloud.Javascript.SubProcess.ScopeWrapper(
+                if (null != fileContainer.Owner)
+                    ownerSession.Login(fileContainer.Owner);
+
+                IWebConnection ownerWebConnection = new BlockingShellWebConnection(
+                    FileHandlerFactoryLocator.WebServer,
+                    ownerSession,
+                    fileContainer.FullPath,
+                    null,
+                    null,
+                    new CookiesFromBrowser(),
+                    CallingFrom.Web,
+                    WebMethod.GET);
+
+                ScopeWrapper = new ScopeWrapper(
                     fileHandlerFactoryLocator,
                     subProcess,
                     fileContainer,
                     parentScope,
+                    ownerWebConnection,
                     out toDiscard);
             }
             catch (Exception e)
@@ -60,6 +76,10 @@ namespace ObjectCloud.Javascript.SubProcess
                 // If the Javascript has an error in it, it must be ignored.  If an error were returned, then malformed Javascript could hose the system!
                 this._ExecutionEnvironmentErrors = e.ToString();
                 log.Error("Error creating scope", e);
+            }
+            finally
+            {
+                FileHandlerFactoryLocator.SessionManagerHandler.EndSession(ownerSession.SessionId);
             }
         }
 
