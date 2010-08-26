@@ -94,8 +94,6 @@ namespace ObjectCloud.Javascript.SubProcess
             ParentScopeFactory parentScopeFactory  = GetParentScopeFactory();
             ParentScope parentScope = parentScopeFactory.GetParentScope(javascriptContainer);
 
-            int scopeId = ScopeWrapper.GetScopeID();
-
             object result;
 
             ScopeWrapper scopeWrapper = new ScopeWrapper(
