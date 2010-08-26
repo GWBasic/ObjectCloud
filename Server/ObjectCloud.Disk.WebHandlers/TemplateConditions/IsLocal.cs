@@ -28,6 +28,9 @@ namespace ObjectCloud.Disk.WebHandlers.TemplateConditions
         /// <returns></returns>
         public bool IsConditionMet(ITemplateParsingState templateParsingState, System.Xml.XmlNode me)
         {
+            if (templateParsingState.WebConnection.Session.User.Id == templateParsingState.FileHandlerFactoryLocator.UserFactory.AnonymousUser.Id)
+                return false;
+
             return templateParsingState.WebConnection.Session.User.Local;
         }
     }
