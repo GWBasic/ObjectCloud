@@ -333,6 +333,16 @@ namespace ObjectCloud.Interfaces.WebServer
         }
         private TimeSpan _ContentTimeout;
 
+        /// <summary>
+        /// The size of buffer to use when sending
+        /// </summary>
+        public int SendBufferSize
+        {
+            get { return _SendBufferSize; }
+            set { _SendBufferSize = value; }
+        }
+        private int _SendBufferSize;
+
         public abstract void RunServer();
 
         public void Stop()

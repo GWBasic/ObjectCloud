@@ -36,10 +36,6 @@ namespace ObjectCloud.WebServer.Implementation
             Socket = socket;
             RemoteEndPoint = socket.RemoteEndPoint;
 
-            // Create the header buffer
-            Buffer = new byte[webServer.HeaderSize];
-            Array.Clear(Buffer, 0, webServer.HeaderSize);
-
             BufferBytesRead = 0;
 
             log.Trace("New socket");
@@ -103,12 +99,15 @@ namespace ObjectCloud.WebServer.Implementation
         static byte[] HeaderEndMarker = Encoding.UTF8.GetBytes("\r\n\r\n");
 
         /// <summary>
-        /// Starts running the socket reader on its own thread
+        /// Starts reading the HTTP header from the socket
         /// </summary>
         public void Start()
         {
             try
             {
+                if (null == Buffer)
+                    Buffer = WebServer.RecieveBufferRecycler.Get();
+
                 // Timeout if the client takes a really long time to send bytes
                 Socket.ReceiveTimeout = Convert.ToInt32(TimeSpan.FromSeconds(15).TotalMilliseconds);
                 ReadStartTime = DateTime.UtcNow;
@@ -116,6 +115,7 @@ namespace ObjectCloud.WebServer.Implementation
                 WebConnection = new WebConnection(WebServer, Socket.RemoteEndPoint, SendToBrowser);
 
                 WebConnectionIOState = WebConnectionIOState.Idle;
+
                 ReadHeader();
             }
             catch (ThreadAbortException)
@@ -236,18 +236,18 @@ namespace ObjectCloud.WebServer.Implementation
         /// </summary>
         private void HandleHeader(int headerEnd)
         {
-            byte[] headerBytes = new byte[headerEnd];
-            Array.Copy(Buffer, headerBytes, headerBytes.Length);
-            string header = Encoding.UTF8.GetString(headerBytes);
+            string header = Encoding.UTF8.GetString(Buffer, 0, headerEnd);
 
             // If more data was read into the buffer then the length of the header, then move it to the front of the buffer
             if (BufferBytesRead > headerEnd + HeaderEndMarker.Length)
             {
                 byte[] oldBuffer = Buffer;
-                Buffer = new byte[oldBuffer.Length];
+                Buffer = WebServer.RecieveBufferRecycler.Get();
 
                 Array.Copy(oldBuffer, headerEnd + HeaderEndMarker.Length, Buffer, 0, BufferBytesRead - headerEnd - HeaderEndMarker.Length);
                 //System.Buffer.BlockCopy(Buffer, headerEnd + HeaderEndMarker.Length, Buffer, 0, BufferBytesRead - headerEnd - HeaderEndMarker.Length);
+
+                WebServer.RecieveBufferRecycler.Recycle(oldBuffer);
             }
 
             BufferBytesRead = BufferBytesRead - (headerEnd + HeaderEndMarker.Length);
@@ -344,10 +344,12 @@ namespace ObjectCloud.WebServer.Implementation
                 else
                 {
                     byte[] oldBuffer = Buffer;
-                    Buffer = new byte[oldBuffer.Length];
+                    Buffer = WebServer.RecieveBufferRecycler.Get();
 
                     Array.Copy(oldBuffer, ContentLength, Buffer, 0, BufferBytesRead - ContentLength);
                     //System.Buffer.BlockCopy(Buffer, Convert.ToInt32(ContentLength), Buffer, 0, Convert.ToInt32(BufferBytesRead - ContentLength));
+
+                    WebServer.RecieveBufferRecycler.Recycle(oldBuffer);
 
                     BufferBytesRead = Convert.ToInt32(Convert.ToInt64(BufferBytesRead) - ContentLength);
                 }
@@ -416,9 +418,11 @@ namespace ObjectCloud.WebServer.Implementation
                         Array.Copy(Buffer, localBuffer, localBuffer.Length);
 
                         byte[] oldBuffer = Buffer;
-                        Buffer = new byte[oldBuffer.Length];
+                        Buffer = WebServer.RecieveBufferRecycler.Get();
                         Array.Copy(oldBuffer, localBuffer.Length, Buffer, 0, BufferBytesRead - localBuffer.Length);
                         //System.Buffer.BlockCopy(Buffer, localBuffer.Length, Buffer, 0, BufferBytesRead - localBuffer.Length);
+
+                        WebServer.RecieveBufferRecycler.Recycle(oldBuffer);
 
                         BufferBytesRead = BufferBytesRead - localBuffer.Length;
 
@@ -511,6 +515,9 @@ namespace ObjectCloud.WebServer.Implementation
         /// <param name="stream"></param>
         private void SendToBrowser(Stream stream)
         {
+            if (null == SendBuffer)
+                SendBuffer = WebServer.SendBufferRecycler.Get();
+
             if (Socket.Connected)
             {
                 SendEnd = DateTime.UtcNow.AddMinutes(5);
@@ -539,7 +546,7 @@ namespace ObjectCloud.WebServer.Implementation
         /// <summary>
         /// The buffer used for sending to the client
         /// </summary>
-        byte[] SendBuffer = new byte[60000];
+        byte[] SendBuffer = null;
 
         /// <summary>
         /// The number of bytes in the buffer that are being sent
@@ -572,6 +579,9 @@ namespace ObjectCloud.WebServer.Implementation
 
                 else
                 {
+                    WebServer.SendBufferRecycler.Recycle(SendBuffer);
+                    SendBuffer = null;
+
                     ResultStream.Close();
                     ResultStream = null;
 
@@ -668,6 +678,12 @@ namespace ObjectCloud.WebServer.Implementation
         /// </summary>
         internal void Close()
         {
+            if (null != Buffer)
+            {
+                WebServer.RecieveBufferRecycler.Recycle(Buffer);
+                Buffer = null;
+            }
+
             try
             {
                 Socket.Shutdown(SocketShutdown.Both);

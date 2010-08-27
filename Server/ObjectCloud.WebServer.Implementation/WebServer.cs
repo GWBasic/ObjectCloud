@@ -44,6 +44,9 @@ namespace ObjectCloud.WebServer.Implementation
         {
             log.Info("Starting: " + this.ServerType);
 
+            RecieveBufferRecycler = new BufferRecycler(HeaderSize);
+            SendBufferRecycler = new BufferRecycler(SendBufferSize);
+
             FileHandlerFactoryLocator.FileSystemResolver.Start();
 
             _Running = true;
@@ -61,6 +64,16 @@ namespace ObjectCloud.WebServer.Implementation
 
 			System.Runtime.GCSettings.LatencyMode = System.Runtime.GCLatencyMode.Batch;
         }
+
+        /// <summary>
+        /// Allows re-using buffers for recieving data from clients
+        /// </summary>
+        internal Recycler<byte[]> RecieveBufferRecycler;
+
+        /// <summary>
+        /// Allows re-using buffers for sending data to clients
+        /// </summary>
+        internal Recycler<byte[]> SendBufferRecycler;
 
         private void AcceptSocket(IAsyncResult ar)
         {
@@ -135,5 +148,31 @@ namespace ObjectCloud.WebServer.Implementation
 			set { _MinRequestsBeforeGarbageCollection = value; }
 		}
 		private int _MinRequestsBeforeGarbageCollection = 3000;
+
+        /// <summary>
+        /// Assists in conserving memory while reading HTTP headers
+        /// </summary>
+        private class BufferRecycler : Recycler<byte[]>
+        {
+            public BufferRecycler(int headerSize)
+            {
+                HeaderSize = headerSize;
+            }
+
+            private int HeaderSize;
+
+            public override byte[] Construct()
+            {
+                byte[] toReturn = new byte[HeaderSize];
+                Array.Clear(toReturn, 0, HeaderSize);
+
+                return toReturn;
+            }
+
+            protected override void RecycleInt(byte[] toRecycle)
+            {
+                Array.Clear(toRecycle, 0, HeaderSize);
+            }
+        }
 	}
 }

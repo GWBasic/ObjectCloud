@@ -26,6 +26,7 @@
       <object id="JavascriptWebAccessCodeGenerator" type="ObjectCloud.WebAccessCodeGenerators.JavascriptWrapperGenerator, ObjectCloud.WebAccessCodeGenerators" />
     </property>
     <property name="HeaderSize" value="4096" />
+    <property name="SendBufferSize" value="120000" />
     <property name="HeaderTimeout">
       <object type="System.TimeSpan" factory-method="FromMinutes" id="HeaderTimeout">
         <constructor-arg index="0"  value="5" />
