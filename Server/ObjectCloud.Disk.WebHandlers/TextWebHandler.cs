@@ -47,7 +47,7 @@ namespace ObjectCloud.Disk.WebHandlers
                     {
                         // The text will be "minimized" javascript to save space
 
-                        JavaScriptMinifier javaScriptMinifier = Recycler<JavaScriptMinifier>.Get();
+                        JavaScriptMinifier javaScriptMinifier = StaticRecycler<JavaScriptMinifier>.Get();
 
                         try
                         {
@@ -59,7 +59,7 @@ namespace ObjectCloud.Disk.WebHandlers
                         }
                         finally
                         {
-                            Recycler<JavaScriptMinifier>.Recycle(javaScriptMinifier);
+                            StaticRecycler<JavaScriptMinifier>.Recycle(javaScriptMinifier);
                         }
 
                         break;

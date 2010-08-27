@@ -801,7 +801,7 @@ namespace ObjectCloud.WebServer.Implementation
                     byte[] scriptBytes = System.Text.Encoding.UTF8.GetBytes(loadedScriptCache[scriptName]);
 
                     // Get a free hash calculator
-                    MD5CryptoServiceProvider hashAlgorithm = Recycler<MD5CryptoServiceProvider>.Get();
+                    MD5CryptoServiceProvider hashAlgorithm = StaticRecycler<MD5CryptoServiceProvider>.Get();
 
                     byte[] scriptHash;
                     try
@@ -811,7 +811,7 @@ namespace ObjectCloud.WebServer.Implementation
                     finally
                     {
                         // Save the hash calculator for reuse
-                        Recycler<MD5CryptoServiceProvider>.Recycle(hashAlgorithm);
+                        StaticRecycler<MD5CryptoServiceProvider>.Recycle(hashAlgorithm);
                     }
 
                     scriptAndMD5.MD5 = Convert.ToBase64String(scriptHash);

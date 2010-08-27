@@ -14,7 +14,7 @@ namespace ObjectCloud.Common
     /// Allows re-use of objects that are computationally complex to generate.  This is thread-safe
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public static class Recycler<T>
+    public static class StaticRecycler<T>
         where T : new()
     {
         private static LockFreeStack<T> Stack = new LockFreeStack<T>();

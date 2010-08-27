@@ -239,7 +239,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     IWebResults shelled = templateParsingState.WebConnection.ShellTo(attributeValue);
 
                     // Get a free hash calculator
-                    MD5CryptoServiceProvider hashAlgorithm = Recycler<MD5CryptoServiceProvider>.Get();
+                    MD5CryptoServiceProvider hashAlgorithm = StaticRecycler<MD5CryptoServiceProvider>.Get();
 
                     byte[] scriptHash;
                     try
@@ -249,7 +249,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     finally
                     {
                         // Save the hash calculator for reuse
-                        Recycler<MD5CryptoServiceProvider>.Recycle(hashAlgorithm);
+                        StaticRecycler<MD5CryptoServiceProvider>.Recycle(hashAlgorithm);
                     }
 
                     attribute.InnerText = HTTPStringFunctions.AppendGetParameter(

@@ -116,7 +116,7 @@ namespace ObjectCloud.Common
             using (MemoryStream ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(toHash)))
             {
                 // Get a free hash calculator
-                MD5CryptoServiceProvider hashAlgorithm = Recycler<MD5CryptoServiceProvider>.Get();
+                MD5CryptoServiceProvider hashAlgorithm = StaticRecycler<MD5CryptoServiceProvider>.Get();
 
                 byte[] scriptHash;
                 try
@@ -126,7 +126,7 @@ namespace ObjectCloud.Common
                 finally
                 {
                     // Save the hash calculator for reuse
-                    Recycler<MD5CryptoServiceProvider>.Recycle(hashAlgorithm);
+                    StaticRecycler<MD5CryptoServiceProvider>.Recycle(hashAlgorithm);
                 }
 
                 return Convert.ToBase64String(scriptHash);
