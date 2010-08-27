@@ -161,7 +161,7 @@ namespace ObjectCloud.WebServer.Implementation
 
             private int HeaderSize;
 
-            public override byte[] Construct()
+            protected override byte[] Construct()
             {
                 byte[] toReturn = new byte[HeaderSize];
                 Array.Clear(toReturn, 0, HeaderSize);
