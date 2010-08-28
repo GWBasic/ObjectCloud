@@ -4,11 +4,6 @@
       <title>[_FileName_]</title>
    </oc:inserthead>
 
-   <object width="300" height="42">
-      <param name="src" value="[_FileName_]?Method=ReadAll&amp;MimeOverride=[_Mime_]" oc:browsercacheattribute="value" />
-      <param name="autoplay" value="false" />
-      <param name="controller" value="false" />
-      <embed src="[_FileName_]?Method=ReadAll&amp;MimeOverride=[_Mime_]" autostart="false" loop="false" width="300" height="42" controller="true"></embed>
-   </object>
+   <oc:component oc:src="/Shell/Viewers/AudioViewer.occ" FileName="[_FileName_]" Mime="[_Mime_]" />
 
 </oc:componentdef>

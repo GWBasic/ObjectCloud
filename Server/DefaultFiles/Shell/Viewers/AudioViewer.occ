@@ -1,0 +1,12 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" xmlns:af="appfeeds_templating">
+   <oc:inserthead>
+      <oc:script src="/Shell/Viewers/AudioViewer.js" />
+      <oc:css src="/DefaultTemplate/jquery-ui.css" />
+   </oc:inserthead>
+
+   <div class="audioviewer" id="audioviewer_[_FileName_]"></div>
+   <script>
+      audioviewer_enable('[_FileName_]', '[_Mime_]');
+   </script>
+
+</oc:componentdef>
