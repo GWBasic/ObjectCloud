@@ -24,12 +24,12 @@ namespace ObjectCloud.Interfaces.Disk
             throw new NotImplementedException("File type isn't supported");
         }
 
-        public void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID)
+        public void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID, IDirectoryHandler parentDirectory)
         {
             throw new NotImplementedException("File type isn't supported");
         }
 
-        public void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
+        public void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId, IDirectoryHandler parentDirectory)
         {
             throw new NotImplementedException("File type isn't supported");
         }

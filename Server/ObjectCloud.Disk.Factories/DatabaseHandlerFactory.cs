@@ -56,7 +56,7 @@ namespace ObjectCloud.Disk.Factories
             return string.Format("{0}{1}embedded.sqlite", path, Path.DirectorySeparatorChar);
         }
 
-        public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID)
+        public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID, IDirectoryHandler parentDirectory)
 		{
             string path = FileSystem.GetFullPath(fileId);
 
@@ -71,7 +71,7 @@ namespace ObjectCloud.Disk.Factories
                 toReturn.Version = sourceDatabaseHandler.Version;
 		}
 
-        public override void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
+        public override void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId, IDirectoryHandler parentDirectory)
 		{
             string path = FileSystem.GetFullPath(fileId);
 

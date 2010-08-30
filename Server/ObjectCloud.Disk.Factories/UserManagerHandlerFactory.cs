@@ -65,12 +65,12 @@ namespace ObjectCloud.Disk.Factories
             return DataAccessLocator.DatabaseConnectorFactory.CreateConnectorForEmbedded(path);
         }
 
-        public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID)
+        public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID, IDirectoryHandler parentDirectory)
         {
             throw new NotImplementedException("A UserManager can not be copied");
         }
 
-        public override void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
+        public override void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId, IDirectoryHandler parentDirectory)
         {
             throw new NotImplementedException();
             /*IUserManagerHandler toReturn = CreateFile(fileId);

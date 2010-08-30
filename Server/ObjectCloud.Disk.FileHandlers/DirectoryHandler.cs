@@ -88,7 +88,7 @@ namespace ObjectCloud.Disk.FileHandlers
             return CreateFileHelper(
                 filename, fileType, userId, delegate(IFileId fileId)
                 {
-                    fileHandlerFactory.RestoreFile(fileId, pathToRestoreFrom, userId);
+                    fileHandlerFactory.RestoreFile(fileId, pathToRestoreFrom, userId, this);
                 });
         }
 
@@ -924,7 +924,7 @@ namespace ObjectCloud.Disk.FileHandlers
 
                     this.CreateFileHelper(newFileName, toCopy.TypeId, ownerID, delegate(IFileId fileId)
                     {
-                        fileHandlerFactory.CopyFile(toCopy.FileHandler, fileId, ownerID);
+                        fileHandlerFactory.CopyFile(toCopy.FileHandler, fileId, ownerID, this);
                     });
 
                     // TODO:  changeData would be cool

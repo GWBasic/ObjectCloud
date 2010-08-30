@@ -25,7 +25,7 @@ namespace ObjectCloud.Disk.Factories
             return new BinaryHandler(path, FileHandlerFactoryLocator);
         }
 
-        public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID)
+        public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID, IDirectoryHandler parentDirectory)
         {
             CreateFile(fileId);
             System.IO.File.WriteAllBytes(
@@ -33,7 +33,7 @@ namespace ObjectCloud.Disk.Factories
                 sourceFileHandler.FileContainer.CastFileHandler<IBinaryHandler>().ReadAll());
         }
 
-        public override void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
+        public override void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId, IDirectoryHandler parentDirectory)
         {
             CreateFile(fileId);
             System.IO.File.WriteAllBytes(

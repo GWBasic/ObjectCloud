@@ -33,7 +33,8 @@ namespace ObjectCloud.Interfaces.Disk
         /// </summary>
         /// <param name="sourceFileHandler">The source file handler to copy</param>
         /// <param name="fileId">The file's unique ID</param>
-        void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID);
+        /// <param name="parentDirectory">The parent directory</param>
+        void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID, IDirectoryHandler parentDirectory);
 
         /// <summary>
         /// Restores a file at the given path
@@ -41,7 +42,8 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="fileId">The file's unique ID</param>
         /// <param name="pathToRestoreFrom">The path that contains the dump of a file to restore</param>
         /// <returns>An IFileHandler object that handles the file.  This must be closed</returns>
-        void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId);
+        /// <param name="parentDirectory">The parent directory</param>
+        void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId, IDirectoryHandler parentDirectory);
 
         /// <summary>
         /// The service locator

@@ -66,14 +66,14 @@ namespace ObjectCloud.Disk.Factories
             return toReturn;
         }
 
-        public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID)
+        public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID, IDirectoryHandler parentDirectory)
         {
             CreateFile(fileId);
             using (NameValuePairsHandler target = OpenFile(fileId))
                 target.WriteAll(null, (NameValuePairsHandler)sourceFileHandler, false);
         }
 
-        public override void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
+        public override void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId, IDirectoryHandler parentDirectory)
         {
             IUser user = FileHandlerFactoryLocator.UserManagerHandler.GetUserNoException(userId);
 

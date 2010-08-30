@@ -32,9 +32,9 @@ namespace ObjectCloud.Disk.Factories
             return OpenFile(fileId);
 		}
 
-        public abstract void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID);
+        public abstract void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID, IDirectoryHandler parentDirectory);
 
-        public abstract void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId);
+        public abstract void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId, IDirectoryHandler parentDirectory);
 
         public void CreateFile(IFileId fileId)
         {
@@ -98,7 +98,7 @@ namespace ObjectCloud.Disk.Factories
     /// </summary>
     public class FileHandlerFactory : FileHandlerFactory<FileHandlerFactory.DoNothingFileHandler>
     {
-        public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID)
+        public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID, IDirectoryHandler parentDirectory)
         {
             throw new NotImplementedException("The method or operation is not implemented.");
         }
@@ -110,7 +110,7 @@ namespace ObjectCloud.Disk.Factories
             return new DoNothingFileHandler();
         }
 
-        public override void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
+        public override void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId, IDirectoryHandler parentDirectory)
         {
             throw new NotImplementedException("The method or operation is not implemented.");
         }
