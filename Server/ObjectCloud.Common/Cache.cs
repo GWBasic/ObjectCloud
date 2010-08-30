@@ -442,6 +442,10 @@ namespace ObjectCloud.Common
             {
                 using (TimedLock.Lock(this))
                 {
+                    // If there is an existing value, allow it to be collected
+                    if (null != Value)
+                        AllowCollect();
+
                     Value = value;
                     WeakReference.Target = value;
 
@@ -657,6 +661,7 @@ namespace ObjectCloud.Common
 			int currentCollectionCount = GC.CollectionCount(generation);
 			if (currentCollectionCount != LastCollectionCount)
 			{
+                // For some unknown reason, this isn't enough to prevent a stack overflow!
                 LastCollectionCount = currentCollectionCount;
 				ManageCacheDeallocationRate(null);
 			}
@@ -724,98 +729,106 @@ namespace ObjectCloud.Common
         static private Process MyProcess = Process.GetCurrentProcess();
 
         /// <summary>
+        /// Prevents recursion in ManageCacheDeallocationRate
+        /// </summary>
+        static bool ManageCacheDeallocationRate_RecusionBlocker = true;
+
+        /// <summary>
         /// Manages deallocation of memory
         /// </summary>
         internal static void ManageCacheDeallocationRate(object state)
         {
-            try
-            {
-				// Calls RemoveCollectedCacheHandles on all Caches 
-
-				LockFreeQueue<WeakReference> allCaches = AllCaches;
-				AllCaches = new LockFreeQueue<WeakReference>();
-				
-				WeakReference wr;
-				while (allCaches.Dequeue(out wr))
-				{
-					Cache cache = (Cache)wr.Target;
-					
-					if (null != cache)
-					{
-						// When the server is busy, clean out collected cache handles on multiple threads
-						// This will end the "busy" state sooner so the server can continue accepting requests
-						if (Busy.IsBusy)
-						{
-							GenericVoid removeCollectedCacheHandlesDelegate = cache.RemoveCollectedCacheHandles;
-							removeCollectedCacheHandlesDelegate.BeginInvoke(null, null);
-						}
-						else
-							// When the server isn't busy, do all cleaning on a single thread so more CPU power
-							// is available for requests
-							cache.RemoveCollectedCacheHandles();
-						
-						AllCaches.Enqueue(wr);
-					}
-				}
-
-				long maxMemory;
-
-                if (null == MaxMemory)
+            if (ManageCacheDeallocationRate_RecusionBlocker)
+                try
                 {
-                    double maxWorkingSet = PercentOfMaxWorkingSet * (Convert.ToDouble(MyProcess.MaxWorkingSet.ToInt64()) / 0.001024);
-                    maxMemory = Convert.ToInt64(maxWorkingSet);
-                }
-                else
-                    maxMemory = MaxMemory.Value;
+                    ManageCacheDeallocationRate_RecusionBlocker = false;
 
-                long processMemorySize = GC.GetTotalMemory(false);
+                    // Calls RemoveCollectedCacheHandles on all Caches 
 
-                // If too much memory is used, force a GC to get a better estimate
-                if (processMemorySize >= maxMemory)
-                    processMemorySize = GC.GetTotalMemory(true);
+                    LockFreeQueue<WeakReference> allCaches = AllCaches;
+                    AllCaches = new LockFreeQueue<WeakReference>();
 
-                if (processMemorySize >= maxMemory)
-                {
-                    log.WarnFormat("Dumping Cache:\tProcess Memory Estimate: {0}\n\tMax Memory: {1}\n\tMax Working Set: {2}",
-                        processMemorySize, maxMemory, MyProcess.MaxWorkingSet);
-
-                    NumObjectsToDequeue = Convert.ToUInt32(NumCacheReferences / 10);
-
-                    if (NumObjectsToDequeue < 30)
-                        NumObjectsToDequeue = 30;
-
-                    int iterations = 0;
-
-                    do
+                    WeakReference wr;
+                    while (allCaches.Dequeue(out wr))
                     {
-                        DequeueImpl(null);
+                        Cache cache = (Cache)wr.Target;
+
+                        if (null != cache)
+                        {
+                            // When the server is busy, clean out collected cache handles on multiple threads
+                            // This will end the "busy" state sooner so the server can continue accepting requests
+                            if (Busy.IsBusy)
+                            {
+                                GenericVoid removeCollectedCacheHandlesDelegate = cache.RemoveCollectedCacheHandles;
+                                removeCollectedCacheHandlesDelegate.BeginInvoke(null, null);
+                            }
+                            else
+                                // When the server isn't busy, do all cleaning on a single thread so more CPU power
+                                // is available for requests
+                                cache.RemoveCollectedCacheHandles();
+
+                            AllCaches.Enqueue(wr);
+                        }
+                    }
+
+                    long maxMemory;
+
+                    if (null == MaxMemory)
+                    {
+                        double maxWorkingSet = PercentOfMaxWorkingSet * (Convert.ToDouble(MyProcess.MaxWorkingSet.ToInt64()) / 0.001024);
+                        maxMemory = Convert.ToInt64(maxWorkingSet);
+                    }
+                    else
+                        maxMemory = MaxMemory.Value;
+
+                    long processMemorySize = GC.GetTotalMemory(false);
+
+                    // If too much memory is used, force a GC to get a better estimate
+                    if (processMemorySize >= maxMemory)
                         processMemorySize = GC.GetTotalMemory(true);
 
-                        iterations++;
-                    }
-                    while ((NumCacheReferences > MinCacheReferences) && (processMemorySize > maxMemory) && (iterations < 10));
-
-                    //throw new NotImplementedException("Raise event when this error condition occurs in case there's a way to reset the process");
-                    // For now, if too many iterations occur, try to kill the entire cache
-                    if (iterations >= 10)
+                    if (processMemorySize >= maxMemory)
                     {
-                        log.Warn("Possible memory leak, killing cache");
+                        log.WarnFormat("Dumping Cache:\tProcess Memory Estimate: {0}\n\tMax Memory: {1}\n\tMax Working Set: {2}",
+                            processMemorySize, maxMemory, MyProcess.MaxWorkingSet);
 
-                        DelegateQueue.Cancel();
-                        ReleaseAllCachedMemoryImpl(null);
+                        NumObjectsToDequeue = Convert.ToUInt32(NumCacheReferences / 10);
 
-                        // Releasing all memory re-queues this function
-                        return;
+                        if (NumObjectsToDequeue < 30)
+                            NumObjectsToDequeue = 30;
+
+                        int iterations = 0;
+
+                        do
+                        {
+                            DequeueImpl(null);
+                            processMemorySize = GC.GetTotalMemory(true);
+
+                            iterations++;
+                        }
+                        while ((NumCacheReferences > MinCacheReferences) && (processMemorySize > maxMemory) && (iterations < 10));
+
+                        //throw new NotImplementedException("Raise event when this error condition occurs in case there's a way to reset the process");
+                        // For now, if too many iterations occur, try to kill the entire cache
+                        if (iterations >= 10)
+                        {
+                            log.Warn("Possible memory leak, killing cache");
+
+                            DelegateQueue.Cancel();
+                            ReleaseAllCachedMemoryImpl(null);
+
+                            // Releasing all memory re-queues this function
+                            return;
+                        }
+
                     }
 
-                }
+                    IEnumerable<long> memorySizeLimits;
 
-                IEnumerable<long> memorySizeLimits;
-
-                if (null != MemorySizeLimits)
-                    memorySizeLimits = MemorySizeLimits;
-                else
-                    memorySizeLimits = new long[]
+                    if (null != MemorySizeLimits)
+                        memorySizeLimits = MemorySizeLimits;
+                    else
+                        memorySizeLimits = new long[]
                     {
                         (maxMemory * 60) / 100,
                         (maxMemory * 80) / 100,
@@ -824,17 +837,21 @@ namespace ObjectCloud.Common
                         (maxMemory * 95) / 100
                     };
 
-                uint numObjectsToDequeue = 0;
-                foreach (long memoryLevel in memorySizeLimits)
-                    if (processMemorySize >= memoryLevel)
-                        numObjectsToDequeue++;
+                    uint numObjectsToDequeue = 0;
+                    foreach (long memoryLevel in memorySizeLimits)
+                        if (processMemorySize >= memoryLevel)
+                            numObjectsToDequeue++;
 
-                NumObjectsToDequeue = numObjectsToDequeue;
-            }
-            catch (Exception e)
-            {
-                log.Error("Error in the RAM cache!!!", e);
-            }
+                    NumObjectsToDequeue = numObjectsToDequeue;
+                }
+                catch (Exception e)
+                {
+                    log.Error("Error in the RAM cache!!!", e);
+                }
+                finally
+                {
+                    ManageCacheDeallocationRate_RecusionBlocker = true;
+                }
         }
 
         /// <summary>
