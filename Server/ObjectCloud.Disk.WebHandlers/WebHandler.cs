@@ -1433,43 +1433,44 @@ namespace ObjectCloud.Disk.WebHandlers
             if (null != executionEnvironment)
                 return executionEnvironment;
 
-            // Note: a large timeout is used in case a thread is constructing the scope.  Constructing the scope can be time consuming
-            // TODO:  Try to do a lot of checking without a lock, or using a read/write lock
-            using (TimedLock.Lock(ExecutionEnvironmentLock, TimeSpan.FromSeconds(15)))
+            // Try to find the javascript file
+            IFileContainer javascriptContainer = FindJavascriptContainer(extension, FileContainer.ParentDirectoryHandler);
+            if (null != javascriptContainer)
             {
-                if (null != _ExecutionEnvironment)
-                    return _ExecutionEnvironment;
-
-                if (CreatingExecutionEnvironment)
+                // Note: a large timeout is used in case a thread is constructing the scope.  Constructing the scope can be time consuming
+                // TODO:  Try to do a lot of checking without a lock, or using a read/write lock
+                using (TimedLock.Lock(ExecutionEnvironmentLock, TimeSpan.FromSeconds(15)))
                 {
-                    log.Error("An attempt was made to call GetOrCreateExecutionEnvironment() while it's being created.  " +
-                        "This usually occurs when server-side javascript, while creating a scope calls a function that depends on " + 
-                        "GetOrCreateExecutionEnvironment() being complete.  As GetOrCreateExecutionEnvrionment() isn't complete, it " + 
-                        "would attempt to create a new one which will result in a stack overflow and server crash.  " +
-                        "To resolve this problem, do not use operations while creating a Javascript scope that depend on the completed " +
-                        "scope, such as calling open() against yourself.  " + FileContainer.ObjectUrl);
-                    throw new WebResultsOverrideException(WebResults.From(Status._500_Internal_Server_Error));
-                }
+                    if (null != _ExecutionEnvironment)
+                        return _ExecutionEnvironment;
 
-                CreatingExecutionEnvironment = true;
+                    if (CreatingExecutionEnvironment)
+                    {
+                        log.Error("An attempt was made to call GetOrCreateExecutionEnvironment() while it's being created.  " +
+                            "This usually occurs when server-side javascript, while creating a scope calls a function that depends on " +
+                            "GetOrCreateExecutionEnvironment() being complete.  As GetOrCreateExecutionEnvrionment() isn't complete, it " +
+                            "would attempt to create a new one which will result in a stack overflow and server crash.  " +
+                            "To resolve this problem, do not use operations while creating a Javascript scope that depend on the completed " +
+                            "scope, such as calling open() against yourself.  " + FileContainer.ObjectUrl);
+                        throw new WebResultsOverrideException(WebResults.From(Status._500_Internal_Server_Error));
+                    }
 
-                try
-                {
-                    // Try to find the javascript file
-                    IFileContainer javascriptContainer = FindJavascriptContainer(extension, FileContainer.ParentDirectoryHandler);
-                    if (null != javascriptContainer)
+                    CreatingExecutionEnvironment = true;
+
+                    try
                     {
                         IExecutionEnvironmentFactory factory = FileHandlerFactoryLocator.ExecutionEnvironmentFactory;
                         _ExecutionEnvironment = factory.Create(FileContainer, javascriptContainer);
+                        return _ExecutionEnvironment;
                     }
-
-                    return _ExecutionEnvironment;
-                }
-                finally
-                {
-                    CreatingExecutionEnvironment = false;
+                    finally
+                    {
+                        CreatingExecutionEnvironment = false;
+                    }
                 }
             }
+            else
+                return _ExecutionEnvironment;
         }
 
         /// <summary>
@@ -1477,15 +1478,16 @@ namespace ObjectCloud.Disk.WebHandlers
         /// </summary>
         public void CreateExecutionEnvironmentIfNoOtherThreadCreating()
         {
-            if (Monitor.TryEnter(ExecutionEnvironmentLock))
-                try
-                {
-                    GetOrCreateExecutionEnvironment();
-                }
-                finally
-                {
-                    Monitor.Exit(ExecutionEnvironmentLock);
-                }
+            if (null != _ExecutionEnvironment)
+                if (Monitor.TryEnter(ExecutionEnvironmentLock))
+                    try
+                    {
+                        GetOrCreateExecutionEnvironment();
+                    }
+                    finally
+                    {
+                        Monitor.Exit(ExecutionEnvironmentLock);
+                    }
         }
 
         /// <summary>
