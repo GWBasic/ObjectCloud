@@ -112,7 +112,7 @@ namespace ObjectCloud.Disk.Factories
             DelegateQueues = new LockFreeQueue<DelegateQueue>();
 
             DelegateQueue delegateQueue;
-            while (DelegateQueues.Dequeue(out delegateQueue))
+            while (delegateQueues.Dequeue(out delegateQueue))
             {
                 delegateQueue.Stop();
                 DelegateQueues.Enqueue(delegateQueue);
