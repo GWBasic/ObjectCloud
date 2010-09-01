@@ -7,13 +7,14 @@
 
    <oc:if>
       <oc:canadminister filename="[_FileName_]">
-         <input type="button" value="share" class="objectbar_share" />
+         <a href="" class="objectbar_share">share</a>
          <script>
             $(document).ready(function()
             {
                $('.objectbar_share').click(function()
                {
                   shareDialog_show('[_FileName_]');
+                  return false;
                });
             });
          </script>
@@ -23,7 +24,7 @@
 
    <oc:if>
       <oc:canwrite filename="[_FileName_]">
-         <input type="button" value="edit" class="objectbar_edit" />
+         <a href="" class="objectbar_edit">edit</a>
 
          <script>
             $(document).ready(function()
@@ -36,6 +37,7 @@
                      editButton.click(function()
                      {
                         window.location.href = '[_FileName_]?Action=Edit';
+                        return false;
                      });
 
                   </oc:hasaction>
