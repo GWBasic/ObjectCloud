@@ -38,6 +38,9 @@
         <entry key="hasvalue">
           <object id="TemplateConditionHandlers_hasvalue" type="ObjectCloud.Disk.WebHandlers.TemplateConditions.HasValue" />
         </entry>
+        <entry key="isequal">
+          <object id="TemplateConditionHandlers_isequal" type="ObjectCloud.Disk.WebHandlers.TemplateConditions.IsEqual" />
+        </entry>
         <entry key="supports">
           <object id="TemplateConditionHandlers_supports" type="ObjectCloud.Disk.WebHandlers.TemplateConditions.Supports" />
         </entry>

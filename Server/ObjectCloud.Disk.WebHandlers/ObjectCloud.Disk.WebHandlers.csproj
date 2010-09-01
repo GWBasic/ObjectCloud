@@ -76,6 +76,7 @@
     <Compile Include="TemplateConditions\CanWrite.cs" />
     <Compile Include="TemplateConditions\Else.cs" />
     <Compile Include="TemplateConditions\IsAdministrator.cs" />
+    <Compile Include="TemplateConditions\IsEqual.cs" />
     <Compile Include="TemplateConditions\IsHandheld.cs" />
     <Compile Include="TemplateConditions\IsLocal.cs" />
     <Compile Include="TemplateConditions\IsLoggedIn.cs" />
