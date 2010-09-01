@@ -94,6 +94,8 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Write)]
         public IWebResults Set(IWebConnection webConnection, string Name, string Value)
         {
+            EnforceSetSecurity(webConnection, Name);
+
             FileHandler.Set(webConnection.Session.User, Name, Value);
 
             return WebResults.From(Status._202_Accepted);
@@ -108,6 +110,8 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Write)]
         public IWebResults Delete(IWebConnection webConnection, string Name)
         {
+            EnforceSetSecurity(webConnection, Name);
+
             FileHandler.Set(webConnection.Session.User, Name, null);
 
             return WebResults.From(Status._202_Accepted);
@@ -123,13 +127,7 @@ namespace ObjectCloud.Disk.WebHandlers
         public IWebResults SetAllJson(IWebConnection webConnection, JsonReader pairs)
         {
             // Decode the new pairs
-            IDictionary<string, string> newPairs;
-
-            newPairs = pairs.Deserialize<Dictionary<string, string>>();
-
-            FileHandler.WriteAll(webConnection.Session.User, newPairs, true);
-
-            return WebResults.From(Status._202_Accepted, "Saved");
+            return SetAllHelper(webConnection, pairs.Deserialize<Dictionary<string, string>>());
         }
 
         /// <summary>
@@ -140,14 +138,30 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Write)]
         public IWebResults SetAll(IWebConnection webConnection)
         {
-            // Decode the new pairs
-            IDictionary<string, string> newPairs;
+            return SetAllHelper(webConnection, webConnection.PostParameters);
+        }
 
-            newPairs = webConnection.PostParameters;
+        private IWebResults SetAllHelper(IWebConnection webConnection, IDictionary<string, string> newPairs)
+        {
+            foreach (string Name in newPairs.Keys)
+                EnforceSetSecurity(webConnection, Name);
 
             FileHandler.WriteAll(webConnection.Session.User, newPairs, true);
 
             return WebResults.From(Status._202_Accepted, "Saved");
+        }
+
+        /// <summary>
+        /// Throws an exception if the current metadata item can not be set
+        /// </summary>
+        /// <param name="Name"></param>
+        /// <param name="webConnection"></param>
+        private void EnforceSetSecurity(IWebConnection webConnection, string Name)
+        {
+            if (Name.StartsWith("Privileged"))
+                if (webConnection.CallingFrom != CallingFrom.Local)
+                    if (!(FileHandlerFactoryLocator.UserManagerHandler.IsUserInGroup(webConnection.Session.User.Id, FileHandlerFactoryLocator.UserFactory.Administrators.Id)))
+                        throw new SecurityException("Priveliged metadata items can only be set within the context of elevate");
         }
     }
 }

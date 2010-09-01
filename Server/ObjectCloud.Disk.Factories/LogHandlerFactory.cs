@@ -108,9 +108,15 @@ namespace ObjectCloud.Disk.Factories
 
         public override void Stop()
         {
+            LockFreeQueue<DelegateQueue> delegateQueues = DelegateQueues;
+            DelegateQueues = new LockFreeQueue<DelegateQueue>();
+
             DelegateQueue delegateQueue;
             while (DelegateQueues.Dequeue(out delegateQueue))
-                delegateQueue.Dispose();
+            {
+                delegateQueue.Stop();
+                DelegateQueues.Enqueue(delegateQueue);
+            }
         }
     }
 }

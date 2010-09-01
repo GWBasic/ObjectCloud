@@ -483,17 +483,13 @@ namespace ObjectCloud.Common
 
         internal Cache() 
         {
-            if (1 == Interlocked.Increment(ref NumCaches))
-                DelegateQueue = new DelegateQueue("Cache manager");
+            Interlocked.Increment(ref NumCaches);
         }
 
         ~Cache()
         {
             if (0 == Interlocked.Decrement(ref NumCaches))
-            {
-                DelegateQueue.Dispose();
-                DelegateQueue = null;
-            }
+                DelegateQueue.Stop();
         }
 
         /// <summary>
@@ -509,7 +505,7 @@ namespace ObjectCloud.Common
         /// <summary>
         /// Sub-thread for managing memory.  Allows the queue of memory to be managed without blocking the requesting threads, and in a synchronized manner
         /// </summary>
-        protected static DelegateQueue DelegateQueue;
+        protected static DelegateQueue DelegateQueue = new DelegateQueue("Cache manager");
 
         /// <summary>
         /// These values tune the cache with regard to when it will start de-referencing objects.  For each value in here, if the process takes more memory then the value, an object

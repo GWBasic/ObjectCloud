@@ -358,7 +358,7 @@ namespace ObjectCloud.Interfaces.WebServer
                     {
                         try
                         {
-                            ((DelegateQueue)state).Dispose();
+                            ((DelegateQueue)state).Stop();
                         }
                         catch (Exception e)
                         {

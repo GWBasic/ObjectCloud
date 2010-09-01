@@ -727,6 +727,13 @@
             <param name="webConnection"></param>
             <returns></returns>
         </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler.EnforceSetSecurity(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
+            <summary>
+            Throws an exception if the current metadata item can not be set
+            </summary>
+            <param name="Name"></param>
+            <param name="webConnection"></param>
+        </member>
         <member name="T:ObjectCloud.Disk.WebHandlers.Template.JSONTemplateResolver">
             <summary>
             Handles JSON templates

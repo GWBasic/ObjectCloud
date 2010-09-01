@@ -15,7 +15,7 @@ namespace ObjectCloud.Common.Threading
     /// Runs all delegates in order asyncronously.  This is an alternative to using the Threadpool in the event that each delegate would block each other, thus
     /// causing contention on the ThreadPool.  Until the delegate queue is disposed, this object will always have a thread, which is suspended when not in use
     /// </summary>
-    public class DelegateQueue : IDisposable
+    public class DelegateQueue
     {
         private ILog log = LogManager.GetLogger<DelegateQueue>();
 
@@ -41,22 +41,34 @@ namespace ObjectCloud.Common.Threading
         public DelegateQueue(string name, int numThreads)
         {
             Name = name;
+            NumThreads = numThreads;
             QueuedDelegates.ItemAddedToEmptyQueue += new EventHandler<LockFreeQueue<QueuedDelegate>, EventArgs>(QueuedDelegates_ItemAddedToEmptyQueue);
 
-            Threads = new Thread[numThreads];
+            Start();
+        }
 
-            for (int ctr = 0; ctr < numThreads; ctr++)
+        private void Start()
+        {
+            // Compare-exchange used in case multiple threads try to start the sub-threads
+            if (null == Interlocked.CompareExchange<Thread[]>(ref Threads, new Thread[NumThreads], null))
             {
-                Thread thread = new Thread(Work);
+                for (int ctr = 0; ctr < NumThreads; ctr++)
+                {
+                    KeepRunning = new Wrapped<bool>(true);
 
-                if (numThreads == 1)
-                    thread.Name = name;
-                else
-                    thread.Name = name + ' ' + ctr.ToString();
+                    Thread thread = new Thread(Work);
 
-                thread.Start();
+                    if (NumThreads == 1)
+                        thread.Name = Name;
+                    else
+                        thread.Name = Name + ' ' + ctr.ToString();
 
-                Threads[ctr] = thread;
+                    thread.Start();
+
+                    Threads[ctr] = thread;
+                }
+
+                GC.ReRegisterForFinalize(this);
             }
         }
 
@@ -69,9 +81,14 @@ namespace ObjectCloud.Common.Threading
 
         LockFreeQueue_WithCount<QueuedDelegate> QueuedDelegates = new LockFreeQueue_WithCount<QueuedDelegate>();
 
-        private bool KeepRunning = true;
+        /// <summary>
+        /// This is wrapped so that, if the delegate queue is stopped, old threads can see false but new threads see a different value
+        /// </summary>
+        private Wrapped<bool> KeepRunning;
 
         private string Name;
+
+        private int NumThreads;
 
         /// <summary>
         /// If there are more queued delegates then this threshold, the server will be marked as busy and requests throttled
@@ -103,8 +120,8 @@ namespace ObjectCloud.Common.Threading
         /// <param name="task"></param>
         public void QueueUserWorkItem(WaitCallback callback, object State)
         {
-            if (!KeepRunning)
-                throw new ObjectDisposedException(Name);
+            if (null == Threads)
+                Start();
 
             QueuedDelegate queuedDelegate = new QueuedDelegate();
             queuedDelegate.Callback = callback;
@@ -130,7 +147,7 @@ namespace ObjectCloud.Common.Threading
         /// <summary>
         /// The threads that run the delegates
         /// </summary>
-        Thread[] Threads;
+        Thread[] Threads = null;
 
         /// <summary>
         /// Used to indicate new delegates when a thread is running
@@ -147,9 +164,11 @@ namespace ObjectCloud.Common.Threading
         /// </summary>
         void Work()
         {
-            //Thread thread = Thread.CurrentThread;
+            // Local instances used in case the delegate queue is stopped
+            Wrapped<bool> keepRunning = KeepRunning;
+            LockFreeQueue_WithCount<QueuedDelegate> queuedDelegates = QueuedDelegates;
 
-            while (KeepRunning)
+            while (keepRunning.Value)
             {
                 //thread.IsBackground = true;
 
@@ -166,7 +185,7 @@ namespace ObjectCloud.Common.Threading
                 //thread.IsBackground = false;
 
                 QueuedDelegate queuedDelegate;
-                while (QueuedDelegates.Dequeue(out queuedDelegate))
+                while (queuedDelegates.Dequeue(out queuedDelegate))
                     try
                     {
                         queuedDelegate.Callback(queuedDelegate.state);
@@ -188,30 +207,35 @@ namespace ObjectCloud.Common.Threading
             }
         }
 
-        public void Dispose()
+        /// <summary>
+        /// Stops the delegate queue.  All queued delegates are run prior to this function returning.  This function is thread-safe.  Note that if delegates are queued after Stop is called, the DelegateQueue will restart its threads.  It's possible to re-start new threads prior to old delegates completing.
+        /// </summary>
+        public void Stop()
         {
-            GC.SuppressFinalize(this);
+            // Compare-exchange used in case multiple threads try to stop
+            Thread[] threads = Threads;
+            if (null != threads)
+                if (threads == Interlocked.CompareExchange<Thread[]>(ref Threads, null, threads))
+                {
+                    KeepRunning.Value = false;
 
-            KeepRunning = false;
+                    lock (pulser)
+                        Monitor.PulseAll(pulser);
 
-            lock (pulser)
-                if (NumSuspendedThreads > 0)
-                    Monitor.PulseAll(pulser);
+                    foreach (Thread thread in threads)
+                        thread.Join();
 
-            foreach (Thread thread in Threads)
-                thread.Join();
+                    GC.SuppressFinalize(this);
+                }
         }
 
         ~DelegateQueue()
         {
-            KeepRunning = false;
-
-            lock (pulser)
-                if (NumSuspendedThreads > 0)
-                    Monitor.PulseAll(pulser);
-
-            foreach (Thread thread in Threads)
-                thread.Join();
+            try
+            {
+                Stop();
+            }
+            catch { }
         }
 
         /// <summary>
@@ -219,7 +243,10 @@ namespace ObjectCloud.Common.Threading
         /// </summary>
         public void Cancel()
         {
-            QueuedDelegates = new LockFreeQueue_WithCount<QueuedDelegate>();
+            // The queue is cleared because threads hold a local reference
+            QueuedDelegate queuedDelegate;
+            while (QueuedDelegates.Dequeue(out queuedDelegate))
+            {}
         }
     }
 }

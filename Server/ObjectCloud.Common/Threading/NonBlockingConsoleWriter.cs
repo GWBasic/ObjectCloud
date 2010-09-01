@@ -14,21 +14,14 @@ namespace ObjectCloud.Common.Threading
         /// <summary>
         /// The queue that prints to the console
         /// </summary>
-        private static DelegateQueue DelegateQueue = null;
-
-        private static object Key = new object();
+        private static DelegateQueue DelegateQueue = new DelegateQueue("Console Writer");
 
         /// <summary>
         /// Stops the thread used to print to the console.
         /// </summary>
         static public void EndThread()
         {
-            lock (Key)
-            {
-                DelegateQueue delegateQueue = DelegateQueue;
-                DelegateQueue = null;
-                delegateQueue.Dispose();
-            }
+            DelegateQueue.Stop();
         }
 
         /// <summary>
@@ -37,19 +30,9 @@ namespace ObjectCloud.Common.Threading
         /// <param name="toPrint"></param>
         static public void Print(string toPrint)
         {
-            DelegateQueue delegateQueue = DelegateQueue;
-
-            if (null == delegateQueue)
-                lock (Key)
-                    if (null == delegateQueue)
-                    {
-                        DelegateQueue = new DelegateQueue("Console Writer");
-                        delegateQueue = DelegateQueue;
-                    }
-
             try
             {
-                delegateQueue.QueueUserWorkItem(delegate(object state)
+                DelegateQueue.QueueUserWorkItem(delegate(object state)
                 {
                     Console.Write(toPrint);
                 });
