@@ -15,7 +15,7 @@ namespace ObjectCloud.Common.Threading
     /// Runs all delegates in order asyncronously.  This is an alternative to using the Threadpool in the event that each delegate would block each other, thus
     /// causing contention on the ThreadPool.  Until the delegate queue is disposed, this object will always have a thread, which is suspended when not in use
     /// </summary>
-    public class DelegateQueue
+    public class DelegateQueue : IDisposable
     {
         private ILog log = LogManager.GetLogger<DelegateQueue>();
 
@@ -227,6 +227,14 @@ namespace ObjectCloud.Common.Threading
 
                     GC.SuppressFinalize(this);
                 }
+        }
+
+        /// <summary>
+        /// Stops the delegate queue.  All queued delegates are run prior to this function returning.  This function is thread-safe.  Note that if delegates are queued after Stop is called, the DelegateQueue will restart its threads.  It's possible to re-start new threads prior to old delegates completing.
+        /// </summary>
+        public void Dispose()
+        {
+            Stop();
         }
 
         ~DelegateQueue()
