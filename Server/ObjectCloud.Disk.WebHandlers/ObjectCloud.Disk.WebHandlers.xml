@@ -1102,6 +1102,19 @@
             <param name="me"></param>
             <returns></returns>
         </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsEqual">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsEqual.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
+            <summary>
+            
+            </summary>
+            <param name="templateParsingState"></param>
+            <param name="me"></param>
+            <returns></returns>
+        </member>
         <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.Else">
             <summary>
             Implements the "else" of an if tag; this always returns true
@@ -2260,19 +2273,6 @@
             <param name="templateParsingState"></param>
             <param name="fileContainer"></param>
             <param name="namedPermission"></param>
-            <returns></returns>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsEqual">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsEqual.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
-            <summary>
-            
-            </summary>
-            <param name="templateParsingState"></param>
-            <param name="me"></param>
             <returns></returns>
         </member>
     </members>
