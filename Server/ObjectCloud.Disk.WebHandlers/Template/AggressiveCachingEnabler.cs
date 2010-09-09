@@ -189,6 +189,9 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
             private void AddBrowserCache(ITemplateParsingState templateParsingState, XmlAttribute attribute)
             {
+                if (null == attribute)
+                    return;
+
                 string attributeValue = attribute.InnerText;
 				
                 // Don't add a dupe cache key
@@ -196,9 +199,6 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     return;
 
                 XmlElement xmlElement = attribute.OwnerElement;
-
-                if (null == attribute)
-                    return;
 
                 string fullPrefix = "http://" + templateParsingState.FileHandlerFactoryLocator.HostnameAndPort;
 
@@ -264,6 +264,8 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 else if (BrowserCacheEnum.Date == browserCache)
                 {
                     string filename = attributeValue.Split(new char[] { '?' }, 2)[0];
+
+                    // Note: potential bug:  The current working directory isn't evaluated!!!
 					
                     if (templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.IsFilePresent(filename))
                     {
