@@ -4,23 +4,26 @@ function Ecrit(page)
 {
    $(document).ready(function()
    {
-      $('input.title').val(page.Title);
+      var titleInput = $('input.title')
+      titleInput.val(page.Title);
 
-      var editorTop = $('#editorTop');
-      var contents = $('textarea.contents');
+      var contents = $('#contents');
       contents.val(page.Contents);
 
-      var windowHeight = $(window).height();
-      var editorOffset = editorTop.position();
-      var rteTop = editorTop.height() + editorOffset.top;
+      var windowHeight = window.innerHeight; //$(window).height();
+      //var editorOffset = editorTop.position();
+      //var rteTop = editorTop.height() + editorOffset.top;
+alert(windowHeight + '   ' + contents.position().top);
 
       var rte = contents.rte(
       {
          controls_rte: rte_toolbar,
          controls_html: html_toolbar,
-         width: editorTop.width(),
-         height: windowHeight - rteTop - 75
+         width: 800,
+         height: windowHeight - contents.position().top
       });
+
+      $('#contentsBack').height(windowHeight - contents.position().top);
 
       // hide the resizer because this will resize with the window
       $('.rte-resizer').hide();

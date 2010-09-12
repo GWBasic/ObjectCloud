@@ -10,7 +10,8 @@
 
    Title: <br />
    <input type="text" class="title" style="width: 100%" /><br />
-   <div id="editorTop" style="width: 100%" >_</div>
-   <textarea class="contents" />
+   <div id="contentsBack">
+      <textarea id="contents" width="100%"/>
+   </div>
 
 </oc:componentdef>
