@@ -261,45 +261,15 @@ function lwrte_image() {
 	var self = this;
 	var panel = self.create_panel('Insert image', 385);
 	panel.append('\
-<p><label>URL</label><input type="text" id="url" size="30" value=""><button id="file">Upload</button><button id="view">View</button></p>\
+<p><label>URL</label><input type="text" id="lwrte_url" size="30" value="" /></p>\
 <div class="clear"></div>\
-<p class="submit"><button id="ok">Ok</button><button id="cancel">Cancel</button></p>'
+<p class="submit"><button id="lwrte_ok">Ok</button><button id="lwrte_cancel">Cancel</button></p>'
 ).show();
 
-	var url = $('#url', panel);
-	var upload = $('#file', panel).upload( {
-		autoSubmit: false,
-		action: '/toolbar/uploader.php',
-		onSelect: function() {
-			var file = this.filename();
-			var ext = (/[.]/.exec(file)) ? /[^.]+$/.exec(file.toLowerCase()) : '';
-			if(!(ext && /^(jpg|png|jpeg|gif)$/.test(ext))){
-				alert('Invalid file extension');
-				return;
-			}
-
-			this.submit();
-		},
-		onComplete: function(response) { 
-			if(response.length <= 0)
-				return;
-
-			response	= eval("(" + response + ")");
-			if(response.error && response.error.length > 0)
-				alert(response.error);
-			else
-				url.val((response.file && response.file.length > 0) ? response.file : '');
-		}
-	});
-
-	$('#view', panel).click( function() {
-			(url.val().length >0 ) ? window.open(url.val()) : alert("Enter URL of image to view");
-			return false;
-		}
-	);
+	var url = $('#lwrte_url', panel);
 			
-	$('#cancel', panel).click( function() { panel.remove(); return false;} );
-	$('#ok', panel).click( 
+	$('#lwrte_cancel', panel).click( function() { panel.remove(); return false;} );
+	$('#lwrte_ok', panel).click( 
 		function() {
 			var file = url.val();
 			self.editor_cmd('insertImage', file);
@@ -324,7 +294,7 @@ function lwrte_cleanup_word() {
 	
 	function cleanup_word(s, bIgnoreFont, bRemoveStyles, bCleanWordKeepsStructure) {
 		s = s.replace(/<o:p>\s*<\/o:p>/g, '') ;
-		s = s.replace(/<o:p>[\s\S]*?<\/o:p>/g, 'Ã‚Â ') ;
+		s = s.replace(/<o:p>[\s\S]*?<\/o:p>/g, 'Ãƒâ€šÃ‚Â ') ;
 
 		// Remove mso-xxx styles.
 		s = s.replace( /\s*mso-[^:]+:[^;"]+;?/gi, '' ) ;
@@ -367,7 +337,7 @@ function lwrte_cleanup_word() {
 		// Remove empty styles.
 		s =  s.replace( /\s*style="\s*"/gi, '' ) ;
 
-		s = s.replace( /<SPAN\s*[^>]*>\s*Ã‚Â \s*<\/SPAN>/gi, 'Ã‚Â ' ) ;
+		s = s.replace( /<SPAN\s*[^>]*>\s*Ãƒâ€šÃ‚Â \s*<\/SPAN>/gi, 'Ãƒâ€šÃ‚Â ' ) ;
 
 		s = s.replace( /<SPAN\s*[^>]*><\/SPAN>/gi, '' ) ;
 
@@ -390,7 +360,7 @@ function lwrte_cleanup_word() {
 		// Remove comments [SF BUG-1481861].
 		s = s.replace(/<\!--[\s\S]*?-->/g, '' ) ;
 
-		s = s.replace( /<(U|I|STRIKE)>Ã‚Â <\/\1>/g, 'Ã‚Â ' ) ;
+		s = s.replace( /<(U|I|STRIKE)>Ãƒâ€šÃ‚Â <\/\1>/g, 'Ãƒâ€šÃ‚Â ' ) ;
 
 		s = s.replace( /<H\d>\s*<\/H\d>/gi, '' ) ;
 
@@ -441,43 +411,22 @@ function lwrte_link() {
 	var panel = self.create_panel("Create link / Attach file", 385);
 
 	panel.append('\
-<p><label>URL</label><input type="text" id="url" size="30" value=""><button id="file">Attach File</button><button id="view">View</button></p>\
+<p><label>URL</label><input type="text" id="lwrte_url" size="30" value="" /></p>\
 <div class="clear"></div>\
-<p><label>Title</label><input type="text" id="title" size="30" value=""><label>Target</label><select id="target"><option value="">default</option><option value="_blank">new</option></select></p>\
+<p><label>Title</label><input type="text" id="lwrte_title" size="30" value="" /><label>Target</label><select id="lwrte_target"><option value="">default</option><option value="_blank">new</option></select></p>\
 <div class="clear"></div>\
-<p class="submit"><button id="ok">Ok</button><button id="cancel">Cancel</button></p>'
+<p class="submit"><button id="lwrte_ok">Ok</button><button id="lwrte_cancel">Cancel</button></p>'
 ).show();
 
-	$('#cancel', panel).click( function() { panel.remove(); return false; } );
+	$('#lwrte_cancel', panel).click( function() { panel.remove(); return false; } );
 
-	var url = $('#url', panel);
-	var upload = $('#file', panel).upload( {
-		autoSubmit: true,
-		action: 'uploader.php',
-		onComplete: function(response) { 
-			if(response.length <= 0)
-				return;
+	var url = $('#lwrte_url', panel);
 
-			response	= eval("(" + response + ")");
-
-			if(response.error && response.error.length > 0)
-				alert(response.error);
-			else
-				url.val((response.file && response.file.length > 0) ? response.file : '');
-		}
-	});
-
-	$('#view', panel).click( function() {
-		(url.val().length >0 ) ? window.open(url.val()) : alert("Enter URL to view");
-		return false;
-	}
-	);
-
-	$('#ok', panel).click( 
+	$('#lwrte_ok', panel).click( 
 		function() {
-			var url = $('#url', panel).val();
-			var target = $('#target', panel).val();
-			var title = $('#title', panel).val();
+			var url = $('#lwrte_url', panel).val();
+			var target = $('#lwrte_target', panel).val();
+			var title = $('#lwrte_title', panel).val();
 
 			if(self.get_selected_text().length <= 0) {
 				alert('Select the text you wish to link!');
@@ -492,8 +441,11 @@ function lwrte_link() {
 			self.editor_cmd('unlink');
 
 			// we wanna well-formed linkage (<p>,<h1> and other block types can't be inside of link due to WC3)
-			self.editor_cmd('createLink', rte_tag);
-			var tmp = $('<span></span>').append(self.get_selected_html());
+			//self.editor_cmd('createLink', rte_tag);
+
+                        // ADR:  The above doesn't work in Chrome, just hacking it for now
+
+			var tmp = $('<span></span>').append('<a href="' + rte_tag + '">' + self.get_selected_html() + '</a>');
 
 			if(target.length > 0)
 				$('a[href*="' + rte_tag + '"]', tmp).attr('target', target);

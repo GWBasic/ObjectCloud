@@ -1,3 +1,5 @@
+// Scripts: /API/jquery.js
+
 /*
  * Lightweight RTE - jQuery Plugin, version 1.2
  * Copyright (c) 2009 Andrey Gayvoronsky - http://www.gayvoronsky.com
@@ -309,8 +311,12 @@ lwRTE.prototype.create_panel = function(title, width) {
 
 	$('.rte-panel', tb).remove();
 	var drag, event;
-	var left = self.event.pageX;
-	var top = self.event.pageY;
+
+        // ADR - modified for ObjectCloud
+        // For some reason, when viewing on xhtml, the panel appears off-screen
+        // TODO:  This should be moved over to jquery-ui's dialog
+	var left = 0;//self.event.pageX;
+	var top = 0;//self.event.pageY;
 	
 	var panel	= $('<div></div>').hide().addClass('rte-panel').css({left: left, top: top});
 	$('<div></div>')

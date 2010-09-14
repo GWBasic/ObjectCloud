@@ -1,62 +1,136 @@
-// Scripts: /API/jquery.js, /API/jquery.rte.js, /API/jquery.rte.tb.js
+// Scripts: /API/jquery.js, /API/jquery-ui.js, /API/jquery.rte.js, /API/jquery.rte.tb.js, /API/shareDialog.js, /API/Url.js
 
-function Ecrit(page)
+var titleInput;
+var editor;
+var page;
+var contentsBack;
+
+function setUpEditor(text)
 {
+   var contents = $('<textarea />');
+
+   contentsBack.empty();
+   contentsBack.height(0);
+   contentsBack.append(contents);
+   contents.val(text);
+
+   var documentHeight = $(document).height();
+   var editorTop = contents.offset().top;
+
+   var editorHeight = 0.975 * (documentHeight - editorTop);
+
+   editor = contents.rte(
+   {
+      controls_rte: rte_toolbar,
+      controls_html: html_toolbar,
+      width: titleInput.width(),
+
+      // 60 is a hardcoded estimate for the size of the toolbars
+      // The RTE doesn't adjust its height for toolbars
+      height: editorHeight - 60
+   })[0];
+
+   // The rte is transparent, thus an empty div needs to be superimposed
+   // behind it
+   contentsBack.height(editorHeight);
+
+   var rte = $('.rte-zone');
+   rte.css( { position: 'absolute' });
+}
+
+function Ecrit(filename, inPage)
+{
+   page = inPage;
+
    $(document).ready(function()
    {
-      var titleInput = $('input.title')
-      titleInput.val(page.Title);
+      $('.footer').remove();
+      $('#footer').remove();
+      contentsBack = $('#contentsBack');
 
-      var contents = $('#contents');
-      contents.val(page.Contents);
+      titleInput = $('input.documentTitle')
 
-      var windowHeight = window.innerHeight; //$(window).height();
-      //var editorOffset = editorTop.position();
-      //var rteTop = editorTop.height() + editorOffset.top;
-alert(windowHeight + '   ' + contents.position().top);
-
-      var rte = contents.rte(
+      // For some reason, .change isn't working
+      titleInput.keyup(function()
       {
-         controls_rte: rte_toolbar,
-         controls_html: html_toolbar,
-         width: 800,
-         height: windowHeight - contents.position().top
+         document.title = "Editing: " + $(this).val();
+      });
+      titleInput.val(page.Title);
+      titleInput.keyup();
+
+      $('.share').click(function()
+      {
+         shareDialog_show(filename);
+         return false;
       });
 
-      $('#contentsBack').height(windowHeight - contents.position().top);
+      var url = Url.parseCurrent();
+      var href = url.protocol + url.server + filename;
+      $('.view').attr('href', href);
 
-      // hide the resizer because this will resize with the window
-      $('.rte-resizer').hide();
-
-      var rte = $('.rte-zone');
-      rte.css( { position: 'absolute' });
-
-      /*function resize()
+      $('.preview').click(function()
       {
-         // Hide the text editor while its new size and position are calculated
-         rte.hide();
+         var previewDialog = $('<div />');
+         previewDialog.append($('<div class="title">' + escape(titleInput.val()) + '</div>'));
+         previewDialog.append(editor.get_content());
 
-
-//editorTop.html(rteTop);
-
-         rte.offset(
+         previewDialog.dialog(
          {
-            left: editorOffset.left,
-            top: rteTop
+            modal:true,
+            position:'top',
+            height: $('#contentsBack').height(),
+            width: 800,
+            title: 'Preview'
          });
 
-         rte.size(
+         return false;
+      });
+
+      $('.save').click(function()
+      {
+         var newPage = 
          {
-            width: ,
-            height: 
+            Title: titleInput.val(),
+            Contents: editor.get_content()
+         };
+
+         // TODO:  The user shouldn't be able to click the X to close the dialog
+         var savingDialog = $('<div>Saving...</div>').dialog(
+         {
+            disabled: true,
+            closeOnEscape: false,
+            modal: true,
+            position: 'center'
          });
 
-         rte.show();
+         object_target.WriteAll(
+            JSON.stringify(newPage),
+            function()
+            {
+               savingDialog.dialog('close');
+               page = newPage;
+            },
+            function(transport)
+            {
+               savingDialog.html(transport.responseText);
+            });
 
-      }
+         return false;
+      });
 
-      $(window).resize(resize);
+      window.onbeforeunload = function()
+      {
+         if ((page.Title != titleInput.val()) || (page.Contents != editor.get_content()))
+            return "The page is changed.  Are you sure you want to exit?";
+      };
+   });
 
-      resize();*/
+   $(window).load(function()
+   {
+      setUpEditor(page.Contents);
+      $(window).resize(function()
+      {
+         setUpEditor(editor.get_content());
+      });
    });
 }

@@ -134,6 +134,7 @@ functions after this point added by Andrew Rondeau as part of ObjectCloud */
 
       var toReturn = 
       {
+         protocol: url.substring(0, slashslashloc + 3),
          server: serverAndFileAndArgs.substring(0, firstSlash),
          file: file,
          arguments: this.urlparse(url)

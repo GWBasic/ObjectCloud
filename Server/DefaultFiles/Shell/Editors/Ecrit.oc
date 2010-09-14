@@ -2,16 +2,36 @@
 <oc:inserthead>
    <oc:script src="Ecrit.js" />
    <oc:css src="/API/jquery_rte/jquery.rte.css" />
+   <oc:open filename="[_FileName_]" varname="object_target" />
 </oc:inserthead>
 
-   <script>
-      Ecrit(<oc:component oc:url="[_FileName_]" Method="ReadAll" />);
-   </script>
+   <oc:if>
+      <oc:canwrite filename="[_FileName_]">
+         <script>
+            Ecrit(
+               '[_FileName_]',
+         <oc:component oc:url="[_FileName_]" Method="ReadAll" />);
+         </script>
 
-   Title: <br />
-   <input type="text" class="title" style="width: 100%" /><br />
-   <div id="contentsBack">
-      <textarea id="contents" width="100%"/>
-   </div>
+         <input type="button" class="save" value="save" />
+         <a href="" class="preview">preview</a> 
+         <a href="" class="view">view</a> 
+
+         <oc:if>
+            <oc:hasvalue value="[_FileName_]">
+               <a href="" class="share">share</a>
+            </oc:hasvalue>
+         </oc:if><br />
+
+         Title: <br />
+         <input type="text" class="documentTitle" style="width: 100%" /><br />
+         <div id="contentsBack">
+            Loading...
+         </div>
+      </oc:canwrite>
+      <oc:else>
+         Permission denied
+      </oc:else>
+   </oc:if>
 
 </oc:componentdef>

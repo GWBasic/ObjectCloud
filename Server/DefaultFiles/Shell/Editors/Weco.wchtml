@@ -130,13 +130,21 @@
          onchange="onFilenameChanged()" />
 
       <input type="button" value="Save" id="saveButton" onclick="save()" ></input> <br />
-      <textarea name="textarea" style="width: 100%; font-family: Courier; font-size: 1em" id="textarea" ><? WebComponent($_GET["FileName"] . "?Method=ReadAll&EncodeFor=HTML") ?></textarea>
+      <textarea name="textarea" style="width: 100%; font-family: Courier; font-size: 1em" id="textarea" ></textarea>
 		
       <script>
-         onresize();
-         updateTitle();
+         // The text file is loaded through AJAX to work around some encoding complexities
+         // This really should be ported to the templating system and common look and feel
+         TextFile.ReadAll(
+            {},
+            function(result)
+            {
+               $("textarea").value = result;
+               onresize();
+               updateTitle();
 
-         $("textarea").observe('keyup', onkeyup);
+               $("textarea").observe('keyup', onkeyup);
+            });
       </script>
    </body>
 </html>
