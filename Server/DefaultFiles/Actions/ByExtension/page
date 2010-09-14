@@ -2,5 +2,5 @@
 <NameValuePairs>
 	<NameValuePair Name="View" Value="/Shell/Viewers/PageViewer.oc?FileName=[Target]" />
 	<NameValuePair Name="Preview" Value=" /Shell/Viewers/PagePreviewer.occ?FileName=[Target]" />
-	<NameValuePair Name="Edit" Value="/Shell/Editors/nicEdit.wchtml?FileName=[Target]" />
+	<NameValuePair Name="Edit" Value="/Shell/Editors/Ecrit.oc?FileName=[Target]" />
 </NameValuePairs>
