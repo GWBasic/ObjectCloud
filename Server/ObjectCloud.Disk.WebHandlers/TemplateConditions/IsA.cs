@@ -32,7 +32,18 @@ namespace ObjectCloud.Disk.WebHandlers.TemplateConditions
 		public bool IsConditionMet (ITemplateParsingState templateParsingState, XmlNode me)
 		{
 			IFileContainer fileContainer = GetFileContainer(templateParsingState, me);
-			return fileContainer.Extension == me.Attributes["extension"].Value;
+			
+			XmlAttribute extensionAttribute = me.Attributes["extension"];
+			
+			if (null != extensionAttribute)
+				return fileContainer.Extension == extensionAttribute.Value;
+			
+			XmlAttribute typeidAttribute = me.Attributes["typeid"];
+			
+			if (null != typeidAttribute)
+				return fileContainer.TypeId == typeidAttribute.Value;
+			
+			return false;
 		}
 	}
 }

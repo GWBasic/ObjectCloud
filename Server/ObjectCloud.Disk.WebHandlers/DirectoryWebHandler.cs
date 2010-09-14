@@ -171,6 +171,9 @@ namespace ObjectCloud.Disk.WebHandlers
                 // Get rid of forbidden characters
                 foreach (char forbiddenChar in FileHandlerFactoryLocator.FileSystemResolver.FilenameForbiddenCharacters)
                     fileNameSuggestion = fileNameSuggestion.Replace(forbiddenChar, '_');
+				
+				// also, get rid of spaces
+				fileNameSuggestion = fileNameSuggestion.Replace(' ', '_');
 
                 // Try the suggestion plus an extension
                 string fileName = string.Format(

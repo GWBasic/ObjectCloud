@@ -103,17 +103,44 @@ function Ecrit(filename, inPage)
             position: 'center'
          });
 
-         object_target.WriteAll(
-            JSON.stringify(newPage),
-            function()
-            {
-               savingDialog.dialog('close');
-               page = newPage;
-            },
-            function(transport)
-            {
-               savingDialog.html(transport.responseText);
-            });
+         if (object_target.TypeId != 'directory')
+            object_target.WriteAll(
+               JSON.stringify(newPage),
+               function()
+               {
+                  savingDialog.dialog('close');
+                  page = newPage;
+               },
+               function(transport)
+               {
+                  savingDialog.html(transport.responseText);
+               });
+         else
+            // Special case when the target is a directory, instead of writing to the file,
+            // a new one is created!
+            object_target.CreateFile(
+               {
+                  extension: 'page',
+                  fileNameSuggestion: newPage.Title.length > 0 ? newPage.Title : newPage.Contents
+               },
+               function(new_target)
+               {
+                  new_target.WriteAll(
+                     JSON.stringify(newPage),
+                     function()
+                     {
+                        window.location.href = new_target.Url + '?Action=Edit';
+                        page = newPage;
+                     },
+                     function(transport)
+                     {
+                        savingDialog.html(transport.responseText);
+                     });
+               },
+               function(transport)
+               {
+                  savingDialog.html(transport.responseText);
+               });
 
          return false;
       });

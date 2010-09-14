@@ -187,6 +187,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 // Replace some key constants
                 javascriptWrapper = javascriptWrapper.Replace("{0}", FileContainer.FullPath);
                 javascriptWrapper = javascriptWrapper.Replace("{1}", FileContainer.Filename);
+                javascriptWrapper = javascriptWrapper.Replace("{2}", FileContainer.TypeId);
 
                 CachedInBrowserJSWrapper = javascriptWrapper;
             }
