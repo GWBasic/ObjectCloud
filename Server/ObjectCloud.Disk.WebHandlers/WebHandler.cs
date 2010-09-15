@@ -1111,9 +1111,10 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="webConnection"></param>
         /// <param name="filename"></param>
         /// <param name="relationship"></param>
+        /// <param name="inheritPermission">Set to true if the related file should inherit READ permissions from the parent file.  That is, anyone who has at least READ permission to the parent file will be able to read the related file.  In order for this to work, the user must have administer permissions to the related file or an error will occur</param>
         /// <returns></returns>
         [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Administer)]
-        public IWebResults AddRelatedFile(IWebConnection webConnection, string filename, string relationship)
+        public IWebResults AddRelatedFile(IWebConnection webConnection, string filename, string relationship, bool? inheritPermission)
         {
             if (null == FileContainer.ParentDirectoryHandler)
                 throw new WebResultsOverrideException(WebResults.From(Status._406_Not_Acceptable, "The root directory can not have relationships"));
@@ -1136,8 +1137,19 @@ namespace ObjectCloud.Disk.WebHandlers
                 throw new WebResultsOverrideException(WebResults.From(Status._404_Not_Found, filename + " does not exist"));
             }
 
+            bool inheritPermissionValue = false;
+            if (null != inheritPermission)
+                inheritPermissionValue = inheritPermission.Value;
+
+            if (inheritPermissionValue)
+                if (FilePermissionEnum.Administer > relatedContainer.LoadPermission(webConnection.Session.User.Id))
+                    throw new WebResultsOverrideException(WebResults.From(
+                        Status._401_Unauthorized,
+                        "You must have administer permission to " + relatedContainer.FullPath + 
+                        " in order for it to inherit permissions from the parent file"));
+
             FileContainer.ParentDirectoryHandler.AddRelationship(
-                FileContainer, relatedContainer, relationship);
+                FileContainer, relatedContainer, relationship, inheritPermissionValue);
 
             return WebResults.From(Status._202_Accepted);
         }

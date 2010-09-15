@@ -78,7 +78,8 @@ namespace ObjectCloud.CodeGenerator
                     {
                         originalFileForiengKeyColumn,
                         referenceFileIdColumn,
-                        relationshipColumn
+                        relationshipColumn,
+                        new Column("Inherit", NotNull.Bool)
                     });
 
             relationshipTable.CompoundIndexes.Add(new Column[] { originalFileForiengKeyColumn, relationshipColumn });
@@ -111,7 +112,7 @@ namespace ObjectCloud.CodeGenerator
 
             database.Tables.Add(namedPermissionTable);
 
-            database.Version = 5; // 6;
+            database.Version = 6;
 
             return database;
         }

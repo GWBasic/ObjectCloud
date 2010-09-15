@@ -39,16 +39,17 @@ function Replier_AddReply(replyText)
                   relationship: "root"
                });
 
+         base.AddRelatedFile_Sync(
+               {
+                  filename: replyFile.Filename,
+                  relationship: "reply",
+                  inheritPermission: true
+               });
+
          replyFile.Chown_Sync(
             {
                newOwnerId: userMetadata.id
             });
-
-         base.AddRelatedFile_Sync(
-               {
-                  filename: replyFile.Filename,
-                  relationship: "reply"
-               });
       });
    });
 }

@@ -90,13 +90,15 @@ namespace ObjectCloud.Interfaces.Disk
         /// <summary>
         /// Creates the relationship in the directory
         /// </summary>
-        /// <param name="parentFileId">The parent file's ID.  This must be present in the directory</param>
-        /// <param name="relatedFileId">The related file's ID.  This must be present in the directory</param>
+        /// <param name="parentFile">The parent file's container.  This must be present in the directory</param>
+        /// <param name="relatedFile">The related file's container.  This must be present in the directory</param>
         /// <param name="relationship">The name of the relationship</param>
+        /// <param name="inherit">True if the related file should inherit read permissions from the parent</param>
         void AddRelationship(
             IFileContainer parentFile,
             IFileContainer relatedFile,
-            string relationship);
+            string relationship,
+            bool inherit);
 
         /// <summary>
         /// Creates the relationship in the directory

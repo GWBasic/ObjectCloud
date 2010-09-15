@@ -154,7 +154,7 @@ namespace ObjectCloud.Interfaces.WebServer
         /// <param name="filename"></param>
         /// <param name="relationship"></param>
         /// <returns></returns>
-        IWebResults AddRelatedFile(IWebConnection webConnection, string filename, string relationship);
+        IWebResults AddRelatedFile(IWebConnection webConnection, string filename, string relationship, bool? inheritPermission);
         
         /// <summary>
         /// Deletes a related file

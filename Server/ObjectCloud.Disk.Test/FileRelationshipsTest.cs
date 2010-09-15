@@ -58,10 +58,10 @@ namespace ObjectCloud.Disk.Test
             IFileContainer related3Container = directory.CreateFile("related3.txt", "text", null).FileContainer;
             IFileContainer related4Container = directory.CreateFile("related4.xml", "text", null).FileContainer;
 
-            directory.AddRelationship(parentContainer, related1Container, "aaa");
-            directory.AddRelationship(parentContainer, related2Container, "aaa");
-            directory.AddRelationship(parentContainer, related3Container, "bbb");
-            directory.AddRelationship(parentContainer, related4Container, "bbb");
+            directory.AddRelationship(parentContainer, related1Container, "aaa", false);
+            directory.AddRelationship(parentContainer, related2Container, "aaa", false);
+            directory.AddRelationship(parentContainer, related3Container, "bbb", false);
+            directory.AddRelationship(parentContainer, related4Container, "bbb", false);
 
             List<IFileContainer> fileContainers;
 
@@ -147,10 +147,10 @@ namespace ObjectCloud.Disk.Test
             IFileContainer related4Container = directory.CreateFile("related4.xml", "text", null).FileContainer;
 
             // Create relationships
-            directory.AddRelationship(parentContainer, related1Container, "aaa");
-            directory.AddRelationship(parentContainer, related2Container, "aaa");
-            directory.AddRelationship(parentContainer, related3Container, "bbb");
-            directory.AddRelationship(parentContainer, related4Container, "bbb");
+            directory.AddRelationship(parentContainer, related1Container, "aaa", false);
+            directory.AddRelationship(parentContainer, related2Container, "aaa", false);
+            directory.AddRelationship(parentContainer, related3Container, "bbb", false);
+            directory.AddRelationship(parentContainer, related4Container, "bbb", false);
 
             // Create users and group
             FileHandlerFactoryLocator.UserManagerHandler.AddUserToGroup(User1.Id, Group.Id);
@@ -204,7 +204,7 @@ namespace ObjectCloud.Disk.Test
             directory.SetPermission(null, parentContainer.Filename, User3.Id, FilePermissionEnum.Read, false, false);
 
             IFileContainer relatedContainer = directory.CreateFile("related.txt", "text", User2.Id).FileContainer;
-            directory.AddRelationship(parentContainer, relatedContainer, "aaa");
+            directory.AddRelationship(parentContainer, relatedContainer, "aaa", false);
 
             Assert.AreEqual(FilePermissionEnum.Read, relatedContainer.LoadPermission(User3.Id), "User did not have permission for a related file");
 
@@ -231,9 +231,9 @@ namespace ObjectCloud.Disk.Test
             directory.SetPermission(null, parentContainer.Filename, User3.Id, FilePermissionEnum.Read, false, false);
 
             IFileContainer relatedContainerA = directory.CreateFile("relatedA.txt", "text", User2.Id).FileContainer;
-            directory.AddRelationship(parentContainer, relatedContainerA, "aaa");
+            directory.AddRelationship(parentContainer, relatedContainerA, "aaa", false);
             IFileContainer relatedContainerB = directory.CreateFile("relatedB.txt", "text", User2.Id).FileContainer;
-            directory.AddRelationship(parentContainer, relatedContainerB, "bbb");
+            directory.AddRelationship(parentContainer, relatedContainerB, "bbb", false);
 
             List<IFileContainer> relatedFiles = new List<IFileContainer>(
                 directory.GetRelatedFiles(User3.Id, parentContainer.FileId, new string[] { "aaa" }, null, null, null, null));

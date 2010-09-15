@@ -111,28 +111,16 @@ PRAGMA user_version = 5;
 
                 command.ExecuteNonQuery();
             }
-            /*
+
             if (version < 6)
             {
                 command = connection.CreateCommand();
-                command.CommandText = "select fileId, Extension, TypeId from File where Extension = 'group' and TypeId = 'database'";
-
-                using (IDataReader reader = command.ExecuteReader())
-                {
-                }
-
-                command = connection.CreateCommand();
-                command.CommandText = "update File set (TypeId = 'database') where Extension = 'group' and TypeId = 'database'";
-
-                command.ExecuteNonQuery();
-
-                command = connection.CreateCommand();
                 command.CommandText =
-@"PRAGMA user_version = 6;
-";
-
+@"alter table Relationships add Inherit boolean;
+Update Relationships set Inherit = 'false';
+PRAGMA user_version = 6;";
                 command.ExecuteNonQuery();
-            }*/
+            }
         }
     }
 }

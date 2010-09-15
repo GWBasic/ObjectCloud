@@ -260,13 +260,14 @@
             Cleans up old and dead transports
             </summary>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.WebHandler`1.AddRelatedFile(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
+        <member name="M:ObjectCloud.Disk.WebHandlers.WebHandler`1.AddRelatedFile(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.Nullable{System.Boolean})">
             <summary>
             Adds a file as being related to this file
             </summary>
             <param name="webConnection"></param>
             <param name="filename"></param>
             <param name="relationship"></param>
+            <param name="inheritPermission">Set to true if the related file should inherit READ permissions from the parent file.  That is, anyone who has at least READ permission to the parent file will be able to read the related file.  In order for this to work, the user must have administer permissions to the related file or an error will occur</param>
             <returns></returns>
         </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.WebHandler`1.DeleteRelatedFile(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">

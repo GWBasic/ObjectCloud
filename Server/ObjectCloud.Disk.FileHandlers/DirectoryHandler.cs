@@ -666,6 +666,7 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             FilePermissionEnum? highestPermission = null;
             List<IFileId> parentIds = new List<IFileId>();
+            List<IFileId> inheritedParentIds = new List<IFileId>();
 
             // Load all of the parent related files
             foreach (IRelationships_Readable relationship in DatabaseConnection.Relationships.Select(Relationships_Table.ReferencedFileId.In(fileIds)))
@@ -676,12 +677,25 @@ namespace ObjectCloud.Disk.FileHandlers
                 {
                     parentIds.Add(fileId);
                     alreadyChecked.Add(fileId);
+
+                    if (relationship.Inherit)
+                        inheritedParentIds.Add(fileId);
                 }
             }
 
             // If there are no parent relationships, just return null
             if (0 == parentIds.Count)
                 return null;
+
+            // Deal with explicitly set inherit permissions
+            // TODO:  This is very untested
+            if (inheritedParentIds.Count > 0)
+                foreach (IFile_Readable file in DatabaseConnection.File.Select(File_Table.FileId.In(inheritedParentIds)))
+                {
+                    FilePermissionEnum? fromFile = LoadPermission(file.Name, userAndGroupIds, false);
+                    if (fromFile != null)
+                        highestPermission = FilePermissionEnum.Read;
+                }
 
             // Scan the permissions of the parent related files
             foreach (IPermission_Readable permission in DatabaseConnection.Permission.Select(
@@ -1186,7 +1200,7 @@ namespace ObjectCloud.Disk.FileHandlers
             }
         }
 
-        public virtual void AddRelationship(IFileContainer parentFile, IFileContainer relatedFile, string relationship)
+        public virtual void AddRelationship(IFileContainer parentFile, IFileContainer relatedFile, string relationship, bool inheritPermission)
         {
             DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
             {
@@ -1203,6 +1217,7 @@ namespace ObjectCloud.Disk.FileHandlers
                         relationshipInDb.FileId = (FileId)(parentFile.FileId);
                         relationshipInDb.ReferencedFileId = (FileId)relatedFile.FileId;
                         relationshipInDb.Relationship = relationship;
+                        relationshipInDb.Inherit = inheritPermission;
                     });
                 }
                 catch (Exception e)
