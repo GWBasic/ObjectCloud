@@ -333,9 +333,12 @@ namespace ObjectCloud.Disk.Implementation
                     FilePermissionEnum.Read,
                     true,
                     false);
+
+				// Because most installations will modify the DefaultTemplate folder, syncing only happens if the folder is
+				// missing.  This will prevent minor system upgrades from overwriting custom look and feel.
+				dir = rootDirectoryHandler.OpenFile("DefaultTemplate").FileHandler;
+            	dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "DefaultTemplate", false);
             }
-            dir = rootDirectoryHandler.OpenFile("DefaultTemplate").FileHandler;
-            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "DefaultTemplate", false);
 
             // Do not syncronize the index file; this is for the user to update.  It's just a web component anyway
             //IFileHandler indexFile = rootDirectoryHandler.OpenFile("index.page").FileHandler;

@@ -186,6 +186,14 @@
 	};
 	
 	this.HTMLtoXML = function( html ) {
+
+                function replaceEscapes(text) {
+                   text = text.replace(/&nbsp;/g, '&#160;');
+                   text = text.replace(/&bull;/g, '&#8226;');
+                   text = text.replace(/&dash;/g, '&#8211;');
+                   return text;
+                }
+
 		var results = "";
 		
 		HTMLParser(html, {
@@ -193,7 +201,7 @@
 				results += "<" + tag;
 		
 				for ( var i = 0; i < attrs.length; i++ )
-					results += " " + attrs[i].name + '="' + attrs[i].escaped + '"';
+					results += " " + attrs[i].name + '="' + replaceEscapes(attrs[i].escaped) + '"';
 		
 				results += (unary ? "/" : "") + ">";
 			},
@@ -201,13 +209,13 @@
 				results += "</" + tag + ">";
 			},
 			chars: function( text ) {
-				results += text;
+				results += replaceEscapes(text);
 			},
 			comment: function( text ) {
 				results += "<!--" + text + "-->";
 			}
 		});
-		
+
 		return results;
 	};
 	

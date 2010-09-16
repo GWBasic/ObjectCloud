@@ -1,4 +1,4 @@
-// Scripts: /API/jquery.js, /API/jquery-ui.js, /API/jquery.rte.js, /API/jquery.rte.tb.js, /API/shareDialog.js, /API/Url.js
+// Scripts: /API/jquery.js, /API/jquery-ui.js, /API/jquery.rte.js, /API/jquery.rte.tb.js, /API/shareDialog.js, /API/Url.js, /API/htmlparser.js
 
 var titleInput;
 var editor;
@@ -94,6 +94,21 @@ function Ecrit(filename, inPage)
             Contents: editor.get_content()
          };
 
+         var converted =
+         {
+            Title: titleInput.val(),
+            Contents: editor.get_content()
+         };
+
+         try
+         {
+            converted.Contents = HTMLtoXML(converted.Contents);
+         }
+         catch (exception)
+         {
+            alert("Warning:  Could not convert page to proper XML\n" + exception);
+         }
+
          // TODO:  The user shouldn't be able to click the X to close the dialog
          var savingDialog = $('<div>Saving...</div>').dialog(
          {
@@ -105,7 +120,7 @@ function Ecrit(filename, inPage)
 
          if (object_target.TypeId != 'directory')
             object_target.WriteAll(
-               JSON.stringify(newPage),
+               JSON.stringify(converted),
                function()
                {
                   savingDialog.dialog('close');

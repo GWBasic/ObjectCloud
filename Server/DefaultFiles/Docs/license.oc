@@ -1,5 +1,9 @@
 <oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
 
+   <oc:inserthead>
+      <title>ObjectCloud License</title>
+   </oc:inserthead>
+
 <img src="/Pages/objectcloud logo.png?Method=GetScaled&amp;width=600" />
 
 <p>All original ObjectCloud source code is copyright (c) 2009, 2010 Andrew Rondeau.  ObjectCloud contains additional source code, programs, and libraries from additional authors.  These retain their original copyright, and are documented in this file.</p>
@@ -103,11 +107,15 @@ Javascript AJAX wrappers.  Note:  I chose Prototype because it was very easy to 
    </tr>
 
    <tr>
-      <td><a href="http://plugins.jquery.com/project/lwRTE/">LIGHTWEIGHT RICH TEXT EDITOR (RTE / WYSIWYG) FOR JQUERY/</a></td><td><a href="http://code.google.com/p/lwrte/">http://code.google.com/p/lwrte/</a></td><td>jQuery-based rich text editor</td><td><a href="http://www.opensource.org/licenses/mit-license.php">MIT</a></td><td>Rich ext editor for use on jQuery-based xhtml pages.</td><td><a href="/API/jquery.rte.js">/API/jquery.rte.js</a>, <a href="/API/jquery.rte.tb.js">/API/jquery.rte.tb.js</a>, and <a href="/API/jquery_rte">/API/jquery_rte</a></td><td>Fixed bugs that prevented use with xhtml and removed php bindings</td>
+      <td><a href="http://plugins.jquery.com/project/lwRTE/">LIGHTWEIGHT RICH TEXT EDITOR (RTE / WYSIWYG) FOR JQUERY/</a></td><td><a href="http://code.google.com/p/lwrte/">http://code.google.com/p/lwrte/</a></td><td>jQuery-based rich text editor</td><td><a href="http://www.opensource.org/licenses/mit-license.php">MIT</a></td><td>Rich text editor for use on jQuery-based xhtml pages.</td><td><a href="/API/jquery.rte.js">/API/jquery.rte.js</a>, <a href="/API/jquery.rte.tb.js">/API/jquery.rte.tb.js</a>, and <a href="/API/jquery_rte">/API/jquery_rte</a></td><td>Fixed bugs that prevented use with xhtml and removed php bindings</td>
    </tr>
 
    <tr>
       <td><a href="http://code.google.com/p/geo-location-javascript/">geo-location-javascript v0.4.3</a></td><td><a href="http://code.google.com/u/whoisstan/">Stan Wiechers</a></td><td>Javascript geolocation API that handles non-HTML5 compliant devices.</td><td><a href="http://www.opensource.org/licenses/mit-license.php">MIT</a></td><td></td><td><a href="/API/geo.js">/API/geo.js</a></td>
+   </tr>
+
+   <tr>
+      <td><a href="http://ejohn.org/blog/pure-javascript-html-parser/">Pure JavaScript HTML Parser</a></td><td><a href="http://ejohn.org/about/">John Resig</a>, <a href="http://erik.eae.net">Erik Arvidsson</a></td><td>Javascript-based HTML parser</td><td><a href="http://www.mozilla.org/MPL/MPL-1.1.html">Mozilla Public License</a></td><td>Converts HTML to xhtml in the web-based document editor</td><td><a href="/API/htmlparser.js">/API/htmlparser.js</a></td><td>Added ability to convert &amp;nbsp;, &amp;bull;, and &amp;dash;.</td>
    </tr>
 
 </table>
