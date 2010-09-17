@@ -321,7 +321,7 @@ namespace ObjectCloud.Disk.Implementation
 
             if (!rootDirectoryHandler.IsFilePresent("DefaultTemplate"))
             {
-                rootDirectoryHandler.CreateFile(
+                dir = rootDirectoryHandler.CreateFile(
                     "DefaultTemplate",
                     "directory",
                     null);
@@ -333,12 +333,18 @@ namespace ObjectCloud.Disk.Implementation
                     FilePermissionEnum.Read,
                     true,
                     false);
+            }
+            else
+				dir = rootDirectoryHandler.OpenFile("DefaultTemplate").FileHandler;
 
+            // Only sync if the DefaultTemplate is empty
+            List<IFileContainer> defaultTemplateFiles = new List<IFileContainer>(
+                dir.FileContainer.CastFileHandler<IDirectoryHandler>().Files);
+
+            if (defaultTemplateFiles.Count == 0)
 				// Because most installations will modify the DefaultTemplate folder, syncing only happens if the folder is
 				// missing.  This will prevent minor system upgrades from overwriting custom look and feel.
-				dir = rootDirectoryHandler.OpenFile("DefaultTemplate").FileHandler;
             	dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "DefaultTemplate", false);
-            }
 
             // Do not syncronize the index file; this is for the user to update.  It's just a web component anyway
             //IFileHandler indexFile = rootDirectoryHandler.OpenFile("index.page").FileHandler;

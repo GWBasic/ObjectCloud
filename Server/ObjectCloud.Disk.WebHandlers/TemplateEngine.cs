@@ -85,7 +85,6 @@ namespace ObjectCloud.Disk.WebHandlers
             IDictionary<string, string> getParameters,
             string filename)
         {
-            XmlDocument templateDocument = null;
             TemplateParsingState templateParsingState = CreateTemplateParsingState(webConnection);
 
             // The code below mostly gets in the way while debugging
@@ -119,12 +118,11 @@ namespace ObjectCloud.Disk.WebHandlers
 
                 webConnection.TouchedFiles.Add(templateFileContainer);
 
-                templateDocument = ResolveHeaderFooter(webConnection, getParameters, templateFileContainer, templateParsingState);
-                templateParsingState.TemplateDocument = templateDocument;
+                ResolveHeaderFooter(webConnection, getParameters, templateFileContainer, templateParsingState);
 
-                ResolveDocument(getParameters, templateDocument, templateParsingState);
+                ResolveDocument(getParameters, templateParsingState.TemplateDocument, templateParsingState);
 
-                XmlNode headNode = GetHeadNode(templateDocument);
+                XmlNode headNode = GetHeadNode(templateParsingState.TemplateDocument);
 
                 // Add script and css tags to the header
                 GenerateScriptAndCssTags(templateParsingState, headNode);
@@ -143,7 +141,7 @@ namespace ObjectCloud.Disk.WebHandlers
             // Copy all elements into an immutable list, run document post-processors, and remove comments
             bool removeComments = !webConnection.CookiesFromBrowser.ContainsKey(templateParsingState.TemplateHandlerLocator.TemplatingConstants.XMLDebugModeCookie);
 
-            foreach (XmlNode xmlNode in Enumerable<XmlNode>.FastCopy(XmlHelper.IterateAllElementsAndComments(templateDocument)))
+            foreach (XmlNode xmlNode in Enumerable<XmlNode>.FastCopy(XmlHelper.IterateAllElementsAndComments(templateParsingState.TemplateDocument)))
             {
                 if (xmlNode is XmlElement)
                 {
@@ -189,7 +187,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             MemoryStream stream = new MemoryStream();
             XmlWriter xmlWriter = XmlWriter.Create(stream, xmlWriterSettings);
-            templateDocument.Save(xmlWriter);
+            templateParsingState.TemplateDocument.Save(xmlWriter);
 
             stream.Seek(0, SeekOrigin.Begin);
 
@@ -522,7 +520,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="webConnection"></param>
         /// <param name="templateParsingState"></param>
         /// <returns></returns>
-        private XmlDocument ResolveHeaderFooter(
+        private void ResolveHeaderFooter(
             IWebConnection webConnection,
             IDictionary<string, string> getParameters,
             IFileContainer templateFileContainer,
@@ -571,16 +569,63 @@ namespace ObjectCloud.Disk.WebHandlers
                     templateFileContainer,
                     XmlParseMode.Xml);
 
-                // find oc:component tag
+                templateParsingState.TemplateDocument = templateDocument;
+
+                // find <oc:component /> tag
+                int numOcComponentTags = 0;
                 XmlNodeList componentTags = templateDocument.GetElementsByTagName("component", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
                 foreach (XmlNode componentNode in Enumerable<XmlNode>.FastCopy(Enumerable<XmlNode>.Cast(componentTags)))
                     if ((null == componentNode.Attributes.GetNamedItem("url", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace)) && (null == componentNode.Attributes.GetNamedItem("src", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace)))
-                        templateParsingState.ReplaceNodes(componentNode, nodesToInsert);
+                    {
+                        numOcComponentTags++;
+
+                        if (1 == numOcComponentTags)
+                            templateParsingState.ReplaceNodes(componentNode, nodesToInsert);
+
+                        else
+                            templateParsingState.ReplaceNodes(
+                                componentNode,
+                                templateParsingState.GenerateWarningNode("Warning:  Duplicate <oc:component /> tag, count " + numOcComponentTags.ToString()));
+                    }
+
+                // Attempt to recover from a missing <oc:component /> tag
+                if (0 == numOcComponentTags)
+                {
+                    XmlNodeList bodyTags = templateDocument.GetElementsByTagName(
+                        "body", templateParsingState.TemplateHandlerLocator.TemplatingConstants.HtmlNamespace);
+
+                    XmlElement bodyTag = null;
+
+                    if (null != bodyTags)
+                        if (bodyTags.Count > 0)
+                            bodyTag = (XmlElement)bodyTags[0];
+
+                    if (null == bodyTag)
+                    {
+                        /*bodyTag = templateDocument.CreateElement(
+                            "body", templateParsingState.TemplateHandlerLocator.TemplatingConstants.HtmlNamespace);
+
+                        templateDocument.AppendChild(bodyTag);*/
+
+                        bodyTag = (XmlElement)templateDocument.FirstChild;
+                    }
+
+                    bodyTag.AppendChild(
+                        templateParsingState.GenerateWarningNode(
+@"WARNING!!!
+--------------
+" + headerFooter + @" is missing a needed <oc:component /> tag!!!
+The tag must be empty with no attributes.  This is where the content for each page is displayed"));
+
+                    XmlElement componentNode = templateDocument.CreateElement(
+                        "component", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
+
+                    bodyTag.AppendChild(componentNode);
+                    templateParsingState.ReplaceNodes(componentNode, nodesToInsert);
+                }
             }
 
             templateParsingState.SetCWD(templateDocument.ChildNodes, templateFileContainer.ParentDirectoryHandler.FileContainer.FullPath);
-
-            return templateDocument;
         }
 
         /// <summary>
