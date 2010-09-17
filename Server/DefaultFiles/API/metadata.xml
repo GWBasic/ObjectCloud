@@ -146,11 +146,33 @@
 	<File
 		Name="File.js"
 		TypeId="text"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
 	<File
 		Name="Filehandlers"
 		TypeId="directory"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
 	<File
 		Name="fullSizeImageLink.js"
 		TypeId="text"
@@ -201,6 +223,10 @@
 	<File
 		Name="jquery_rte"
 		TypeId="directory"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="jquery-ui.auto.js"
+		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 	<File
 		Name="jquery-ui.js"

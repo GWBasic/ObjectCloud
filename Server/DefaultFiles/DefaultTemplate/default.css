@@ -70,64 +70,17 @@ th
 
 #account {
    float: right;
-   width: 450px;
-   font-size:13px;
-   margin-top: 5px;
-   background: #6666aa;
-
-
    }
 
-#account b {
-   font-size:13px;
-
-
-   }
-
-#account input {
-   font-size:13px;
-   padding: 0px;
-   border: 0px;
-
-   }
-
-#profilepicaccount {
-   float: left;
-   margin-right: 5px;
-   margin-top: 0px;
-
-
-   }
-
-#accountblock {
-
-   display: block;
-   margin-top:1px;
-
-
-}
 
 #accountblock a {
 
    color:#fff;
-   text-decoration:none;
-
 }
 
 #accountblock img {
-
    border: 0px;
-
 }
-
-#Login_Welcome{
-       font-size: 22px;
-       width: 500px;
-   }
-
-#Login_Welcome input{
-       font-size: 20px;
-   }
 
 /* Start of Body Content */
 

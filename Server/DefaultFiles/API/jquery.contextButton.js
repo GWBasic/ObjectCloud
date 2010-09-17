@@ -1,5 +1,37 @@
 // Scripts:  /API/jquery.js
 
+/**
+ * Quick-and-dirty Context Button jQuery Plugin
+ *
+ * http://appfeeds.appfeeds.com/Lifestream/quickanddirtycontextbutton.page
+ *
+ * Copyright (c) 2010 Andrew Rondeau
+ * Dual licensed under the MIT or SimPL 2.0 licenses:
+ * http://www.opensource.org/licenses/mit-license.php
+ * http://opensource.org/licenses/simpl-2.0.html
+ *
+ */
+
+/*
+   Usage
+
+   First, create some divs that will turn into menus:
+
+   <div class="contextMenu">
+      <a>Item 1</a><br />
+      <a>Item 2</a><br />
+      <a>Item 3</a>
+   </div>
+   Then, add a script to swap in buttons:
+
+   <script>
+      $(document).ready(function()
+      {
+         $('.contextMenu').contextButton();
+      });
+   </script>
+*/
+
 jQuery.fn.contextButton = function(options) {
 
    if (!options)

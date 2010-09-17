@@ -1,0 +1,36 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
+<oc:inserthead>
+   <oc:script src="/Shell/Security/Login.js" />
+   <title>Login</title>
+</oc:inserthead>
+
+   <oc:if>
+      <oc:isloggedin>
+         Remember me <input class="Login_KeepAlive" type="checkbox" />
+         <span class="Login_MaxAgeSpan">for <input class="Login_MaxAge" type="text" size="5" /> days</span>.
+         <a class="Login_logoutButton" href="">Logout</a><br />
+      </oc:isloggedin>
+   </oc:if>
+
+   <oc:if>
+      <oc:can filename="/Users/UserDB" namedpermission="CreateUser">
+         <a href="/Shell/UserManagers/Create%20Account.oc" target="_top">Create Account</a> </oc:can>
+   </oc:if>
+
+   <hr />
+
+   <form class="Login_LoginForm"> 
+      Username: <input type="text" name="username"/><br />
+      Password: <input type="password" name="password"/><br /> 
+      <input class="Login_loginButton" type="submit" value="login"/> 
+   </form> 
+
+   <hr />
+
+   <form action="/Users/UserDB?Method=OpenIDLogin" method="POST"> 
+      OpenID <img src="/Shell/OpenID/login-bg.gif" />: <input type="text" name="openid_url" id="openid_url"/> 
+      <input type="submit" value="OpenID login"/> 
+      <input type="hidden" name="redirect" id="Login_redirect"/> 
+   </form> 
+
+</oc:componentdef>

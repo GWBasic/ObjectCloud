@@ -1,4 +1,4 @@
-// Scripts:  /API/jquery.js, /Users/UserDB?Method=GetJSW&assignToVariable=UserDB, /API/Filehandlers/SessionManager.js
+// Scripts:  /API/jquery.js, /API/jquery-ui.js, /Users/UserDB?Method=GetJSW&assignToVariable=UserDB, /API/Filehandlers/SessionManager.js
 
 function Login_UpdateKeepAlive()
 {
@@ -18,17 +18,32 @@ $(document).ready(function()
 {
    // Register login / out handlers
 
-   $('input.Login_logoutButton').click(function()
+   $('.Login_logoutButton').click(function()
    {
-         if (confirm("Are you sure you want to log out?"))
+      var dialog = $('<div>Click OK to log out</div>').dialog(
+      {
+         modal:true,
+         position:'top',
+         title: 'Are you sure you want to log out?',
+         buttons:
          {
-            UserDB.Logout(
-               {},
-               function(responseText)
-               {
-                  window.location.reload();
-               });
+            OK: function()
+            {
+               UserDB.Logout(
+                  {},
+                  function(responseText)
+                  {
+                     window.location.reload();
+                  });
+            },
+            Cancel: function()
+            {
+               dialog.dialog('close');
+            }
          }
+      });
+
+      return false;
    });
 
    $('form.Login_LoginForm').submit(function()
@@ -44,7 +59,7 @@ $(document).ready(function()
          },
          function(responseText)
          {
-            window.location.reload();
+            top.location.href = top.location.href;
          });
 
       return false;

@@ -23,17 +23,5 @@
 
    <hr />
 
-   <form action="/Users/UserDB?Method=OpenIDLogin" method="POST"> 
-      <a href="/AppFeeds/CreateAccount.ssjs">Create Account</a> - OpenID: <input type="text" name="openid_url" id="openid_url"/> 
-      <input type="submit" value="OpenID login"/> 
-      <input type="hidden" name="redirect" id="Login_redirect"/> 
-   </form> 
-   <div> 
-      <form class="Login_LoginForm"> 
-         Username: <input type="text" name="username"/> 
-         Password: <input type="password" name="password"/> 
-         <input class="Login_loginButton" type="submit" value="login"/> 
-      </form> 
-   </div>
-
+   <oc:component oc:src="/Shell/Security/Login.oc" />
 </oc:componentdef>

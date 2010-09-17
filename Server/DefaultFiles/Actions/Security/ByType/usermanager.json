@@ -1,0 +1,4 @@
+[
+   {"NamedPermission":"CreateUser", "Label": "Create Users", "Default":false},
+   {"NamedPermission":"CreateGroup", "Label": "Create Groups", "Default":false}
+]

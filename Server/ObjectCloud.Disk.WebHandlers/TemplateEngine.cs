@@ -549,6 +549,10 @@ namespace ObjectCloud.Disk.WebHandlers
                 }
                 else
                     nodesToInsert = templateDocument.ChildNodes;
+				
+				string headerFooterOverride;
+				if (webConnection.GetParameters.TryGetValue("HeaderFooterOverride", out headerFooterOverride))
+					headerFooter = headerFooterOverride;
 
                 templateParsingState.SetCWD(nodesToInsert, templateFileContainer.ParentDirectoryHandler.FileContainer.FullPath);
 
