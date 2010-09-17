@@ -1,0 +1,27 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" xmlns:af="appfeeds_templating">
+<oc:inserthead>
+   <title>Permission Denied</title>
+   <oc:script src="/API/jquery.js" />
+   <script>
+      $('document').ready(function()
+      {
+         $('span.urlspan').html(window.location.href);
+      });
+   </script>
+</oc:inserthead>
+
+   <div>
+      <oc:if>
+         <oc:isloggedin>
+            <img src="[_User.Identity_]?Method=GetAvatar&amp;width=350" /><br />
+         </oc:isloggedin>
+      </oc:if>
+      You do not have permission to access 
+      <span class="urlspan">...</span>.
+      Please log in if you would like to see it.
+   </div>
+
+   <hr />
+
+   <oc:component oc:src="/DefaultTemplate/login.oc" />
+</oc:componentdef>

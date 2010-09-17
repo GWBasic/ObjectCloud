@@ -1,1 +1,3 @@
-ByExtension
+Login.oc
+LoginComponent.oc
+PermissionDenied.oc

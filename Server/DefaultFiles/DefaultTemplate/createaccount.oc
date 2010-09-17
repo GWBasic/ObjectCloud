@@ -1,0 +1,47 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
+   <oc:inserthead>
+      <oc:open filename="/Users/UserDB" varname="UserDB" />
+      <oc:script src="/Shell/UserManagers/Create Account.js" />
+      <script>
+
+         // This controls if, when creating an account, the user should be signed in
+         // as the new user
+         <oc:if>
+            <oc:isloggedin>
+               var assignSession = false;
+            </oc:isloggedin>
+            <oc:else>
+               var assignSession = true;
+            </oc:else>
+         </oc:if>
+
+         // This is the page that users see when they create a new account if assignSession is true
+         var welcomePage = '/';
+
+         setupCreateAccount(
+            assignSession,
+            welcomePage);
+
+      </script>
+
+   </oc:inserthead>
+
+   <oc:if>
+      <oc:can filename="/Users/UserDB" namedpermission="CreateUser">
+         <form class="createAccount">
+            Username: <input type="text" name="username" id="usernameInput" /><br />
+            Password: <input type="password" name="password" id="passwordInput" /><br />
+            <input type="submit" value="create account" />
+         </form>
+      </oc:can>
+      <oc:else>
+         You do not have permission to create an account.  Please contact the system administrator to get access.
+      </oc:else>
+   </oc:if>
+
+   <oc:if>
+      <oc:isadministrator>
+         <oc:component oc:src="/Shell/Security/PermissionsComponent.oc" FileName="/Users/UserDB" />
+      </oc:isadministrator>
+   </oc:if>
+</oc:componentdef>

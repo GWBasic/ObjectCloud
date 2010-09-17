@@ -256,6 +256,14 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="namedPermission"></param>
         /// <returns></returns>
         IEnumerable<NamedPermission> GetNamedPermissions(IFileId fileId, string namedPermission);
+
+        /// <summary>
+        /// Syncronizes this directory from an authoritative version on the local disk if it's newer
+        /// </summary>
+        /// <param name="localDiskPath"></param>
+        /// <param name="force">Set to true to force syncing</param>
+        /// <param name="onlyMissing">When set to true, only missing files are syncronized</param>
+        void SyncFromLocalDisk(string localDiskPath, bool force, bool onlyMissing);
     }
 
     /// <summary>

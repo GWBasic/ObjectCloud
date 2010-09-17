@@ -658,7 +658,7 @@ namespace ObjectCloud.Interfaces.WebServer
                     {
                         try
                         {
-                            IWebResults webResults = ShellTo("/Shell/Security/PermissionDenied.oc");
+                            IWebResults webResults = ShellTo("/DefaultTemplate/permissiondenied.oc");
 
                             // Even though we're shelling to another file, the permission still needs to be unauthorized
                             webResults.Status = Status._401_Unauthorized;
@@ -669,7 +669,7 @@ namespace ObjectCloud.Interfaces.WebServer
                         {
                             // Errors when shelling to the permission denied page are logged and swallowed.
                             // The system defaults to a simple message in this case
-                            log.Error("Error when shelling to /Shell/Security/PermissionDenied.oc for a permission denied message", e);
+                            log.Error("Error when shelling to /DefaultTemplate/permissiondenied.oc for a permission denied message", e);
                             return WebResults.From(Status._401_Unauthorized, "Permission Denied");
                         }
                     }

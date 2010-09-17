@@ -1,6 +1,6 @@
 // Scripts: /API/jquery.js, /API/Url.js
 
-function setupCreateAccount(assignSession)
+function setupCreateAccount(assignSession, welcomePage)
 {
    $(document).ready(function()
    {
@@ -23,7 +23,7 @@ function setupCreateAccount(assignSession)
                if (assignSession)
                {
                   var url = Url.parseCurrent();
-                  window.location.href = 'http://' + url.server;
+                  window.location.href = 'http://' + url.server + welcomePage;
                }
             });
 

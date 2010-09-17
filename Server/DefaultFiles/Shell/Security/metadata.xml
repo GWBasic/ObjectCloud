@@ -5,14 +5,6 @@
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 	<File
-		Name="Login.oc"
-		TypeId="text"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
-	<File
-		Name="LoginComponent.oc"
-		TypeId="text"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
-	<File
 		Name="NamedPermissions.webcomponent"
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
@@ -27,10 +19,6 @@
 			Inherit="False"
 			SendNotifications="False" />
 	</File>
-	<File
-		Name="PermissionDenied.oc"
-		TypeId="text"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 	<File
 		Name="PermissionInstructions.webcomponent"
 		TypeId="text"

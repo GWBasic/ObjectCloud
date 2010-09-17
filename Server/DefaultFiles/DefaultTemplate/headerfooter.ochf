@@ -22,8 +22,12 @@
        <div id="header"> 
           <a href="/"><img id="headerlogofloat" src="/Pages/objectcloud%20logo.png?Method=GetScaled&amp;height=80" /></a> 
              
-          <oc:component oc:src="login.oc" />
-          <div style="float: clear"></div>
+         <div id="account"> 
+            <div id="accountblock" style="float: right">
+               <oc:component oc:src="login.occ" />
+            </div>
+         </div>
+         <div style="float: clear"></div>
          </div> 
 
          <script>

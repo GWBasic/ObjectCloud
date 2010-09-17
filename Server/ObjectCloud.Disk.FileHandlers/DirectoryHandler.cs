@@ -985,7 +985,12 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public override void SyncFromLocalDisk(string localDiskPath, bool force)
         {
-			log.Trace("Syncing " + FileContainer.FullPath);
+            SyncFromLocalDisk(localDiskPath, force, false);
+        }
+
+        public void SyncFromLocalDisk(string localDiskPath, bool force, bool onlyMissing)
+        {
+            log.Trace("Syncing " + FileContainer.FullPath);
 			
             string metadataPath = Path.GetFullPath(localDiskPath + Path.DirectorySeparatorChar + "metadata.xml");
 
@@ -1020,29 +1025,32 @@ namespace ObjectCloud.Disk.FileHandlers
 
                                 if (IsFilePresent(filename))
                                 {
-                                    // If the file is already present, just update it
-									string fileToSync = localDiskPath + Path.DirectorySeparatorChar + filename;
-									fileToSync = Path.GetFullPath(fileToSync);
-							
-									IFileContainer toSync = OpenFile(filename);
-							
-									log.Trace("Jumping into " + toSync.FullPath);
-
-                                    try
+                                    if (!onlyMissing)
                                     {
-                                        toSync.FileHandler.SyncFromLocalDisk(fileToSync, force);
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        log.Error("Error syncing " + toSync.FullPath, e);
-                                        throw;
-                                    }
+                                        // If the file is already present, just update it
+                                        string fileToSync = localDiskPath + Path.DirectorySeparatorChar + filename;
+                                        fileToSync = Path.GetFullPath(fileToSync);
 
-                                    DatabaseConnection.File.Update((File_Table.Name == filename) & (File_Table.OwnerId != ownerId),
-                                        delegate(IFile_Writable file)
+                                        IFileContainer toSync = OpenFile(filename);
+
+                                        log.Trace("Jumping into " + toSync.FullPath);
+
+                                        try
                                         {
-                                            file.OwnerId = ownerId;
-                                        });
+                                            toSync.FileHandler.SyncFromLocalDisk(fileToSync, force);
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            log.Error("Error syncing " + toSync.FullPath, e);
+                                            throw;
+                                        }
+
+                                        DatabaseConnection.File.Update((File_Table.Name == filename) & (File_Table.OwnerId != ownerId),
+                                            delegate(IFile_Writable file)
+                                            {
+                                                file.OwnerId = ownerId;
+                                            });
+                                    }
                                 }
                                 else
                                     RestoreFile(
