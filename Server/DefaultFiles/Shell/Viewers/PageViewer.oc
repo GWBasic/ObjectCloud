@@ -5,7 +5,6 @@
       <oc:inserthead>
          <title>[_Title_]</title>
       </oc:inserthead>
-      <!-- Note:  Some old .page files have HTML instead of xhtml, although these cases are rare -->
       <oc:safeparse oc:xmlparsemode="xmlthenhtml">[_Contents_]</oc:safeparse>
    </oc:jsontemplate>
 
