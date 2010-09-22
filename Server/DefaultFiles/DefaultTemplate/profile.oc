@@ -1,0 +1,8 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
+   <oc:inserthead>
+      <title>ObjectCloud: http://[_Host_][_Target_]</title>
+   </oc:inserthead>
+
+   User profiles aren't supported in this release
+
+</oc:componentdef>

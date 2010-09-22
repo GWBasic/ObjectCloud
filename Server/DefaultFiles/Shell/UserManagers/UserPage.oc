@@ -1,0 +1,22 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
+   <oc:inserthead>
+      <link rel="openid.server" href="http://[_Host_][_Target_]?Method=DoOpenId" />
+
+      <!-- Particle Endpoints -->
+      <link rel="particle.establishTrust" href="http://[_Host_][_Target_]?Method=EstablishTrust" />
+      <link rel="particle.respondTrust" href="http://[_Host_][_Target_]?Method=RespondTrust" />
+      <link rel="particle.receiveNotification" href="http://[_Host_][_Target_]?Method=ReceiveNotification" />
+      <link rel="particle.establishSession" href="http://[_Host_][_Target_]?Method=EstablishSession" />
+      <link rel="particle.getNotifications" href="http://[_Host_][_Target_]?Method=GetNotifications" />
+      <link rel="particle.sendNotification" href="http://[_Host_][_Target_]?Method=SendNotification" />
+      <link rel="particle.updateNotificationState" href="http://[_Host_][_Target_]?Method=UpdateNotificationState" />
+      <link rel="particle.updateObjectState" href="http://[_Host_][_Target_]?Method=UpdateObjectState" />
+      <link rel="particle.block" href="http://[_Host_][_Target_]?Method=Block" />
+      <link rel="particle.unBlock" href="http://[_Host_][_Target_]?Method=UnBlock" />
+      <link rel="particle.getBlocked" href="http://[_Host_][_Target_]?Method=GetBlocked" />
+      <link rel="particle.incomingNotificationEvent" href="http:[_Host_][_Target_]?ChannelEndpoint=IncomingNotificationEvent" />
+   </oc:inserthead>
+
+   <oc:component oc:src="/DefaultTemplate/profile.oc" Host="[_Host_]" Target="[_Target_]" />
+
+</oc:componentdef>

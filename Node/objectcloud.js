@@ -73,7 +73,7 @@ function createObjectCloudConnection(getObjectCloudClient, objectcloudRequestMet
 
 			send: function(payload)
 			{
-				console.log('sending');
+				//console.log('sending');
 
 				if (null != payload)
 					this.headers['Content-Length'] = Buffer.byteLength(payload, 'utf8');
@@ -90,25 +90,25 @@ function createObjectCloudConnection(getObjectCloudClient, objectcloudRequestMet
 	
 				request.end();
 				
-				console.log('sent');
+				//console.log('sent');
 
 				var me = this;
 
 				request.on('response', function (response)
 				{
-					console.log('response');
+					//console.log('response');
 					
 					me.responseText = '';
 						
 					response.on('data', function (chunk)
 					{
-						console.log('data');
+						//console.log('data');
 						me.responseText += chunk;
 					});
 		
 					response.on('end', function ()
 					{
-						console.log('end');
+						//console.log('end');
 						me.readyState = 4;
 			            me.status = response.statusCode;
 						me.onreadystatechange();
