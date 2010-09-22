@@ -527,6 +527,9 @@ namespace ObjectCloud.Disk.WebHandlers
             TemplateParsingState templateParsingState)
         {
             XmlDocument templateDocument = templateParsingState.LoadXmlDocumentAndReplaceGetParameters(getParameters, templateFileContainer, XmlParseMode.Xml);
+			
+			// I think this is to work around an issue when directly viewing a template with an empty <oc:component /> tag
+			templateParsingState.TemplateDocument = templateDocument;
 
             // While the first node isn't HTML, keep loading header/footers
             while ("html" != templateDocument.FirstChild.LocalName)
@@ -602,11 +605,6 @@ namespace ObjectCloud.Disk.WebHandlers
 
                     if (null == bodyTag)
                     {
-                        /*bodyTag = templateDocument.CreateElement(
-                            "body", templateParsingState.TemplateHandlerLocator.TemplatingConstants.HtmlNamespace);
-
-                        templateDocument.AppendChild(bodyTag);*/
-
                         bodyTag = (XmlElement)templateDocument.FirstChild;
                     }
 
