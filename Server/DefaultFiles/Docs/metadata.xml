@@ -121,6 +121,10 @@
 			SendNotifications="False" />
 	</File>
 	<File
+		Name="faq.page"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
 		Name="history.page"
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
