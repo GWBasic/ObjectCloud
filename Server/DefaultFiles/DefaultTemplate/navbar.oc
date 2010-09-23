@@ -20,7 +20,7 @@
 
            <oc:if>
               <oc:can namedpermission="CreateUser" filename="/Users/UserDB">
-                 <p><a href="/Shell/UserManagers/Create%20Account.wchtml">Create Account</a></p>
+                 <p><a href="/DefaultTemplate/createaccount.oc">Create Account</a></p>
               </oc:can>
            </oc:if>
 

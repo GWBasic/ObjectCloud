@@ -1,10 +1,55 @@
-<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" xmlns:af="appfeeds_templating">
-<oc:inserthead>
-   <oc:script src="/API/jquery.js" />
-</oc:inserthead>
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" xmlns:af="appfeeds_templating" headerfooter="/DefaultTemplate/objectbar.ochf">
+   <oc:inserthead>
+      <oc:open filename="[_FileName_]" varname="groupWrapper" />
+      <oc:script src="/Shell/UserManagers/Group Page.js" />
+      <title>[_FileName_]</title>
+   </oc:inserthead>
 
-   <!--
-      ObjectCloud's templating system renders as HTML5/xml.  All contents must be valid xml.
-   -->
+   <oc:jsontemplate oc:url="[_FileName_]" Method="getGroup">
+      <div class="title">[_NameOrAlias_]</div>
+      <oc:if>
+         <oc:hasvalue value="[_Owner_]">
+            <p>Owner: <a href="[_OwnerIdentity_]">[_Owner_]</a></p>
+         </oc:hasvalue>
+      </oc:if>
+   </oc:jsontemplate>
+
+   <oc:if>
+      <oc:canwrite filename="[_FileName_]">
+         <oc:jsontemplate oc:url="[_FileName_]" Method="GetAll">
+            <p><a href="/Shell/UserManagers/GroupEditor.wchtml?groupId=[_GroupId_]">Update Members</a></p>
+         </oc:jsontemplate>
+      </oc:canwrite>
+   </oc:if>
+
+   <h1>Members:</h1>
+   <p>
+      <oc:jsontemplate oc:url="[_FileName_]" Method="getMembers">
+         <a href="[_Identity_]">[_Name_]</a><br />
+      </oc:jsontemplate>
+   </p>
+
+   <oc:if>
+      <oc:isloggedin>
+         <oc:jsontemplate oc:url="[_FileName_]" Method="getGroup" FileName="[_FileName_]">
+            <oc:if>
+               <oc:isequal l="Public" r="[_Type_]">
+
+                  <oc:jsontemplate oc:url="[__UP.FileName_]" Method="isMember">
+                     <oc:if>
+                        <oc:isequal l="true" r="[__]">
+                           <a href="" class="leave">Leave</a>
+                        </oc:isequal>
+                        <oc:else>
+                           <a href="" class="join">Join</a>
+                        </oc:else>
+                     </oc:if>
+                  </oc:jsontemplate>
+
+               </oc:isequal>
+            </oc:if>
+         </oc:jsontemplate>
+      </oc:isloggedin>
+   </oc:if>
 
 </oc:componentdef>

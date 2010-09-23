@@ -2,3 +2,5 @@ PermissionDenied.wchtml
 UserPage.wchtml
 Create Account.wchtml
 Create Account.oc
+GroupPage.wchtml
+UserPage.wchtml
