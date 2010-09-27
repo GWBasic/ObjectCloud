@@ -23,7 +23,8 @@ function UpdatePermission(userOrGroupId)
    File.SetPermission(
       {
          UserOrGroupId: userOrGroupId,
-         FilePermission: permission
+         FilePermission: permission,
+         Inherit: true
       },
       function(transport)
       {
