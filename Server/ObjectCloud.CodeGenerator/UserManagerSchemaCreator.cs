@@ -87,7 +87,41 @@ namespace ObjectCloud.CodeGenerator
 
             database.Tables.Add(groupAliasesTable);
 
-            database.Version = 5;
+            database.Tables.Add(new Table(
+                "Sender",
+                new Column("senderID", NotNull.Long, true),
+                new Column[]
+                {
+                    new Column("name", NotNull.String, ColumnOption.Unique),
+                    new Column("senderToken", NotNull.String, ColumnOption.Unique),
+                    new Column("loginURL", NotNull.String),
+                    new Column("loginURLOpenID", NotNull.String),
+                    new Column("loginURLWebFinger", NotNull.String),
+                    new Column("loginURLRedirect", NotNull.String)
+                }));
+
+            Column userId = new Column("userID", IDColumn<IUserOrGroup, Guid>.NotNullColumnType);
+            Column receiveNotificationEndpoint = new Column("receiveNotificationEndpoint", NotNull.String);
+
+            Table recipient = new Table(
+                "Recipient",
+                new Column[]
+                {
+                    userId,
+                    receiveNotificationEndpoint,
+                    new Column("senderToken", NotNull.String)
+                });
+
+            recipient.CompoundIndexes.Add(new Index(new Column[]
+            {
+                userId,
+                receiveNotificationEndpoint
+            },
+            true));
+
+            database.Tables.Add(recipient);
+
+            database.Version = 6;
 
             return database;
         }

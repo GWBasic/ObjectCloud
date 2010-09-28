@@ -63,6 +63,31 @@ PRAGMA user_version = 5;";
 
                 command.ExecuteNonQuery();
             }
+
+            if (version < 6)
+            {
+                command = connection.CreateCommand();
+                command.CommandText =
+@"create table Sender 
+(
+	name			string not null unique,
+	senderToken			string not null unique,
+	loginURL			string not null,
+	loginURLOpenID			string not null,
+	loginURLWebFinger			string not null,
+	loginURLRedirect			string not null,
+	senderID			integer not null	primary key AUTOINCREMENT
+);create table Recipient 
+(
+	userID			guid not null,
+	receiveNotificationEndpoint			string not null,
+	senderToken			string not null
+);Create unique index Recipient_userID_receiveNotificationEndpoint on Recipient (userID, receiveNotificationEndpoint);
+
+PRAGMA user_version = 6;";
+
+                command.ExecuteNonQuery();
+            }
         }
     }
 }
