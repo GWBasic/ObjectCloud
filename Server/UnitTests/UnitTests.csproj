@@ -115,6 +115,10 @@
       <Project>{516C38E4-D59A-41E0-893F-ADDF2E4DB5A6}</Project>
       <Name>ObjectCloud.ORM.DataAccess</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ObjectCloud.Particle.UnitTests\ObjectCloud.Particle.UnitTests.csproj">
+      <Project>{6B008219-9CAC-4717-99B7-2E9C00D0EE12}</Project>
+      <Name>ObjectCloud.Particle.UnitTests</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ObjectCloud.WebAccessCodeGenerators\ObjectCloud.WebAccessCodeGenerators.csproj">
       <Project>{B2052165-C0FE-44F7-8F23-B48FB77AE2CA}</Project>
       <Name>ObjectCloud.WebAccessCodeGenerators</Name>

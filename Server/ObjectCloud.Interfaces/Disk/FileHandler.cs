@@ -36,7 +36,7 @@ namespace ObjectCloud.Interfaces.Disk
             get { return _FileContainer; }
             set 
             {
-#if DEBUG
+/*#if DEBUG
 				using (TimedLock.Lock(ExistingFileHandlers))
 				{
 	                if (ExistingFileHandlers.ContainsKey(value.FileId))
@@ -49,7 +49,7 @@ namespace ObjectCloud.Interfaces.Disk
 	
 	                ExistingFileHandlers[value.FileId] = new WeakReference(this);
 				}
-#endif
+#endif*/
                 _FileContainer = value;
             }
         }

@@ -33,7 +33,7 @@ namespace ObjectCloud.WebServer.Test
         /// </summary>
         public IWebServer SecondWebServer
         {
-            get { return FileHandlerFactoryLocator.WebServer; }
+            get { return SecondFileHandlerFactoryLocator.WebServer; }
         }
 
         protected override void DoAdditionalSetup()

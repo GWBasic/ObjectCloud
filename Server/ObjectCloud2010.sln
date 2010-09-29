@@ -60,6 +60,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectCloud.WebAccessCodeGe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectCloud.Javascript.SubProcess", "ObjectCloud.Javascript.SubProcess\ObjectCloud.Javascript.SubProcess.csproj", "{AE17CCFE-4A78-41CF-85B3-B1131F8334B8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectCloud.Particle.UnitTests", "ObjectCloud.Particle.UnitTests\ObjectCloud.Particle.UnitTests.csproj", "{6B008219-9CAC-4717-99B7-2E9C00D0EE12}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -451,6 +453,21 @@ Global
 		{AE17CCFE-4A78-41CF-85B3-B1131F8334B8}.Signed|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{AE17CCFE-4A78-41CF-85B3-B1131F8334B8}.Signed|Mixed Platforms.Build.0 = Release|Any CPU
 		{AE17CCFE-4A78-41CF-85B3-B1131F8334B8}.Signed|x86.ActiveCfg = Release|Any CPU
+		{6B008219-9CAC-4717-99B7-2E9C00D0EE12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B008219-9CAC-4717-99B7-2E9C00D0EE12}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B008219-9CAC-4717-99B7-2E9C00D0EE12}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{6B008219-9CAC-4717-99B7-2E9C00D0EE12}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{6B008219-9CAC-4717-99B7-2E9C00D0EE12}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6B008219-9CAC-4717-99B7-2E9C00D0EE12}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B008219-9CAC-4717-99B7-2E9C00D0EE12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B008219-9CAC-4717-99B7-2E9C00D0EE12}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{6B008219-9CAC-4717-99B7-2E9C00D0EE12}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{6B008219-9CAC-4717-99B7-2E9C00D0EE12}.Release|x86.ActiveCfg = Release|Any CPU
+		{6B008219-9CAC-4717-99B7-2E9C00D0EE12}.Signed|Any CPU.ActiveCfg = Release|Any CPU
+		{6B008219-9CAC-4717-99B7-2E9C00D0EE12}.Signed|Any CPU.Build.0 = Release|Any CPU
+		{6B008219-9CAC-4717-99B7-2E9C00D0EE12}.Signed|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{6B008219-9CAC-4717-99B7-2E9C00D0EE12}.Signed|Mixed Platforms.Build.0 = Release|Any CPU
+		{6B008219-9CAC-4717-99B7-2E9C00D0EE12}.Signed|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

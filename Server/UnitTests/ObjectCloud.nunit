@@ -4,6 +4,7 @@
     <assembly path="ObjectCloud.Disk.Test.dll" />
     <assembly path="ObjectCloud.ORM.DataAccess.SQLite.Test.dll" />
     <assembly path="ObjectCloud.WebServer.Test.dll" />
+    <assembly path="ObjectCloud.Particle.UnitTests.dll" />
   </Config>
   <Config name="Release" binpathtype="Auto" />
 </NUnitProject>
