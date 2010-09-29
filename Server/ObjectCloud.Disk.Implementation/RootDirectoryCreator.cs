@@ -554,6 +554,18 @@ insert into Metadata (Name, Value) values ('GroupId', @groupId);
 			IFileContainer anonymousUserFileContainer = usersDirectory.OpenFile("anonymous.user");
 			usersDirectory.Chown(null, anonymousUserFileContainer.FileId, FileHandlerFactoryLocator.UserFactory.RootUser.Id);
 			usersDirectory.RemovePermission("anonymous.user", FileHandlerFactoryLocator.UserFactory.AnonymousUser.Id);
+
+            if (!usersDirectory.IsFilePresent("ParticleAvatars"))
+            {
+                usersDirectory.CreateFile("ParticleAvatars", "directory", null);
+                usersDirectory.SetPermission(
+                    null, 
+                    "ParticleAvatars", 
+                    FileHandlerFactoryLocator.UserFactory.LocalUsers.Id, 
+                    FilePermissionEnum.Read, 
+                    true, 
+                    false);
+            }
 		}
 
         /// <summary>

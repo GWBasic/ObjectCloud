@@ -53,7 +53,17 @@ namespace ObjectCloud.Disk.WebHandlers
 
                     webConnection.SendResults(WebResults.From(Status._201_Created, "created"));
 
-                    log.Warn("Not writing avatar");
+                    IUser senderUser = FileHandlerFactoryLocator.UserManagerHandler.GetOpenIdUser(sender);
+
+                    string avatarFilename = senderUser.Id.ToString() + ".jpg";
+
+                    IBinaryHandler avatarHandler;
+                    if (ParticleAvatarsDirectory.IsFilePresent(avatarFilename))
+                        avatarHandler = ParticleAvatarsDirectory.OpenFile(avatarFilename).CastFileHandler<IBinaryHandler>();
+                    else
+                        avatarHandler = (IBinaryHandler)ParticleAvatarsDirectory.CreateFile(avatarFilename, "image", null);
+
+                    avatarHandler.WriteAll(Convert.FromBase64String(avatar));
                 }
                 else
                     webConnection.SendResults(WebResults.From(Status._400_Bad_Request, "Error from RespondTrust"));
@@ -77,6 +87,21 @@ namespace ObjectCloud.Disk.WebHandlers
 
             return null;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public IDirectoryHandler ParticleAvatarsDirectory
+        {
+            get 
+            {
+                if (null == _ParticleAvatarsDirectory)
+                    _ParticleAvatarsDirectory = FileContainer.ParentDirectoryHandler.OpenFile("ParticleAvatars").CastFileHandler<IDirectoryHandler>();
+
+                return _ParticleAvatarsDirectory; 
+            }
+        }
+        private IDirectoryHandler _ParticleAvatarsDirectory = null;
 
         /// <summary>
         /// Handles a server's response to EstablishTrust

@@ -907,6 +907,11 @@
             <param name="webConnection"></param>
             <returns></returns>
         </member>
+        <member name="P:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.ParticleAvatarsDirectory">
+            <summary>
+            
+            </summary>
+        </member>
         <member name="T:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler">
             <summary>
             Wrapper for web methods that handle name-value pairs
