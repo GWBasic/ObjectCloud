@@ -148,7 +148,7 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <returns></returns>
         public string GetSenderToken(string openId, bool forceRefresh)
         {
-            return GetSenderToken(openId, forceRefresh, Endpoints.GetEndpoints(openId));
+            return GetSenderToken(openId, forceRefresh, OLD_Endpoints.GetEndpoints(openId));
         }
 
         /// <summary>
@@ -157,7 +157,7 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <param name="openId"></param>
         /// <param name="forceRefresh"></param>
         /// <returns></returns>
-        public string GetSenderToken(string openId, bool forceRefresh, Endpoints endpoints)
+        public string GetSenderToken(string openId, bool forceRefresh, OLD_Endpoints endpoints)
         {
             ISender_Readable sender = DatabaseConnection.Sender.SelectSingle(Sender_Table.OpenID == openId);
 
@@ -291,7 +291,7 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <param name="token"></param>
         public void EstablishTrust(string sender, string token)
         {
-            Endpoints endpoints = Endpoints.GetEndpoints(sender);
+            OLD_Endpoints endpoints = OLD_Endpoints.GetEndpoints(sender);
 
             // Get the sender's endpoints
             string respondTrustEndpoint = endpoints["respondTrust"];
@@ -401,7 +401,7 @@ namespace ObjectCloud.Disk.FileHandlers
             if (maxRetries < 0)
                 return;
 
-            Endpoints endpoints = Endpoints.GetEndpoints(openId, forceRefreshEndpoints);
+            OLD_Endpoints endpoints = OLD_Endpoints.GetEndpoints(openId, forceRefreshEndpoints);
 
             // (For now) senderTokens are always established through the web
             string senderToken = GetSenderToken(openId, forceRefreshSenderToken, endpoints);

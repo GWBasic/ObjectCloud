@@ -23,7 +23,7 @@ using ObjectCloud.ORM.DataAccess.WhereConditionals;
 
 namespace ObjectCloud.Disk.FileHandlers
 {
-    public class UserManagerHandler : HasDatabaseFileHandler<IDatabaseConnector, IDatabaseConnection, IDatabaseTransaction>, IUserManagerHandler
+    public partial class UserManagerHandler : HasDatabaseFileHandler<IDatabaseConnector, IDatabaseConnection, IDatabaseTransaction>, IUserManagerHandler
     {
         public UserManagerHandler(IDatabaseConnector databaseConnector, FileHandlerFactoryLocator fileHandlerFactoryLocator)
             : base(databaseConnector, fileHandlerFactoryLocator) 

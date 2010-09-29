@@ -97,6 +97,7 @@
     <Compile Include="Template\Trimmer.cs" />
     <Compile Include="TextWebHandler.cs" />
     <Compile Include="UserManagerWebHandler.cs" />
+    <Compile Include="UserManagerWebHandler_Particle.cs" />
     <Compile Include="UserWebHandler.cs" />
     <Compile Include="LogWebHandler.cs" />
     <Compile Include="WebHandler.cs" />

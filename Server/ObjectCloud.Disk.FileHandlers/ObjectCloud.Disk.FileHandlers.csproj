@@ -52,6 +52,7 @@
     <Compile Include="UserHandler.cs" />
     <Compile Include="UserManagerHandler.cs" />
     <Compile Include="LogHandler.cs" />
+    <Compile Include="UserManagerHandler_Particle.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="ExtremeSwank.OpenId, Version=4.0.1.1, Culture=neutral, PublicKeyToken=7e26a780dbe2aeef">

@@ -340,5 +340,71 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="groupId"></param>
         /// <param name="alias"></param>
         IGroupAndAlias GetGroupAndAlias(ID<IUserOrGroup, Guid> userId, ID<IUserOrGroup, Guid> groupId);
+
+        /// <summary>
+        /// Gets information about recipients for sending a notification
+        /// </summary>
+        /// <param name="openIdOrWebFinger"></param>
+        /// <param name="forceRefresh"></param>
+        /// <returns></returns>
+        void GetRecipientInfos(
+            IUserOrGroup sender, 
+            bool forceRefresh, 
+            IEnumerable<string> openIdOrWebFingers, 
+            GenericArgument<RecipientInfo> callback);
+
+        /// <summary>
+        /// Used when responding to a request to establish trust
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="senderToken"></param>
+        /// <exception cref="DiskException">Thrown if the token is invalid</exception>
+        void RespondTrust(string token, string senderToken);
+
+        /// <summary>
+        /// Writes information about established trust into the database
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="token"></param>
+        /// <param name="loginUrl"></param>
+        /// <param name="loginUrlOpenID"></param>
+        /// <param name="loginUrlWebFinger"></param>
+        /// <param name="loginUrlRedirect"></param>
+        /// <returns></returns>
+        void EstablishTrust(
+            string sender, 
+            string senderToken, 
+            string loginUrl, 
+            string loginUrlOpenID, 
+            string loginUrlWebFinger, 
+            string loginUrlRedirect);
+
+        /// <summary>
+        /// Responds with the endpoint needed to respond trust
+        /// </summary>
+        /// <param name="openIdOrWebFinger"></param>
+        /// <param name="callback"></param>
+        void GetRespondTrustEnpoint(string openIdOrWebFinger, GenericArgument<string> callback);
+    }
+
+    /// <summary>
+    /// Encapsulates information about a recipient when sending a notification
+    /// </summary>
+    public struct RecipientInfo
+    {
+        /// <summary>
+        /// The sender token that's used to identify the sender
+        /// </summary>
+        public string SenderToken;
+
+        /// <summary>
+        /// The URL of the endpoint used for recieving a notification
+        /// </summary>
+        public string RecieveNotificationEndpoint;
+
+        /// <summary>
+        /// The OpenIDs or WebFinders that are valid for this endpoint
+        /// </summary>
+        public List<string> OpenIdOrWebFingers;
     }
 }

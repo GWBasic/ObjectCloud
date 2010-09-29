@@ -28,12 +28,12 @@ namespace ObjectCloud.WebServer.Test.Particle
         [Test]
         public void TestEndpointSanity()
         {
-            Assert.IsNotNull(Endpoints.GetEndpoints("http://localhost:" + WebServer.Port.ToString() + "/Users/root.user"), "Could not load endpoints");
+            Assert.IsNotNull(OLD_Endpoints.GetEndpoints("http://localhost:" + WebServer.Port.ToString() + "/Users/root.user"), "Could not load endpoints");
         }
 
         private void TestEndpoint(string endpoint, string expectedValue)
         {
-            Endpoints endpoints = Endpoints.GetEndpoints("http://localhost:" + WebServer.Port.ToString() + "/Users/root.user");
+            OLD_Endpoints endpoints = OLD_Endpoints.GetEndpoints("http://localhost:" + WebServer.Port.ToString() + "/Users/root.user");
             Assert.AreEqual(expectedValue, endpoints[endpoint], "Wrong endpoint for " + endpoint);
         }
 

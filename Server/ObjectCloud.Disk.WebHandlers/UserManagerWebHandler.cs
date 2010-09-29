@@ -21,7 +21,7 @@ namespace ObjectCloud.Disk.WebHandlers
     /// <summary>
     /// Web wrapper for the user database
     /// </summary>
-    public class UserManagerWebHandler : DatabaseWebHandler<IUserManagerHandler, UserManagerWebHandler>
+    public partial class UserManagerWebHandler : DatabaseWebHandler<IUserManagerHandler, UserManagerWebHandler>
     {
 		private static ILog log = LogManager.GetLogger(typeof(UserManagerWebHandler));
 		
