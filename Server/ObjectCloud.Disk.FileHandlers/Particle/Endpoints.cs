@@ -21,6 +21,13 @@ namespace ObjectCloud.Disk.FileHandlers.Particle
     public class Endpoints
     {
         private static ILog log = LogManager.GetLogger<Endpoints>();
+		
+		static Endpoints()
+		{
+			// Work around a compiler issue
+			if (null == CleanEndpointsTimer)
+				CleanEndpointsTimer = null;
+		}
 
         /// <summary>
         /// Every hour remove old endpoints
