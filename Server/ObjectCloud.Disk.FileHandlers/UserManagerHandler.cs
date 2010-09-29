@@ -11,6 +11,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Xml;
 
+using Common.Logging;
 using ExtremeSwank.OpenId;
 
 using ObjectCloud.Common;
@@ -25,6 +26,8 @@ namespace ObjectCloud.Disk.FileHandlers
 {
     public partial class UserManagerHandler : HasDatabaseFileHandler<IDatabaseConnector, IDatabaseConnection, IDatabaseTransaction>, IUserManagerHandler
     {
+        private static ILog log = LogManager.GetLogger<UserManagerHandler>();
+
         public UserManagerHandler(IDatabaseConnector databaseConnector, FileHandlerFactoryLocator fileHandlerFactoryLocator)
             : base(databaseConnector, fileHandlerFactoryLocator) 
         {

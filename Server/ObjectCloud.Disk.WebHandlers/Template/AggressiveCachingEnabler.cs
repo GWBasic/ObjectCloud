@@ -39,75 +39,6 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             internal void PostProcessElement(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
             {
                 if (templateParsingState.TemplateHandlerLocator.TemplatingConstants.HtmlNamespaces.Contains(element.NamespaceURI))
-                    /*if (element.LocalName == "script")
-                    {
-                        // Don't allow empty <script /> tags
-                        if (null == element.InnerText)
-                            element.InnerText = "";
-
-                        if (element.InnerText.Length == 0)
-                        {
-                            XmlAttribute srcAttribute = element.Attributes["src"];
-
-                            if (null != srcAttribute)
-                            {
-                                AddBrowserCache(templateParsingState, srcAttribute);
-
-                                if (!templateParsingState.WebConnection.CookiesFromBrowser.ContainsKey(templateParsingState.TemplateHandlerLocator.TemplatingConstants.JavascriptDebugModeCookie))
-                                    srcAttribute.Value = HTTPStringFunctions.AppendGetParameter(srcAttribute.Value, "EncodeFor", "JavaScript");
-                                else if ((!srcAttribute.Value.StartsWith("http://")) && (!srcAttribute.Value.StartsWith("https://")))
-                                {
-                                    // If Javascript debug mode is on, verify that the script exists
-
-                                    string fileName = srcAttribute.Value.Split(new char[] { '?' }, 2)[0];
-
-                                    if (!templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.IsFilePresent(fileName))
-                                    {
-                                        element.InnerText = "alert('" + (srcAttribute.Value + " doesn't exist: " + element.OuterXml).Replace("'", "\\'") + "');";
-                                        element.Attributes.Remove(srcAttribute);
-                                    }
-                                }
-                            }
-                        }
-                        else
-                            if (!templateParsingState.WebConnection.CookiesFromBrowser.ContainsKey(templateParsingState.TemplateHandlerLocator.TemplatingConstants.JavascriptDebugModeCookie))
-                                try
-                                {
-                                    IEnumerable<XmlNode> toIterate = Enumerable<XmlNode>.FastCopy(Enumerable<XmlNode>.Cast(element.ChildNodes));
-
-                                    // The xml contents of a script tag are minified in case xml is quoted
-                                    StringBuilder scriptBuilder = new StringBuilder((element.InnerXml.Length * 5) / 4);
-                                    foreach(XmlNode node in toIterate)
-                                        if (node is XmlText)
-                                            scriptBuilder.Append(node.InnerText);
-                                        else
-                                            scriptBuilder.Append(node.OuterXml);
-
-                                    string minified = JavaScriptMinifier.Instance.Minify(scriptBuilder.ToString());
-
-                                    foreach (XmlNode node in toIterate)
-                                        element.RemoveChild(node);
-
-                                    element.AppendChild(
-                                        templateParsingState.TemplateDocument.CreateTextNode(minified));
-                                }
-                                catch (Exception e)
-                                {
-                                    log.Warn("Exception minimizing Javascript:\n" + element.InnerXml, e);
-                                }
-                                /*foreach (XmlText scriptContentsNode in Enumerable<XmlText>.Filter(element.ChildNodes))
-                                    try
-                                    {
-                                        scriptContentsNode.InnerText = JavaScriptMinifier.Instance.Minify(scriptContentsNode.InnerText);
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        log.Warn("Exception minimizing Javascript:\n" + scriptContentsNode.InnerText, e);
-                                    }*/
-
-                    /*}
-                    else */
-
                     if (element.LocalName == "script")
                     {
                         // Don't allow empty <script /> tags
@@ -140,20 +71,13 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                                 {
                                     log.Warn("Exception minimizing Javascript:\n" + element.InnerXml, e);
                                 }
-                        /*foreach (XmlText scriptContentsNode in Enumerable<XmlText>.Filter(element.ChildNodes))
-                            try
-                            {
-                                scriptContentsNode.InnerText = JavaScriptMinifier.Instance.Minify(scriptContentsNode.InnerText);
-                            }
-                            catch (Exception e)
-                            {
-                                log.Warn("Exception minimizing Javascript:\n" + scriptContentsNode.InnerText, e);
-                            }*/
-
                     }
                     else if (element.LocalName == "link")
-                        AddBrowserCache(templateParsingState, element.Attributes["href"]);
-
+                    {
+                        string typeString = element.GetAttribute("type");
+                        if (typeString == "text/css" || typeString == "image/x-icon")
+                            AddBrowserCache(templateParsingState, element.Attributes["href"]);
+                    }
                     else if (element.LocalName == "img")
                         AddBrowserCache(templateParsingState, element.Attributes["src"]);
 

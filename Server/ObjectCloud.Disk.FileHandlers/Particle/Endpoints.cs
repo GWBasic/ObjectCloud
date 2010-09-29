@@ -195,8 +195,8 @@ namespace ObjectCloud.Disk.FileHandlers.Particle
                     errorCallback(new DiskException("Error loading endpoint for " + name));
                 }
             };
-                
-            httpWebClient.BeginGet(name, responseHandler);
+
+            httpWebClient.BeginGet(name, responseHandler, errorCallback);
         }
 
         /// <summary>

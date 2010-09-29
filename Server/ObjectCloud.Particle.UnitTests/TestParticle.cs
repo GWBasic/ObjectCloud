@@ -44,21 +44,46 @@ namespace ObjectCloud.Particle.UnitTests
                     Monitor.Pulse(pulser);
             };
 
+            Exception e = null;
+            GenericArgument<IEnumerable<string>> errorCallback = delegate(IEnumerable<string> recipients)
+            {
+                e = new Exception("Could not establish trust with " + StringGenerator.GenerateCommaSeperatedList(recipients));
+
+                lock (pulser)
+                    Monitor.Pulse(pulser);
+            };
+
+            GenericArgument<Exception> exceptionCallback = delegate(Exception ex)
+            {
+                e = ex;
+
+                lock (pulser)
+                    Monitor.Pulse(pulser);
+            };
+
             lock (pulser)
             {
                 FileHandlerFactoryLocator.UserManagerHandler.GetRecipientInfos(
                     user,
                     false,
                     new string[] { target.Identity },
-                    callback);
+                    callback,
+                    errorCallback,
+                    exceptionCallback);
 
                 Monitor.Wait(pulser);
+            }
+
+            if (null != e)
+            {
+                Console.WriteLine(e.StackTrace);
+                throw e;
             }
 
             Assert.IsNotNull(recipientInfo);
             Assert.IsNotNull(recipientInfo.SenderToken);
             Assert.AreEqual(
-                    string.Format("http://{0}/Users/UserDB?Method=RecieveNotification", SecondFileHandlerFactoryLocator.HostnameAndPort),
+                    string.Format("http://{0}/Users/UserDB?Method=ReceiveNotification", SecondFileHandlerFactoryLocator.HostnameAndPort),
                     recipientInfo.RecieveNotificationEndpoint);
         }
     }

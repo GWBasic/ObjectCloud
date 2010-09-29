@@ -3,9 +3,9 @@
       <link rel="openid.server" href="http://[_Host_][_Target_]?Method=DoOpenId" />
 
       <!-- Particle Endpoints -->
-      <link rel="particle.establishTrust" href="http://[_Host_][_Target_]?Method=EstablishTrust" />
-      <link rel="particle.respondTrust" href="http://[_Host_][_Target_]?Method=RespondTrust" />
-      <link rel="particle.receiveNotification" href="http://[_Host_][_Target_]?Method=ReceiveNotification" />
+      <link rel="particle.establishTrust" href="http://[_Host_]/Users/UserDB?Method=EstablishTrust" />
+      <link rel="particle.respondTrust" href="http://[_Host_]/Users/UserDB?Method=RespondTrust" />
+      <link rel="particle.receiveNotification" href="http://[_Host_]/Users/UserDB?Method=ReceiveNotification" />
       <link rel="particle.establishSession" href="http://[_Host_][_Target_]?Method=EstablishSession" />
       <link rel="particle.getNotifications" href="http://[_Host_][_Target_]?Method=GetNotifications" />
       <link rel="particle.sendNotification" href="http://[_Host_][_Target_]?Method=SendNotification" />

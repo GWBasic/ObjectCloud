@@ -32,6 +32,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="loginURLWebFinger"></param>
         /// <param name="loginURLRedirect"></param>
         /// <returns></returns>
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Read)]
         public IWebResults EstablishTrust(
             IWebConnection webConnection,
             string sender,
@@ -58,17 +59,45 @@ namespace ObjectCloud.Disk.WebHandlers
                     webConnection.SendResults(WebResults.From(Status._400_Bad_Request, "Error from RespondTrust"));
             };
 
+            GenericArgument<Exception> errorCallback = delegate(Exception e)
+            {
+                webConnection.SendResults(WebResults.From(Status._401_Unauthorized, "Could not establish trust"));
+            };
+
             FileHandler.GetRespondTrustEnpoint(sender, delegate(string respondTrustEndpoint)
             {
                 HttpWebClient httpWebClient = new HttpWebClient();
                 httpWebClient.BeginPost(
                     respondTrustEndpoint,
                     callback,
+                    errorCallback,
                     new KeyValuePair<string, string>("token", token),
                     new KeyValuePair<string, string>("senderToken", senderToken));
             });
 
             return null;
+        }
+
+        /// <summary>
+        /// Handles a server's response to EstablishTrust
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="token"></param>
+        /// <param name="senderToken"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Read)]
+        public IWebResults RespondTrust(IWebConnection webConnection, string token, string senderToken)
+        {
+            try
+            {
+                FileHandler.RespondTrust(token, senderToken);
+                return WebResults.From(Status._202_Accepted);
+            }
+            catch (Exception e)
+            {
+                log.Error("Exception in RespondTrust", e);
+                return WebResults.From(Status._400_Bad_Request);
+            }
         }
     }
 }

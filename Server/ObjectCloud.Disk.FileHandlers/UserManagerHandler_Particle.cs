@@ -39,7 +39,9 @@ namespace ObjectCloud.Disk.FileHandlers
             IUserOrGroup sender,
             bool forceRefresh, 
             IEnumerable<string> openIdOrWebFingersEnum, 
-            GenericArgument<RecipientInfo> callback)
+            GenericArgument<RecipientInfo> callback,
+            GenericArgument<IEnumerable<string>> errorCallback,
+            GenericArgument<Exception> exceptionCallback)
         {
             Set<string> openIdOrWebFingers = new Set<string>(openIdOrWebFingersEnum);
 
@@ -52,13 +54,13 @@ namespace ObjectCloud.Disk.FileHandlers
                 loadedEndpoints.Enqueue(endpoints);
 
                 if (0 == Interlocked.Decrement(ref outstandingRequests))
-                    GetRecipientInfos(sender, openIdOrWebFingers, loadedEndpoints, callback);
+                    GetRecipientInfos(sender, openIdOrWebFingers, loadedEndpoints, callback, errorCallback, exceptionCallback);
             };
 
             GenericArgument<Exception> endpointException = delegate(Exception e)
             {
                 if (0 == Interlocked.Decrement(ref outstandingRequests))
-                    GetRecipientInfos(sender, openIdOrWebFingers, loadedEndpoints, callback);
+                    GetRecipientInfos(sender, openIdOrWebFingers, loadedEndpoints, callback, errorCallback, exceptionCallback);
             };
 
             foreach (string openIdOrWebFinger in openIdOrWebFingers)
@@ -75,54 +77,64 @@ namespace ObjectCloud.Disk.FileHandlers
         private void GetRecipientInfos(
             IUserOrGroup sender, 
             Set<string> openIdOrWebFingers, 
-            LockFreeQueue<Endpoints> loadedEndpoints, 
-            GenericArgument<RecipientInfo> callback)
+            LockFreeQueue<Endpoints> loadedEndpoints,
+            GenericArgument<RecipientInfo> callback,
+            GenericArgument<IEnumerable<string>> errorCallback,
+            GenericArgument<Exception> exceptionCallback)
         {
-            // All of the unique particle.recieveNotification endpoints, with the recipients at each
-            Dictionary<string, List<string>> recipientsAtEndpoints = new Dictionary<string, List<string>>();
-            Dictionary<string, string> establishTrustEndpoints = new Dictionary<string,string>();
-
-            Endpoints endpoints;
-            while (loadedEndpoints.Dequeue(out endpoints))
+            try
             {
-                string recieveNotificationEndpoint = endpoints["receiveNotification"];
+                // All of the unique particle.recieveNotification endpoints, with the recipients at each
+                Dictionary<string, List<string>> recipientsAtEndpoints = new Dictionary<string, List<string>>();
+                Dictionary<string, string> establishTrustEndpoints = new Dictionary<string, string>();
 
-                List<string> users;
-                if (recipientsAtEndpoints.TryGetValue(recieveNotificationEndpoint, out users))
-                    users.Add(endpoints.OpenIdOrWebFinger);
-                else
+                Endpoints endpoints;
+                while (loadedEndpoints.Dequeue(out endpoints))
                 {
-                    users = new List<string>();
-                    users.Add(endpoints.OpenIdOrWebFinger);
+                    string recieveNotificationEndpoint = endpoints["receiveNotification"];
 
-                    recipientsAtEndpoints[recieveNotificationEndpoint] = users;
-                    establishTrustEndpoints[recieveNotificationEndpoint] = endpoints["establishTrust"];
+                    List<string> users;
+                    if (recipientsAtEndpoints.TryGetValue(recieveNotificationEndpoint, out users))
+                        users.Add(endpoints.OpenIdOrWebFinger);
+                    else
+                    {
+                        users = new List<string>();
+                        users.Add(endpoints.OpenIdOrWebFinger);
+
+                        recipientsAtEndpoints[recieveNotificationEndpoint] = users;
+                        establishTrustEndpoints[recieveNotificationEndpoint] = endpoints["establishTrust"];
+                    }
                 }
-            }
 
-            // Load for situations where trust is already established
-            foreach (IRecipient_Readable recipient in DatabaseConnection.Recipient.Select(
-                Recipient_Table.receiveNotificationEndpoint.In(recipientsAtEndpoints.Keys) &
-                Recipient_Table.userID == sender.Id))
+                // Load for situations where trust is already established
+                foreach (IRecipient_Readable recipient in DatabaseConnection.Recipient.Select(
+                    Recipient_Table.receiveNotificationEndpoint.In(recipientsAtEndpoints.Keys) &
+                    Recipient_Table.userID == sender.Id))
+                {
+                    RecipientInfo recipientInfo = new RecipientInfo();
+                    recipientInfo.OpenIdOrWebFingers = recipientsAtEndpoints[recipient.receiveNotificationEndpoint];
+                    recipientInfo.RecieveNotificationEndpoint = recipient.receiveNotificationEndpoint;
+                    recipientInfo.SenderToken = recipient.senderToken;
+
+                    recipientsAtEndpoints.Remove(recipient.receiveNotificationEndpoint);
+
+                    callback(recipientInfo);
+                }
+
+                // For situations where trust isn't established, establish trust and then use the callback
+                foreach (KeyValuePair<string, List<string>> endpointAndRecipients in recipientsAtEndpoints)
+                    GetRecipientInfos(
+                        sender,
+                        endpointAndRecipients.Key,
+                        establishTrustEndpoints[endpointAndRecipients.Key],
+                        endpointAndRecipients.Value,
+                        callback,
+                        errorCallback);
+            }
+            catch (Exception e)
             {
-                RecipientInfo recipientInfo = new RecipientInfo();
-                recipientInfo.OpenIdOrWebFingers = recipientsAtEndpoints[recipient.receiveNotificationEndpoint];
-                recipientInfo.RecieveNotificationEndpoint = recipient.receiveNotificationEndpoint;
-                recipientInfo.SenderToken = recipient.senderToken;
-
-                recipientsAtEndpoints.Remove(recipient.receiveNotificationEndpoint);
-
-                callback(recipientInfo);
+                exceptionCallback(e);
             }
-
-            // For situations where trust isn't established, establish trust and then use the callback
-            foreach (KeyValuePair<string, List<string>> endpointAndRecipients in recipientsAtEndpoints)
-                GetRecipientInfos(
-                    sender, 
-                    endpointAndRecipients.Key, 
-                    establishTrustEndpoints[endpointAndRecipients.Key], 
-                    endpointAndRecipients.Value, 
-                    callback);
         }
 
         /// <summary>
@@ -136,8 +148,9 @@ namespace ObjectCloud.Disk.FileHandlers
             IUserOrGroup sender, 
             string receiveNotificationEndpoint,
             string establishTrustEndpoint,
-            List<string> recipients, 
-            GenericArgument<RecipientInfo> callback)
+            List<string> recipients,
+            GenericArgument<RecipientInfo> callback,
+            GenericArgument<IEnumerable<string>> errorCallback)
         {
             BeginEstablishTrust(sender, receiveNotificationEndpoint, establishTrustEndpoint, delegate(string senderToken)
             {
@@ -147,6 +160,14 @@ namespace ObjectCloud.Disk.FileHandlers
                 recipientInfo.SenderToken = senderToken;
 
                 callback(recipientInfo);
+            },
+            delegate(Exception e)
+            {
+                log.Error(
+                    string.Format("Could not establish trust between {0} and {1}", sender.Name, StringGenerator.GenerateCommaSeperatedList(recipients)),
+                    e);
+
+                errorCallback(recipients);
             });
         }
 
@@ -189,7 +210,8 @@ namespace ObjectCloud.Disk.FileHandlers
             IUserOrGroup sender,
             string receiveNotificationEndpoint,
             string establishTrustEndpoint,
-            GenericArgument<string> callback)
+            GenericArgument<string> callback,
+            GenericArgument<Exception> errorCallback)
         {
             // Make sure the timer is created
             if (null == EstablishTrustDatasByToken)
@@ -249,7 +271,12 @@ namespace ObjectCloud.Disk.FileHandlers
             HttpWebClient httpWebClient = new HttpWebClient();
             httpWebClient.BeginPost(
                 establishTrustEndpoint,
-                delegate(HttpResponseHandler httpResponseHandler) { },
+                delegate(HttpResponseHandler httpResponseHandler) 
+                {
+                    if (httpResponseHandler.StatusCode != System.Net.HttpStatusCode.Created)
+                        errorCallback(new DiskException("Couldn't establish trust: " + httpResponseHandler.AsString()));
+                },
+                errorCallback,
                 new KeyValuePair<string, string>("sender", sender.Identity),
                 new KeyValuePair<string, string>("token", token),
                 new KeyValuePair<string, string>("avatar", Convert.ToBase64String(avatar)),

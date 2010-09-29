@@ -346,12 +346,17 @@ namespace ObjectCloud.Interfaces.Disk
         /// </summary>
         /// <param name="openIdOrWebFinger"></param>
         /// <param name="forceRefresh"></param>
+        /// <param name="callback">Called when recipient information is known</param>
+        /// <param name="errorCallback">Called when an error occurs establishing recipient information</param>
+        /// <param name="exceptionCallback">Callback for unhandled exceptions</param>
         /// <returns></returns>
         void GetRecipientInfos(
             IUserOrGroup sender, 
             bool forceRefresh, 
-            IEnumerable<string> openIdOrWebFingers, 
-            GenericArgument<RecipientInfo> callback);
+            IEnumerable<string> openIdOrWebFingers,
+            GenericArgument<RecipientInfo> callback,
+            GenericArgument<IEnumerable<string>> errorCallback,
+            GenericArgument<Exception> exceptionCallback);
 
         /// <summary>
         /// Used when responding to a request to establish trust

@@ -679,6 +679,15 @@
             <param name="loginURLRedirect"></param>
             <returns></returns>
         </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.RespondTrust(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
+            <summary>
+            Handles a server's response to EstablishTrust
+            </summary>
+            <param name="webConnection"></param>
+            <param name="token"></param>
+            <param name="senderToken"></param>
+            <returns></returns>
+        </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.Login(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
             <summary>
             Logs in

@@ -16,8 +16,6 @@ namespace ObjectCloud.Common
     /// </summary>
     public class HttpWebClient
     {
-        private static ILog log = LogManager.GetLogger<HttpWebClient>();
-
         /// <summary>
         /// The cookies for the web connection
         /// </summary>
@@ -91,6 +89,7 @@ namespace ObjectCloud.Common
         {
             public HttpWebRequest HttpWebRequest;
             public GenericArgument<HttpResponseHandler> Callback;
+            public GenericArgument<Exception> ErrorCallback;
         }
 
         /// <summary>
@@ -101,9 +100,10 @@ namespace ObjectCloud.Common
         /// <returns></returns>
         public void BeginGet(
             string url,
-            GenericArgument<HttpResponseHandler> callback)
+            GenericArgument<HttpResponseHandler> callback,
+            GenericArgument<Exception> errorCallback)
         {
-            BeginGet(url, null, callback);
+            BeginGet(url, null, callback, errorCallback);
         }
 
         /// <summary>
@@ -114,16 +114,18 @@ namespace ObjectCloud.Common
         /// <returns></returns>
         public void BeginGet(
             string url, 
-            ICollection<KeyValuePair<string, string>> arguments, 
-            GenericArgument<HttpResponseHandler> callback)
+            ICollection<KeyValuePair<string, string>> arguments,
+            GenericArgument<HttpResponseHandler> callback,
+            GenericArgument<Exception> errorCallback)
         {
             HttpWebRequest webRequest = CreateWebRequest(url, arguments);
 
             RequestState state = new RequestState();
             state.HttpWebRequest = webRequest;
             state.Callback = callback;
+            state.ErrorCallback = errorCallback;
 
-            webRequest.BeginGetResponse(GetCallback, state);
+            webRequest.BeginGetResponse(WebRequestCallback, state);
         }
 
         private HttpWebRequest CreateWebRequest(string url, ICollection<KeyValuePair<string, string>> arguments)
@@ -141,6 +143,7 @@ namespace ObjectCloud.Common
 
             if (null != Timeout)
                 webRequest.Timeout = Convert.ToInt32(Timeout.Value.TotalMilliseconds);
+
             return webRequest;
         }
 
@@ -148,7 +151,7 @@ namespace ObjectCloud.Common
         /// Callback for BeginGet
         /// </summary>
         /// <param name="ar"></param>
-        private void GetCallback(IAsyncResult ar)
+        private void WebRequestCallback(IAsyncResult ar)
         {
             RequestState state = (RequestState)ar.AsyncState;
 
@@ -162,11 +165,11 @@ namespace ObjectCloud.Common
                 if (null != webException.Response)
                     state.Callback(new HttpResponseHandler((HttpWebResponse)webException.Response, state.HttpWebRequest));
                 else
-                    log.Error("Unhandled exception when handling a web response", webException);
+                    state.ErrorCallback(webException);
             }
             catch (Exception e)
             {
-                log.Error("Unhandled exception when handling a web response", e);
+                state.ErrorCallback(e);
             }
         }
 
@@ -216,6 +219,7 @@ namespace ObjectCloud.Common
         public void BeginPost(
             string url,
             GenericArgument<HttpResponseHandler> callback,
+            GenericArgument<Exception> errorCallback,
             params KeyValuePair<string, string>[] arguments)
         {
             HttpWebRequest webRequest = CreatePostWebRequest(url, arguments);
@@ -223,8 +227,9 @@ namespace ObjectCloud.Common
             RequestState state = new RequestState();
             state.HttpWebRequest = webRequest;
             state.Callback = callback;
+            state.ErrorCallback = errorCallback;
 
-            webRequest.BeginGetResponse(GetCallback, state);
+            webRequest.BeginGetResponse(WebRequestCallback, state);
         }
 
         private HttpWebRequest CreatePostWebRequest(string url, IEnumerable<KeyValuePair<string, string>> arguments)
@@ -268,12 +273,20 @@ namespace ObjectCloud.Common
         {
             List<string> encodedArguments = new List<string>();
 
-            foreach(KeyValuePair<string, string> argument in arguments)
+            foreach (KeyValuePair<string, string> argument in arguments)
                 if (null != argument.Key && null != argument.Value)
-                    encodedArguments.Add(string.Format(
-                        "{0}={1}",
-                        Uri.EscapeDataString(argument.Key),
-                        Uri.EscapeDataString(argument.Value)));
+                    if (argument.Value.Length < 32760)
+                        encodedArguments.Add(string.Format(
+                            "{0}={1}",
+                            Uri.EscapeDataString(argument.Key),
+                            Uri.EscapeDataString(argument.Value)));
+                    else
+                        // Quick hack to work around a limitation with Uri.EscapeDataString...
+                        // It is intended that very long strings are base64 encoded
+                        encodedArguments.Add(string.Format(
+                            "{0}={1}",
+                            Uri.EscapeDataString(argument.Key),
+                            argument.Value));
 
             return StringGenerator.GenerateSeperatedList(encodedArguments, "&");
         }
