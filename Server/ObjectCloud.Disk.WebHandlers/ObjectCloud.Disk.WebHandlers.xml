@@ -660,6 +660,244 @@
             <param name="transportId"></param>
             <returns></returns>
         </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler">
+            <summary>
+            Web wrapper for the user database
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.EstablishTrust(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Establishes trust between a sender and this server
+            </summary>
+            <param name="webConnection"></param>
+            <param name="sender"></param>
+            <param name="avatar"></param>
+            <param name="token"></param>
+            <param name="loginURL"></param>
+            <param name="loginURLOpenID"></param>
+            <param name="loginURLWebFinger"></param>
+            <param name="loginURLRedirect"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.Login(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
+            <summary>
+            Logs in
+            </summary>
+            <param name="webConnection"></param>
+            <param name="username"></param>
+            <param name="password"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.Logout(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Logs out
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.CreateUser(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
+            <summary>
+            Creates the user
+            </summary>
+            <param name="webConnection"></param>
+            <param name="username"></param>
+            <param name="password"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.CreateGroup(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String)">
+            <summary>
+            Creates the group
+            </summary>
+            <param name="webConnection"></param>
+            <param name="groupname"></param>
+            <param name="username">The group's owner, or null if the current user is the owner</param>
+            <param name="grouptype"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.DeleteGroup(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.Nullable{System.Guid})">
+            <summary>
+            Deletes the group
+            </summary>
+            <param name="webConnection"></param>
+            <param name="groupname"></param>
+            <param name="groupId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetGroup(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
+            <summary>
+            Returns the group. Either groupname OR groupid must be specified
+            </summary>
+            <param name="webConnection"></param>
+            <param name="groupname"></param>
+            <param name="groupid"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetGroupAndAlias(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Guid)">
+            <summary>
+            Returns the user's alias for the group
+            </summary>
+            <param name="webConnection"></param>
+            <param name="groupid"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetGroupInt(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
+            <summary>
+            Gets the group specified in the web connection 
+            </summary>
+            <param name="webConnection">
+            A <see cref="T:ObjectCloud.Interfaces.WebServer.IWebConnection"/>
+            </param>
+            <returns>
+            A <see cref="T:ObjectCloud.Interfaces.Security.IGroup"/>
+            </returns>
+            <param name="groupid"></param>
+            <param name="groupname"></param>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetUser(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
+            <summary>
+            Gets the user specified in the web connection 
+            </summary>
+            <param name="webConnection">
+            A <see cref="T:ObjectCloud.Interfaces.WebServer.IWebConnection"/>
+            </param>
+            <returns>
+            A <see cref="T:ObjectCloud.Interfaces.Security.IUser"/>
+            </returns>
+            <param name="userid"></param>
+            <param name="username"></param>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetUsername(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Returns the user name of the currently-logged in user.  This is preferable to querying the user's object due
+            to OpenID issues
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetCurrentUser(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Returns a JSON object with information about the current user
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetIdentity(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Returns the user open id of the currently-logged in user.
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.AddUserToGroup(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String,System.String)">
+            <summary>
+            Adds the user to the group.  Either groupname or groupid must be specified, AND, username or userid must be specified
+            </summary>
+            <param name="webConnection"></param>
+            <param name="groupname"></param>
+            <param name="groupid"></param>
+            <param name="username"></param>
+            <param name="userid"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.RemoveUserFromGroup(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String,System.String)">
+            <summary>
+            Removes the user from the group.  Either groupname or groupid must be specified, OR, username or userid must be specified
+            </summary>
+            <param name="webConnection"></param>
+            <param name="groupname"></param>
+            <param name="groupid"></param>
+            <param name="username"></param>
+            <param name="userid"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetUsersGroups(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
+            <summary>
+            Returns all of the groups that the user is in.  The caller must either be the user queried, be an administrator, or have administrative permission for the user
+            </summary>
+            <param name="webConnection"></param>
+            <param name="username"></param>
+            <param name="userid"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.SetGroupAlias(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Guid,System.String)">
+            <summary>
+            Sets the user's alias for the group
+            </summary>
+            <param name="webConnection"></param>
+            <param name="groupId"></param>
+            <param name="alias"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetUsersInGroup(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
+            <summary>
+            Returns all of the users in the group.  Either groupname or groupid must be specified
+            </summary>
+            <param name="webConnection"></param>
+            <param name="groupname"></param>
+            <param name="groupid"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetGroupsThatCanBeAdministered(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Gets all of the groups that the current user can administer
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.SearchUsersAndGroups(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.Nullable{System.UInt32})">
+            <summary>
+            Returns all public groups.  On systems with large amounts of groups; this should be somehow disabled, or 
+            </summary>
+            <param name="webConnection"></param>
+            <param name="max"></param>
+            <param name="query"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetGroupsThatUserIsIn(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Gets all of the groups that the current user is in
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.IsUserInGroup(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
+            <summary>
+            Returns true if the user is in the specified group, false otherwise
+            </summary>
+            <param name="webConnection"></param>
+            <param name="groupname">The group name to match.</param>
+            <param name="groupid">The group ID.  Either this or groupname must be set</param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.IsUserInGroupsOrMatch(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String[])">
+            <summary>
+            Returns true if the user is in the specified groups or the username is specified
+            </summary>
+            <param name="webConnection"></param>
+            <param name="groupAndUserNames">The group and user names.  Returns true if the user is a member of any of these groups, or if the user name is specified</param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.OpenIDLogin(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Starts the process of logging into this server using an OpenId.  The result is that the user will be rediected to a new page
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.CompleteOpenIdLogin(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Completes the process of a user logging into this web server with openId
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.ProvideOpenID(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Accepts the user's password when logging into another site with OpenID
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
         <member name="T:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler">
             <summary>
             Wrapper for web methods that handle name-value pairs
@@ -2039,230 +2277,6 @@
             <summary>
             Sends a packet whenever the contents of the directory changes.  The packet contains the contents of the directory tailored to the user
             </summary>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler">
-            <summary>
-            Web wrapper for the user database
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.Login(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
-            <summary>
-            Logs in
-            </summary>
-            <param name="webConnection"></param>
-            <param name="username"></param>
-            <param name="password"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.Logout(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Logs out
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.CreateUser(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
-            <summary>
-            Creates the user
-            </summary>
-            <param name="webConnection"></param>
-            <param name="username"></param>
-            <param name="password"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.CreateGroup(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String)">
-            <summary>
-            Creates the group
-            </summary>
-            <param name="webConnection"></param>
-            <param name="groupname"></param>
-            <param name="username">The group's owner, or null if the current user is the owner</param>
-            <param name="grouptype"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.DeleteGroup(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.Nullable{System.Guid})">
-            <summary>
-            Deletes the group
-            </summary>
-            <param name="webConnection"></param>
-            <param name="groupname"></param>
-            <param name="groupId"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetGroup(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
-            <summary>
-            Returns the group. Either groupname OR groupid must be specified
-            </summary>
-            <param name="webConnection"></param>
-            <param name="groupname"></param>
-            <param name="groupid"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetGroupAndAlias(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Guid)">
-            <summary>
-            Returns the user's alias for the group
-            </summary>
-            <param name="webConnection"></param>
-            <param name="groupid"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetGroupInt(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
-            <summary>
-            Gets the group specified in the web connection 
-            </summary>
-            <param name="webConnection">
-            A <see cref="T:ObjectCloud.Interfaces.WebServer.IWebConnection"/>
-            </param>
-            <returns>
-            A <see cref="T:ObjectCloud.Interfaces.Security.IGroup"/>
-            </returns>
-            <param name="groupid"></param>
-            <param name="groupname"></param>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetUser(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
-            <summary>
-            Gets the user specified in the web connection 
-            </summary>
-            <param name="webConnection">
-            A <see cref="T:ObjectCloud.Interfaces.WebServer.IWebConnection"/>
-            </param>
-            <returns>
-            A <see cref="T:ObjectCloud.Interfaces.Security.IUser"/>
-            </returns>
-            <param name="userid"></param>
-            <param name="username"></param>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetUsername(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Returns the user name of the currently-logged in user.  This is preferable to querying the user's object due
-            to OpenID issues
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetCurrentUser(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Returns a JSON object with information about the current user
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetIdentity(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Returns the user open id of the currently-logged in user.
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.AddUserToGroup(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String,System.String)">
-            <summary>
-            Adds the user to the group.  Either groupname or groupid must be specified, AND, username or userid must be specified
-            </summary>
-            <param name="webConnection"></param>
-            <param name="groupname"></param>
-            <param name="groupid"></param>
-            <param name="username"></param>
-            <param name="userid"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.RemoveUserFromGroup(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String,System.String)">
-            <summary>
-            Removes the user from the group.  Either groupname or groupid must be specified, OR, username or userid must be specified
-            </summary>
-            <param name="webConnection"></param>
-            <param name="groupname"></param>
-            <param name="groupid"></param>
-            <param name="username"></param>
-            <param name="userid"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetUsersGroups(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
-            <summary>
-            Returns all of the groups that the user is in.  The caller must either be the user queried, be an administrator, or have administrative permission for the user
-            </summary>
-            <param name="webConnection"></param>
-            <param name="username"></param>
-            <param name="userid"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.SetGroupAlias(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Guid,System.String)">
-            <summary>
-            Sets the user's alias for the group
-            </summary>
-            <param name="webConnection"></param>
-            <param name="groupId"></param>
-            <param name="alias"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetUsersInGroup(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
-            <summary>
-            Returns all of the users in the group.  Either groupname or groupid must be specified
-            </summary>
-            <param name="webConnection"></param>
-            <param name="groupname"></param>
-            <param name="groupid"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetGroupsThatCanBeAdministered(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Gets all of the groups that the current user can administer
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.SearchUsersAndGroups(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.Nullable{System.UInt32})">
-            <summary>
-            Returns all public groups.  On systems with large amounts of groups; this should be somehow disabled, or 
-            </summary>
-            <param name="webConnection"></param>
-            <param name="max"></param>
-            <param name="query"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetGroupsThatUserIsIn(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Gets all of the groups that the current user is in
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.IsUserInGroup(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
-            <summary>
-            Returns true if the user is in the specified group, false otherwise
-            </summary>
-            <param name="webConnection"></param>
-            <param name="groupname">The group name to match.</param>
-            <param name="groupid">The group ID.  Either this or groupname must be set</param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.IsUserInGroupsOrMatch(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String[])">
-            <summary>
-            Returns true if the user is in the specified groups or the username is specified
-            </summary>
-            <param name="webConnection"></param>
-            <param name="groupAndUserNames">The group and user names.  Returns true if the user is a member of any of these groups, or if the user name is specified</param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.OpenIDLogin(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Starts the process of logging into this server using an OpenId.  The result is that the user will be rediected to a new page
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.CompleteOpenIdLogin(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Completes the process of a user logging into this web server with openId
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.ProvideOpenID(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Accepts the user's password when logging into another site with OpenID
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
         </member>
         <member name="T:ObjectCloud.Disk.WebHandlers.Template.ComponentAndConditionalsResolver">
             <summary>
