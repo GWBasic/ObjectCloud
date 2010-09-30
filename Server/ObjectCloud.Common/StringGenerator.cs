@@ -132,5 +132,34 @@ namespace ObjectCloud.Common
                 return Convert.ToBase64String(scriptHash);
             }
         }
+
+        const int MaxEscapeLength = 32760;
+
+        /// <summary>
+        /// Wraps Uri.EscapeDataString so that it can handle arbitarily long strings
+        /// </summary>
+        /// <param name="toEscape"></param>
+        /// <returns></returns>
+        public static string UriEscapeDataString(string toEscape)
+        {
+            if (toEscape.Length < MaxEscapeLength)
+                return Uri.EscapeDataString(toEscape);
+
+            StringBuilder toReturn = new StringBuilder((toEscape.Length * 5) / 4);
+
+            int numChunks = toEscape.Length / MaxEscapeLength;
+
+            string chunk;
+            for (int ctr = 0; ctr < numChunks; ctr++)
+            {
+                chunk = toEscape.Substring(ctr * MaxEscapeLength, MaxEscapeLength);
+                toReturn.Append(Uri.EscapeDataString(chunk));
+            }
+
+            chunk = toEscape.Substring(numChunks * MaxEscapeLength);
+            toReturn.Append(Uri.EscapeDataString(chunk));
+
+            return toReturn.ToString();
+        }
     }
 }

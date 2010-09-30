@@ -176,9 +176,10 @@ namespace ObjectCloud.Disk.FileHandlers
         /// </summary>
         private class EstablishTrustData
         {
-            public IUserOrGroup Sender;
-            public string ReceiveNotificationEndpoint;
-            public GenericArgument<string> Callback;
+            //public IUserOrGroup Sender;
+            //public string ReceiveNotificationEndpoint;
+            //public GenericArgument<string> Callback;
+            public string SenderToken;
             public DateTime Created = DateTime.UtcNow;
         }
 
@@ -252,20 +253,14 @@ namespace ObjectCloud.Disk.FileHandlers
 
 
             // Hold on to callback information for use after trust is established
-            EstablishTrustData etd = new EstablishTrustData();
-            etd.Callback = callback;
-            etd.ReceiveNotificationEndpoint = receiveNotificationEndpoint;
-            etd.Sender = sender;
-
             string token;
-
             using (TimedLock.Lock(EstablishTrustDatasByToken))
             {
                 do
                     token = Convert.ToBase64String(SRandom.NextBytes(100));
                 while (EstablishTrustDatasByToken.ContainsKey(token));
 
-                EstablishTrustDatasByToken[token] = etd;
+                EstablishTrustDatasByToken[token] = new EstablishTrustData();
             }
 
             HttpWebClient httpWebClient = new HttpWebClient();
@@ -273,8 +268,27 @@ namespace ObjectCloud.Disk.FileHandlers
                 establishTrustEndpoint,
                 delegate(HttpResponseHandler httpResponseHandler) 
                 {
-                    if (httpResponseHandler.StatusCode != System.Net.HttpStatusCode.Created)
-                        errorCallback(new DiskException("Couldn't establish trust: " + httpResponseHandler.AsString()));
+                    if (httpResponseHandler.StatusCode == System.Net.HttpStatusCode.Created)
+                    {
+                        string senderToken;
+                        
+                        using (TimedLock.Lock(EstablishTrustDatasByToken))
+                        {
+                            senderToken = EstablishTrustDatasByToken[token].SenderToken;
+                            EstablishTrustDatasByToken.Remove(token);
+                        }
+
+                        DatabaseConnection.Recipient.Insert(delegate(IRecipient_Writable recipient)
+                        {
+                            recipient.receiveNotificationEndpoint = receiveNotificationEndpoint;
+                            recipient.senderToken = senderToken;
+                            recipient.userID = sender.Id;
+                        });
+
+                        callback(senderToken);
+                    }
+                    else
+                        errorCallback(new ParticleException.CouldNotEstablishTrust("Couldn't establish trust: " + httpResponseHandler.AsString()));
                 },
                 errorCallback,
                 new KeyValuePair<string, string>("sender", sender.Identity),
@@ -300,17 +314,17 @@ namespace ObjectCloud.Disk.FileHandlers
                 if (!EstablishTrustDatasByToken.TryGetValue(token, out etd))
                     throw new DiskException(token + " is invalid");
 
-                EstablishTrustDatasByToken.Remove(token);
+                //EstablishTrustDatasByToken.Remove(token);
             }
 
-            DatabaseConnection.Recipient.Insert(delegate(IRecipient_Writable recipient)
+            /*DatabaseConnection.Recipient.Insert(delegate(IRecipient_Writable recipient)
             {
                 recipient.receiveNotificationEndpoint = etd.ReceiveNotificationEndpoint;
                 recipient.senderToken = senderToken;
                 recipient.userID = etd.Sender.Id;
-            });
+            });*/
 
-            etd.Callback(senderToken);
+            etd.SenderToken = senderToken;
         }
 
         public void EstablishTrust(

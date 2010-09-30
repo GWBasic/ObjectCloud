@@ -44,10 +44,20 @@ namespace ObjectCloud.Disk.WebHandlers
             string loginURLRedirect)
         {
             string senderToken = Convert.ToBase64String(SRandom.NextBytes(100));
+            byte[] avatarBytes;
+
+            try
+            {
+                avatarBytes = Convert.FromBase64String(avatar);
+            }
+            catch (Exception e)
+            {
+                throw new WebResultsOverrideException(WebResults.From(Status._400_Bad_Request, "Malformed avatar"), e);
+            }
 
             GenericArgument<HttpResponseHandler> callback = delegate(HttpResponseHandler response)
             {
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                if (response.StatusCode == System.Net.HttpStatusCode.Accepted)
                 {
                     FileHandler.EstablishTrust(sender, senderToken, loginURL, loginURLOpenID, loginURLWebFinger, loginURLRedirect);
 
@@ -63,7 +73,7 @@ namespace ObjectCloud.Disk.WebHandlers
                     else
                         avatarHandler = (IBinaryHandler)ParticleAvatarsDirectory.CreateFile(avatarFilename, "image", null);
 
-                    avatarHandler.WriteAll(Convert.FromBase64String(avatar));
+                    avatarHandler.WriteAll(avatarBytes);
                 }
                 else
                     webConnection.SendResults(WebResults.From(Status._400_Bad_Request, "Error from RespondTrust"));

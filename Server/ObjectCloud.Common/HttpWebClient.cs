@@ -275,18 +275,10 @@ namespace ObjectCloud.Common
 
             foreach (KeyValuePair<string, string> argument in arguments)
                 if (null != argument.Key && null != argument.Value)
-                    if (argument.Value.Length < 32760)
-                        encodedArguments.Add(string.Format(
-                            "{0}={1}",
-                            Uri.EscapeDataString(argument.Key),
-                            Uri.EscapeDataString(argument.Value)));
-                    else
-                        // Quick hack to work around a limitation with Uri.EscapeDataString...
-                        // It is intended that very long strings are base64 encoded
-                        encodedArguments.Add(string.Format(
-                            "{0}={1}",
-                            Uri.EscapeDataString(argument.Key),
-                            argument.Value));
+                    encodedArguments.Add(string.Format(
+                        "{0}={1}",
+                        StringGenerator.UriEscapeDataString(argument.Key),
+                        StringGenerator.UriEscapeDataString(argument.Value)));
 
             return StringGenerator.GenerateSeperatedList(encodedArguments, "&");
         }

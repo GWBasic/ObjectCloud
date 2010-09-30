@@ -159,7 +159,8 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <returns></returns>
         public string GetSenderToken(string openId, bool forceRefresh, OLD_Endpoints endpoints)
         {
-            ISender_Readable sender = DatabaseConnection.Sender.SelectSingle(Sender_Table.OpenID == openId);
+            throw new NotImplementedException();
+            /*ISender_Readable sender = DatabaseConnection.Sender.SelectSingle(Sender_Table.OpenID == openId);
 
             if (!forceRefresh)
             {
@@ -194,7 +195,7 @@ namespace ObjectCloud.Disk.FileHandlers
                     TimeSpan.FromSeconds(25)
 #else
                     TimeSpan.FromMinutes(3)
-#endif
+//#endif
                     ));
                 IToken_Readable tokenR = DatabaseConnection.Token.SelectSingle(Token_Table.OpenId == openId);
 
@@ -244,7 +245,7 @@ namespace ObjectCloud.Disk.FileHandlers
                 Thread.Sleep(1);
             } while (startWaitResponse.AddMinutes(1) > DateTime.UtcNow);
 
-            throw new ParticleException.CouldNotEstablishTrust("Could not establish trust with " + openId);
+            throw new ParticleException.CouldNotEstablishTrust("Could not establish trust with " + openId);*/
         }
 
         /// <summary>
@@ -269,7 +270,7 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <param name="senderToken"></param>
         public void RespondTrust(string token, string senderToken)
         {
-            DatabaseConnection.Token.Delete(Token_Table.Created < DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(3)));
+            /*DatabaseConnection.Token.Delete(Token_Table.Created < DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(3)));
             IToken_Readable tokenR = DatabaseConnection.Token.SelectSingle(Token_Table.Token == token);
 
             if (null == tokenR)
@@ -281,7 +282,7 @@ namespace ObjectCloud.Disk.FileHandlers
                     sender.RecipientToken = senderToken;
                 });
 
-            DatabaseConnection.Token.Delete(Token_Table.Token == token);
+            DatabaseConnection.Token.Delete(Token_Table.Token == token);*/
         }
 
         /// <summary>
@@ -291,7 +292,7 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <param name="token"></param>
         public void EstablishTrust(string sender, string token)
         {
-            OLD_Endpoints endpoints = OLD_Endpoints.GetEndpoints(sender);
+            /*OLD_Endpoints endpoints = OLD_Endpoints.GetEndpoints(sender);
 
             // Get the sender's endpoints
             string respondTrustEndpoint = endpoints["respondTrust"];
@@ -334,7 +335,7 @@ namespace ObjectCloud.Disk.FileHandlers
                         });
 
                     transaction.Commit();
-                });
+                });*/
         }
 
         /// <summary>
