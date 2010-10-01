@@ -39,7 +39,7 @@ namespace ObjectCloud.Disk.FileHandlers
             {
                 // Not sure if it's worth trying to update as opposed to delete...
                 // Update might be faster, but right now the data access system doesn't support it!
-                int numRowsDeleted = DatabaseConnection.Pairs.Delete(Pairs_Table.Name == name);
+                DatabaseConnection.Pairs.Delete(Pairs_Table.Name == name);
 
                 if (null != value)
                     DatabaseConnection.Pairs.Insert(delegate(IPairs_Writable pair)
