@@ -23,7 +23,7 @@ namespace ObjectCloud.Interfaces.Disk
     /// </summary>
     public abstract class FileHandler : IFileHandler
     {
-        private static readonly ILog log = LogManager.GetLogger<FileHandler>();
+        //private static readonly ILog log = LogManager.GetLogger<FileHandler>();
 
         public FileHandler(FileHandlerFactoryLocator fileHandlerFactoryLocator)
         {
