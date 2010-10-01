@@ -396,6 +396,75 @@ namespace ObjectCloud.Disk.FileHandlers
         public void SendNotification(
             IUser sender,
             bool forceRefresh,
+            IEnumerable<IUser> recipients,
+            string objectUrl,
+            string summaryView,
+            string documentType,
+            string verb,
+            string changeData,
+            int maxRetries,
+            TimeSpan transportErrorDelay)
+        {
+            List<string> recipientIdentities = new List<string>();
+            List<IUser> localRecipients = new List<IUser>();
+
+            // Seperate local and remote users
+
+            foreach (IUser user in recipients)
+                if (user.Local)
+                    localRecipients.Add(user);
+                else
+                    recipientIdentities.Add(user.Identity);
+
+            // Start sending notifications asyncronously to remote users
+            if (recipientIdentities.Count > 0)
+                SendNotification(sender, forceRefresh, recipientIdentities, objectUrl, summaryView, documentType, verb, changeData, maxRetries, transportErrorDelay);
+
+            // Send local notifications on the threadpool
+            if (localRecipients.Count > 0)
+                ThreadPool.QueueUserWorkItem(delegate(object state)
+                {
+                    string linkedSenderIdentity = null;
+
+                    if ("link" == verb)
+                        try
+                        {
+                            Dictionary<string, object> parsedChangeData = JsonReader.Deserialize<Dictionary<string, object>>(changeData);
+                            linkedSenderIdentity = parsedChangeData["owner"].ToString();
+                        }
+                        catch (Exception e)
+                        {
+                            log.Error("Exception getting linked sender identity from change data while sending a local notification", e);
+                        }
+
+                    foreach (IUser user in localRecipients)
+                        try
+                        {
+                            user.UserHandler.ReceiveNotification(sender.Identity, objectUrl, summaryView, documentType, verb, changeData, linkedSenderIdentity);
+                        }
+                        catch (Exception e)
+                        {
+                            log.Error("Error sending notification to " + user.Name, e);
+                        }
+                });
+        }
+
+        /// <summary>
+        /// Sends notifications to recipients on other servers
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="forceRefresh"></param>
+        /// <param name="recipientIdentities"></param>
+        /// <param name="objectUrl"></param>
+        /// <param name="summaryView"></param>
+        /// <param name="documentType"></param>
+        /// <param name="verb"></param>
+        /// <param name="changeData"></param>
+        /// <param name="maxRetries"></param>
+        /// <param name="transportErrorDelay"></param>
+        private void SendNotification(
+            IUser sender,
+            bool forceRefresh,
             IEnumerable<string> recipientIdentities,
             string objectUrl,
             string summaryView,

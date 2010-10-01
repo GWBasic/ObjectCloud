@@ -72,6 +72,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\JsonFx.Json\JsonFx.Json.csproj">
+      <Project>{ABA23F14-7E47-43FE-A3E7-1FF97840C3FB}</Project>
+      <Name>JsonFx.Json</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ObjectCloud.Common\ObjectCloud.Common.csproj">
       <Project>{4E351911-60AC-4BCE-99D7-066C3C9DA67E}</Project>
       <Name>ObjectCloud.Common</Name>

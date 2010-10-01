@@ -48,7 +48,6 @@
     <Compile Include="SessionManager.cs" />
     <Compile Include="User.cs" />
     <Compile Include="UserManager.cs" />
-    <Compile Include="User\IDatabaseConnection.cs" />
     <Compile Include="Log.cs" />
   </ItemGroup>
   <ItemGroup>

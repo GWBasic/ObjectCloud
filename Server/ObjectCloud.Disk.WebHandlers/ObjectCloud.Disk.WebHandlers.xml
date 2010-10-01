@@ -1319,7 +1319,17 @@
             <param name="NewPassword"></param>
             <returns></returns>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.GetNotifications(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Nullable{System.Int64},System.Nullable{System.Int64},System.Nullable{System.Int64},System.String,System.String,System.String)">
+        <member name="F:ObjectCloud.Disk.WebHandlers.UserWebHandler.NotificationColumnToParticleSpec">
+            <summary>
+            Maps the strongly-typed enum to the proper name as part of the particle spec
+            </summary>
+        </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.UserWebHandler.ParticleSpecColumnToNotificationColumn">
+            <summary>
+            Maps the particle spec column to the proper NotificationColumn
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.GetNotifications(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Nullable{System.Int64},System.Nullable{System.Int64},System.Nullable{System.Int64},System.String[],System.String[],System.String[])">
             <summary>
             Returns notifications for the user in JSON format.
             </summary>
@@ -1327,10 +1337,16 @@
             <param name="newestNotificationId"></param>
             <param name="oldestNotificationId"></param>
             <param name="maxNotifications"></param>
-            <param name="objectUrl"></param>
-            <param name="sender"></param>
+            <param name="objectUrls"></param>
+            <param name="senderIdentities"></param>
             <param name="desiredValues"></param>
+            <returns></returns>
             <returns>Notifications for the user in JSON format.  These are scrubbed and "eval-safe"</returns>
+        </member>
+        <member name="P:ObjectCloud.Disk.WebHandlers.UserWebHandler.ParticleAvatarsDirectory">
+            <summary>
+            
+            </summary>
         </member>
         <member name="P:ObjectCloud.Disk.WebHandlers.UserWebHandler.IncomingNotificationEvent">
             <summary>

@@ -227,58 +227,49 @@ namespace ObjectCloud.Disk.WebHandlers
             return WebResults.From(Status._202_Accepted, "Password changed");
         }
 
-        /*// <summary>
-        /// Sends a notification
-        /// </summary>
-        /// <param name="webConnection"></param>
-        /// <param name="openId"></param>
-        /// <param name="objectUrl"></param>
-        /// <param name="title"></param>
-        /// <param name="documentType"></param>
-        /// <param name="messageSummary"></param>
-        /// <param name="changeData"></param>
-        /// <param name="forceRefreshSenderToken"></param>
-        /// <param name="forceRefreshEndpoints"></param>
-        /// <param name="maxRetries"></param>
-        /// <param name="transportErrorDelay"></param>
-        /// <returns></returns>
-        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Write)]
-        public IWebResults SendNotification(
-            IWebConnection webConnection,
-            string openId,
-            string objectUrl,
-            string title,
-            string documentType,
-            string messageSummary,
-            string changeData,
-            bool? forceRefreshSenderToken,
-            bool? forceRefreshEndpoints,
-            int? maxRetries,
-            TimeSpan? transportErrorDelay)
+        static UserWebHandler()
         {
-            if (null == forceRefreshSenderToken)
-                forceRefreshSenderToken = false;
+            NotificationColumnToParticleSpec = new Dictionary<NotificationColumn,string>();
 
-            if (null == forceRefreshEndpoints)
-                forceRefreshEndpoints = false;
+            NotificationColumnToParticleSpec[NotificationColumn.NotificationId] = "notificationId";
+            NotificationColumnToParticleSpec[NotificationColumn.Timestamp] = "timeStamp";
+            NotificationColumnToParticleSpec[NotificationColumn.SenderIdentity] = "senderIdentity";
+            NotificationColumnToParticleSpec[NotificationColumn.ObjectUrl] = "objectUrl";
+            NotificationColumnToParticleSpec[NotificationColumn.SummaryView] = "summaryView";
+            NotificationColumnToParticleSpec[NotificationColumn.DocumentType] = "documentType";
+            NotificationColumnToParticleSpec[NotificationColumn.Verb] = "verb";
+            NotificationColumnToParticleSpec[NotificationColumn.ChangeData] = "changeData";
+            NotificationColumnToParticleSpec[NotificationColumn.LinkedSenderIdentity] = "linkedSenderIdentity";
 
-            if (null == maxRetries)
-                maxRetries = 42;
+            ParticleSpecColumnToNotificationColumn = new Dictionary<string, NotificationColumn>();
+            foreach (KeyValuePair<NotificationColumn, string> notificationColumnPair in NotificationColumnToParticleSpec)
+                ParticleSpecColumnToNotificationColumn[notificationColumnPair.Value] = notificationColumnPair.Key;
+        }
 
-            if (null == transportErrorDelay)
-                transportErrorDelay = TimeSpan.FromMinutes(1);
+        /// <summary>
+        /// Maps the strongly-typed enum to the proper name as part of the particle spec
+        /// </summary>
+        private static readonly Dictionary<NotificationColumn, string> NotificationColumnToParticleSpec;
 
-            try
+        /// <summary>
+        /// Maps the particle spec column to the proper NotificationColumn
+        /// </summary>
+        private static readonly Dictionary<string, NotificationColumn> ParticleSpecColumnToNotificationColumn;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public IDirectoryHandler ParticleAvatarsDirectory
+        {
+            get
             {
-                // TODO:  Deleted is not handled
-                FileHandler.SendNotification(openId, objectUrl, title, documentType, messageSummary, changeData, forceRefreshSenderToken.Value, forceRefreshEndpoints.Value, maxRetries.Value, transportErrorDelay.Value);
-                return WebResults.From(Status._202_Accepted);
+                if (null == _ParticleAvatarsDirectory)
+                    _ParticleAvatarsDirectory = FileContainer.ParentDirectoryHandler.OpenFile("ParticleAvatars").CastFileHandler<IDirectoryHandler>();
+
+                return _ParticleAvatarsDirectory;
             }
-            catch (ParticleException pe)
-            {
-                return WebResults.From(Status._417_Expectation_Failed, pe.Message);
-            }
-        }*/
+        }
+        private IDirectoryHandler _ParticleAvatarsDirectory = null;
 
         /// <summary>
         /// Returns notifications for the user in JSON format.
@@ -287,9 +278,10 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="newestNotificationId"></param>
         /// <param name="oldestNotificationId"></param>
         /// <param name="maxNotifications"></param>
-        /// <param name="objectUrl"></param>
-        /// <param name="sender"></param>
+        /// <param name="objectUrls"></param>
+        /// <param name="senderIdentities"></param>
         /// <param name="desiredValues"></param>
+        /// <returns></returns>
         /// <returns>Notifications for the user in JSON format.  These are scrubbed and "eval-safe"</returns>
         [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Read)]
         public IWebResults GetNotifications(
@@ -297,29 +289,82 @@ namespace ObjectCloud.Disk.WebHandlers
             long? newestNotificationId,
             long? oldestNotificationId,
             long? maxNotifications,
-            string objectUrl,
-            string sender,
-            string desiredValues)
+            string[] objectUrls,
+            string[] senderIdentities,
+            string[] desiredValues)
         {
-            // Parse the desired values
-            List<NotificationColumn> desiredValuesList = new List<NotificationColumn>();
-            if (null == desiredValues)
-                desiredValuesList.AddRange(Enum<NotificationColumn>.Values);
-            else
-                foreach (string notificationColumnString in desiredValues.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries))
-                {
-                    NotificationColumn? notificationColumn = Enum<NotificationColumn>.TryParse(notificationColumnString);
+            Set<NotificationColumn> desiredValuesSet;
 
-                    if (null != notificationColumn)
-                        desiredValuesList.Add(notificationColumn.Value);
+            bool includeAvatarUrl = false;
+
+            if (null == desiredValues)
+            {
+                desiredValuesSet = new Set<NotificationColumn>(Enum<NotificationColumn>.Values);
+                includeAvatarUrl = true;
+            }
+            else if (desiredValues.Length == 0)
+            {
+                desiredValuesSet = new Set<NotificationColumn>(Enum<NotificationColumn>.Values);
+                includeAvatarUrl = true;
+            }
+            else
+            {
+                desiredValuesSet = new Set<NotificationColumn>();
+
+                foreach (string desiredValue in desiredValues)
+                {
+                    NotificationColumn notificationColumn;
+
+                    if ("senderAvatarUrl" == desiredValue)
+                    {
+                        includeAvatarUrl = true;
+
+                        // Later code needs to look at the senderIdentity to find the avatar
+                        desiredValuesSet.Add(NotificationColumn.SenderIdentity);
+                    }
+                    else if (ParticleSpecColumnToNotificationColumn.TryGetValue(desiredValue, out notificationColumn))
+                        desiredValuesSet.Add(notificationColumn);
+                }
+            }
+
+            List<Dictionary<string, object>> toReturn = new List<Dictionary<string, object>>();
+
+            foreach (Dictionary<NotificationColumn, object> notificationFromDB in FileHandler.GetNotifications(
+                newestNotificationId, oldestNotificationId, maxNotifications, objectUrls, senderIdentities, desiredValuesSet))
+            {
+                Dictionary<string, object> notification = new Dictionary<string, object>();
+                foreach (KeyValuePair<NotificationColumn, object> kvp in notificationFromDB)
+                    notification[NotificationColumnToParticleSpec[kvp.Key]] = kvp.Value;
+
+                if (includeAvatarUrl)
+                {
+                    IUserOrGroup senderUserOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupOrOpenId(
+                        notificationFromDB[NotificationColumn.SenderIdentity].ToString());
+
+                    if (senderUserOrGroup is IUser)
+                    {
+                        IUser senderUser = (IUser)senderUserOrGroup;
+
+                        if (senderUser.Local)
+                            notification["senderAvatarUrl"] = senderUser.Identity + "?Method=GetAvatar";
+                        else
+                            notification["senderAvatarUrl"] = string.Format(
+                                "{0}/{1}.jpg",
+                                ParticleAvatarsDirectory.FileContainer.ObjectUrl,
+                                senderUser.Id.ToString());
+                    }
                     else
-                        log.Warn(notificationColumnString + " is not a known column for notifications");
+                        notification["senderAvatarUrl"] = "";
                 }
 
-            List<Dictionary<NotificationColumn, object>> notifications = new List<Dictionary<NotificationColumn,object>>(FileHandler.GetNotifications(
-                newestNotificationId, oldestNotificationId, maxNotifications, objectUrl, sender, desiredValuesList));
+                notification["ignored"] = false;
 
-            return WebResults.ToJson(notifications);
+                toReturn.Add(notification);
+            }
+
+            // TODO:  sender avatar and ignored
+
+            return WebResults.ToJson(toReturn);
         }
 
         /// <summary>

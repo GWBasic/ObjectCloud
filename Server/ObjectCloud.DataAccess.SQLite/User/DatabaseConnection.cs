@@ -16,6 +16,26 @@ namespace ObjectCloud.DataAccess.SQLite.User
 {
     public partial class DatabaseConnection : IDatabaseConnection
     {
+        static DatabaseConnection()
+        {
+            NotificationColumnToDbColumn = new Dictionary<NotificationColumn,string>();
+
+            NotificationColumnToDbColumn[NotificationColumn.notificationId] = "NotificationId";
+            NotificationColumnToDbColumn[NotificationColumn.timestamp] = "TimeStamp";
+            NotificationColumnToDbColumn[NotificationColumn.senderIdentity] = "SenderIdentity";
+            NotificationColumnToDbColumn[NotificationColumn.objectUrl] = "ObjectUrl";
+            NotificationColumnToDbColumn[NotificationColumn.summaryView] = "SummaryView";
+            NotificationColumnToDbColumn[NotificationColumn.documentType] = "DocumentType";
+            NotificationColumnToDbColumn[NotificationColumn.verb] = "Verb";
+            NotificationColumnToDbColumn[NotificationColumn.changeData] = "ChangeData";
+            NotificationColumnToDbColumn[NotificationColumn.linkedSenderIdentity] = "LinkedSenderIdentity";
+        }
+
+        /// <summary>
+        /// Maps the strongly-typed enum to the proper database column name
+        /// </summary>
+        private static readonly Dictionary<NotificationColumn, string> NotificationColumnToDbColumn;
+
         public IEnumerable<Dictionary<NotificationColumn, object>> GetNotifications(
             long? newestNotificationId,
             long? oldestNotificationId,
@@ -27,21 +47,9 @@ namespace ObjectCloud.DataAccess.SQLite.User
             // Determine which columns to select and which tables to select from
             // *********************************************
             List<string> columns = new List<string>();
-            bool useChangeDataTable = false;
-            bool useNotificationTable = false;
 
             foreach (NotificationColumn notificationColumn in desiredValues)
-            {
-                if (NotificationColumn.changeData == notificationColumn)
-                    useChangeDataTable = true;
-                else if (NotificationColumn.notificationId != notificationColumn)
-                    useNotificationTable = true;
-
-                if (NotificationColumn.notificationId == notificationColumn)
-                    columns.Add("n.NotificationId");
-                else
-                    columns.Add(notificationColumn.ToString());
-            }
+                columns.Add(NotificationColumnToDbColumn[notificationColumn]);
 
             // Determine which filters to use
             // ***************************************
@@ -49,22 +57,22 @@ namespace ObjectCloud.DataAccess.SQLite.User
             List<string> filters = new List<string>();
 
             if (null != newestNotificationId)
-                filters.Add(string.Format("n.NotificationId <= {0}", newestNotificationId.Value.ToString()));
+                filters.Add(
+                    string.Format("{0} <= {1}",
+                    NotificationColumnToDbColumn[NotificationColumn.notificationId],
+                    newestNotificationId.Value.ToString()));
 
             if (null != oldestNotificationId)
-                filters.Add(string.Format("n.NotificationId >= {0}", oldestNotificationId.Value.ToString()));
+                filters.Add(
+                    string.Format("{0} >= {1}",
+                    NotificationColumnToDbColumn[NotificationColumn.notificationId],
+                    oldestNotificationId.Value.ToString()));
 
             if (null != objectUrl)
-            {
-                useNotificationTable = true;
                 filters.Add("objectUrl = @objectUrl");
-            }
 
             if (null != sender)
-            {
-                useNotificationTable = true;
                 filters.Add("sender = @sender");
-            }
 
             string whereClause;
             if (filters.Count > 0)
@@ -76,20 +84,14 @@ namespace ObjectCloud.DataAccess.SQLite.User
             string columnsClause = StringGenerator.GenerateCommaSeperatedList(columns);
 
             // Build the from clause
-            string fromClause;
-            if (useNotificationTable && !useChangeDataTable)
-                fromClause = " from Notification as n ";
-            else if (!useNotificationTable && useChangeDataTable)
-                fromClause = " from ChangeData as n ";
-            else
-                fromClause = " from Notification as n left outer join ChangeData on n.NotificationId = ChangeData.NotificationId ";
+            string fromClause = " from Notification ";
 
             StringBuilder queryBuilder = new StringBuilder("select ");
 
             queryBuilder.Append(columnsClause);
             queryBuilder.Append(fromClause);
             queryBuilder.Append(whereClause);
-            queryBuilder.Append(" order by n.NotificationId desc ");
+            queryBuilder.Append(" order by NotificationId desc ");
 
             if (null != maxNotifications)
             {
@@ -125,7 +127,7 @@ namespace ObjectCloud.DataAccess.SQLite.User
                     Dictionary<NotificationColumn, object> toYield = new Dictionary<NotificationColumn, object>();
 
                     for (int colCtr = 0; colCtr < reader.FieldCount; colCtr++)
-                        if (NotificationColumn.timeStamp == desiredValues[colCtr])
+                        if (NotificationColumn.timestamp == desiredValues[colCtr])
                             // The timestamp should be a DateTime, but the data access layer stores them as ticks
                             toYield[desiredValues[colCtr]] = new DateTime(reader.GetInt64(colCtr));
                         else

@@ -13,14 +13,14 @@ namespace ObjectCloud.Interfaces.Disk
     /// </summary>
     public enum NotificationColumn
     {
-        notificationId,
-        timeStamp,
-        state,
-        sender,
-        objectUrl,
-        title,
-        documentType,
-        messageSummary,
-        changeData
+        NotificationId,
+        ChangeData,
+        DocumentType,
+        LinkedSenderIdentity,
+        ObjectUrl,
+        SenderIdentity,
+        SummaryView,
+        Timestamp,
+        Verb
     }
 }

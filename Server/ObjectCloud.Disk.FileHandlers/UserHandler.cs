@@ -15,6 +15,7 @@ using ObjectCloud.DataAccess.User;
 using ObjectCloud.Disk.FileHandlers.Particle;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
+using ObjectCloud.ORM.DataAccess.WhereConditionals;
 
 namespace ObjectCloud.Disk.FileHandlers
 {
@@ -141,139 +142,6 @@ namespace ObjectCloud.Disk.FileHandlers
         }
 
         /// <summary>
-        /// Sends a notification
-        /// </summary>
-        /// <param name="openId">The OpenId to send the notification to</param>
-        /// <param name="objectUrl">The object that this notification applies to.  This must be the same domain as the OpenId</param>
-        /// <param name="title">The document's title</param>
-        /// <param name="documentType">The document type</param>
-        /// <param name="messageSummary">The message summary.  This is displayed in the user's notifications viewer GUI</param>
-        /// <param name="changeData">The changeData</param>
-        /// <param name="forceRefreshSenderToken">true to force a refresh of the sender token</param>
-        /// <param name="forceRefreshEndpoints">true to force a refresh of the endpoints</param>
-        /// <param name="maxRetries">The maximum number of times to retry</param>
-        /// <param name="transportErrorDelay">The amount of time to wait before a retry when there is a transport error</param>
-        public void SendNotification(
-            string openId,
-            string objectUrl,
-            string title,
-            string documentType,
-            string messageSummary,
-            string changeData)
-        {
-            SendNotification(openId, objectUrl, title, documentType, messageSummary, changeData, false, false, 42, TimeSpan.FromMinutes(3));
-        }
-
-        /// <summary>
-        /// Sends a notification
-        /// </summary>
-        /// <param name="openId">The OpenId to send the notification to</param>
-        /// <param name="objectUrl">The object that this notification applies to.  This must be the same domain as the OpenId</param>
-        /// <param name="title">The document's title</param>
-        /// <param name="documentType">The document type</param>
-        /// <param name="messageSummary">The message summary.  This is displayed in the user's notifications viewer GUI</param>
-        /// <param name="changeData">The changeData</param>
-        /// <param name="forceRefreshSenderToken">true to force a refresh of the sender token</param>
-        /// <param name="forceRefreshEndpoints">true to force a refresh of the endpoints</param>
-        /// <param name="maxRetries">The maximum number of times to retry</param>
-        /// <param name="transportErrorDelay">The amount of time to wait before a retry when there is a transport error</param>
-        public void SendNotification(
-            string openId,
-            string objectUrl,
-            string title,
-            string documentType,
-            string messageSummary,
-            string changeData,
-            bool forceRefreshSenderToken,
-            bool forceRefreshEndpoints,
-            int maxRetries,
-            TimeSpan transportErrorDelay)
-        {
-            /*/ TODO:  This should be refactored to be queued!
-
-            // Don't send notifications if the server isn't running
-            // TODO:  Move these if local notifications are sent without HTTP
-            if (!FileHandlerFactoryLocator.FileSystemResolver.IsStarted)
-                return;
-            if (null == FileHandlerFactoryLocator.WebServer)
-                return;
-            if (!FileHandlerFactoryLocator.WebServer.Running)
-                return;
-
-            // The notification is lost if it can't be sent.  Notifications are lossy!
-            if (maxRetries < 0)
-                return;
-
-            OLD_Endpoints endpoints = OLD_Endpoints.GetEndpoints(openId, forceRefreshEndpoints);
-
-            // (For now) senderTokens are always established through the web
-            string senderToken = GetSenderToken(openId, forceRefreshSenderToken, endpoints);
-
-            // If the notification goes to a local user, then skip the web (except to establish trust
-            if (openId.StartsWith("http://" + FileHandlerFactoryLocator.HostnameAndPort + "/"))
-            {
-                string userFile = openId.Substring(((string)("http://" + FileHandlerFactoryLocator.HostnameAndPort)).Length);
-
-                if (FileHandlerFactoryLocator.FileSystemResolver.IsFilePresent(userFile))
-                {
-                    IFileContainer recipientContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(userFile);
-
-                    if (recipientContainer.FileHandler is IUserHandler)
-                    {
-                        // At this point, the notification is only sent without HTTP if the user is local, a file exists for the user's identity, and that file is an IUserHander
-                        IUserHandler recipient = recipientContainer.CastFileHandler<IUserHandler>();
-
-                        try
-                        {
-                            recipient.ReceiveNotification(senderToken, objectUrl, title, documentType, messageSummary, changeData);
-                        }
-                        catch (ParticleException.BadToken)
-                        {
-                            SendNotification(openId, objectUrl, title, documentType, messageSummary, changeData, true, false, maxRetries - 1, transportErrorDelay);
-                        }
-
-                        return;
-                    }
-                }
-            }
-
-            string receiveNotificationEndpoint = endpoints["receiveNotification"];
-
-            HttpWebClient httpWebClient = new HttpWebClient();
-            httpWebClient.Timeout = transportErrorDelay;
-
-            try
-            {
-                HttpResponseHandler responseHandler = httpWebClient.Post(receiveNotificationEndpoint,
-                    new KeyValuePair<string, string>("senderToken", senderToken),
-                    new KeyValuePair<string, string>("objectUrl", objectUrl),
-                    new KeyValuePair<string, string>("title", title),
-                    new KeyValuePair<string, string>("documentType", documentType),
-                    new KeyValuePair<string, string>("messageSummary", messageSummary),
-                    new KeyValuePair<string, string>("changeData", changeData));
-
-                // If the notification was sent correctly, return
-                if (HttpStatusCode.Accepted == responseHandler.StatusCode)
-                    return;
-
-                // If the recipient demands a new senderToken, then recurse
-                if (HttpStatusCode.PreconditionFailed == responseHandler.StatusCode)
-                    if ("senderToken".Equals(responseHandler.AsString()))
-                        SendNotification(openId, objectUrl, title, documentType, messageSummary, changeData, true, false, maxRetries - 1, transportErrorDelay);
-
-                // TODO:  Handle blocked!
-
-                // Keep retrying...
-                SendNotification(openId, objectUrl, title, documentType, messageSummary, changeData, false, false, maxRetries - 1, transportErrorDelay);
-            }
-            catch (WebException we)
-            {
-                log.Error("Exception occured when attempting to send a notification to " + openId, we);
-                SendNotification(openId, objectUrl, title, documentType, messageSummary, changeData, false, false, maxRetries - 1, transportErrorDelay);
-            }*/
-        }
-
-        /// <summary>
         /// Receives a notification
         /// </summary>
         /// <param name="senderToken"></param>
@@ -296,8 +164,7 @@ namespace ObjectCloud.Disk.FileHandlers
 
             DateTime timestamp = DateTime.UtcNow;
 
-            //long notificationId = 
-			DatabaseConnection.Notification.InsertAndReturnPK<long>(delegate(INotification_Writable notification)
+            long notificationId = DatabaseConnection.Notification.InsertAndReturnPK<long>(delegate(INotification_Writable notification)
             {
                 notification.ChangeData = changeData;
                 notification.DocumentType = documentType;
@@ -309,32 +176,90 @@ namespace ObjectCloud.Disk.FileHandlers
                 notification.Verb = verb;
             });
 
-            /*Dictionary<NotificationColumn, object> notificationForEvent = new Dictionary<NotificationColumn, object>();
-            notificationForEvent[NotificationColumn.changeData] = changeData;
-            notificationForEvent[NotificationColumn.documentType] = documentType;
-            notificationForEvent[NotificationColumn.messageSummary] = messageSummary;
-            notificationForEvent[NotificationColumn.notificationId] = notificationId;
-            notificationForEvent[NotificationColumn.objectUrl] = objectUrl;
-            notificationForEvent[NotificationColumn.sender] = sender;
-            notificationForEvent[NotificationColumn.state] = NotificationState.unread;
-            notificationForEvent[NotificationColumn.timeStamp] = timestamp;
-            notificationForEvent[NotificationColumn.title] = title;
+            Dictionary<NotificationColumn, object> notificationForEvent = new Dictionary<NotificationColumn, object>();
+            notificationForEvent[NotificationColumn.ChangeData] = changeData;
+            notificationForEvent[NotificationColumn.DocumentType] = documentType;
+            notificationForEvent[NotificationColumn.NotificationId] = notificationId;
+            notificationForEvent[NotificationColumn.ObjectUrl] = objectUrl;
+            notificationForEvent[NotificationColumn.SenderIdentity] = senderIdentity;
+            notificationForEvent[NotificationColumn.SummaryView] = summaryView;
+            notificationForEvent[NotificationColumn.Timestamp] = timestamp;
+            notificationForEvent[NotificationColumn.LinkedSenderIdentity] = linkedSenderIdentity;
+            notificationForEvent[NotificationColumn.Verb] = verb;
 
-            OnNotificationRecieved(notificationForEvent);*/
+            OnNotificationRecieved(notificationForEvent);
         }
 
         public IEnumerable<Dictionary<NotificationColumn, object>> GetNotifications(
             long? newestNotificationId,
             long? oldestNotificationId,
-            long? maxNotifications,
-            string objectUrl,
-            string sender,
-            List<NotificationColumn> desiredValues)
+            long? maxNotificationsLong,
+            IEnumerable<string> objectUrls,
+            IEnumerable<string> senderIdentities,
+            Set<NotificationColumn> desiredValues)
         {
-            List<Dictionary<NotificationColumn, object>> toReturn = new List<Dictionary<NotificationColumn, object>>(
+            uint? maxNotifications = null;
+            if (null != maxNotificationsLong)
+                maxNotifications = Convert.ToUInt32(maxNotificationsLong.Value);
+
+            // Build conditions
+            List<ComparisonCondition> comparisonConditions = new List<ComparisonCondition>();
+
+            if (null != newestNotificationId)
+                comparisonConditions.Add(Notification_Table.NotificationId <= newestNotificationId.Value);
+
+            if (null != oldestNotificationId)
+                comparisonConditions.Add(Notification_Table.NotificationId >= oldestNotificationId.Value);
+
+            if (null != objectUrls)
+                comparisonConditions.Add(Notification_Table.ObjectUrl.In(objectUrls));
+
+            if (null != senderIdentities)
+                comparisonConditions.Add(Notification_Table.SenderIdentity.In(senderIdentities) | Notification_Table.LinkedSenderIdentity.In(senderIdentities));
+
+            // run query and construct result
+            foreach (INotification_Readable notification in DatabaseConnection.Notification.Select(
+                ComparisonCondition.Condense(comparisonConditions),
+                maxNotifications,
+                ORM.DataAccess.OrderBy.Desc,
+                Notification_Table.NotificationId))
+            {
+                Dictionary<NotificationColumn, object> toYield = new Dictionary<NotificationColumn, object>();
+
+                if (desiredValues.Contains(NotificationColumn.NotificationId))
+                    toYield[NotificationColumn.NotificationId] = notification.NotificationId;
+
+                if (desiredValues.Contains(NotificationColumn.ChangeData))
+                    toYield[NotificationColumn.ChangeData] = notification.ChangeData;
+
+                if (desiredValues.Contains(NotificationColumn.DocumentType))
+                    toYield[NotificationColumn.DocumentType] = notification.DocumentType;
+
+                if (desiredValues.Contains(NotificationColumn.LinkedSenderIdentity))
+                    toYield[NotificationColumn.LinkedSenderIdentity] = notification.LinkedSenderIdentity;
+
+                if (desiredValues.Contains(NotificationColumn.ObjectUrl))
+                    toYield[NotificationColumn.ObjectUrl] = notification.ObjectUrl;
+
+                if (desiredValues.Contains(NotificationColumn.SenderIdentity))
+                    toYield[NotificationColumn.SenderIdentity] = notification.SenderIdentity;
+
+                if (desiredValues.Contains(NotificationColumn.SummaryView))
+                    toYield[NotificationColumn.SummaryView] = notification.SummaryView;
+
+                if (desiredValues.Contains(NotificationColumn.Timestamp))
+                    toYield[NotificationColumn.Timestamp] = notification.TimeStamp;
+
+                if (desiredValues.Contains(NotificationColumn.Verb))
+                    toYield[NotificationColumn.Verb] = notification.Verb;
+
+                yield return toYield;
+            }
+
+            /*List<Dictionary<NotificationColumn, object>> toReturn = new List<Dictionary<NotificationColumn, object>>(
                 DatabaseConnection.GetNotifications(newestNotificationId, oldestNotificationId, maxNotifications, objectUrl, sender, desiredValues));
 
-            return toReturn;
+            return toReturn;*/
         }
 
         public override string ToString()

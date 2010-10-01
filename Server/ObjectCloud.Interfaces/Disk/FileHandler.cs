@@ -112,7 +112,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="messageSummary"></param>
         public void SendShareNotificationFrom(IUser sender)
         {
-            List<string> recipientIdentities = new List<string>(GetRecipientIdentities());
+            List<string> recipientIdentities = new List<string>(GetNotificationRecipientIdentities());
             SendNotification(sender, "share", recipientIdentities.ToArray());
         }
 
@@ -161,7 +161,7 @@ namespace ObjectCloud.Interfaces.Disk
             if (!sender.Local)
                 return;
 
-            Set<string> recipientIdentities = new Set<string>(GetRecipientIdentities());
+            Set<IUser> recipients = new Set<IUser>(GetNotificationRecipients());
 
             // Attempt to get a summary view
             string summaryView = GenerateSummaryView(FileContainer);
@@ -169,7 +169,7 @@ namespace ObjectCloud.Interfaces.Disk
             FileHandlerFactoryLocator.UserManagerHandler.SendNotification(
                 sender,
                 false,
-                recipientIdentities,
+                recipients,
                 FileContainer.ObjectUrl,
                 summaryView,
                 null != FileContainer.Extension ? FileContainer.Extension : FileContainer.TypeId,
@@ -218,7 +218,14 @@ namespace ObjectCloud.Interfaces.Disk
             return summaryView;
         }
 
-        private IEnumerable<string> GetRecipientIdentities()
+        private IEnumerable<string> GetNotificationRecipientIdentities()
+        {
+            IEnumerable<IUser> notificationRecipients = GetNotificationRecipients();
+            foreach (IUser user in notificationRecipients)
+                yield return user.Identity;
+        }
+
+        private IEnumerable<IUser> GetNotificationRecipients()
         {
             // Load the recipients based on who has permission / owns the file
             IEnumerable<FilePermission> permissions = FileContainer.ParentDirectoryHandler.GetPermissions(FileContainer.Filename);
@@ -234,8 +241,7 @@ namespace ObjectCloud.Interfaces.Disk
             userOrGroupIds.Add(FileContainer.OwnerId.Value);
 
             IEnumerable<IUser> notificationRecipients = FileHandlerFactoryLocator.UserManagerHandler.GetUsersAndResolveGroupsToUsers(userOrGroupIds);
-            foreach (IUser user in notificationRecipients)
-                yield return user.Identity;
+            return notificationRecipients;
         }
 
         public virtual void SyncFromLocalDisk(string localDiskPath, bool force)

@@ -399,6 +399,16 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public IUserOrGroup GetUserOrGroupOrOpenId(string nameOrGroupOrIdentity)
         {
+            string localIdentityPrefix = string.Format("http://{0}/Users/", FileHandlerFactoryLocator.HostnameAndPort);
+            if (
+                nameOrGroupOrIdentity.StartsWith(localIdentityPrefix)
+                && nameOrGroupOrIdentity.EndsWith(".user"))
+            {
+                nameOrGroupOrIdentity = nameOrGroupOrIdentity.Substring(
+                    localIdentityPrefix.Length,
+                    nameOrGroupOrIdentity.Length - localIdentityPrefix.Length - 5);
+            }
+
             IUsers_Readable user = DatabaseConnection.Users.SelectSingle(Users_Table.Name == nameOrGroupOrIdentity.ToLowerInvariant());
 
             // If there is a matching user, return it
@@ -417,7 +427,7 @@ namespace ObjectCloud.Disk.FileHandlers
             openIdClient.Identity = nameOrGroupOrIdentity;
             openIdClient.TrustRoot = null;
 
-            openIdClient.ReturnUrl = new Uri(string.Format("http://" + FileHandlerFactoryLocator.HostnameAndPort));
+            openIdClient.ReturnUrl = new Uri(string.Format("http://[0}", FileHandlerFactoryLocator.HostnameAndPort));
 
             // The proper identity is encoded in the URL
             Uri requestUri = openIdClient.CreateRequest(false, false);

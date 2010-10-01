@@ -53,7 +53,6 @@
     <Compile Include="User.cs" />
     <Compile Include="UserManager.cs" />
     <Compile Include="UserManager\DatabaseConnector.cs" />
-    <Compile Include="User\DatabaseConnection.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="User\DatabaseConnector.cs" />
   </ItemGroup>

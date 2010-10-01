@@ -410,7 +410,7 @@ namespace ObjectCloud.Interfaces.Disk
         void SendNotification(
             IUser sender,
             bool forceRefresh,
-            IEnumerable<string> recipientIdentities,
+            IEnumerable<IUser> recipients,
             string objectUrl,
             string summaryView,
             string documentType,
