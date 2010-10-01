@@ -369,7 +369,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <summary>
         /// Writes information about established trust into the database
         /// </summary>
-        /// <param name="sender"></param>
+        /// <param name="senderIdentity"></param>
         /// <param name="token"></param>
         /// <param name="loginUrl"></param>
         /// <param name="loginUrlOpenID"></param>
@@ -377,7 +377,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="loginUrlRedirect"></param>
         /// <returns></returns>
         void EstablishTrust(
-            string sender, 
+            string senderIdentity, 
             string senderToken, 
             string loginUrl, 
             string loginUrlOpenID, 
@@ -390,6 +390,14 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="openIdOrWebFinger"></param>
         /// <param name="callback"></param>
         void GetRespondTrustEnpoint(string openIdOrWebFinger, GenericArgument<string> callback);
+
+        /// <summary>
+        /// Gets the sender token ID for the given sender token, or returns false if the sender token is unknown
+        /// </summary>
+        /// <param name="senderToken"></param>
+        /// <param name="senderIdendity">The sender's ideneity</param>
+        /// <returns></returns>
+        bool TryGetSenderIdentity(string senderToken, out string senderIdendity);
     }
 
     /// <summary>

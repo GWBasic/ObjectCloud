@@ -33,46 +33,16 @@ namespace ObjectCloud.CodeGenerator
                     new Column[]
                     {
                         new Column("TimeStamp", NotNull.TimeStamp, ColumnOption.Indexed),
-                        new Column("Sender", NotNull.String, ColumnOption.Indexed),
+                        new Column("SenderIdentity", NotNull.String, ColumnOption.Indexed),
                         new Column("ObjectUrl", NotNull.String, ColumnOption.Indexed),
-                        new Column("Title", NotNull.String, ColumnOption.Indexed),
+                        new Column("SummaryView", NotNull.String),
                         new Column("DocumentType", NotNull.String, ColumnOption.Indexed),
-                        new Column("MessageSummary", NotNull.String),
-                        new Column("State", EnumColumn<NotificationState>.NotNullColumnType, ColumnOption.Indexed)
+                        new Column("Verb", NotNull.String),
+                        new Column("ChangeData", Null.String),
+                        new Column("LinkedSenderIdentity", Null.String, ColumnOption.Indexed)
                     });
 
             database.Tables.Add(NotificationTable);
-
-            Table ChangeDataTable =
-                new Table(
-                    "ChangeData",
-                    new Column("NotificationId", NotNull.Long, ColumnOption.None, NotificationTable, NotificationTable.PrimaryKey),
-                    new Column[]
-                    {
-                        new Column("ChangeData", NotNull.String),
-                    });
-
-            database.Tables.Add(ChangeDataTable);
-
-            database.Tables.Add(
-                new Table(
-                    "Sender",
-                    new Column("OpenID", NotNull.String),
-                    new Column[]
-                    {
-                        new Column("SenderToken", Null.String, ColumnOption.Indexed),
-                        new Column("RecipientToken", Null.String, ColumnOption.Indexed)
-                    }));
-
-            database.Tables.Add(
-                new Table(
-                    "Token",
-                    new Column("OpenId", NotNull.String),
-                    new Column[]
-                    {
-                        new Column("Token", NotNull.String, ColumnOption.Indexed),
-                        new Column("Created", NotNull.TimeStamp)
-                    }));
 
             database.Tables.Add(
                 new Table(
@@ -97,7 +67,7 @@ namespace ObjectCloud.CodeGenerator
                         new Column("OpenId", NotNull.String)
                     }));
 
-            database.Version = 2;
+            database.Version = 3;
 
             return database;
         }

@@ -577,18 +577,6 @@ namespace ObjectCloud.Disk.WebHandlers
             return WebResults.ToJson(groupsAL.ToArray());
         }
 
-        /*private IWebResults ReturnAsJSON(IEnumerable<IGroup> groups)
-        {
-            ArrayList groupsAL = new ArrayList();
-            foreach (IGroup group in groups)
-            {
-                IDictionary<string, object> groupDictionary = CreateJSONDictionary(group);
-                groupsAL.Add(groupDictionary);
-            }
-
-            return WebResults.ToJson(groupsAL.ToArray());
-        }*/
-		
 		private IWebResults ReturnAsJSON(IEnumerable<IUser> users)
 		{
 			ArrayList usersAL = new ArrayList();
@@ -809,15 +797,7 @@ namespace ObjectCloud.Disk.WebHandlers
 			// isn't logged on,) then verify the password
 			if (webConnection.Session.User.Identity != requestedIdentity)
 			{
-				// First, the user name needs to be derrived from the open ID
-                string openIdPrefix = string.Format("http://{0}/Users/", FileHandlerFactoryLocator.HostnameAndPort);
-				
-				// Make sure the identiy is in a valid form
-				if (!(requestedIdentity.StartsWith(openIdPrefix)) && requestedIdentity.EndsWith(".user"))
-			        return WebResults.From(Status._400_Bad_Request, requestedIdentity + "is not a valid identity");
-				
-				string nameDotUser = requestedIdentity.Substring(openIdPrefix.Length);
-				string name = nameDotUser.Substring(0, nameDotUser.LastIndexOf('.'));
+                string name = GetLocalUserNameFromOpenID(requestedIdentity);
 				
 				if (log.IsInfoEnabled)
 					log.Info("Provided an OpenID identity for " + name);
@@ -865,6 +845,20 @@ namespace ObjectCloud.Disk.WebHandlers
 				}
 			}
 		}
+
+        private string GetLocalUserNameFromOpenID(string requestedIdentity)
+        {
+            // First, the user name needs to be derrived from the open ID
+            string openIdPrefix = string.Format("http://{0}/Users/", FileHandlerFactoryLocator.HostnameAndPort);
+
+            // Make sure the identiy is in a valid form
+            if (!(requestedIdentity.StartsWith(openIdPrefix)) && requestedIdentity.EndsWith(".user"))
+                throw new WebResultsOverrideException(WebResults.From(Status._400_Bad_Request, requestedIdentity + "is not a valid identity"));
+
+            string nameDotUser = requestedIdentity.Substring(openIdPrefix.Length);
+            string name = nameDotUser.Substring(0, nameDotUser.LastIndexOf('.'));
+            return name;
+        }
 		
 		private IWebResults CheckID_Setup(IWebConnection webConnection, ID<IUserOrGroup, Guid> userId, IUserHandler userHandler, IDictionary<string, string> getParametersToPass)
 		{

@@ -42,6 +42,38 @@ PRAGMA user_version = 2;
 
                 command.ExecuteNonQuery();
             }
+
+            if (version < 3)
+            {
+                command = connection.CreateCommand();
+                command.CommandText =
+@"drop table Sender;
+drop table Token;
+drop table ChangeData;
+drop table Notification;
+
+create table Notification 
+(
+	TimeStamp			integer not null,
+	SenderIdentity			string not null,
+	ObjectUrl			string not null,
+	SummaryView			string not null,
+	DocumentType			string not null,
+	Verb			string not null,
+	ChangeData			string,
+	LinkedSenderIdentity			string,
+	NotificationId			integer not null	primary key AUTOINCREMENT
+);Create index Notification_TimeStamp on Notification (TimeStamp);
+Create index Notification_SenderIdentity on Notification (SenderIdentity);
+Create index Notification_ObjectUrl on Notification (ObjectUrl);
+Create index Notification_DocumentType on Notification (DocumentType);
+Create index Notification_LinkedSenderIdentity on Notification (LinkedSenderIdentity);
+
+PRAGMA user_version = 3;
+";
+
+                command.ExecuteNonQuery();
+            }
         }
     }
 }

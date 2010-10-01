@@ -72,9 +72,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="HasSecondServer.cs" />
-    <Compile Include="Particle\TestEndpoints.cs" />
-    <Compile Include="Particle\TestNotifications.cs" />
-    <Compile Include="Particle\TestTrust.cs" />
     <Compile Include="PermissionsTests\HasSecondContext.cs">
       <SubType>Code</SubType>
     </Compile>

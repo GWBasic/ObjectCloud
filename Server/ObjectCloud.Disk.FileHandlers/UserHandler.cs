@@ -141,204 +141,6 @@ namespace ObjectCloud.Disk.FileHandlers
         }
 
         /// <summary>
-        /// Gets the senderToken for the openId
-        /// </summary>
-        /// <param name="openId"></param>
-        /// <param name="forceRefresh"></param>
-        /// <returns></returns>
-        public string GetSenderToken(string openId, bool forceRefresh)
-        {
-            return GetSenderToken(openId, forceRefresh, OLD_Endpoints.GetEndpoints(openId));
-        }
-
-        /// <summary>
-        /// Gets the senderToken for the openId
-        /// </summary>
-        /// <param name="openId"></param>
-        /// <param name="forceRefresh"></param>
-        /// <returns></returns>
-        public string GetSenderToken(string openId, bool forceRefresh, OLD_Endpoints endpoints)
-        {
-            throw new NotImplementedException();
-            /*ISender_Readable sender = DatabaseConnection.Sender.SelectSingle(Sender_Table.OpenID == openId);
-
-            if (!forceRefresh)
-            {
-                if (null != sender)
-                    if (null != sender.RecipientToken)
-                        return sender.RecipientToken;
-            }
-
-            // The sender token must be loaded
-            // ********************
-
-            // First, make sure there's an entry with this openId that has a null senderToken
-            if (null == sender)
-                DatabaseConnection.Sender.Insert(delegate(ISender_Writable senderW)
-                {
-                    senderW.OpenID = openId;
-                });
-            else
-                DatabaseConnection.Sender.Update(Sender_Table.OpenID == openId,
-                    delegate(ISender_Writable senderW)
-                    {
-                        senderW.SenderToken = null;
-                    });
-
-            string token = null;
-
-            // Only send a reqest if there isn't a pending request
-            DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
-            {
-                int deleted = DatabaseConnection.Token.Delete(Token_Table.Created < DateTime.UtcNow.Subtract(
-#if DEBUG
-                    TimeSpan.FromSeconds(25)
-#else
-                    TimeSpan.FromMinutes(3)
-//#endif
-                    ));
-                IToken_Readable tokenR = DatabaseConnection.Token.SelectSingle(Token_Table.OpenId == openId);
-
-                if (null == tokenR)
-                {
-                    // Create the token that the recipient must respond with
-                    token = Convert.ToBase64String(SRandom.NextBytes(200));
-                    DatabaseConnection.Token.Insert(delegate(IToken_Writable tokenW)
-                    {
-                        tokenW.OpenId = openId;
-                        tokenW.Token = token;
-                        tokenW.Created = DateTime.UtcNow;
-                    });
-
-                    transaction.Commit();
-                }
-
-                    // Else only commit if old tokens were deleted
-                else if (deleted > 0)
-                    transaction.Commit();
-            });
-
-            // Establishing trust is only called if a token is created.  This is performed outside the transaction for performance reasons
-            if (null != token)
-            {
-                string establishTrustEndpoint = endpoints["establishTrust"];
-
-                HttpWebClient httpWebClient = new HttpWebClient();
-                HttpResponseHandler responseHandler = httpWebClient.Post(establishTrustEndpoint,
-                    new KeyValuePair<string, string>("sender", Identity),
-                    new KeyValuePair<string, string>("token", token));
-
-                if (responseHandler.StatusCode != HttpStatusCode.Created)
-                    throw new ParticleException.CouldNotEstablishTrust("EstablishTrust endpoint did not return success");
-            }
-
-            // Wait for a response
-            DateTime startWaitResponse = DateTime.UtcNow;
-
-            do
-            {
-                sender = DatabaseConnection.Sender.SelectSingle(Sender_Table.OpenID == openId);
-
-                if (null != sender.RecipientToken)
-                    return sender.RecipientToken;
-
-                Thread.Sleep(1);
-            } while (startWaitResponse.AddMinutes(1) > DateTime.UtcNow);
-
-            throw new ParticleException.CouldNotEstablishTrust("Could not establish trust with " + openId);*/
-        }
-
-        /// <summary>
-        /// Returns the OpenId associated with the sender token
-        /// </summary>
-        /// <param name="senderToken"></param>
-        /// <returns></returns>
-        public string GetOpenIdFromSenderToken(string senderToken)
-        {
-            ISender_Readable sender = DatabaseConnection.Sender.SelectSingle(Sender_Table.SenderToken == senderToken);
-
-            if (null != sender)
-                return sender.OpenID;
-
-            throw new ParticleException.BadToken("Unknown senderToken");
-        }
-
-        /// <summary>
-        /// Assists in responding when establishing trust
-        /// </summary>
-        /// <param name="token"></param>
-        /// <param name="senderToken"></param>
-        public void RespondTrust(string token, string senderToken)
-        {
-            /*DatabaseConnection.Token.Delete(Token_Table.Created < DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(3)));
-            IToken_Readable tokenR = DatabaseConnection.Token.SelectSingle(Token_Table.Token == token);
-
-            if (null == tokenR)
-                throw new ParticleException.BadToken(token + " is not a valid token");
-
-            DatabaseConnection.Sender.Update(Sender_Table.OpenID == tokenR.OpenId,
-                delegate(ISender_Writable sender)
-                {
-                    sender.RecipientToken = senderToken;
-                });
-
-            DatabaseConnection.Token.Delete(Token_Table.Token == token);*/
-        }
-
-        /// <summary>
-        /// Establishes trust with the sender using the sent token
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="token"></param>
-        public void EstablishTrust(string sender, string token)
-        {
-            /*OLD_Endpoints endpoints = OLD_Endpoints.GetEndpoints(sender);
-
-            // Get the sender's endpoints
-            string respondTrustEndpoint = endpoints["respondTrust"];
-
-            // Generate the senderToken
-            string senderToken = Convert.ToBase64String(SRandom.NextBytes(60));
-
-            // Send the sender token back to the sender that wants to establish trust
-            HttpWebClient httpWebClient = new HttpWebClient();
-            HttpResponseHandler responseHandler = httpWebClient.Post(respondTrustEndpoint,
-                new KeyValuePair<string, string>("senderToken", senderToken),
-                new KeyValuePair<string, string>("token", token));
-
-            // Make sure that the sender says its okay
-            if (responseHandler.StatusCode != HttpStatusCode.Accepted)
-                throw new ParticleException.CouldNotEstablishTrust("RespondTrust endpoint did not return success");
-
-            // If it's okay, update the sender's entry
-            int rowsUpdated = DatabaseConnection.Sender.Update(Sender_Table.OpenID == sender,
-                delegate(ISender_Writable senderW)
-                {
-                    senderW.SenderToken = senderToken;
-                });
-
-            // If there were no rows updated, then create an entry on a transaction
-            if (0 == rowsUpdated)
-                DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
-                {
-                    rowsUpdated = DatabaseConnection.Sender.Update(Sender_Table.OpenID == sender,
-                        delegate(ISender_Writable senderW)
-                        {
-                            senderW.SenderToken = senderToken;
-                        });
-
-                    if (0 == rowsUpdated)
-                        DatabaseConnection.Sender.Insert(delegate(ISender_Writable senderW)
-                        {
-                            senderW.OpenID = sender;
-                            senderW.SenderToken = senderToken;
-                        });
-
-                    transaction.Commit();
-                });*/
-        }
-
-        /// <summary>
         /// Sends a notification
         /// </summary>
         /// <param name="openId">The OpenId to send the notification to</param>
@@ -387,7 +189,7 @@ namespace ObjectCloud.Disk.FileHandlers
             int maxRetries,
             TimeSpan transportErrorDelay)
         {
-            // TODO:  This should be refactored to be queued!
+            /*/ TODO:  This should be refactored to be queued!
 
             // Don't send notifications if the server isn't running
             // TODO:  Move these if local notifications are sent without HTTP
@@ -468,7 +270,7 @@ namespace ObjectCloud.Disk.FileHandlers
             {
                 log.Error("Exception occured when attempting to send a notification to " + openId, we);
                 SendNotification(openId, objectUrl, title, documentType, messageSummary, changeData, false, false, maxRetries - 1, transportErrorDelay);
-            }
+            }*/
         }
 
         /// <summary>
@@ -481,42 +283,32 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <param name="messageSummary"></param>
         /// <param name="changeData"></param>
         public void ReceiveNotification(
-            string senderToken,
+            string senderIdentity,
             string objectUrl,
-            string title,
+            string summaryView,
             string documentType,
-            string messageSummary,
-            string changeData)
+            string verb,
+            string changeData,
+            string linkedSenderIdentity)
         {
             if (this == FileHandlerFactoryLocator.UserFactory.AnonymousUser.UserHandler)
                 throw new SecurityException("The anonymous user can not recieve notifications");
-
-            string sender = GetOpenIdFromSenderToken(senderToken);
-
-            // TODO:  I suspect that GetNotifications is occasionally getting a notification without the changedata
-            // This shouldn't happen
 
             DateTime timestamp = DateTime.UtcNow;
 
             long notificationId = DatabaseConnection.Notification.InsertAndReturnPK<long>(delegate(INotification_Writable notification)
             {
+                notification.ChangeData = changeData;
                 notification.DocumentType = documentType;
-                notification.MessageSummary = messageSummary;
+                notification.LinkedSenderIdentity = linkedSenderIdentity;
                 notification.ObjectUrl = objectUrl;
-                notification.Sender = sender;
+                notification.SenderIdentity = senderIdentity;
+                notification.SummaryView = summaryView;
                 notification.TimeStamp = timestamp;
-                notification.Title = title;
-                notification.State = NotificationState.unread;
+                notification.Verb = verb;
             });
 
-            if (null != changeData)
-                DatabaseConnection.ChangeData.Insert(delegate(IChangeData_Writable changeDataW)
-                {
-                    changeDataW.NotificationId = notificationId;
-                    changeDataW.ChangeData = changeData;
-                });
-
-            Dictionary<NotificationColumn, object> notificationForEvent = new Dictionary<NotificationColumn, object>();
+            /*Dictionary<NotificationColumn, object> notificationForEvent = new Dictionary<NotificationColumn, object>();
             notificationForEvent[NotificationColumn.changeData] = changeData;
             notificationForEvent[NotificationColumn.documentType] = documentType;
             notificationForEvent[NotificationColumn.messageSummary] = messageSummary;
@@ -527,7 +319,7 @@ namespace ObjectCloud.Disk.FileHandlers
             notificationForEvent[NotificationColumn.timeStamp] = timestamp;
             notificationForEvent[NotificationColumn.title] = title;
 
-            OnNotificationRecieved(notificationForEvent);
+            OnNotificationRecieved(notificationForEvent);*/
         }
 
         public IEnumerable<Dictionary<NotificationColumn, object>> GetNotifications(

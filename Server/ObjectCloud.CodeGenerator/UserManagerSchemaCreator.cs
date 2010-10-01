@@ -92,7 +92,7 @@ namespace ObjectCloud.CodeGenerator
                 new Column("senderID", NotNull.Long, true),
                 new Column[]
                 {
-                    new Column("name", NotNull.String, ColumnOption.Unique),
+                    new Column("identity", NotNull.String, ColumnOption.Unique),
                     new Column("senderToken", NotNull.String, ColumnOption.Unique),
                     new Column("loginURL", NotNull.String),
                     new Column("loginURLOpenID", NotNull.String),

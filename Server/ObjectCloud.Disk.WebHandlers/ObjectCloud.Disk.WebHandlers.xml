@@ -665,12 +665,17 @@
             Web wrapper for the user database
             </summary>
         </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.PendingSenderTokens">
+            <summary>
+            In-memory sender tokens that are awaiting storage in the database because of a pending respondTrust call
+            </summary>
+        </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.EstablishTrust(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String,System.String,System.String,System.String,System.String)">
             <summary>
             Establishes trust between a sender and this server
             </summary>
             <param name="webConnection"></param>
-            <param name="sender"></param>
+            <param name="senderIdentity"></param>
             <param name="avatar"></param>
             <param name="token"></param>
             <param name="loginURL"></param>
@@ -687,6 +692,51 @@
             <param name="token"></param>
             <param name="senderToken"></param>
             <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.ReceiveNotification(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String[],System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            
+            </summary>
+            <param name="webConnection"></param>
+            <param name="senderToken"></param>
+            <param name="recipients"></param>
+            <param name="objectUrl"></param>
+            <param name="summaryView"></param>
+            <param name="documentType"></param>
+            <param name="verb"></param>
+            <param name="changeData"></param>
+            <returns></returns>
+        </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.ValidSummaryViewClasses">
+            <summary>
+            The valid summary view classes
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.ValidateSummaryView(System.String@,System.String@)">
+            <summary>
+            Validates a summary view, removing invalid tags, attributes, and css classes
+            </summary>
+            <param name="summaryView"></param>
+            <param name="summaryViewError"></param>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.ValidateChangeData(System.String,System.String@,System.String@,System.String@)">
+            <summary>
+            Validates change data
+            </summary>
+            <param name="verb"></param>
+            <param name="changeData"></param>
+            <param name="changeDataError"></param>
+            <param name="linkedSenderIdentity"></param>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.#ctor">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.ReceiveNotificationDelegate">
+            <summary>
+            Delegate for RecieveNotification
+            </summary>
         </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.Login(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
             <summary>
@@ -910,6 +960,11 @@
         <member name="P:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.ParticleAvatarsDirectory">
             <summary>
             
+            </summary>
+        </member>
+        <member name="P:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.ValidSummaryViewTagsAndAttributes">
+            <summary>
+            The valid summary view tags and attributes.  Each tag is a key, and then there is a set of valid attributes
             </summary>
         </member>
         <member name="T:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler">
@@ -1264,31 +1319,6 @@
             <param name="NewPassword"></param>
             <returns></returns>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.GetSenderToken(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.Nullable{System.Boolean})">
-            <summary>
-            Gets the senderToken for the openId
-            </summary>
-            <param name="webConnection"></param>
-            <param name="openId"></param>
-            <param name="forceRefresh"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.EstablishTrust(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
-            <summary>
-            Establishes trust with the sender using the sent token
-            </summary>
-            <param name="webConnection"></param>
-            <param name="sender"></param>
-            <param name="token"></param>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.RespondTrust(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
-            <summary>
-            Assists in responding when establishing trust
-            </summary>
-            <param name="webConnection"></param>
-            <param name="token"></param>
-            <param name="senderToken"></param>
-        </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.SendNotification(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Int32},System.Nullable{System.TimeSpan})">
             <summary>
             Sends a notification
@@ -1305,18 +1335,6 @@
             <param name="maxRetries"></param>
             <param name="transportErrorDelay"></param>
             <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.ReceiveNotification(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String,System.String,System.String,System.String)">
-            <summary>
-            Receives a notification
-            </summary>
-            <param name="webConnection"></param>
-            <param name="senderToken"></param>
-            <param name="objectUrl"></param>
-            <param name="title"></param>
-            <param name="documentType"></param>
-            <param name="messageSummary"></param>
-            <param name="changeData"></param>
         </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.GetNotifications(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Nullable{System.Int64},System.Nullable{System.Int64},System.Nullable{System.Int64},System.String,System.String,System.String)">
             <summary>

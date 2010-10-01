@@ -228,64 +228,6 @@ namespace ObjectCloud.Disk.WebHandlers
         }
 
         /// <summary>
-        /// Gets the senderToken for the openId
-        /// </summary>
-        /// <param name="webConnection"></param>
-        /// <param name="openId"></param>
-        /// <param name="forceRefresh"></param>
-        /// <returns></returns>
-        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.Naked, FilePermissionEnum.Administer)]
-        public IWebResults GetSenderToken(IWebConnection webConnection, string openId, bool? forceRefresh)
-        {
-            if (null == forceRefresh)
-                forceRefresh = false;
-
-            string senderToken = FileHandler.GetSenderToken(openId, forceRefresh.Value);
-
-            return WebResults.From(Status._200_OK, senderToken);
-        }
-
-        /// <summary>
-        /// Establishes trust with the sender using the sent token
-        /// </summary>
-        /// <param name="webConnection"></param>
-        /// <param name="sender"></param>
-        /// <param name="token"></param>
-        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status)]
-        public IWebResults EstablishTrust(IWebConnection webConnection, string sender, string token)
-        {
-            try
-            {
-                FileHandler.EstablishTrust(sender, token);
-                return WebResults.From(Status._201_Created);
-            }
-            catch (ParticleException.CouldNotEstablishTrust cnet)
-            {
-                return WebResults.From(Status._401_Unauthorized, cnet.Message);
-            }
-        }
-
-        /// <summary>
-        /// Assists in responding when establishing trust
-        /// </summary>
-        /// <param name="webConnection"></param>
-        /// <param name="token"></param>
-        /// <param name="senderToken"></param>
-        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status)]
-        public IWebResults RespondTrust(IWebConnection webConnection, string token, string senderToken)
-        {
-            try
-            {
-                FileHandler.RespondTrust(token, senderToken);
-                return WebResults.From(Status._202_Accepted);
-            }
-            catch (ParticleException.BadToken bt)
-            {
-                return WebResults.From(Status._401_Unauthorized, bt.Message);
-            }
-        }
-
-        /// <summary>
         /// Sends a notification
         /// </summary>
         /// <param name="webConnection"></param>
@@ -335,47 +277,6 @@ namespace ObjectCloud.Disk.WebHandlers
             catch (ParticleException pe)
             {
                 return WebResults.From(Status._417_Expectation_Failed, pe.Message);
-            }
-        }
-
-        /// <summary>
-        /// Receives a notification
-        /// </summary>
-        /// <param name="webConnection"></param>
-        /// <param name="senderToken"></param>
-        /// <param name="objectUrl"></param>
-        /// <param name="title"></param>
-        /// <param name="documentType"></param>
-        /// <param name="messageSummary"></param>
-        /// <param name="changeData"></param>
-        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status)]
-        public IWebResults ReceiveNotification(
-            IWebConnection webConnection,
-            string senderToken,
-            string objectUrl,
-            string title,
-            string documentType,
-            string messageSummary,
-            string changeData)
-        {
-            if (FileHandler == FileHandlerFactoryLocator.UserFactory.AnonymousUser.UserHandler)
-                throw new WebResultsOverrideException(WebResults.From(Status._401_Unauthorized, "The anonymous user can not recieve notifications"));
-
-            try
-            {
-                FileHandler.ReceiveNotification(
-                    senderToken,
-                    objectUrl,
-                    title,
-                    documentType,
-                    messageSummary,
-                    changeData);
-
-                return WebResults.From(Status._202_Accepted);
-            }
-            catch (ParticleException.BadToken)
-            {
-                return WebResults.From(Status._412_Precondition_Failed, "senderToken");
             }
         }
 

@@ -72,54 +72,16 @@ namespace ObjectCloud.Interfaces.Disk
             TimeSpan transportErrorDelay);
 
         /// <summary>
-        /// Gets the senderToken for the openId
-        /// </summary>
-        /// <param name="openId"></param>
-        /// <param name="forceRefresh"></param>
-        /// <returns></returns>
-        string GetSenderToken(string openId, bool forceRefresh);
-
-        /// <summary>
-        /// Returns the OpenId associated with the sender token
-        /// </summary>
-        /// <param name="senderToken"></param>
-        /// <returns></returns>
-        /// <exception cref="ParticleException.BadToken">Thrown if the senderToken is unknown</exception>
-        string GetOpenIdFromSenderToken(string senderToken);
-
-        /// <summary>
-        /// Establishes trust with the sender using the sent token
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="token"></param>
-        void EstablishTrust(string sender, string token);
-
-        /// <summary>
-        /// Assists in responding when establishing trust
-        /// </summary>
-        /// <param name="token"></param>
-        /// <param name="senderToken"></param>
-        void RespondTrust(
-            string token,
-            string senderToken);
-
-        /// <summary>
         /// Receives a notification
         /// </summary>
-        /// <param name="senderToken"></param>
-        /// <param name="objectUrl"></param>
-        /// <param name="title"></param>
-        /// <param name="documentType"></param>
-        /// <param name="messageSummary"></param>
-        /// <param name="changeData"></param>
-        /// <exception cref="ParticleException.BadToken">Thrown if the senderToken is unknown</exception>
         void ReceiveNotification(
-            string senderToken,
+            string senderIdentity,
             string objectUrl,
-            string title,
+            string summaryView,
             string documentType,
-            string messageSummary,
-            string changeData);
+            string verb,
+            string changeData,
+            string linkedSenderIdentity);
 
         /// <summary>
         /// Gets notifications
