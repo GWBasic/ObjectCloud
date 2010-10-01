@@ -227,7 +227,7 @@ namespace ObjectCloud.Disk.WebHandlers
             return WebResults.From(Status._202_Accepted, "Password changed");
         }
 
-        /// <summary>
+        /*// <summary>
         /// Sends a notification
         /// </summary>
         /// <param name="webConnection"></param>
@@ -278,7 +278,7 @@ namespace ObjectCloud.Disk.WebHandlers
             {
                 return WebResults.From(Status._417_Expectation_Failed, pe.Message);
             }
-        }
+        }*/
 
         /// <summary>
         /// Returns notifications for the user in JSON format.

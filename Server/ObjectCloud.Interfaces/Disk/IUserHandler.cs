@@ -5,8 +5,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Xml;
 
 using ObjectCloud.Common;
+using ObjectCloud.Interfaces.Security;
 
 namespace ObjectCloud.Interfaces.Disk
 {
@@ -24,52 +26,6 @@ namespace ObjectCloud.Interfaces.Disk
 		/// Returns the OpenID Identity 
 		/// </value>
         string Identity { get; }
-
-        /// <summary>
-        /// Sends a notification
-        /// </summary>
-        /// <param name="openId">The OpenId to send the notification to</param>
-        /// <param name="objectUrl">The object that this notification applies to.  This must be the same domain as the OpenId</param>
-        /// <param name="title">The document's title</param>
-        /// <param name="documentType">The document type</param>
-        /// <param name="messageSummary">The message summary.  This is displayed in the user's notifications viewer GUI</param>
-        /// <param name="changeData">The changeData</param>
-        /// <param name="forceRefreshSenderToken">true to force a refresh of the sender token</param>
-        /// <param name="forceRefreshEndpoints">true to force a refresh of the endpoints</param>
-        /// <param name="maxRetries">The maximum number of times to retry</param>
-        /// <param name="transportErrorDelay">The amount of time to wait before a retry when there is a transport error</param>
-        void SendNotification(
-            string openId,
-            string objectUrl,
-            string title,
-            string documentType,
-            string messageSummary,
-            string changeData);
-        
-        /// <summary>
-        /// Sends a notification
-        /// </summary>
-        /// <param name="openId">The OpenId to send the notification to</param>
-        /// <param name="objectUrl">The object that this notification applies to.  This must be the same domain as the OpenId</param>
-        /// <param name="title">The document's title</param>
-        /// <param name="documentType">The document type</param>
-        /// <param name="messageSummary">The message summary.  This is displayed in the user's notifications viewer GUI</param>
-        /// <param name="changeData">The changeData</param>
-        /// <param name="forceRefreshSenderToken">true to force a refresh of the sender token</param>
-        /// <param name="forceRefreshEndpoints">true to force a refresh of the endpoints</param>
-        /// <param name="maxRetries">The maximum number of times to retry</param>
-        /// <param name="transportErrorDelay">The amount of time to wait before a retry when there is a transport error</param>
-        void SendNotification(
-            string openId,
-            string objectUrl,
-            string title,
-            string documentType,
-            string messageSummary,
-            string changeData,
-            bool forceRefreshSenderToken,
-            bool forceRefreshEndpoints,
-            int maxRetries,
-            TimeSpan transportErrorDelay);
 
         /// <summary>
         /// Receives a notification

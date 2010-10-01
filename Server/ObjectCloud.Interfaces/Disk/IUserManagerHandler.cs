@@ -353,7 +353,7 @@ namespace ObjectCloud.Interfaces.Disk
         void GetRecipientInfos(
             IUserOrGroup sender, 
             bool forceRefresh, 
-            IEnumerable<string> openIdOrWebFingers,
+            IEnumerable<string> recipientIdentities,
             GenericArgument<RecipientInfo> callback,
             GenericArgument<IEnumerable<string>> errorCallback,
             GenericArgument<Exception> exceptionCallback);
@@ -398,6 +398,26 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="senderIdendity">The sender's ideneity</param>
         /// <returns></returns>
         bool TryGetSenderIdentity(string senderToken, out string senderIdendity);
+
+        /// <summary>
+        /// Sends a notification
+        /// </summary>
+        /// <param name="recipientIdentities"></param>
+        /// <param name="fileContainer"></param>
+        /// <param name="summaryView"></param>
+        /// <param name="documentType"></param>
+        /// <param name="messageSummary"></param>
+        void SendNotification(
+            IUser sender,
+            bool forceRefresh,
+            IEnumerable<string> recipientIdentities,
+            string objectUrl,
+            string summaryView,
+            string documentType,
+            string verb,
+            string changeData,
+            int maxRetries,
+            TimeSpan transportErrorDelay);
     }
 
     /// <summary>
@@ -418,6 +438,6 @@ namespace ObjectCloud.Interfaces.Disk
         /// <summary>
         /// The OpenIDs or WebFinders that are valid for this endpoint
         /// </summary>
-        public List<string> OpenIdOrWebFingers;
+        public List<string> RecipientIdentities;
     }
 }

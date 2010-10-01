@@ -35,22 +35,26 @@ namespace ObjectCloud.Interfaces.Disk
 		IFileContainer FileContainer { get; set; }
 
         /// <summary>
-        /// Sends a notification to all of the recipients as originating from this object
+        /// Sends a notification
         /// </summary>
-        /// <param name="recipients"></param>
-        /// <param name="title"></param>
-        /// <param name="messageSummary"></param>
-        /// <param name="changeData"></param>
-        void SendNotification(IUser from, IEnumerable<IUser> recipients, string messageSummary, string changeData);
+        void SendUpdateNotificationFrom(IUser sender);
 
         /// <summary>
-        /// Sends a notification to all of the users who have access to this object as originating from this object
+        /// Sends a notification
         /// </summary>
-        /// <param name="recipients"></param>
-        /// <param name="title"></param>
-        /// <param name="messageSummary"></param>
-        /// <param name="changeData"></param>
-        void SendNotification(IUser from, string messageSummary, string changeData);
+        void SendDeleteNotificationFrom(IUser sender);
+
+        /// <summary>
+        /// Sends a notification
+        /// </summary>
+        void SendShareNotificationFrom(IUser sender);
+
+        /// <summary>
+        /// Sends a notification
+        /// </summary>
+        void SendLinkNotificationFrom(
+            IUser sender,
+            IFileContainer linkedFile);
 
         /// <summary>
         /// The file's title.  This can default to its URL

@@ -57,9 +57,8 @@ namespace ObjectCloud.Disk.FileHandlers
                 CachedEnumerable = null;
             }
 
-            // TODO:  diffing between the old and new text would be cool to include in the changedata
             if (null != FileContainer)
-                SendNotification(changer, FileContainer.Filename + " updated", null);
+                SendUpdateNotificationFrom(changer);
 
             OnContentsChanged();
         }
@@ -131,7 +130,7 @@ namespace ObjectCloud.Disk.FileHandlers
 
             // TODO:  diffing between the old and new text would be cool to include in the changedata
             if (null != FileContainer)
-                SendNotification(changer, FileContainer.Filename + " updated", null);
+                SendUpdateNotificationFrom(changer);
 
             OnContentsChanged();
         }

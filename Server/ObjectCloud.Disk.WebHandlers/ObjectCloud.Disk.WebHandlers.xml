@@ -1319,23 +1319,6 @@
             <param name="NewPassword"></param>
             <returns></returns>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.SendNotification(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Int32},System.Nullable{System.TimeSpan})">
-            <summary>
-            Sends a notification
-            </summary>
-            <param name="webConnection"></param>
-            <param name="openId"></param>
-            <param name="objectUrl"></param>
-            <param name="title"></param>
-            <param name="documentType"></param>
-            <param name="messageSummary"></param>
-            <param name="changeData"></param>
-            <param name="forceRefreshSenderToken"></param>
-            <param name="forceRefreshEndpoints"></param>
-            <param name="maxRetries"></param>
-            <param name="transportErrorDelay"></param>
-            <returns></returns>
-        </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.GetNotifications(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Nullable{System.Int64},System.Nullable{System.Int64},System.Nullable{System.Int64},System.String,System.String,System.String)">
             <summary>
             Returns notifications for the user in JSON format.

@@ -190,7 +190,7 @@ namespace ObjectCloud.Disk.FileHandlers
             if (null != ownerId)
                 changer = FileHandlerFactoryLocator.UserManagerHandler.GetUserNoException(ownerId.Value);
 
-            // TODO:  Some change data would be cool
+            /*/ TODO:  Some change data would be cool
             SendNotification(changer, filename + " created", null);
 
             // Send the owner a notification so that the object shows up in the notification window
@@ -200,7 +200,7 @@ namespace ObjectCloud.Disk.FileHandlers
                 changeData["action"] = "created";
                 string actionData = JsonFx.Json.JsonWriter.Serialize(changeData);
                 toReturn.SendNotification(changer, actionData, null);
-            }
+            }*/
 
             OnDirectoryChanged();
 
@@ -318,28 +318,12 @@ namespace ObjectCloud.Disk.FileHandlers
             });
 
             // If notifications are enabled, then send a notification informing the user of the change
-            if (sendNotifications)
+            IFileContainer targetFile = OpenFile(filename);
+
+            if (null != assigningPermission)
             {
-                IFileContainer targetFile = OpenFile(filename);
-
-                if (null == assigningPermission)
-                    assigningPermission = targetFile.OwnerId;
-
-                if (null != assigningPermission)
-                {
-                    IUser from = FileHandlerFactoryLocator.UserManagerHandler.GetUser(assigningPermission.Value);
-
-                    IUserOrGroup targetUserOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroup(userOrGroupId);
-                    IEnumerable<IUser> targetUsers = FileHandlerFactoryLocator.UserManagerHandler.GetUsersAndResolveGroupsToUsers(new ID<IUserOrGroup, Guid>[] { userOrGroupId });
-
-                    string messageSummary;
-                    if (updated)
-                        messageSummary = "Permission updated: " + level.ToString() + " for " + targetUserOrGroup.Name;
-                    else
-                        messageSummary = "Permission granted: " + level.ToString() + " for " + targetUserOrGroup.Name;
-
-                    targetFile.FileHandler.SendNotification(from, targetUsers, messageSummary, null);
-                }
+                IUser sender = FileHandlerFactoryLocator.UserManagerHandler.GetUser(assigningPermission.Value);
+                targetFile.FileHandler.SendShareNotificationFrom(sender);
             }
 
             OnDirectoryChanged();
@@ -484,9 +468,6 @@ namespace ObjectCloud.Disk.FileHandlers
             FileIDCacheByName.Remove(filename);
             PermissionsCacheWithInherit.Clear();
             PermissionsCacheWithoutInherit.Clear();
-
-            // TODO:  changeData would be cool
-            SendNotification(changer, filename + " deleted", null);
 
             OnDirectoryChanged();
         }
@@ -914,9 +895,6 @@ namespace ObjectCloud.Disk.FileHandlers
             newFileContainer.WebHandler.FileContainer = newFileContainer;
             newFileContainer.WebHandler.ResetExecutionEnvironment();
 
-            // TODO:  changeData would be cool
-            SendNotification(changer, oldFilename + " renamed to " + newFilename, null);
-
             OnDirectoryChanged();
         }
 
@@ -940,9 +918,6 @@ namespace ObjectCloud.Disk.FileHandlers
                     {
                         fileHandlerFactory.CopyFile(toCopy.FileHandler, fileId, ownerID, this);
                     });
-
-                    // TODO:  changeData would be cool
-                    SendNotification(changer, toCopy.FullPath + "/" + toCopy.Filename + " copied to " + Filename, null);
 
                     OnDirectoryChanged();
 
@@ -1237,15 +1212,7 @@ namespace ObjectCloud.Disk.FileHandlers
                 transaction.Commit();
             });
 
-            Dictionary<string, object> changeData = new Dictionary<string, object>();
-            changeData["Add"] = true;
-            changeData["Relationship"] = relationship;
-            changeData["RelatedFile"] = relatedFile.ObjectUrl;
-
-            parentFile.FileHandler.SendNotification(
-                parentFile.Owner,
-                "Related file added: " + relatedFile.FullPath + ", relationship: " + relationship,
-                JsonWriter.Serialize(changeData));
+            parentFile.FileHandler.SendLinkNotificationFrom(parentFile.Owner, relatedFile);
 
             parentFile.FileHandler.OnRelationshipAdded(new RelationshipEventArgs(relatedFile, relationship));
         }
@@ -1254,16 +1221,6 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             DatabaseConnection.Relationships.Delete(
                 Relationships_Table.FileId == parentFile.FileId & Relationships_Table.ReferencedFileId == relatedFile.FileId & Relationships_Table.Relationship == relationship);
-
-            Dictionary<string, object> changeData = new Dictionary<string, object>();
-            changeData["Delete"] = true;
-            changeData["Relationship"] = relationship;
-            changeData["RelatedFile"] = relatedFile.ObjectUrl;
-
-            parentFile.FileHandler.SendNotification(
-                parentFile.Owner,
-                "Related file removed: " + relatedFile.FullPath + ", relationship: " + relationship,
-                JsonWriter.Serialize(changeData));
 
             parentFile.FileHandler.OnRelationshipDeleted(new RelationshipEventArgs(relatedFile, relationship));
         }
@@ -1290,11 +1247,6 @@ namespace ObjectCloud.Disk.FileHandlers
 
                 OwnerIdCache[fileId] = newOwnerId;
             }
-
-            if (null != newOwner)
-                SendNotification(changer, "Owner Changed", "New owner: " + newOwner.Name);
-            else
-                SendNotification(changer, "Owner Changed", "");
 
             OnDirectoryChanged();
         }

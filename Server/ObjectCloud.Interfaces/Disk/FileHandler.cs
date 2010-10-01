@@ -6,12 +6,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using System.Xml;
 
 using Common.Logging;
+using JsonFx.Json;
 
 using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Security;
+using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.Interfaces.Disk
 {
@@ -73,9 +76,76 @@ namespace ObjectCloud.Interfaces.Disk
             get { return FileContainer.Filename; }
         }
 
-        public void SendNotification(IUser from, string messageSummary, string changeData)
+        /// <summary>
+        /// Sends a notification
+        /// </summary>
+        /// <param name="recipientIdentities"></param>
+        /// <param name="fileContainer"></param>
+        /// <param name="summaryViewParent">The summary view will be all child nodes</param>
+        /// <param name="documentType"></param>
+        /// <param name="messageSummary"></param>
+        public void SendUpdateNotificationFrom(IUser sender)
         {
-        	// Do not send notifications if the object is incomplete
+            SendNotification(sender, "update", null);
+        }
+
+        /// <summary>
+        /// Sends a notification
+        /// </summary>
+        /// <param name="recipientIdentities"></param>
+        /// <param name="fileContainer"></param>
+        /// <param name="summaryViewParent">The summary view will be all child nodes</param>
+        /// <param name="documentType"></param>
+        /// <param name="messageSummary"></param>
+        public void SendDeleteNotificationFrom(IUser sender)
+        {
+            SendNotification(sender, "delete", null);
+        }
+
+        /// <summary>
+        /// Sends a notification
+        /// </summary>
+        /// <param name="recipientIdentities"></param>
+        /// <param name="fileContainer"></param>
+        /// <param name="summaryViewParent">The summary view will be all child nodes</param>
+        /// <param name="documentType"></param>
+        /// <param name="messageSummary"></param>
+        public void SendShareNotificationFrom(IUser sender)
+        {
+            List<string> recipientIdentities = new List<string>(GetRecipientIdentities());
+            SendNotification(sender, "share", recipientIdentities.ToArray());
+        }
+
+        /// <summary>
+        /// Sends a notification
+        /// </summary>
+        /// <param name="recipientIdentities"></param>
+        /// <param name="fileContainer"></param>
+        /// <param name="summaryViewParent">The summary view will be all child nodes</param>
+        /// <param name="documentType"></param>
+        /// <param name="messageSummary"></param>
+        public void SendLinkNotificationFrom(
+            IUser sender,
+            IFileContainer linkedFileContainer)
+        {
+            Dictionary<string, object> changeData = new Dictionary<string,object>();
+            changeData["URL"] = linkedFileContainer.ObjectUrl;
+            changeData["summaryView"] = GenerateSummaryView(linkedFileContainer);
+            changeData["owner"] = linkedFileContainer.Owner.Identity;
+
+            SendNotification(sender, "link", changeData);
+        }
+
+        private void SendNotification(
+            IUser sender,
+            string verb,
+            object changeData)
+        {
+            // Do not send notifications while the system is starting up
+            if (!FileHandlerFactoryLocator.FileSystemResolver.IsStarted)
+                return;
+
+            // Do not send notifications if the object is incomplete
             if (null == FileContainer)
                 return;
             if (null == FileContainer.ParentDirectoryHandler)
@@ -83,6 +153,73 @@ namespace ObjectCloud.Interfaces.Disk
             if (null == FileHandlerFactoryLocator)
                 return;
 
+            if (null == sender)
+                return;
+
+            // Do not send notifications if the owner is an OpenID
+            // TODO:  Sometime later this might be supported, but it introduces a security concern
+            if (!sender.Local)
+                return;
+
+            Set<string> recipientIdentities = new Set<string>(GetRecipientIdentities());
+
+            // Attempt to get a summary view
+            string summaryView = GenerateSummaryView(FileContainer);
+
+            FileHandlerFactoryLocator.UserManagerHandler.SendNotification(
+                sender,
+                false,
+                recipientIdentities,
+                FileContainer.ObjectUrl,
+                summaryView,
+                null != FileContainer.Extension ? FileContainer.Extension : FileContainer.TypeId,
+                verb,
+                null != changeData ? JsonWriter.Serialize(changeData) : null,
+                30,
+                TimeSpan.FromMinutes(5));
+        }
+
+        private string GenerateSummaryView(IFileContainer fileContainer)
+        {
+            string summaryViewUrl = string.Format("/Shell/SummaryViews/{0}.oc?FileName={1}", fileContainer.Extension, fileContainer.FullPath);
+            ISession session = FileHandlerFactoryLocator.SessionManagerHandler.CreateSession();
+            session.Login(fileContainer.Owner);
+
+            string summaryView;
+            try
+            {
+                IWebConnection webConnection = new BlockingShellWebConnection(
+                    FileHandlerFactoryLocator.WebServer,
+                    session,
+                    summaryViewUrl,
+                    null,
+                    null,
+                    null,
+                    CallingFrom.Web,
+                    WebMethod.GET);
+
+                IWebResults webResults = webConnection.ShellTo(summaryViewUrl);
+
+                XmlDocument xmlDocument = new XmlDocument();
+                using (Stream stream = webResults.ResultsAsStream)
+                    xmlDocument.Load(stream);
+
+                // TODO:  Make this less icky
+                summaryView = xmlDocument.FirstChild.ChildNodes[1].InnerXml;
+            }
+            catch
+            {
+                summaryView = string.Format("<a href=\"{0}\">{0}</a>", FileContainer.ObjectUrl);
+            }
+            finally
+            {
+                FileHandlerFactoryLocator.SessionManagerHandler.EndSession(session.SessionId);
+            }
+            return summaryView;
+        }
+
+        private IEnumerable<string> GetRecipientIdentities()
+        {
             // Load the recipients based on who has permission / owns the file
             IEnumerable<FilePermission> permissions = FileContainer.ParentDirectoryHandler.GetPermissions(FileContainer.Filename);
 
@@ -94,85 +231,11 @@ namespace ObjectCloud.Interfaces.Disk
                     userOrGroupIds.Add(filePermission.UserOrGroupId);
 
             // ... and the owner
-            if (null != FileContainer.OwnerId)
-                userOrGroupIds.Add(FileContainer.OwnerId.Value);
+            userOrGroupIds.Add(FileContainer.OwnerId.Value);
 
-            IEnumerable<IUser> recipients = FileHandlerFactoryLocator.UserManagerHandler.GetUsersAndResolveGroupsToUsers(userOrGroupIds);
-
-            SendNotification(from, recipients, messageSummary, changeData);
-        }
-
-        public void SendNotification(IUser from, IEnumerable<IUser> recipients, string messageSummary, string changeData)
-        {
-            // Do not send notifications while the system is starting up
-            if (!FileHandlerFactoryLocator.FileSystemResolver.IsStarted)
-                return;
-
-        	// Do not send notifications if the object is incomplete
-            if (null == FileContainer)
-                return;
-            if (null == FileContainer.ParentDirectoryHandler)
-                return;
-
-            if (null == from)
-                if (null != FileContainer.OwnerId)
-                    try
-                    {
-                        from = FileHandlerFactoryLocator.UserManagerHandler.GetUser(FileContainer.OwnerId.Value);
-                    }
-                    catch (UnknownUser u)
-                    {
-                        log.Warn("Unknown UserID set as owning a file.", u);
-                        return;
-                    }
-                else return;
-
-            // TODO:  It is unknown how to handle when from is a user that's an OpenId from another server.  Perhaps OAuth?
-            // For now, in these cases, from is re-assigned to be the owner, or the message isn't sent if there is no owner
-
-            else if (!from.Identity.StartsWith("http://" + FileHandlerFactoryLocator.HostnameAndPort + "/Users/"))
-                if (null != FileContainer.OwnerId)
-                {
-                    from = FileHandlerFactoryLocator.UserManagerHandler.GetUser(FileContainer.OwnerId.Value);
-
-                    if (!from.Identity.StartsWith("http://" + FileHandlerFactoryLocator.HostnameAndPort + "/Users/"))
-                        return;
-                }
-                else return;
-
-            IUserHandler fromHandler = from.UserHandler;
-
-            // In some rare cases, the fromHandler can be null when constructing users
-            if (null == fromHandler)
-                return;
-
-            string documentType = FileContainer.TypeId;
-            string extension = FileContainer.Extension;
-            if (null != extension)
-                if (extension.Length > 0)
-                    documentType = extension;
-
-
-            foreach (IUser targetUserI in recipients)
-                ThreadPool.QueueUserWorkItem(delegate(object state)
-                {
-                    try
-                    {
-                        IUser targetUser = (IUser)state;
-
-                        fromHandler.SendNotification(
-                            targetUser.Identity,
-                            FileContainer.ObjectUrl,
-                            Title,
-                            documentType,
-                            messageSummary,
-                            changeData);
-                    }
-                    catch (Exception e)
-                    {
-                        log.Error("Error when sending a notification to " + state.ToString(), e);
-                    }
-                }, targetUserI);
+            IEnumerable<IUser> notificationRecipients = FileHandlerFactoryLocator.UserManagerHandler.GetUsersAndResolveGroupsToUsers(userOrGroupIds);
+            foreach (IUser user in notificationRecipients)
+                yield return user.Identity;
         }
 
         public virtual void SyncFromLocalDisk(string localDiskPath, bool force)

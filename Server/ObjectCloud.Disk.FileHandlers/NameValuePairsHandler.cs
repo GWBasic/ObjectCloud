@@ -62,21 +62,8 @@ namespace ObjectCloud.Disk.FileHandlers
             else
                 messageSummary = name + " removed.";
 
-            Dictionary<string, object> changeData = new Dictionary<string, object>();
-            if (null != value)
-            {
-                changeData["action"] = added ? "add" : "update";
-                changeData["name"] = name;
-                changeData["value"] = value;
-            }
-            else
-            {
-                changeData["action"] = "delete";
-                changeData["name"] = name;
-            }
-
             // TODO, figure out a way to describe the change in the changedata
-            SendNotification(changer, messageSummary, JsonFx.Json.JsonWriter.Serialize(changeData));
+            SendUpdateNotificationFrom(changer);
         }
 
         public bool Contains(string key)
@@ -88,8 +75,7 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             DatabaseConnection.Pairs.Delete();
 
-            // TODO, figure out a way to describe the change in the changedata
-            SendNotification(changer, "Cleared", null);
+            SendUpdateNotificationFrom(changer);
         }
 
         public IEnumerator<KeyValuePair<string, string>> GetEnumerator()
@@ -128,8 +114,7 @@ namespace ObjectCloud.Disk.FileHandlers
                 transaction.Commit();
             });
 
-            // TODO, figure out a way to describe the change in the changedata
-            SendNotification(changer, "Updated", null);
+            SendUpdateNotificationFrom(changer);
         }
 
         public override void Dump(string path, ID<IUserOrGroup, Guid> userId)

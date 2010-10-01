@@ -14,6 +14,7 @@ using System.Threading;
 using System.Xml;
 
 using ExtremeSwank.OpenId;
+using JsonFx.Json;
 
 using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
@@ -29,6 +30,11 @@ namespace ObjectCloud.Disk.FileHandlers
 {
     public partial class UserManagerHandler
     {
+        // TODO
+        // A lot of the logic in this file that's not tied to the DB should move someplace else so that independent implementations can use it
+
+
+
         /// <summary>
         /// Gets information about recipients for sending a notification
         /// </summary>
@@ -38,14 +44,14 @@ namespace ObjectCloud.Disk.FileHandlers
         public void GetRecipientInfos(
             IUserOrGroup sender,
             bool forceRefresh, 
-            IEnumerable<string> openIdOrWebFingersEnum, 
+            IEnumerable<string> recipientIdentitiesArg, 
             GenericArgument<RecipientInfo> callback,
             GenericArgument<IEnumerable<string>> errorCallback,
             GenericArgument<Exception> exceptionCallback)
         {
-            Set<string> openIdOrWebFingers = new Set<string>(openIdOrWebFingersEnum);
+            Set<string> recipientIdentities = new Set<string>(recipientIdentitiesArg);
 
-            long outstandingRequests = openIdOrWebFingers.Count;
+            long outstandingRequests = recipientIdentities.Count;
 
             LockFreeQueue<Endpoints> loadedEndpoints = new LockFreeQueue<Endpoints>();
 
@@ -54,16 +60,16 @@ namespace ObjectCloud.Disk.FileHandlers
                 loadedEndpoints.Enqueue(endpoints);
 
                 if (0 == Interlocked.Decrement(ref outstandingRequests))
-                    GetRecipientInfos(sender, openIdOrWebFingers, loadedEndpoints, callback, errorCallback, exceptionCallback);
+                    GetRecipientInfos(sender, forceRefresh, recipientIdentities, loadedEndpoints, callback, errorCallback, exceptionCallback);
             };
 
             GenericArgument<Exception> endpointException = delegate(Exception e)
             {
                 if (0 == Interlocked.Decrement(ref outstandingRequests))
-                    GetRecipientInfos(sender, openIdOrWebFingers, loadedEndpoints, callback, errorCallback, exceptionCallback);
+                    GetRecipientInfos(sender, forceRefresh, recipientIdentities, loadedEndpoints, callback, errorCallback, exceptionCallback);
             };
 
-            foreach (string openIdOrWebFinger in openIdOrWebFingers)
+            foreach (string openIdOrWebFinger in recipientIdentities)
                 Endpoints.GetEndpoints(openIdOrWebFinger, forceRefresh, endpointLoaded, endpointException);
         }
 
@@ -71,12 +77,13 @@ namespace ObjectCloud.Disk.FileHandlers
         /// Continues to get more information about recipients after all information about endpoints is loaded
         /// </summary>
         /// <param name="sender"></param>
-        /// <param name="openIdOrWebFingers"></param>
+        /// <param name="recipientIdentities"></param>
         /// <param name="loadedEndpoints"></param>
         /// <param name="callback"></param>
         private void GetRecipientInfos(
-            IUserOrGroup sender, 
-            Set<string> openIdOrWebFingers, 
+            IUserOrGroup sender,
+            bool forceRefresh,
+            Set<string> recipientIdentities, 
             LockFreeQueue<Endpoints> loadedEndpoints,
             GenericArgument<RecipientInfo> callback,
             GenericArgument<IEnumerable<string>> errorCallback,
@@ -106,19 +113,22 @@ namespace ObjectCloud.Disk.FileHandlers
                     }
                 }
 
-                // Load for situations where trust is already established
-                foreach (IRecipient_Readable recipient in DatabaseConnection.Recipient.Select(
-                    Recipient_Table.receiveNotificationEndpoint.In(recipientsAtEndpoints.Keys) &
-                    Recipient_Table.userID == sender.Id))
+                if (!forceRefresh)
                 {
-                    RecipientInfo recipientInfo = new RecipientInfo();
-                    recipientInfo.OpenIdOrWebFingers = recipientsAtEndpoints[recipient.receiveNotificationEndpoint];
-                    recipientInfo.RecieveNotificationEndpoint = recipient.receiveNotificationEndpoint;
-                    recipientInfo.SenderToken = recipient.senderToken;
+                    // Load for situations where trust is already established
+                    foreach (IRecipient_Readable recipient in DatabaseConnection.Recipient.Select(
+                        Recipient_Table.receiveNotificationEndpoint.In(recipientsAtEndpoints.Keys) &
+                        Recipient_Table.userID == sender.Id))
+                    {
+                        RecipientInfo recipientInfo = new RecipientInfo();
+                        recipientInfo.RecipientIdentities = recipientsAtEndpoints[recipient.receiveNotificationEndpoint];
+                        recipientInfo.RecieveNotificationEndpoint = recipient.receiveNotificationEndpoint;
+                        recipientInfo.SenderToken = recipient.senderToken;
 
-                    recipientsAtEndpoints.Remove(recipient.receiveNotificationEndpoint);
+                        recipientsAtEndpoints.Remove(recipient.receiveNotificationEndpoint);
 
-                    callback(recipientInfo);
+                        callback(recipientInfo);
+                    }
                 }
 
                 // For situations where trust isn't established, establish trust and then use the callback
@@ -155,7 +165,7 @@ namespace ObjectCloud.Disk.FileHandlers
             BeginEstablishTrust(sender, receiveNotificationEndpoint, establishTrustEndpoint, delegate(string senderToken)
             {
                 RecipientInfo recipientInfo = new RecipientInfo();
-                recipientInfo.OpenIdOrWebFingers = recipients;
+                recipientInfo.RecipientIdentities = recipients;
                 recipientInfo.RecieveNotificationEndpoint = receiveNotificationEndpoint;
                 recipientInfo.SenderToken = senderToken;
 
@@ -381,6 +391,146 @@ namespace ObjectCloud.Disk.FileHandlers
                 senderIdendity = sender.identity;
                 return true;
             }
+        }
+
+        public void SendNotification(
+            IUser sender,
+            bool forceRefresh,
+            IEnumerable<string> recipientIdentities,
+            string objectUrl,
+            string summaryView,
+            string documentType,
+            string verb,
+            string changeData,
+            int maxRetries,
+            TimeSpan transportErrorDelay)
+        {
+            foreach (string recipientIdentity in recipientIdentities)
+                GetRecipientInfos(
+                    sender,
+                    forceRefresh,
+                    recipientIdentities,
+                    delegate(RecipientInfo recipientInfo)
+                    {
+                        SendNotification(
+                            sender,
+                            recipientInfo,
+                            objectUrl,
+                            summaryView,
+                            documentType,
+                            verb,
+                            changeData,
+                            maxRetries,
+                            transportErrorDelay);
+                    },
+                    delegate(IEnumerable<string> erroniousRecipientIdentities)
+                    {
+                        if (maxRetries > 0)
+                        {
+                            log.Warn(
+                                "Could not get recipient information for " + StringGenerator.GenerateCommaSeperatedList(erroniousRecipientIdentities) + ", retrying");
+
+                            ThreadPool.QueueUserWorkItem(delegate(object state)
+                            {
+                                Thread.Sleep(transportErrorDelay);
+
+                                SendNotification(
+                                    sender,
+                                    true,
+                                    erroniousRecipientIdentities,
+                                    objectUrl,
+                                    summaryView,
+                                    documentType,
+                                    verb,
+                                    changeData,
+                                    maxRetries - 1,
+                                    transportErrorDelay);
+                            });
+                        }
+                        else
+                            log.Warn(
+                                "Could not get recipient information for " + StringGenerator.GenerateCommaSeperatedList(erroniousRecipientIdentities) + ", no more retries left");
+                    },
+                    delegate(Exception e)
+                    {
+                        log.Warn("Unhandled exception when sending a notification for " + objectUrl + ", no more information is known", e);
+                    });
+        }
+
+        public void SendNotification(
+            IUser sender,
+            RecipientInfo recipientInfo,
+            string objectUrl,
+            string summaryView,
+            string documentType,
+            string verb,
+            string changeData,
+            int maxRetries,
+            TimeSpan transportErrorDelay)
+        {
+            HttpWebClient webClient = new HttpWebClient();
+
+            GenericVoid retry = delegate()
+            {
+                if (maxRetries > 0)
+                    ThreadPool.QueueUserWorkItem(delegate(object state)
+                    {
+                        Thread.Sleep(transportErrorDelay);
+
+                        SendNotification(
+                            sender,
+                            recipientInfo,
+                            objectUrl,
+                            summaryView,
+                            documentType,
+                            verb,
+                            changeData,
+                            maxRetries - 1,
+                            transportErrorDelay);
+                    });
+            };
+
+            webClient.BeginPost(
+                recipientInfo.RecieveNotificationEndpoint,
+                delegate(HttpResponseHandler response)
+                {
+                    string responseString = response.AsString();
+
+                    if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                    // success!
+                    { }
+
+                    else if (response.StatusCode == System.Net.HttpStatusCode.Accepted)
+                        // errors
+                        log.Warn("Errors occured when sending a notification: " + responseString);
+
+                    else if (response.StatusCode == System.Net.HttpStatusCode.PreconditionFailed && "senderToken" == responseString)
+                    {
+                        SendNotification(
+                            sender,
+                            true,
+                            recipientInfo.RecipientIdentities,
+                            objectUrl,
+                            summaryView,
+                            documentType,
+                            verb,
+                            changeData,
+                            maxRetries,
+                            transportErrorDelay);
+                    }
+                    else
+                        retry();
+                },
+                delegate(Exception e)
+                {
+                },
+                new KeyValuePair<string, string>("senderToken", recipientInfo.SenderToken),
+                new KeyValuePair<string, string>("recipients", JsonWriter.Serialize(recipientInfo.RecipientIdentities)),
+                new KeyValuePair<string, string>("objectUrl", objectUrl),
+                new KeyValuePair<string, string>("summaryView", summaryView),
+                new KeyValuePair<string, string>("documentType", documentType),
+                new KeyValuePair<string, string>("verb", verb),
+                new KeyValuePair<string, string>("changeData", changeData));
         }
     }
 }
