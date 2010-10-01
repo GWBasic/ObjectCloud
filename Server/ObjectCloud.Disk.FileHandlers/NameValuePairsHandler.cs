@@ -35,15 +35,11 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public void Set(IUser changer, string name, string value)
         {
-            bool added = false;
-
             DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
             {
                 // Not sure if it's worth trying to update as opposed to delete...
                 // Update might be faster, but right now the data access system doesn't support it!
                 int numRowsDeleted = DatabaseConnection.Pairs.Delete(Pairs_Table.Name == name);
-
-                added = numRowsDeleted == 0;
 
                 if (null != value)
                     DatabaseConnection.Pairs.Insert(delegate(IPairs_Writable pair)
@@ -54,13 +50,6 @@ namespace ObjectCloud.Disk.FileHandlers
 
                 transaction.Commit();
             });
-
-            // send notification
-            string messageSummary;
-            if (null != value)
-                messageSummary = name + " updated to " + value;
-            else
-                messageSummary = name + " removed.";
 
             // TODO, figure out a way to describe the change in the changedata
             SendUpdateNotificationFrom(changer);

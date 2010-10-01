@@ -405,57 +405,56 @@ namespace ObjectCloud.Disk.FileHandlers
             int maxRetries,
             TimeSpan transportErrorDelay)
         {
-            foreach (string recipientIdentity in recipientIdentities)
-                GetRecipientInfos(
-                    sender,
-                    forceRefresh,
-                    recipientIdentities,
-                    delegate(RecipientInfo recipientInfo)
+            GetRecipientInfos(
+                sender,
+                forceRefresh,
+                recipientIdentities,
+                delegate(RecipientInfo recipientInfo)
+                {
+                    SendNotification(
+                        sender,
+                        recipientInfo,
+                        objectUrl,
+                        summaryView,
+                        documentType,
+                        verb,
+                        changeData,
+                        maxRetries,
+                        transportErrorDelay);
+                },
+                delegate(IEnumerable<string> erroniousRecipientIdentities)
+                {
+                    if (maxRetries > 0)
                     {
-                        SendNotification(
-                            sender,
-                            recipientInfo,
-                            objectUrl,
-                            summaryView,
-                            documentType,
-                            verb,
-                            changeData,
-                            maxRetries,
-                            transportErrorDelay);
-                    },
-                    delegate(IEnumerable<string> erroniousRecipientIdentities)
-                    {
-                        if (maxRetries > 0)
+                        log.Warn(
+                            "Could not get recipient information for " + StringGenerator.GenerateCommaSeperatedList(erroniousRecipientIdentities) + ", retrying");
+
+                        ThreadPool.QueueUserWorkItem(delegate(object state)
                         {
-                            log.Warn(
-                                "Could not get recipient information for " + StringGenerator.GenerateCommaSeperatedList(erroniousRecipientIdentities) + ", retrying");
+                            Thread.Sleep(transportErrorDelay);
 
-                            ThreadPool.QueueUserWorkItem(delegate(object state)
-                            {
-                                Thread.Sleep(transportErrorDelay);
-
-                                SendNotification(
-                                    sender,
-                                    true,
-                                    erroniousRecipientIdentities,
-                                    objectUrl,
-                                    summaryView,
-                                    documentType,
-                                    verb,
-                                    changeData,
-                                    maxRetries - 1,
-                                    transportErrorDelay);
-                            });
-                        }
-                        else
-                            log.Warn(
-                                "Could not get recipient information for " + StringGenerator.GenerateCommaSeperatedList(erroniousRecipientIdentities) + ", no more retries left");
-                    },
-                    delegate(Exception e)
-                    {
-                        log.Warn("Unhandled exception when sending a notification for " + objectUrl + ", no more information is known", e);
-                    });
-        }
+                            SendNotification(
+                                sender,
+                                true,
+                                erroniousRecipientIdentities,
+                                objectUrl,
+                                summaryView,
+                                documentType,
+                                verb,
+                                changeData,
+                                maxRetries - 1,
+                                transportErrorDelay);
+                        });
+                    }
+                    else
+                        log.Warn(
+                            "Could not get recipient information for " + StringGenerator.GenerateCommaSeperatedList(erroniousRecipientIdentities) + ", no more retries left");
+                },
+                delegate(Exception e)
+                {
+                    log.Warn("Unhandled exception when sending a notification for " + objectUrl + ", no more information is known", e);
+                });
+		}
 
         public void SendNotification(
             IUser sender,

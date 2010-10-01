@@ -20,7 +20,7 @@ namespace ObjectCloud.Disk.FileHandlers
 {
     public class UserHandler : HasDatabaseFileHandler<IDatabaseConnector, IDatabaseConnection, IDatabaseTransaction>, IUserHandler
     {
-        static ILog log = LogManager.GetLogger<UserHandler>();
+        //static ILog log = LogManager.GetLogger<UserHandler>();
 
         public UserHandler(IDatabaseConnector databaseConnector, FileHandlerFactoryLocator fileHandlerFactoryLocator)
             : base(databaseConnector, fileHandlerFactoryLocator) { }
@@ -296,7 +296,8 @@ namespace ObjectCloud.Disk.FileHandlers
 
             DateTime timestamp = DateTime.UtcNow;
 
-            long notificationId = DatabaseConnection.Notification.InsertAndReturnPK<long>(delegate(INotification_Writable notification)
+            //long notificationId = 
+			DatabaseConnection.Notification.InsertAndReturnPK<long>(delegate(INotification_Writable notification)
             {
                 notification.ChangeData = changeData;
                 notification.DocumentType = documentType;

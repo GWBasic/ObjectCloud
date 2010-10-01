@@ -186,11 +186,11 @@ namespace ObjectCloud.Disk.FileHandlers
             IFileHandler toReturn = FileHandlerFactoryLocator.FileSystemResolver.LoadFile(fileId, fileType);
             toReturn.FileContainer = new FileContainer(fileId, fileType, filename, this, FileHandlerFactoryLocator, created);
 
-            IUser changer = null;
+            /*IUser changer = null;
             if (null != ownerId)
                 changer = FileHandlerFactoryLocator.UserManagerHandler.GetUserNoException(ownerId.Value);
 
-            /*/ TODO:  Some change data would be cool
+            // TODO:  Some change data would be cool
             SendNotification(changer, filename + " created", null);
 
             // Send the owner a notification so that the object shows up in the notification window
@@ -309,11 +309,9 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public void SetPermission(ID<IUserOrGroup, Guid>? assigningPermission, string filename, ID<IUserOrGroup, Guid> userOrGroupId, FilePermissionEnum level, bool inherit, bool sendNotifications)
         {
-            bool updated = false;
-
             DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
             {
-                updated = SetPermissionOnTransaction(assigningPermission, filename, userOrGroupId, level, inherit, sendNotifications, transaction);
+                SetPermissionOnTransaction(assigningPermission, filename, userOrGroupId, level, inherit, sendNotifications, transaction);
                 transaction.Commit();
             });
 
@@ -1232,9 +1230,8 @@ namespace ObjectCloud.Disk.FileHandlers
 				throw new FileDoesNotExist("ID: " + fileId.ToString());
 
             // Verify that the new owner exists
-            IUser newOwner = null;
             if (null != newOwnerId)
-                newOwner = FileHandlerFactoryLocator.UserManagerHandler.GetUser(newOwnerId.Value);
+                FileHandlerFactoryLocator.UserManagerHandler.GetUser(newOwnerId.Value);
 
             using (TimedLock.Lock(this))
             {
