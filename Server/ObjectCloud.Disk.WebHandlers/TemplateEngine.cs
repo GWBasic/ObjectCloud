@@ -453,11 +453,12 @@ namespace ObjectCloud.Disk.WebHandlers
                                 {
                                     src = src.Split('?')[0];
 
-                                    if (!templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.IsFilePresent(src))
-                                    {
-                                        node.InnerText = "alert('" + (src + " doesn't exist: " + node.OuterXml).Replace("'", "\\'") + "');";
-                                        node.RemoveAttribute("src");
-                                    }
+                                    if (!src.Contains("[")) // quick hack so scripts can contain [user]
+                                        if (!templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.IsFilePresent(src))
+                                        {
+                                            node.InnerText = "alert('" + (src + " doesn't exist: " + node.OuterXml).Replace("'", "\\'") + "');";
+                                            node.RemoveAttribute("src");
+                                        }
                                 }
                     }
             }

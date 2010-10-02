@@ -337,39 +337,44 @@ namespace ObjectCloud.Disk.WebHandlers
             foreach (Dictionary<NotificationColumn, object> notificationFromDB in FileHandler.GetNotifications(
                 newestNotificationId, oldestNotificationId, maxNotifications, objectUrls, senderIdentities, desiredValuesSet))
             {
-                Dictionary<string, object> notification = new Dictionary<string, object>();
-                foreach (KeyValuePair<NotificationColumn, object> kvp in notificationFromDB)
-                    notification[NotificationColumnToParticleSpec[kvp.Key]] = kvp.Value;
-
-                if (includeAvatarUrl)
-                {
-                    IUserOrGroup senderUserOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupOrOpenId(
-                        notificationFromDB[NotificationColumn.SenderIdentity].ToString());
-
-                    if (senderUserOrGroup is IUser)
-                    {
-                        IUser senderUser = (IUser)senderUserOrGroup;
-
-                        if (senderUser.Local)
-                            notification["senderAvatarUrl"] = senderUser.Identity + "?Method=GetAvatar";
-                        else
-                            notification["senderAvatarUrl"] = string.Format(
-                                "{0}/{1}.jpg",
-                                ParticleAvatarsDirectory.FileContainer.ObjectUrl,
-                                senderUser.Id.ToString());
-                    }
-                    else
-                        notification["senderAvatarUrl"] = "";
-                }
-
-                notification["ignored"] = false;
-
+                Dictionary<string, object> notification = ConvertNotificationFromDBToNotificationForWeb(includeAvatarUrl, notificationFromDB);
                 toReturn.Add(notification);
             }
 
             // TODO:  sender avatar and ignored
 
             return WebResults.ToJson(toReturn);
+        }
+
+        private Dictionary<string, object> ConvertNotificationFromDBToNotificationForWeb(bool includeAvatarUrl, Dictionary<NotificationColumn, object> notificationFromDB)
+        {
+            Dictionary<string, object> notification = new Dictionary<string, object>();
+            foreach (KeyValuePair<NotificationColumn, object> kvp in notificationFromDB)
+                notification[NotificationColumnToParticleSpec[kvp.Key]] = kvp.Value;
+
+            if (includeAvatarUrl)
+            {
+                IUserOrGroup senderUserOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupOrOpenId(
+                    notificationFromDB[NotificationColumn.SenderIdentity].ToString());
+
+                if (senderUserOrGroup is IUser)
+                {
+                    IUser senderUser = (IUser)senderUserOrGroup;
+
+                    if (senderUser.Local)
+                        notification["senderAvatarUrl"] = senderUser.Identity + "?Method=GetAvatar";
+                    else
+                        notification["senderAvatarUrl"] = string.Format(
+                            "{0}/{1}.jpg",
+                            ParticleAvatarsDirectory.FileContainer.ObjectUrl,
+                            senderUser.Id.ToString());
+                }
+                else
+                    notification["senderAvatarUrl"] = "";
+            }
+
+            notification["ignored"] = false;
+            return notification;
         }
 
         /// <summary>
@@ -397,7 +402,8 @@ namespace ObjectCloud.Disk.WebHandlers
 
         void FileHandler_NotificationRecieved(IUserHandler sender, EventArgs<Dictionary<NotificationColumn, object>> e)
         {
-            _IncomingNotificationEvent.SendAll(e.Value);
+            Dictionary<string, object> notification = ConvertNotificationFromDBToNotificationForWeb(true, e.Value);
+            _IncomingNotificationEvent.SendAll(notification);
         }
     }
 }
