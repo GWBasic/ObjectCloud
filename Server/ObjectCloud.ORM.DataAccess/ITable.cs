@@ -88,5 +88,13 @@ namespace ObjectCloud.ORM.DataAccess
         /// <param name="writeDelegate"></param>
         /// <returns></returns>
         int Update(ComparisonCondition condition, DataAccessDelegate<T_Writable> writeDelegate);
+
+        /// <summary>
+        /// Updates the items in the table that match the condition.  If no items in the table match the condition, then inserts an item.  See restrictions on the condition
+        /// </summary>
+        /// <param name="condition">Must only be ==.  Multiple columns supported only with &.  No duplicate columns allowed</param>
+        /// <param name="writeDelegate"></param>
+        /// <returns></returns>
+        void Upsert(ComparisonCondition condition, DataAccessDelegate<T_Writable> writeDelegate);
     }
 }

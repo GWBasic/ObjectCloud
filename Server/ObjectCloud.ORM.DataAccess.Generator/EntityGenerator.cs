@@ -91,9 +91,9 @@ namespace ObjectCloud.ORM.DataAccess.Generator
                 yield return "\t}\n";
                 yield return "\n";
 
-                yield return "\tpublic abstract partial class " + table.Name + "_Table : ITable<I" + table.Name + "_Writable, I" + table.Name + "_Readable>\n";
+                yield return "\tpublic abstract partial class " + table.Name + "_Table : Table<I" + table.Name + "_Writable, I" + table.Name + "_Readable, " + table.Name + "_Table." + table.Name + "_Inserter>\n";
                 yield return "\t{\n";
-                yield return "\t\tpublic void Insert(DataAccessDelegate<I" + table.Name + "_Writable> writeDelegate)\n";
+                yield return "\t\tpublic override void Insert(DataAccessDelegate<I" + table.Name + "_Writable> writeDelegate)\n";
                 yield return "\t\t{\n";
                 yield return "\t\t\t" + table.Name + "_Inserter inserter = new " + table.Name + "_Inserter();\n";
                 yield return "\t\t\twriteDelegate(inserter);\n";
@@ -104,7 +104,7 @@ namespace ObjectCloud.ORM.DataAccess.Generator
                 yield return "\t\t\n";
                 yield return "\t\tprotected abstract void DoInsert(" + table.Name + "_Inserter inserter);\n";
                 yield return "\t\t\n";
-                yield return "\t\tpublic TKey InsertAndReturnPK<TKey>(DataAccessDelegate<I" + table.Name + "_Writable> writeDelegate)\n";
+                yield return "\t\tpublic override TKey InsertAndReturnPK<TKey>(DataAccessDelegate<I" + table.Name + "_Writable> writeDelegate)\n";
                 yield return "\t\t{\n";
                 yield return "\t\t\t" + table.Name + "_Inserter inserter = new " + table.Name + "_Inserter();\n";
                 yield return "\t\t\twriteDelegate(inserter);\n";
@@ -115,45 +115,12 @@ namespace ObjectCloud.ORM.DataAccess.Generator
                 yield return "\t\t\n";
                 yield return "\t\tprotected abstract TKey DoInsertAndReturnPrimaryKey<TKey>(" + table.Name + "_Inserter inserter);\n";
                 yield return "\t\t\n";
-                yield return "\t\tpublic abstract IEnumerable<I" + table.Name + "_Readable> Select(ComparisonCondition condition, uint? max, OrderBy sortOrder, params Column[] orderBy);\n";
-                yield return "\t\t\n";
-                yield return "\t\tpublic IEnumerable<I" + table.Name + "_Readable> Select(ComparisonCondition condition)\n";
-                yield return "\t\t{\n";
-                yield return "\t\t\treturn Select(condition, null, default(OrderBy), null);\n";
-                yield return "\t\t}\n";
-                yield return "\t\t\n";
-                yield return "\t\tpublic IEnumerable<I" + table.Name + "_Readable> Select()\n";
-                yield return "\t\t{\n";
-                yield return "\t\t\treturn Select(null, null, default(OrderBy), null);\n";
-                yield return "\t\t}\n";
-                yield return "\t\t\n";
-                yield return "\t\tpublic I" + table.Name + "_Readable SelectSingle(ComparisonCondition condition)\n";
-                yield return "\t\t{\n";
-                yield return "\t\t\tIEnumerator<I" + table.Name + "_Readable> results = Select(condition).GetEnumerator();\n";
-                yield return "\t\t\t\n";
-                yield return "\t\t\tif (!results.MoveNext())\n";
-                yield return "\t\t\t\treturn default(I" + table.Name + "_Readable);\n";
-                yield return "\t\t\t\n";
-                yield return "\t\t\tI" + table.Name + "_Readable result = results.Current;\n";
-                yield return "\t\t\t\n";
-                yield return "\t\t\tif (results.MoveNext())\n";
-                yield return "\t\t\t\tthrow new QueryException(\"More then one object returned\");\n";
-                yield return "\t\t\treturn result;\n";
-                yield return "\t\t}\n";
-                yield return "\t\t\n";
-                yield return "\t\tpublic abstract int Delete(ComparisonCondition condition);\n";
-                yield return "\t\t\n";
-                yield return "\t\tpublic int Delete()\n";
-                yield return "\t\t{\n";
-                yield return "\t\t\treturn Delete(null);\n";
-                yield return "\t\t}\n";
-                yield return "\t\t\n";
-                yield return "\t\tpublic int Update(DataAccessDelegate<I" + table.Name + "_Writable> writeDelegate)\n";
+                yield return "\t\tpublic override int Update(DataAccessDelegate<I" + table.Name + "_Writable> writeDelegate)\n";
                 yield return "\t\t{\n";
                 yield return "\t\t\treturn Update(null, writeDelegate);\n";
                 yield return "\t\t}\n";
                 yield return "\t\t\n";
-                yield return "\t\tpublic int Update(ComparisonCondition condition, DataAccessDelegate<I" + table.Name + "_Writable> writeDelegate)\n";
+                yield return "\t\tpublic override int Update(ComparisonCondition condition, DataAccessDelegate<I" + table.Name + "_Writable> writeDelegate)\n";
                 yield return "\t\t{\n";
                 yield return "\t\t\t" + table.Name + "_Inserter inserter = new " + table.Name + "_Inserter();\n";
                 yield return "\t\t\twriteDelegate(inserter);\n";
@@ -178,7 +145,7 @@ namespace ObjectCloud.ORM.DataAccess.Generator
                 }
 
                 yield return "\t\t\n";
-                yield return "\t\tprotected class " + table.Name + "_Inserter : I" + table.Name + "_Writable\n";
+                yield return "\t\tpublic class " + table.Name + "_Inserter : I" + table.Name + "_Writable\n";
                 yield return "\t\t{\n";
 
                 foreach (Column column in table.Columns)
