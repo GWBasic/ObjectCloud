@@ -358,7 +358,13 @@ namespace ObjectCloud.ORM.DataAccess.Generator.SqLite
                 yield return "\t\t{\n";
 
                 foreach (Column column in table.Columns)
-                    yield return "\t\t\t" + baseClassNamespace + "." + table.Name + "_Table._" + column.Name + " = ObjectCloud.ORM.DataAccess.Column.Construct<" + table.Name + "_Table, I" + table.Name + "_Writable, I" + table.Name + "_Readable>(\"" + column.Name + "\");\n";
+                {
+                    yield return "\t\t\t" + baseClassNamespace + "." + table.Name + "_Table._" + column.Name + " = ObjectCloud.ORM.DataAccess.Column.Construct<" + table.Name + "_Table, I" + table.Name + "_Writable, I" + table.Name + "_Readable>(\"" + column.Name + "\",\n";
+                    yield return "\t\t\t\tdelegate(object writable, object value)\n";
+                    yield return "\t\t\t\t{\n";
+                    yield return "\t\t\t\t\t((I" + table.Name + "_Writable)writable)." + column.Name + " = (" + StringGenerator.GenerateTypeName(column.Type.ResolvedType) + ")value;\n";
+                    yield return "\t\t\t\t});\n";
+                }
 
                 yield return "\t\t}\n";
                 yield return "\t\t\n";

@@ -309,7 +309,11 @@ PRAGMA user_version = 2;
 
 		static TestTable_Table()
 		{
-			ObjectCloud.ORM.DataAccess.Test.TestTable_Table._TestColumn = ObjectCloud.ORM.DataAccess.Column.Construct<TestTable_Table, ITestTable_Writable, ITestTable_Readable>("TestColumn");
+			ObjectCloud.ORM.DataAccess.Test.TestTable_Table._TestColumn = ObjectCloud.ORM.DataAccess.Column.Construct<TestTable_Table, ITestTable_Writable, ITestTable_Readable>("TestColumn",
+				delegate(object writable, object value)
+				{
+					((ITestTable_Writable)writable).TestColumn = (System.String)value;
+				});
 		}
 		
 		internal DbConnection Connection;

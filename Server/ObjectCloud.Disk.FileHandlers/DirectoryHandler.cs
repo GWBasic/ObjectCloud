@@ -163,6 +163,7 @@ namespace ObjectCloud.Disk.FileHandlers
                         file.TypeId = fileType;
                         file.OwnerId = ownerId;
                         file.Created = created;
+                        file.Extension = GetExtensionFromFilename(filename);
                     });
 
                     // Create the file within the transaction.  This way, if there's an exception, the transaction
@@ -205,6 +206,18 @@ namespace ObjectCloud.Disk.FileHandlers
             OnDirectoryChanged();
 
             return toReturn;
+        }
+
+        private static string GetExtensionFromFilename(string filename)
+        {
+            string extension;
+            int lastDot = filename.LastIndexOf('.');
+            if (lastDot >= 0)
+                extension = filename.Substring(lastDot + 1);
+            else
+                extension = "";
+
+            return extension;
         }
 
         /// <summary>
@@ -881,6 +894,7 @@ namespace ObjectCloud.Disk.FileHandlers
                     delegate(IFile_Writable file)
                     {
                         file.Name = newFilename;
+                        file.Extension = GetExtensionFromFilename(newFilename);
                     });
 
                 transaction.Commit();

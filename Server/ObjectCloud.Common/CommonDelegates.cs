@@ -9,10 +9,15 @@ namespace ObjectCloud.Common
 	/// </summary>
 	public delegate void GenericVoid();
 
-	/// <summary>
-	/// A delegate that takes a generic argument and returns a void
-	/// </summary>
-	public delegate void GenericArgument<T>(T arg);
+    /// <summary>
+    /// A delegate that takes a generic argument and returns a void
+    /// </summary>
+    public delegate void GenericArgument<T>(T arg);
+
+    /// <summary>
+    /// A delegate that takes two generic arguments and returns a void
+    /// </summary>
+    public delegate void GenericArgument<T, TT>(T arg, TT arg2);
 
 	/// <summary>
 	/// A delegate that takes a no argument and returns a generic

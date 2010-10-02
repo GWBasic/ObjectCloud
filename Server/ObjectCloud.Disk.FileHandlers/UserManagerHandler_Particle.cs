@@ -334,7 +334,18 @@ namespace ObjectCloud.Disk.FileHandlers
             string loginUrlWebFinger,
             string loginUrlRedirect)
         {
-            if (null != DatabaseConnection.Sender.SelectSingle(Sender_Table.identity == senderIdentity))
+            DatabaseConnection.Sender.Upsert(
+                Sender_Table.identity == senderIdentity,
+                delegate(ISender_Writable senderEntry)
+                {
+                    senderEntry.loginURL = loginUrl;
+                    senderEntry.loginURLOpenID = loginUrlOpenID;
+                    senderEntry.loginURLRedirect = loginUrlRedirect;
+                    senderEntry.loginURLWebFinger = loginUrlWebFinger;
+                    senderEntry.senderToken = senderToken;
+                });
+
+            /*if (null != DatabaseConnection.Sender.SelectSingle(Sender_Table.identity == senderIdentity))
                 DatabaseConnection.Sender.Update(
                     Sender_Table.identity == senderIdentity,
                     delegate(ISender_Writable senderEntry)
@@ -354,7 +365,7 @@ namespace ObjectCloud.Disk.FileHandlers
                     senderEntry.loginURLWebFinger = loginUrlWebFinger;
                     senderEntry.senderToken = senderToken;
                     senderEntry.identity = senderIdentity;
-                });
+                });*/
         }
 
         /// <summary>

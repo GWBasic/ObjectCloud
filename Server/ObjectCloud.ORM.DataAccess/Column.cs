@@ -7,16 +7,20 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
+using ObjectCloud.Common;
 using ObjectCloud.ORM.DataAccess.WhereConditionals;
 
 namespace ObjectCloud.ORM.DataAccess
 {
     public class Column
     {
-        public static Column Construct<TTable, T_Writable, T_Readable>(string name)
+        public static Column Construct<TTable, T_Writable, T_Readable>(string name, GenericArgument<object, object> writeDelegate)
             where TTable : ITable<T_Writable, T_Readable>
         {
-            return new Column(name, typeof(TTable));
+            Column toReturn = new Column(name, typeof(TTable));
+            toReturn.WriteDelegate = writeDelegate;
+
+            return toReturn;
         }
 
         private Column(string name, Type table)
@@ -42,6 +46,12 @@ namespace ObjectCloud.ORM.DataAccess
             get { return _Table; }
         }
         private readonly Type _Table;
+
+        public void Write(object writer, object value)
+        {
+            WriteDelegate(writer, value);
+        }
+        private GenericArgument<object, object> WriteDelegate;
 		
 		/// <summary>
 		/// Specifies that a query includes values from this column in the given values 
