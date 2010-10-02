@@ -11,11 +11,27 @@ using ObjectCloud.ORM.DataAccess.WhereConditionals;
 namespace ObjectCloud.ORM.DataAccess
 {
     public abstract class Table<T_Writable, T_Readable, T_Inserter> : ITable<T_Writable, T_Readable>
-        where T_Inserter : T_Writable
+        where T_Inserter : T_Writable, new()
     {
-        public abstract void Insert(DataAccessDelegate<T_Writable> writeDelegate);
+        public void Insert(DataAccessDelegate<T_Writable> writeDelegate)
+        {
+            T_Inserter inserter = new T_Inserter();
+            writeDelegate(inserter);
 
-        public abstract TKey InsertAndReturnPK<TKey>(DataAccessDelegate<T_Writable> writeDelegate);
+            DoInsert(inserter);
+        }
+
+        protected abstract void DoInsert(T_Inserter inserter);
+
+        public TKey InsertAndReturnPK<TKey>(DataAccessDelegate<T_Writable> writeDelegate)
+        {
+            T_Inserter inserter = new T_Inserter();
+            writeDelegate(inserter);
+
+            return DoInsertAndReturnPrimaryKey<TKey>(inserter);
+        }
+
+        protected abstract TKey DoInsertAndReturnPrimaryKey<TKey>(T_Inserter inserter);
 
         public abstract IEnumerable<T_Readable> Select(ComparisonCondition condition, uint? max, OrderBy sortOrder, params Column[] orderBy);
 
@@ -51,9 +67,21 @@ namespace ObjectCloud.ORM.DataAccess
             return Delete(null);
         }
 
-        public abstract int Update(DataAccessDelegate<T_Writable> writeDelegate);
 
-        public abstract int Update(ComparisonCondition condition, DataAccessDelegate<T_Writable> writeDelegate);
+        public int Update(DataAccessDelegate<T_Writable> writeDelegate)
+        {
+            return Update(null, writeDelegate);
+        }
+
+        public int Update(ComparisonCondition condition, DataAccessDelegate<T_Writable> writeDelegate)
+        {
+            T_Inserter inserter = new T_Inserter();
+            writeDelegate(inserter);
+
+            return DoUpdate(condition, inserter);
+        }
+
+        protected abstract int DoUpdate(ComparisonCondition condition, T_Inserter inserter);
 
         public void Upsert(ComparisonCondition condition, DataAccessDelegate<T_Writable> writeDelegate)
         {

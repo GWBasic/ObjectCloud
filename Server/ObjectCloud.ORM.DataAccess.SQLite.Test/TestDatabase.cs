@@ -31,41 +31,6 @@ namespace ObjectCloud.ORM.DataAccess.Test
 
 	public abstract partial class TestTable_Table : Table<ITestTable_Writable, ITestTable_Readable, TestTable_Table.TestTable_Inserter>
 	{
-		public override void Insert(DataAccessDelegate<ITestTable_Writable> writeDelegate)
-		{
-			TestTable_Inserter inserter = new TestTable_Inserter();
-			writeDelegate(inserter);
-			
-			DoInsert(inserter);
-		}
-		
-		protected abstract void DoInsert(TestTable_Inserter inserter);
-		
-		public override TKey InsertAndReturnPK<TKey>(DataAccessDelegate<ITestTable_Writable> writeDelegate)
-		{
-			TestTable_Inserter inserter = new TestTable_Inserter();
-			writeDelegate(inserter);
-			
-			return DoInsertAndReturnPrimaryKey<TKey>(inserter);
-		}
-		
-		protected abstract TKey DoInsertAndReturnPrimaryKey<TKey>(TestTable_Inserter inserter);
-		
-		public override int Update(DataAccessDelegate<ITestTable_Writable> writeDelegate)
-		{
-			return Update(null, writeDelegate);
-		}
-		
-		public override int Update(ComparisonCondition condition, DataAccessDelegate<ITestTable_Writable> writeDelegate)
-		{
-			TestTable_Inserter inserter = new TestTable_Inserter();
-			writeDelegate(inserter);
-			
-			return DoUpdate(condition, inserter);
-		}
-		
-		protected abstract int DoUpdate(ComparisonCondition condition, TestTable_Inserter inserter);
-		
 		public static Column TestColumn
 		{
 			get
