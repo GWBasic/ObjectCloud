@@ -120,15 +120,33 @@ namespace ObjectCloud.ORM.DataAccess
                     throw new QueryException("Conditions must be COLUMN == VALUE");
         }
 
-        public void Upsert(ComparisonCondition condition, DataAccessDelegate<T_Writable> writeDelegate)
+        public int Upsert(ComparisonCondition condition)
+        {
+            return Upsert(condition, null, null);
+        }
+
+
+        public int Upsert(ComparisonCondition condition, DataAccessDelegate<T_Writable> writeDelegate)
+        {
+            return Upsert(condition, writeDelegate, null);
+        }
+            
+        public int Upsert(ComparisonCondition condition, DataAccessDelegate<T_Writable> writeDelegate, DataAccessDelegate<T_Writable> insertDelegate)
         {
             List<KeyValuePair<Column, object>> assigmentConditions = new List<KeyValuePair<Column, object>>(GetColumnsAndValues(condition));
 
             T_Inserter inserter = new T_Inserter();
-            writeDelegate(inserter);
 
-            if (0 == DoUpdate(condition, inserter))
+            if (null != writeDelegate)
+                writeDelegate(inserter);
+
+            int rowsUpdated = DoUpdate(condition, inserter);
+
+            if (0 == rowsUpdated)
             {
+                if (null != insertDelegate)
+                    insertDelegate(inserter);
+
                 // If there were no objects updated, then do an insert
                 foreach (KeyValuePair<Column, object> columnAndValue in assigmentConditions)
                 {
@@ -140,6 +158,8 @@ namespace ObjectCloud.ORM.DataAccess
 
                 DoInsert(inserter);
             }
+
+            return rowsUpdated;
         }
     }
 }

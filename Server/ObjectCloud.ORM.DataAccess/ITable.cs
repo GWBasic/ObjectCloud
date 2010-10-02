@@ -94,7 +94,24 @@ namespace ObjectCloud.ORM.DataAccess
         /// </summary>
         /// <param name="condition">Must only be ==.  Multiple columns supported only with &.  No duplicate columns allowed</param>
         /// <param name="writeDelegate"></param>
-        /// <returns></returns>
-        void Upsert(ComparisonCondition condition, DataAccessDelegate<T_Writable> writeDelegate);
+        /// <returns>Number of rows updated, or 0 if there was an insertion</returns>
+        int Upsert(ComparisonCondition condition);
+
+        /// <summary>
+        /// Updates the items in the table that match the condition.  If no items in the table match the condition, then inserts an item.  See restrictions on the condition
+        /// </summary>
+        /// <param name="condition">Must only be ==.  Multiple columns supported only with &.  No duplicate columns allowed</param>
+        /// <param name="writeDelegate"></param>
+        /// <returns>Number of rows updated, or 0 if there was an insertion</returns>
+        int Upsert(ComparisonCondition condition, DataAccessDelegate<T_Writable> writeDelegate);
+
+        /// <summary>
+        /// Updates the items in the table that match the condition.  If no items in the table match the condition, then inserts an item.  See restrictions on the condition
+        /// </summary>
+        /// <param name="condition">Must only be ==.  Multiple columns supported only with &.  No duplicate columns allowed</param>
+        /// <param name="writeDelegate"></param>
+        /// <param name="insertDelegate">Only used when inserting, ignored during an update</param>
+        /// <returns>Number of rows updated, or 0 if there was an insertion</returns>
+        int Upsert(ComparisonCondition condition, DataAccessDelegate<T_Writable> writeDelegate, DataAccessDelegate<T_Writable> insertDelegate);
     }
 }
