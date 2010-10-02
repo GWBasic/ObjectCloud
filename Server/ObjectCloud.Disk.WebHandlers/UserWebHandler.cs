@@ -293,6 +293,11 @@ namespace ObjectCloud.Disk.WebHandlers
             string[] senderIdentities,
             string[] desiredValues)
         {
+            if (FileHandler == FileHandlerFactoryLocator.UserFactory.AnonymousUser.UserHandler)
+                throw new WebResultsOverrideException(WebResults.From(
+                    Status._403_Forbidden,
+                    "The anonymous user can not recieve notifications"));
+
             Set<NotificationColumn> desiredValuesSet;
 
             bool includeAvatarUrl = false;

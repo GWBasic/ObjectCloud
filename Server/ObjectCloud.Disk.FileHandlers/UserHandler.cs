@@ -198,6 +198,9 @@ namespace ObjectCloud.Disk.FileHandlers
             IEnumerable<string> senderIdentities,
             Set<NotificationColumn> desiredValues)
         {
+            if (this == FileHandlerFactoryLocator.UserFactory.AnonymousUser.UserHandler)
+                throw new SecurityException("The anonymous user can not recieve notifications");
+
             uint? maxNotifications = null;
             if (null != maxNotificationsLong)
                 maxNotifications = Convert.ToUInt32(maxNotificationsLong.Value);
