@@ -1,6 +1,12 @@
 <oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" xmlns:af="appfeeds_templating">
 <oc:inserthead>
+
+   <script>
+      var currentUserName = '<oc:component oc:url="/Users/UserDB?Method=GetUsername" />';
+   </script>
+
    <oc:script src="/Shell/Particle/viewer.js" />
+
 </oc:inserthead>
 
    <div id="notificationsDiv" />

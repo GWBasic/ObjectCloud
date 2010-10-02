@@ -24,7 +24,8 @@ function UpdatePermission(userOrGroupId)
       {
          UserOrGroupId: userOrGroupId,
          FilePermission: permission,
-         Inherit: true
+         Inherit: true,
+         SendNotifications: true
       },
       function(transport)
       {
@@ -42,7 +43,8 @@ function UpdateNamedPermission(namedPermission, userOrGroupId)
       {
          UserOrGroupId: userOrGroupId,
          namedPermission: namedPermission,
-         inherit: true
+         inherit: true,
+         SendNotifications: true
       }, function(){});
    else
       File.RemoveNamedPermission(
@@ -143,7 +145,7 @@ function doPermissions(inPermissions, inDefaultNamedPermissions)
                UserOrGroup: userOrGroup,
                FilePermission: filePermission,
                Inherit: true,
-               SendNotifications: false,
+               SendNotifications: true,
                namedPermissions: DefaultNamedPermissions_JustNames
             },
             function(result)
