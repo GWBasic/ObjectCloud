@@ -54,10 +54,10 @@ function displayNotification(notification)
       objectElements = notificationsOnScreen[notification.objectUrl];
    else
    {
-      var notificationDiv = $('<div />');
+      var notificationDiv = $('<div class="notification" />');
       var summaryDiv = $('<div />');
 
-      var repliesDiv = $('<div />');
+      var repliesDiv = $('<div class="notificationLinks" />');
       notificationDiv.append(summaryDiv);
       notificationDiv.append(repliesDiv);
 
@@ -72,5 +72,18 @@ function displayNotification(notification)
    }
 
    notificationsDiv.prepend(objectElements.notificationDiv);
-   objectElements.summaryDiv.html(JSON.stringify(notification).escapeHTML());
+
+   var notificationCopy = JSON.parse(JSON.stringify(notification));
+   delete notificationCopy.changeData;
+
+
+   objectElements.summaryDiv.html(JSON.stringify(notificationCopy).escapeHTML());
+
+   if ("link" == notification.verb)
+   {
+      var replyDiv = $('<div />');
+      replyDiv.html(JSON.stringify(notification.changeData));
+
+      objectElements.repliesDiv.append(replyDiv);
+   }
 }

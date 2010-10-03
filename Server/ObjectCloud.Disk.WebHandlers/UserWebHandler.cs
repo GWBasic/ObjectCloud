@@ -354,23 +354,33 @@ namespace ObjectCloud.Disk.WebHandlers
 
             if (includeAvatarUrl)
             {
-                IUserOrGroup senderUserOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupOrOpenId(
-                    notificationFromDB[NotificationColumn.SenderIdentity].ToString());
-
-                if (senderUserOrGroup is IUser)
+                try
                 {
-                    IUser senderUser = (IUser)senderUserOrGroup;
+                    // TODO:  This can really slow down if the OpenID isn't in the DB and the remote servers respond slowly!
+                    IUserOrGroup senderUserOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupOrOpenId(
+                        notificationFromDB[NotificationColumn.SenderIdentity].ToString());
 
-                    if (senderUser.Local)
-                        notification["senderAvatarUrl"] = senderUser.Identity + "?Method=GetAvatar";
+                    if (senderUserOrGroup is IUser)
+                    {
+                        IUser senderUser = (IUser)senderUserOrGroup;
+
+                        if (senderUser.Local)
+                            notification["senderAvatarUrl"] = senderUser.Identity + "?Method=GetAvatar";
+                        else
+                            notification["senderAvatarUrl"] = string.Format(
+                                "{0}/{1}.jpg",
+                                ParticleAvatarsDirectory.FileContainer.ObjectUrl,
+                                senderUser.Id.ToString());
+                    }
                     else
-                        notification["senderAvatarUrl"] = string.Format(
-                            "{0}/{1}.jpg",
-                            ParticleAvatarsDirectory.FileContainer.ObjectUrl,
-                            senderUser.Id.ToString());
+                        notification["senderAvatarUrl"] = "";
                 }
-                else
+                catch (Exception e)
+                {
+                    // This can happen if the server changes host name, or if an OpenID becomes invalid
+                    log.Error("Error when trying to determine if an identity is local", e);
                     notification["senderAvatarUrl"] = "";
+                }
             }
 
             notification["ignored"] = false;

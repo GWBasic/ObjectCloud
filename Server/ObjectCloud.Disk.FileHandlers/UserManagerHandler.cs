@@ -427,7 +427,7 @@ namespace ObjectCloud.Disk.FileHandlers
             openIdClient.Identity = nameOrGroupOrIdentity;
             openIdClient.TrustRoot = null;
 
-            openIdClient.ReturnUrl = new Uri(string.Format("http://[0}", FileHandlerFactoryLocator.HostnameAndPort));
+            openIdClient.ReturnUrl = new Uri(string.Format("http://{0}", FileHandlerFactoryLocator.HostnameAndPort));
 
             // The proper identity is encoded in the URL
             Uri requestUri = openIdClient.CreateRequest(false, false);
