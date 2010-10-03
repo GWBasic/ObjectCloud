@@ -81,7 +81,7 @@ function displayNotification(notification)
 
    if ("link" == notification.verb)
    {
-      var replyDiv = $('<div />');
+      var replyDiv = $('<div class="notificationLink" />');
       replyDiv.html(JSON.stringify(notification.changeData));
 
       objectElements.repliesDiv.append(replyDiv);

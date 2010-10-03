@@ -3,7 +3,8 @@ div.notifications
    max-width: 500px;
 }
 
-div.notificationLinks
+div.notificationLink
 {
    margin-left:50px;
+   background-color:#cccccc;
 }
