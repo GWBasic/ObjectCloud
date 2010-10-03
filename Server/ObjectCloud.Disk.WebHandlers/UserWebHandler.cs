@@ -358,7 +358,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 {
                     // TODO:  This can really slow down if the OpenID isn't in the DB and the remote servers respond slowly!
                     IUserOrGroup senderUserOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupOrOpenId(
-                        notificationFromDB[NotificationColumn.SenderIdentity].ToString());
+                        notificationFromDB[NotificationColumn.SenderIdentity].ToString(), true);
 
                     if (senderUserOrGroup is IUser)
                     {
@@ -384,6 +384,26 @@ namespace ObjectCloud.Disk.WebHandlers
             }
 
             notification["ignored"] = false;
+
+
+            // handle change data
+            notification.Remove("changeData");
+
+            switch (notificationFromDB[NotificationColumn.Verb].ToString())
+            {
+                case ("share"):
+                    {
+                        notification["recipients"] = JsonReader.Deserialize(notificationFromDB[NotificationColumn.ChangeData].ToString());
+                        break;
+                    }
+
+                case ("link"):
+                    {
+                        notification["link"] = JsonReader.Deserialize(notificationFromDB[NotificationColumn.ChangeData].ToString());
+                        break;
+                    }
+            }
+
             return notification;
         }
 
@@ -395,18 +415,36 @@ namespace ObjectCloud.Disk.WebHandlers
         {
             get
             {
-                if (!IncomingNotificationEventWired)
-                    using (TimedLock.Lock(_IncomingNotificationEvent))
-                        if (!IncomingNotificationEventWired)
-                        {
-                            IncomingNotificationEventWired = true;
-                            FileHandler.NotificationRecieved += new EventHandler<IUserHandler, EventArgs<Dictionary<NotificationColumn, object>>>(FileHandler_NotificationRecieved);
-                        }
-
+                EnsureIncomingNotificationEventWired();
                 return _IncomingNotificationEvent;
             }
         }
         private readonly ChannelEventWebAdaptor _IncomingNotificationEvent = new ChannelEventWebAdaptor();
+
+        /// <summary>
+        /// Sends new notifications as they arrive
+        /// </summary>
+        [ChannelEndpointMinimumPermission(FilePermissionEnum.Administer)]
+        public IChannelEventWebAdaptor IncomingNotificationEventThroughTemplate
+        {
+            get
+            {
+                EnsureIncomingNotificationEventWired();
+                return _IncomingNotificationEventThroughTemplate;
+            }
+        }
+
+        private void EnsureIncomingNotificationEventWired()
+        {
+            if (!IncomingNotificationEventWired)
+                using (TimedLock.Lock(_IncomingNotificationEventThroughTemplate))
+                    if (!IncomingNotificationEventWired)
+                    {
+                        IncomingNotificationEventWired = true;
+                        FileHandler.NotificationRecieved += new EventHandler<IUserHandler, EventArgs<Dictionary<NotificationColumn, object>>>(FileHandler_NotificationRecieved);
+                    }
+        }
+        private readonly ChannelEventWebAdaptor _IncomingNotificationEventThroughTemplate = new ChannelEventWebAdaptor();
 
         private bool IncomingNotificationEventWired = false;
 
@@ -414,6 +452,50 @@ namespace ObjectCloud.Disk.WebHandlers
         {
             Dictionary<string, object> notification = ConvertNotificationFromDBToNotificationForWeb(true, e.Value);
             _IncomingNotificationEvent.SendAll(notification);
+
+            string notificationEvalutatedThroughTemplate;
+            ISession session = FileHandlerFactoryLocator.SessionManagerHandler.CreateSession();
+            try
+            {
+                session.Login(FileContainer.Owner);
+
+                BlockingShellWebConnection webConnection = new BlockingShellWebConnection(
+                    FileHandlerFactoryLocator.WebServer,
+                    session,
+                    "",
+                    null,
+                    null,
+                    new CookiesFromBrowser(),
+                    CallingFrom.Web,
+                    WebMethod.GET);
+
+                foreach (KeyValuePair<string, object> kvp in notification)
+                    webConnection.GetParameters.Add(kvp.Key, kvp.Value.ToString());
+
+                IWebResults webResults = TemplateEngine.EvaluateComponent(webConnection, "/DefaultTemplate/notification.occ");
+                notificationEvalutatedThroughTemplate = webResults.ResultsAsString;
+            }
+            finally
+            {
+                FileHandlerFactoryLocator.SessionManagerHandler.EndSession(session.SessionId);
+            }
+
+            _IncomingNotificationEventThroughTemplate.SendAll(notificationEvalutatedThroughTemplate);
         }
+
+        private TemplateEngine TemplateEngine
+        {
+            get 
+            {
+                if (null == _TemplateEngine)
+                {
+                    IFileContainer templateEngineContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("/System/TemplateEngine");
+                    _TemplateEngine = (TemplateEngine)templateEngineContainer.WebHandler;
+                }
+
+                return _TemplateEngine; 
+            }
+        }
+        private TemplateEngine _TemplateEngine = null;
     }
 }

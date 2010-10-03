@@ -73,6 +73,15 @@ namespace ObjectCloud.Interfaces.Disk
         IUserOrGroup GetUserOrGroupOrOpenId(string nameOrGroupOrIdentity);
 
         /// <summary>
+        /// Gets the user, group, or openId
+        /// </summary>
+        /// <param name="nameOrGroupOrIdentity">The user name, group name, or openId</param>
+        /// <param name="onlyInLocalDB">true to only return information about users that are in the local DB</param>
+        /// <returns></returns>
+        /// <exception cref="UnknownUser">Thrown if the user, group, or openId does not exist</exception>
+        IUserOrGroup GetUserOrGroupOrOpenId(string nameOrGroupOrIdentity, bool onlyInLocalDB);
+
+        /// <summary>
         /// Gets the user, or group by ID
         /// </summary>
         /// <param name="nameOrGroupOrIdentity">The user name, group name, or openId</param>

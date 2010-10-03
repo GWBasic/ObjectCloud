@@ -399,6 +399,11 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public IUserOrGroup GetUserOrGroupOrOpenId(string nameOrGroupOrIdentity)
         {
+            return GetUserOrGroupOrOpenId(nameOrGroupOrIdentity, false);
+        }
+
+        public IUserOrGroup GetUserOrGroupOrOpenId(string nameOrGroupOrIdentity, bool onlyInLocalDB)
+        {
             string localIdentityPrefix = string.Format("http://{0}/Users/", FileHandlerFactoryLocator.HostnameAndPort);
             if (
                 nameOrGroupOrIdentity.StartsWith(localIdentityPrefix)
@@ -421,25 +426,28 @@ namespace ObjectCloud.Disk.FileHandlers
             if (null != group)
                 return CreateGroupObject(group);
 
-            NameValueCollection openIdClientArgs = new NameValueCollection();
+            if (!onlyInLocalDB)
+            {
+                NameValueCollection openIdClientArgs = new NameValueCollection();
 
-            OpenIdClient openIdClient = new OpenIdClient(openIdClientArgs);
-            openIdClient.Identity = nameOrGroupOrIdentity;
-            openIdClient.TrustRoot = null;
+                OpenIdClient openIdClient = new OpenIdClient(openIdClientArgs);
+                openIdClient.Identity = nameOrGroupOrIdentity;
+                openIdClient.TrustRoot = null;
 
-            openIdClient.ReturnUrl = new Uri(string.Format("http://{0}", FileHandlerFactoryLocator.HostnameAndPort));
+                openIdClient.ReturnUrl = new Uri(string.Format("http://{0}", FileHandlerFactoryLocator.HostnameAndPort));
 
-            // The proper identity is encoded in the URL
-            Uri requestUri = openIdClient.CreateRequest(false, false);
+                // The proper identity is encoded in the URL
+                Uri requestUri = openIdClient.CreateRequest(false, false);
 
-            if (openIdClient.ErrorState == ErrorCondition.NoErrors)
-                if (openIdClient.IsValidIdentity())
-                {
-                    RequestParameters openIdRequestParameters = new RequestParameters(requestUri.Query.Substring(1));
-                    string identity = openIdRequestParameters["openid.identity"];
+                if (openIdClient.ErrorState == ErrorCondition.NoErrors)
+                    if (openIdClient.IsValidIdentity())
+                    {
+                        RequestParameters openIdRequestParameters = new RequestParameters(requestUri.Query.Substring(1));
+                        string identity = openIdRequestParameters["openid.identity"];
 
-                    return GetOpenIdUser(identity);
-                }
+                        return GetOpenIdUser(identity);
+                    }
+            }
 
             throw new UnknownUser(nameOrGroupOrIdentity + " is not a known user, group, or OpenId");
         }

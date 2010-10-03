@@ -22,30 +22,36 @@ String.prototype.escapeHTML = function(){
 var notificationsOnScreen = {};
 var notificationsDiv;
 
-$(document).ready(function()
+var notificationTemplate;
+var linkTemplate;
+
+function runNotificationViewer(currentUserName)
 {
-   notificationsDiv = $('#notificationsDiv');
+   $(document).ready(function()
+   {
+      notificationsDiv = $('#notificationsDiv');
 
-   NotificationsProxy.GetNotifications(
-      {
-         maxNotifications: 25
-      },
-      function(notifications)
-      {
-         for (var i = notifications.length - 1; i >= 0; i--)
-            displayNotification(notifications[i]);
+      NotificationsProxy.GetNotifications(
+         {
+            maxNotifications: 25
+         },
+         function(notifications)
+         {
+            for (var i = notifications.length - 1; i >= 0; i--)
+               displayNotification(notifications[i]);
 
-         // Connect back to the server to get COMET updates when the page changes
-         CP_QualityReliable.connect(
-            '/Users/' + currentUserName + '.user?ChannelEndpoint=IncomingNotificationEvent',
-            {
-               handleIncomingData: function(notification)
+            // Connect back to the server to get COMET updates when the page changes
+            CP_QualityReliable.connect(
+               '/Users/' + currentUserName + '.user?ChannelEndpoint=IncomingNotificationEvent',
                {
-                  displayNotification(notification);
-               }
-            });
-      });
-});
+                  handleIncomingData: function(notification)
+                  {
+                     displayNotification(notification);
+                  }
+               });
+         });
+   });
+}
 
 function displayNotification(notification)
 {
@@ -74,15 +80,15 @@ function displayNotification(notification)
    notificationsDiv.prepend(objectElements.notificationDiv);
 
    var notificationCopy = JSON.parse(JSON.stringify(notification));
-   delete notificationCopy.changeData;
+   delete notificationCopy.link;
 
 
-   objectElements.summaryDiv.html(JSON.stringify(notificationCopy).escapeHTML());
+   objectElements.summaryDiv.html('<pre>' + JSON.stringify(notificationCopy, null, '\t').escapeHTML() + '</pre>');
 
    if ("link" == notification.verb)
    {
       var replyDiv = $('<div class="notificationLink" />');
-      replyDiv.html(JSON.stringify(notification.changeData));
+      replyDiv.html('<pre>' + JSON.stringify(notification.link, null, '\t').escapeHTML() + '</pre>');
 
       objectElements.repliesDiv.append(replyDiv);
    }

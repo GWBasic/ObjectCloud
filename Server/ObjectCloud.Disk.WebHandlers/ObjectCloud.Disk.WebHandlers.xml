@@ -1353,6 +1353,11 @@
             Sends new notifications as they arrive
             </summary>
         </member>
+        <member name="P:ObjectCloud.Disk.WebHandlers.UserWebHandler.IncomingNotificationEventThroughTemplate">
+            <summary>
+            Sends new notifications as they arrive
+            </summary>
+        </member>
         <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsPad">
             <summary>
             Class for determining if the user's browser is a pad

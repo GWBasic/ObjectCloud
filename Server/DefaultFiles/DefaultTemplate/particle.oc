@@ -4,7 +4,8 @@
    <oc:css src="/DefaultTemplate/particle.css" />
 
    <script>
-      var currentUserName = '<oc:component oc:url="/Users/UserDB?Method=GetUsername" />';
+      runNotificationViewer(
+         '<oc:component oc:url="/Users/UserDB?Method=GetUsername" />');
    </script>
 
    <oc:script src="/Shell/Particle/viewer.js" />
@@ -12,5 +13,9 @@
 </oc:inserthead>
 
    <div class="notifications" id="notificationsDiv" />
+
+   <oc:jsontemplate
+      oc:src="/DefaultTemplate/notification.occ"
+      oc:url="/Users/[name].user?Method=GetNotifications&amp;maxNotifications=25" />
 
 </oc:componentdef>
