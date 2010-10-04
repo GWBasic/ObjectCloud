@@ -1,11 +1,11 @@
 <oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" xmlns:af="appfeeds_templating">
 <oc:inserthead>
-   <oc:script src="/API/jquery.js" />
+   <oc:script src="/API/prettyPrintDates.js" />
 </oc:inserthead>
 
    <div class="notification" src="[_objectUrl_]">
       <a href="[_senderIdentity_]">
-         <img src="[_senderAvatarUrl_]" />
+         <img src="[_senderAvatarUrl_]&amp;maxWidth=100" />
          [_senderIdentity_]
       </a>: <a href="[_objectUrl_]">[_objectUrl_]</a>
       <div class="summaryView"><oc:safeparse>[_summaryView_]</oc:safeparse></div>
@@ -15,12 +15,14 @@
                <div class="notificationLink">
                   <a href="[_link.owner_]">
                      [_link.owner_]
-                  </a>: <a href="[_link.URL_]">[_link.URL_]</a>
+                  </a>: <a href="[_link.URL_]">[_link.URL_]</a> <span class="date_ago">[_timeStamp_]</span>
                   <div class="linkSummaryView"><oc:safeparse>[_link.summaryView_]</oc:safeparse></div>
+                  <hr />
                </div>
             </oc:hasvalue>
          </oc:if>
       </div>
+      <hr />
    </div>
 
 </oc:componentdef>

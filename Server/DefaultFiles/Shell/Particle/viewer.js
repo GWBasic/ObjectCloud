@@ -31,7 +31,13 @@ function runNotificationViewer(currentUserName)
    {
       notificationsDiv = $('#notificationsDiv');
 
-      NotificationsProxy.GetNotifications(
+      $('.notification').each(function()
+      {
+         reformatNotification($(this));
+      });
+
+
+      /*NotificationsProxy.GetNotifications(
          {
             maxNotifications: 25
          },
@@ -49,8 +55,24 @@ function runNotificationViewer(currentUserName)
                      displayNotification(notification);
                   }
                });
-         });
+         });*/
    });
+}
+
+function reformatNotification(notification)
+{
+   var objectElements;
+   var objectUrl = notification.attr('src');
+
+   if (notificationsOnScreen[objectUrl])
+   {
+      notificationsOnScreen[objectUrl].remove();
+
+      var notificationLinks = $('.notificationLinks', notification);
+      notificationLinks.prepend($('.notificationLink', notificationsOnScreen[objectUrl]));
+   }
+
+   notificationsOnScreen[objectUrl] = notification;
 }
 
 function displayNotification(notification)
@@ -71,7 +93,7 @@ function displayNotification(notification)
       {
          notificationDiv: notificationDiv,
          summaryDiv: summaryDiv,
-         repliesDiv: summaryDiv
+         repliesDiv: repliesDiv
       };
 
       notificationsOnScreen[notification.objectUrl] = objectElements;
