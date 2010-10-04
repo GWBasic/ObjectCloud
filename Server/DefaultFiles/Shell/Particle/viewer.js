@@ -36,26 +36,17 @@ function runNotificationViewer(currentUserName)
          reformatNotification($(this));
       });
 
-
-      /*NotificationsProxy.GetNotifications(
+      // Connect back to the server to get COMET updates when the page changes
+      CP_QualityReliable.connect(
+         '/Users/' + currentUserName + '.user?ChannelEndpoint=IncomingNotificationEventThroughTemplate',
          {
-            maxNotifications: 25
-         },
-         function(notifications)
-         {
-            for (var i = notifications.length - 1; i >= 0; i--)
-               displayNotification(notifications[i]);
-
-            // Connect back to the server to get COMET updates when the page changes
-            CP_QualityReliable.connect(
-               '/Users/' + currentUserName + '.user?ChannelEndpoint=IncomingNotificationEvent',
-               {
-                  handleIncomingData: function(notification)
-                  {
-                     displayNotification(notification);
-                  }
-               });
-         });*/
+            handleIncomingData: function(notificationXml)
+            {
+               var notification = $(notificationXml);
+               notificationsDiv.prepend(notification);
+               reformatNotification(notification);
+            }
+         });
    });
 }
 
@@ -69,49 +60,8 @@ function reformatNotification(notification)
       notificationsOnScreen[objectUrl].remove();
 
       var notificationLinks = $('.notificationLinks', notification);
-      notificationLinks.prepend($('.notificationLink', notificationsOnScreen[objectUrl]));
+      notificationLinks.append($('.notificationLink', notificationsOnScreen[objectUrl]));
    }
 
    notificationsOnScreen[objectUrl] = notification;
-}
-
-function displayNotification(notification)
-{
-   var objectElements;
-   if (notificationsOnScreen[notification.objectUrl])
-      objectElements = notificationsOnScreen[notification.objectUrl];
-   else
-   {
-      var notificationDiv = $('<div class="notification" />');
-      var summaryDiv = $('<div />');
-
-      var repliesDiv = $('<div class="notificationLinks" />');
-      notificationDiv.append(summaryDiv);
-      notificationDiv.append(repliesDiv);
-
-      objectElements =
-      {
-         notificationDiv: notificationDiv,
-         summaryDiv: summaryDiv,
-         repliesDiv: repliesDiv
-      };
-
-      notificationsOnScreen[notification.objectUrl] = objectElements;
-   }
-
-   notificationsDiv.prepend(objectElements.notificationDiv);
-
-   var notificationCopy = JSON.parse(JSON.stringify(notification));
-   delete notificationCopy.link;
-
-
-   objectElements.summaryDiv.html('<pre>' + JSON.stringify(notificationCopy, null, '\t').escapeHTML() + '</pre>');
-
-   if ("link" == notification.verb)
-   {
-      var replyDiv = $('<div class="notificationLink" />');
-      replyDiv.html('<pre>' + JSON.stringify(notification.link, null, '\t').escapeHTML() + '</pre>');
-
-      objectElements.repliesDiv.append(replyDiv);
-   }
 }
