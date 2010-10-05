@@ -1,10 +1,9 @@
-<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" xmlns:af="appfeeds_templating">
-<oc:inserthead>
-   <oc:script src="/API/jquery.js" />
-</oc:inserthead>
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
 
-   <!--
-      ObjectCloud's templating system renders as HTML5/xml.  All contents must be valid xml.
-   -->
+   <oc:jsontemplate
+      oc:datafile="[_filename_]" filename="[_filename_]" objectUrl="[_objectUrl_]">
 
+      <a href="[__UP.objectUrl_]"><em>[_Title_]</em></a>:
+      <oc:trim maxtags="30" maxlength="150"><oc:safeparse oc:xmlparsemode="xmlthenhtml">[_Contents_]</oc:safeparse></oc:trim>
+   </oc:jsontemplate>
 </oc:componentdef>

@@ -6,17 +6,22 @@
    <div class="notification" src="[_objectUrl_]">
       <a href="[_senderIdentity_]">
          <img src="[_senderAvatarUrl_]&amp;maxWidth=100" />
-         [_senderIdentity_]
-      </a>: <a href="[_objectUrl_]">[_objectUrl_]</a>
-      <div class="summaryView"><oc:safeparse>[_summaryView_]</oc:safeparse></div>
+      </a>: 
+      <div class="summaryView">
+         <a href="[_senderIdentity_]">[_senderIdentity_]</a>: 
+         <oc:safeparse>[_summaryView_]</oc:safeparse>
+      </div>
+      (<span class="date_ago">[_timeStamp_]</span>) <a href="[_objectUrl_]" target="_blank">&#x21AA;</a>
       <div class="notificationLinks">
          <oc:if>
             <oc:hasvalue value="[_link.URL_]">
                <div class="notificationLink">
-                  <a href="[_link.owner_]">
-                     [_link.owner_]
-                  </a>: <a href="[_link.URL_]">[_link.URL_]</a> <span class="date_ago">[_timeStamp_]</span>
-                  <div class="linkSummaryView"><oc:safeparse>[_link.summaryView_]</oc:safeparse></div>
+                  <div class="linkSummaryView">
+                     <a href="[_link.owner_]">[_link.owner_]</a>:
+                     <oc:safeparse>[_link.summaryView_]</oc:safeparse>
+                  </div>
+                  (<span class="date_ago">[_timeStamp_]</span>)
+                  <a href="[_link.URL_]" target="_blank">&#x21AA;</a>
                   <hr />
                </div>
             </oc:hasvalue>

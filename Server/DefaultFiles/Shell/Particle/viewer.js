@@ -31,10 +31,9 @@ function runNotificationViewer(currentUserName)
    {
       notificationsDiv = $('#notificationsDiv');
 
-      $('.notification').each(function()
-      {
-         reformatNotification($(this));
-      });
+      var notifications = $('.notification');
+      for (var i = notifications.length - 1; i >= 0; i--)
+         reformatNotification($(notifications[i]));
 
       // Connect back to the server to get COMET updates when the page changes
       CP_QualityReliable.connect(
@@ -60,7 +59,7 @@ function reformatNotification(notification)
       notificationsOnScreen[objectUrl].remove();
 
       var notificationLinks = $('.notificationLinks', notification);
-      notificationLinks.append($('.notificationLink', notificationsOnScreen[objectUrl]));
+      notificationLinks.prepend($('.notificationLink', notificationsOnScreen[objectUrl]));
    }
 
    notificationsOnScreen[objectUrl] = notification;
