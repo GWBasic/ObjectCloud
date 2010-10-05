@@ -229,8 +229,6 @@ namespace ObjectCloud.Interfaces.Disk
                     CallingFrom.Web,
                     WebMethod.GET);
 
-                XmlDocument xmlDocument = new XmlDocument();
-
                 summaryView = TemplateEngine.EvaluateComponent(webConnection, filename, getParameters);
             }
             catch (Exception e)
