@@ -3,6 +3,7 @@
 // For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -32,7 +33,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 templateParsingState.PostProcessElement += RemoveIfInternalData;
         }
 
-        private void RemoveIfInternalData(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlNode element)
+        private void RemoveIfInternalData(ITemplateParsingState templateParsingState, IDictionary<string, object> getParameters, XmlNode element)
         {
             if (element.NamespaceURI == templateParsingState.TemplateHandlerLocator.TemplatingConstants.TaggingNamespace)
                 element.ParentNode.RemoveChild(element);

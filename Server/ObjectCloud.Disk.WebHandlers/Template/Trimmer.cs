@@ -3,6 +3,7 @@
 // For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -32,7 +33,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             templateParsingState.PostProcessElement += PostProcessElement;
         }
 
-        void PostProcessElement(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
+        void PostProcessElement(ITemplateParsingState templateParsingState, IDictionary<string, object> getParameters, XmlElement element)
         {
             if (element.LocalName == "trim" && element.NamespaceURI == templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace)
             {

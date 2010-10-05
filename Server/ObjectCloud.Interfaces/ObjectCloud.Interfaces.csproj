@@ -108,6 +108,7 @@
     <Compile Include="Security\IUserOrGroup.cs" />
     <Compile Include="Security\ShellSession.cs" />
     <Compile Include="Templating\ITemplateConditionHandler.cs" />
+    <Compile Include="Templating\ITemplateEngine.cs" />
     <Compile Include="Templating\ITemplateParsingState.cs" />
     <Compile Include="Templating\ITemplateProcessor.cs" />
     <Compile Include="Templating\TemplateHandlerLocator.cs" />

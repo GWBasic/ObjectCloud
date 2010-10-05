@@ -3,6 +3,7 @@
 // For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -26,7 +27,7 @@ namespace ObjectCloud.Disk.WebHandlers
     /// <summary>
     /// Generates complete files from templates
     /// </summary>
-    public class TemplateEngine : WebHandler
+    public class TemplateEngine : WebHandler, ITemplateEngine
     {
         private static ILog log = LogManager.GetLogger<TemplateEngine>();
 
@@ -39,9 +40,13 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.Primitive, FilePermissionEnum.Read)]
         public IWebResults Evaluate(IWebConnection webConnection, string filename)
         {
+            Dictionary<string, object> arguments = new Dictionary<string, object>();
+            foreach (KeyValuePair<string, string> getParameter in webConnection.GetParameters)
+                arguments[getParameter.Key] = getParameter.Value;
+
             Stream results = EvaluateToStream(
                 webConnection,
-                webConnection.GetParameters,
+                arguments,
                 filename);
 
             IWebResults toReturn;
@@ -77,12 +82,12 @@ namespace ObjectCloud.Disk.WebHandlers
         /// Evaluates the named template
         /// </summary>
         /// <param name="webConnection"></param>
-        /// <param name="getParameters"></param>
+        /// <param name="arguments"></param>
         /// <param name="filename"></param>
         /// <returns></returns>
         public Stream EvaluateToStream(
             IWebConnection webConnection,
-            IDictionary<string, string> getParameters,
+            IDictionary<string, object> arguments,
             string filename)
         {
             TemplateParsingState templateParsingState = CreateTemplateParsingState(webConnection);
@@ -118,9 +123,9 @@ namespace ObjectCloud.Disk.WebHandlers
 
                 webConnection.TouchedFiles.Add(templateFileContainer);
 
-                ResolveHeaderFooter(webConnection, getParameters, templateFileContainer, templateParsingState);
+                ResolveHeaderFooter(webConnection, arguments, templateFileContainer, templateParsingState);
 
-                ResolveDocument(getParameters, templateParsingState.TemplateDocument, templateParsingState);
+                ResolveDocument(arguments, templateParsingState.TemplateDocument, templateParsingState);
 
                 XmlNode headNode = GetHeadNode(templateParsingState.TemplateDocument);
 
@@ -163,7 +168,7 @@ namespace ObjectCloud.Disk.WebHandlers
                         }
                     }
                     else */
-                        templateParsingState.OnPostProcessElement(getParameters, (XmlElement)xmlNode);
+                        templateParsingState.OnPostProcessElement(arguments, (XmlElement)xmlNode);
                 }
                 else if (removeComments)
                     xmlNode.ParentNode.RemoveChild(xmlNode);
@@ -205,9 +210,9 @@ namespace ObjectCloud.Disk.WebHandlers
             return templateParsingState;
         }
 
-        private static void ResolveDocument(IDictionary<string, string> getParameters, XmlDocument templateDocument, TemplateParsingState templateParsingState)
+        private static void ResolveDocument(IDictionary<string, object> arguments, XmlDocument templateDocument, TemplateParsingState templateParsingState)
         {
-            templateParsingState.OnDocumentLoaded(getParameters, templateDocument.FirstChild as XmlElement);
+            templateParsingState.OnDocumentLoaded(arguments, templateDocument.FirstChild as XmlElement);
 
             bool continueResolving;
 
@@ -233,7 +238,7 @@ namespace ObjectCloud.Disk.WebHandlers
                     foreach (XmlElement element in templateParsingState.IterateNonDeferredElements(templateDocument))
                         try
                         {
-                            templateParsingState.OnProcessElementForConditionalsAndComponents(getParameters, element);
+                            templateParsingState.OnProcessElementForConditionalsAndComponents(arguments, element);
                         }
                         catch (Exception e)
                         {
@@ -250,7 +255,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 foreach (XmlElement element in templateParsingState.IterateNonDeferredElements(templateDocument))
                     try
                     {
-                        templateParsingState.OnProcessElementForDependanciesAndTemplates(getParameters, element);
+                        templateParsingState.OnProcessElementForDependanciesAndTemplates(arguments, element);
                     }
                     catch (Exception e)
                     {
@@ -278,10 +283,29 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.Primitive, FilePermissionEnum.Read)]
         public IWebResults EvaluateComponent(IWebConnection webConnection, string filename)
         {
-            IDictionary<string, string> getParameters = webConnection.GetParameters;
+            Dictionary<string, object> arguments = new Dictionary<string, object>();
+            foreach (KeyValuePair<string, string> getParameter in webConnection.GetParameters)
+                arguments[getParameter.Key] = getParameter.Value;
 
+            return WebResults.From(Status._200_OK,
+                EvaluateComponent(webConnection, filename, arguments));
+        }
+
+        /// <summary>
+        /// Evaluates the named template
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="filename"></param>
+        /// <param name="templateInput"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.Primitive, FilePermissionEnum.Read)]
+        public string EvaluateComponent(IWebConnection webConnection, string filename, object templateInput)
+        {
             XmlDocument templateDocument;
             TemplateParsingState templateParsingState = CreateTemplateParsingState(webConnection);
+
+            Dictionary<string, object> arguments = new Dictionary<string,object>();
+            templateParsingState.Flatten(arguments, "", templateInput);
 
             IFileContainer templateFileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(filename);
 
@@ -289,19 +313,19 @@ namespace ObjectCloud.Disk.WebHandlers
 
             templateDocument = templateParsingState.LoadXmlDocument(templateFileContainer, XmlParseMode.Xml);
             templateParsingState.TemplateDocument = templateDocument;
-            templateParsingState.ReplaceGetParameters(getParameters, templateDocument);
+            templateParsingState.HandleArguments(arguments, templateDocument);
 
             templateParsingState.SetCWD(templateDocument.ChildNodes, templateFileContainer.ParentDirectoryHandler.FileContainer.FullPath);
 
-            ResolveDocument(getParameters, templateDocument, templateParsingState);
+            ResolveDocument(arguments, templateDocument, templateParsingState);
 
             foreach (XmlNode xmlNode in Enumerable<XmlNode>.FastCopy(XmlHelper.IterateAllElementsAndComments(templateDocument)))
                 if (xmlNode is XmlElement)
-                    templateParsingState.OnPostProcessElement(getParameters, (XmlElement)xmlNode);
+                    templateParsingState.OnPostProcessElement(arguments, (XmlElement)xmlNode);
                 else if (xmlNode is XmlComment)
                     xmlNode.ParentNode.RemoveChild(xmlNode);
 
-            return WebResults.From(Status._200_OK, templateDocument.FirstChild.InnerXml);
+            return templateDocument.FirstChild.InnerXml;
         }
 
         /// <summary>
@@ -310,7 +334,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="templateParsingState"></param>
         /// <param name="getParameters"></param>
         /// <param name="element"></param>
-        void EnsureNoEmptyTextareas(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
+        void EnsureNoEmptyTextareas(ITemplateParsingState templateParsingState, IDictionary<string, object> getParameters, XmlElement element)
         {
             if (element.LocalName == "textarea" && templateParsingState.TemplateHandlerLocator.TemplatingConstants.HtmlNamespaces.Contains(element.NamespaceURI))
                 if (element.IsEmpty)
@@ -516,18 +540,18 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <summary>
         /// Returns the file with all header/footers resolved as XML for further processing
         /// </summary>
-        /// <param name="getParameters"></param>
+        /// <param name="arguments"></param>
         /// <param name="templateFileContainer"></param>
         /// <param name="webConnection"></param>
         /// <param name="templateParsingState"></param>
         /// <returns></returns>
         private void ResolveHeaderFooter(
             IWebConnection webConnection,
-            IDictionary<string, string> getParameters,
+            IDictionary<string, object> arguments,
             IFileContainer templateFileContainer,
             TemplateParsingState templateParsingState)
         {
-            XmlDocument templateDocument = templateParsingState.LoadXmlDocumentAndReplaceGetParameters(getParameters, templateFileContainer, XmlParseMode.Xml);
+            XmlDocument templateDocument = templateParsingState.LoadXmlDocumentAndReplaceGetParameters(arguments, templateFileContainer, XmlParseMode.Xml);
 			
 			// I think this is to work around an issue when directly viewing a template with an empty <oc:component /> tag
 			templateParsingState.TemplateDocument = templateDocument;
@@ -569,7 +593,7 @@ namespace ObjectCloud.Disk.WebHandlers
 				}
 
                 templateDocument = templateParsingState.LoadXmlDocumentAndReplaceGetParameters(
-                    getParameters,
+                    arguments,
                     templateFileContainer,
                     XmlParseMode.Xml);
 

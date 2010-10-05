@@ -3,6 +3,7 @@
 // For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Xml;
@@ -169,29 +170,29 @@ namespace ObjectCloud.Interfaces.Templating
         /// <summary>
         /// Loads an XmlDocument from the filecontainer, replacing GET parameters and verifying permissions
         /// </summary>
-        /// <param name="getParameters"></param>
+        /// <param name="arguments"></param>
         /// <param name="fileContainer"></param>
         /// <returns></returns>
         XmlDocument LoadXmlDocumentAndReplaceGetParameters(
-            IDictionary<string, string> getParameters,
+            IDictionary<string, object> arguments,
             IFileContainer fileContainer,
             XmlParseMode xmlParseMode);
 
         /// <summary>
         /// Replaces all of the GET parameters in an XmlNode
         /// </summary>
-        /// <param name="getParameters"></param>
+        /// <param name="arguments"></param>
         /// <param name="xmlNode"></param>
         /// <returns></returns>
-        void ReplaceGetParameters(IDictionary<string, string> getParameters, XmlNode xmlNode);
+        void HandleArguments(IDictionary<string, object> arguments, XmlNode xmlNode);
 
         /// <summary>
         /// Replaces all of the GET parameters in a string
         /// </summary>
-        /// <param name="getParameters"></param>
+        /// <param name="arguments"></param>
         /// <param name="xmlAsString"></param>
         /// <returns></returns>
-        string ReplaceGetParameters(IDictionary<string, string> getParameters, string xmlAsString);
+        string ReplaceGetParameters(IDictionary<string, object> arguments, string xmlAsString);
 
         /// <summary>
         /// Loads a component for use with JSON.  All inner nodes of element will be replaced with nodes from src
@@ -214,6 +215,14 @@ namespace ObjectCloud.Interfaces.Templating
         /// <param name="xmlNode"></param>
         /// <returns></returns>
         IEnumerable<XmlElement> IterateNonDeferredElements(XmlNode xmlNode);
+
+        /// <summary>
+        /// Flattens a JSON object for use with a template
+        /// </summary>
+        /// <param name="getParameters"></param>
+        /// <param name="prefix"></param>
+        /// <param name="templateInput"></param>
+        void Flatten(IDictionary<string, object> getParameters, string prefix, object templateInput);
     }
 
     /// <summary>
@@ -221,5 +230,5 @@ namespace ObjectCloud.Interfaces.Templating
     /// </summary>
     /// <param name="webConnection"></param>
     /// <param name="element"></param>
-    public delegate void ElementProcessorFunction(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element);
+    public delegate void ElementProcessorFunction(ITemplateParsingState templateParsingState, IDictionary<string, object> arguments, XmlElement element);
 }

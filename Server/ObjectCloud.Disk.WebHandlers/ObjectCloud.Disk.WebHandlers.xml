@@ -1446,12 +1446,12 @@
             <param name="filename"></param>
             <returns></returns>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.EvaluateToStream(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Collections.Generic.IDictionary{System.String,System.String},System.String)">
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.EvaluateToStream(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Collections.Generic.IDictionary{System.String,System.Object},System.String)">
             <summary>
             Evaluates the named template
             </summary>
             <param name="webConnection"></param>
-            <param name="getParameters"></param>
+            <param name="arguments"></param>
             <param name="filename"></param>
             <returns></returns>
         </member>
@@ -1463,7 +1463,16 @@
             <param name="filename"></param>
             <returns></returns>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.EnsureNoEmptyTextareas(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Collections.Generic.IDictionary{System.String,System.String},System.Xml.XmlElement)">
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.EvaluateComponent(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.Object)">
+            <summary>
+            Evaluates the named template
+            </summary>
+            <param name="webConnection"></param>
+            <param name="filename"></param>
+            <param name="templateInput"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.EnsureNoEmptyTextareas(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Collections.Generic.IDictionary{System.String,System.Object},System.Xml.XmlElement)">
             <summary>
             This is to work around a Mozilla quirk where it can't handle empty text areas
             </summary>
@@ -1471,11 +1480,11 @@
             <param name="getParameters"></param>
             <param name="element"></param>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.ResolveHeaderFooter(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Collections.Generic.IDictionary{System.String,System.String},ObjectCloud.Interfaces.Disk.IFileContainer,ObjectCloud.Disk.WebHandlers.Template.TemplateParsingState)">
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.ResolveHeaderFooter(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Collections.Generic.IDictionary{System.String,System.Object},ObjectCloud.Interfaces.Disk.IFileContainer,ObjectCloud.Disk.WebHandlers.Template.TemplateParsingState)">
             <summary>
             Returns the file with all header/footers resolved as XML for further processing
             </summary>
-            <param name="getParameters"></param>
+            <param name="arguments"></param>
             <param name="templateFileContainer"></param>
             <param name="webConnection"></param>
             <param name="templateParsingState"></param>
@@ -1923,30 +1932,30 @@
             <param name="element">This is scanned to find the XmlParseMode</param>
             <returns></returns>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.Template.TemplateParsingState.LoadXmlDocumentAndReplaceGetParameters(System.Collections.Generic.IDictionary{System.String,System.String},ObjectCloud.Interfaces.Disk.IFileContainer,ObjectCloud.Interfaces.Templating.XmlParseMode)">
+        <member name="M:ObjectCloud.Disk.WebHandlers.Template.TemplateParsingState.LoadXmlDocumentAndReplaceGetParameters(System.Collections.Generic.IDictionary{System.String,System.Object},ObjectCloud.Interfaces.Disk.IFileContainer,ObjectCloud.Interfaces.Templating.XmlParseMode)">
             <summary>
             Loads an XmlDocument from the filecontainer, replacing GET parameters and verifying permissions
             </summary>
-            <param name="getParameters"></param>
+            <param name="arguments"></param>
             <param name="fileContainer"></param>
             <param name="xmlParseMode">The kind of text that's being parsed</param>
             <returns></returns>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.Template.TemplateParsingState.ReplaceGetParameters(System.Collections.Generic.IDictionary{System.String,System.String},System.Xml.XmlNode)">
+        <member name="M:ObjectCloud.Disk.WebHandlers.Template.TemplateParsingState.HandleArguments(System.Collections.Generic.IDictionary{System.String,System.Object},System.Xml.XmlNode)">
             <summary>
             Replaces all of the GET parameters in an XmlNode
             </summary>
-            <param name="getParameters"></param>
+            <param name="arguments"></param>
             <param name="xmlNode"></param>
             <returns></returns>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.Template.TemplateParsingState.AugmentGetParameters(System.Collections.Generic.IDictionary{System.String,System.String})">
+        <member name="M:ObjectCloud.Disk.WebHandlers.Template.TemplateParsingState.AugmentGetParameters(System.Collections.Generic.IDictionary{System.String,System.Object})">
             <summary>
             Adds some default runtime metadata to the get parameters
             </summary>
             <param name="getParameters"></param>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.Template.TemplateParsingState.ReplaceGetParameters(System.Collections.Generic.IDictionary{System.String,System.String},System.String)">
+        <member name="M:ObjectCloud.Disk.WebHandlers.Template.TemplateParsingState.ReplaceGetParameters(System.Collections.Generic.IDictionary{System.String,System.Object},System.String)">
             <summary>
             Replaces all of the GET parameters in a string
             </summary>
@@ -1954,11 +1963,11 @@
             <param name="xmlAsString"></param>
             <returns></returns>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.Template.TemplateParsingState.ReplaceGetParametersInt(System.Collections.Generic.IDictionary{System.String,System.String},System.String)">
+        <member name="M:ObjectCloud.Disk.WebHandlers.Template.TemplateParsingState.HandleArgumentsInt(System.Collections.Generic.IDictionary{System.String,System.Object},System.String)">
             <summary>
             Replaces all of the GET parameters in a string
             </summary>
-            <param name="getParameters"></param>
+            <param name="arguments"></param>
             <param name="xmlAsString"></param>
             <returns></returns>
         </member>
@@ -1977,7 +1986,7 @@
             <param name="element"></param>
             <param name="templateInput"></param>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.Template.TemplateParsingState.Flatten(System.Collections.Generic.Dictionary{System.String,System.String},System.String,System.Object)">
+        <member name="M:ObjectCloud.Disk.WebHandlers.Template.TemplateParsingState.Flatten(System.Collections.Generic.IDictionary{System.String,System.Object},System.String,System.Object)">
             <summary>
             Flattens a JSON object for use with a template
             </summary>

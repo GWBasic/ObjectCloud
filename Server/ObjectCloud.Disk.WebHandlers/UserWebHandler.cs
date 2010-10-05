@@ -462,21 +462,17 @@ namespace ObjectCloud.Disk.WebHandlers
                 BlockingShellWebConnection webConnection = new BlockingShellWebConnection(
                     FileHandlerFactoryLocator.WebServer,
                     session,
-                    "",
+                    "/DefaultTemplate/notification.occ",
                     null,
                     null,
                     new CookiesFromBrowser(),
                     CallingFrom.Web,
                     WebMethod.GET);
 
-                foreach (KeyValuePair<string, object> kvp in notification)
-                    if (null != kvp.Value)
-                        webConnection.GetParameters.Add(kvp.Key, kvp.Value.ToString());
-                    else
-                        webConnection.GetParameters.Add(kvp.Key, "");
-
-                IWebResults webResults = TemplateEngine.EvaluateComponent(webConnection, "/DefaultTemplate/notification.occ");
-                notificationEvalutatedThroughTemplate = webResults.ResultsAsString;
+                notificationEvalutatedThroughTemplate = TemplateEngine.EvaluateComponent(
+                    webConnection,
+                    "/DefaultTemplate/notification.occ",
+                    notification);
             }
             finally
             {

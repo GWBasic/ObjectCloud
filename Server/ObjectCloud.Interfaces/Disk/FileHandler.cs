@@ -14,6 +14,7 @@ using JsonFx.Json;
 using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Security;
+using ObjectCloud.Interfaces.Templating;
 using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.Interfaces.Disk
@@ -23,7 +24,7 @@ namespace ObjectCloud.Interfaces.Disk
     /// </summary>
     public abstract class FileHandler : IFileHandler
     {
-        //private static readonly ILog log = LogManager.GetLogger<FileHandler>();
+        private static readonly ILog log = LogManager.GetLogger<FileHandler>();
 
         public FileHandler(FileHandlerFactoryLocator fileHandlerFactoryLocator)
         {
@@ -179,9 +180,39 @@ namespace ObjectCloud.Interfaces.Disk
                 TimeSpan.FromMinutes(5));
         }
 
+        public ITemplateEngine TemplateEngine
+        {
+            get 
+            {
+                if (null == _TemplateEngine)
+                {
+                    IFileContainer templateEngineFileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("/System/TemplateEngine");
+                    _TemplateEngine = (ITemplateEngine)templateEngineFileContainer.WebHandler;
+                }
+
+                return _TemplateEngine; 
+            }
+        }
+        private ITemplateEngine _TemplateEngine = null;
+
         private string GenerateSummaryView(IFileContainer fileContainer)
         {
-            string summaryViewUrl = string.Format("/Shell/SummaryViews/{0}.oc?FileName={1}", fileContainer.Extension, fileContainer.FullPath);
+            string filename;
+
+            if (null != fileContainer.Extension)
+                filename = string.Format(
+                    "/Shell/SummaryViews/ByExtension/{0}.oc", 
+                    fileContainer.Extension);
+            else
+                filename = string.Format(
+                    "/Shell/SummaryViews/ByType/{0}.oc",
+                    fileContainer.TypeId);
+
+            Dictionary<string, object> getParameters = new Dictionary<string, object>();
+            getParameters["filename"] = fileContainer.FullPath;
+            getParameters["objectUrl"] = fileContainer.ObjectUrl;
+            getParameters["HeaderFooterOverride"] = "/DefaultTemplate/summaryview.ochf";
+
             ISession session = FileHandlerFactoryLocator.SessionManagerHandler.CreateSession();
             session.Login(fileContainer.Owner);
 
@@ -191,24 +222,20 @@ namespace ObjectCloud.Interfaces.Disk
                 IWebConnection webConnection = new BlockingShellWebConnection(
                     FileHandlerFactoryLocator.WebServer,
                     session,
-                    summaryViewUrl,
+                    fileContainer.FullPath,
                     null,
                     null,
-                    null,
+                    new CookiesFromBrowser(),
                     CallingFrom.Web,
                     WebMethod.GET);
 
-                IWebResults webResults = webConnection.ShellTo(summaryViewUrl);
-
                 XmlDocument xmlDocument = new XmlDocument();
-                using (Stream stream = webResults.ResultsAsStream)
-                    xmlDocument.Load(stream);
 
-                // TODO:  Make this less icky
-                summaryView = xmlDocument.FirstChild.ChildNodes[1].InnerXml;
+                summaryView = TemplateEngine.EvaluateComponent(webConnection, filename, getParameters);
             }
-            catch
+            catch (Exception e)
             {
+                log.Error("Exception when generating a summary view to send in a notification for " + fileContainer.FullPath, e);
                 summaryView = string.Format("<a href=\"{0}\">{0}</a>", FileContainer.ObjectUrl);
             }
             finally

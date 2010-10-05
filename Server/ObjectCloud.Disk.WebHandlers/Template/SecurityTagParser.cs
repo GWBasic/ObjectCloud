@@ -37,7 +37,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             templateParsingState.ProcessElementForDependanciesAndTemplates += ProcessElementForDependanciesAndTemplates;
         }
 
-        void ProcessElementForDependanciesAndTemplates(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
+        void ProcessElementForDependanciesAndTemplates(ITemplateParsingState templateParsingState, IDictionary<string, object> getParameters, XmlElement element)
         {
             if (templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace == element.NamespaceURI)
                 if ("safeparse" == element.LocalName)
@@ -48,12 +48,12 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     DoParseTag(templateParsingState, getParameters, element);
         }
 
-        void DoSafeParseTag(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
+        void DoSafeParseTag(ITemplateParsingState templateParsingState, IDictionary<string, object> getParameters, XmlElement element)
         {
             MakeSafe(DoParseTag(templateParsingState, getParameters, element));
         }
 		
-        IEnumerable<XmlNode> DoParseTag(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
+        IEnumerable<XmlNode> DoParseTag(ITemplateParsingState templateParsingState, IDictionary<string, object> getParameters, XmlElement element)
         {
             // Generate the xml
             StringBuilder xml = new StringBuilder(
@@ -94,7 +94,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 			return importedNodes;
 		}
 
-        void DoSafeTag(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
+        void DoSafeTag(ITemplateParsingState templateParsingState, IDictionary<string, object> getParameters, XmlElement element)
         {
             IEnumerable<XmlNode> childNodes = Enumerable<XmlNode>.FastCopy(Enumerable<XmlNode>.Cast(element.ChildNodes));
 

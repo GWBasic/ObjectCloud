@@ -13,9 +13,9 @@ using JsonFx.Json;
 
 using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
-using ObjectCloud.Disk.WebHandlers;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
+using ObjectCloud.Interfaces.Templating;
 using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.Javascript.SubProcess
@@ -541,7 +541,7 @@ namespace ObjectCloud.Javascript.SubProcess
             FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
 
             IFileContainer templateEngineFileContainer = functionCallContext.ScopeWrapper.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("/System/TemplateEngine");
-            TemplateEngine templateEngineWebHandler = (TemplateEngine)templateEngineFileContainer.WebHandler;
+            ITemplateEngine templateEngineWebHandler = (ITemplateEngine)templateEngineFileContainer.WebHandler;
 
             RequestParameters requestParameters = new RequestParameters();
 

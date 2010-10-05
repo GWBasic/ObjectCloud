@@ -3,6 +3,7 @@
 // For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -154,31 +155,31 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         }
         private readonly SortedDictionary<double, LinkedList<XmlNode>> _HeaderNodes = new SortedDictionary<double, LinkedList<XmlNode>>();
 
-        internal void OnDocumentLoaded(IDictionary<string, string> getParameters, XmlElement element)
+        internal void OnDocumentLoaded(IDictionary<string, object> arguments, XmlElement element)
         {
             if (null != DocumentLoaded)
-                DocumentLoaded(this, getParameters, element);
+                DocumentLoaded(this, arguments, element);
         }
         public event ElementProcessorFunction DocumentLoaded;
 
-        internal void OnProcessElementForConditionalsAndComponents(IDictionary<string, string> getParameters, XmlElement element)
+        internal void OnProcessElementForConditionalsAndComponents(IDictionary<string, object> arguments, XmlElement element)
         {
             if (null != ProcessElementForConditionalsAndComponents)
-                ProcessElementForConditionalsAndComponents(this, getParameters, element);
+                ProcessElementForConditionalsAndComponents(this, arguments, element);
         }
         public event ElementProcessorFunction ProcessElementForConditionalsAndComponents;
 
-        internal void OnProcessElementForDependanciesAndTemplates(IDictionary<string, string> getParameters, XmlElement element)
+        internal void OnProcessElementForDependanciesAndTemplates(IDictionary<string, object> arguments, XmlElement element)
         {
             if (null != ProcessElementForDependanciesAndTemplates)
-                ProcessElementForDependanciesAndTemplates(this, getParameters, element);
+                ProcessElementForDependanciesAndTemplates(this, arguments, element);
         }
         public event ElementProcessorFunction ProcessElementForDependanciesAndTemplates;
 
-        internal void OnPostProcessElement(IDictionary<string, string> getParameters, XmlElement element)
+        internal void OnPostProcessElement(IDictionary<string, object> arguments, XmlElement element)
         {
             if (null != PostProcessElement)
-                PostProcessElement(this, getParameters, element);
+                PostProcessElement(this, arguments, element);
         }
         public event ElementProcessorFunction PostProcessElement;
 
@@ -486,28 +487,28 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         /// <summary>
         /// Loads an XmlDocument from the filecontainer, replacing GET parameters and verifying permissions
         /// </summary>
-        /// <param name="getParameters"></param>
+        /// <param name="arguments"></param>
         /// <param name="fileContainer"></param>
         /// <param name="xmlParseMode">The kind of text that's being parsed</param>
         /// <returns></returns>
         public XmlDocument LoadXmlDocumentAndReplaceGetParameters(
-            IDictionary<string, string> getParameters, 
+            IDictionary<string, object> arguments, 
             IFileContainer fileContainer,
             XmlParseMode xmlParseMode)
         {
             XmlDocument xmlDocument = LoadXmlDocument(fileContainer, xmlParseMode);
 
             // Do the replacements
-            ReplaceGetParameters(getParameters, xmlDocument);
+            HandleArguments(arguments, xmlDocument);
 
             if (WebConnection.CookiesFromBrowser.ContainsKey(TemplateHandlerLocator.TemplatingConstants.XMLDebugModeCookie))
             {
                 StringBuilder commentBuilder = new StringBuilder("\n\nDEBUG INFO\n");
 
-                SortedDictionary<string, string> sortedGetParameters = new SortedDictionary<string, string>(getParameters);
+                SortedDictionary<string, object> sortedArguments = new SortedDictionary<string, object>(arguments);
 
-                foreach (KeyValuePair<string, string> getArgument in sortedGetParameters)
-                    commentBuilder.AppendFormat("\t{0}: {1}\n", getArgument.Key, getArgument.Value);
+                foreach (KeyValuePair<string, object> getArgument in sortedArguments)
+                    commentBuilder.AppendFormat("\t{0}: {1}\n", getArgument.Key, getArgument.Value.ToString());
 
                 commentBuilder.Append("\n\n");
 
@@ -528,12 +529,12 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         /// <summary>
         /// Replaces all of the GET parameters in an XmlNode
         /// </summary>
-        /// <param name="getParameters"></param>
+        /// <param name="arguments"></param>
         /// <param name="xmlNode"></param>
         /// <returns></returns>
-        public void ReplaceGetParameters(IDictionary<string, string> getParameters, XmlNode xmlNode)
+        public void HandleArguments(IDictionary<string, object> arguments, XmlNode xmlNode)
         {
-            AugmentGetParameters(getParameters);
+            AugmentGetParameters(arguments);
 
             // Perform replacements on all attributes
             if (null != xmlNode.Attributes)
@@ -542,14 +543,14 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 {
                     // Change the value
                     if (xmlAttribute.Value.Contains(TemplateHandlerLocator.TemplatingConstants.ArgBegin[0]))
-                        xmlAttribute.Value = ReplaceGetParametersInt(getParameters, xmlAttribute.Value);
+                        xmlAttribute.Value = HandleArgumentsInt(arguments, xmlAttribute.Value);
 
                     // Change the namespace
                     if (xmlAttribute.NamespaceURI.Contains(TemplateHandlerLocator.TemplatingConstants.ArgBegin[0]))
                     {
                         XmlAttribute newAttribute = xmlNode.OwnerDocument.CreateAttribute(
                             xmlAttribute.LocalName,
-                            ReplaceGetParametersInt(getParameters, xmlAttribute.NamespaceURI));
+                            HandleArgumentsInt(arguments, xmlAttribute.NamespaceURI));
 
                         newAttribute.Value = xmlAttribute.Value;
 
@@ -564,7 +565,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 XmlText xmlText = (XmlText)xmlNode;
 
                 if (xmlText.InnerText.Contains(TemplateHandlerLocator.TemplatingConstants.ArgBegin[0]))
-                    xmlText.InnerText = ReplaceGetParametersInt(getParameters, xmlText.InnerText);
+                    xmlText.InnerText = HandleArgumentsInt(arguments, xmlText.InnerText);
             }
 
             // Recurse on all child nodes
@@ -586,7 +587,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     childNodes = Enumerable<XmlNode>.FastCopy(Enumerable<XmlNode>.Cast(xmlNode.ChildNodes));
 
                     foreach (XmlNode childNode in childNodes)
-                        ReplaceGetParameters(getParameters, childNode);
+                        HandleArguments(arguments, childNode);
                 }
             }
 
@@ -596,7 +597,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 {
                     XmlElement newElement = xmlNode.OwnerDocument.CreateElement(
                         xmlNode.LocalName,
-                        ReplaceGetParametersInt(getParameters, xmlNode.NamespaceURI));
+                        HandleArgumentsInt(arguments, xmlNode.NamespaceURI));
 
                     if (xmlNode.HasChildNodes)
                     {
@@ -622,7 +623,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         /// Adds some default runtime metadata to the get parameters
         /// </summary>
         /// <param name="getParameters"></param>
-        private void AugmentGetParameters(IDictionary<string, string> getParameters)
+        private void AugmentGetParameters(IDictionary<string, object> getParameters)
         {
             // Add some default user information
             if (!getParameters.ContainsKey("User.Identity"))
@@ -640,19 +641,19 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         /// <param name="getParameters"></param>
         /// <param name="xmlAsString"></param>
         /// <returns></returns>
-        public string ReplaceGetParameters(IDictionary<string, string> getParameters, string xmlAsString)
+        public string ReplaceGetParameters(IDictionary<string, object> getParameters, string xmlAsString)
         {
             AugmentGetParameters(getParameters);
-            return ReplaceGetParametersInt(getParameters, xmlAsString);
+            return HandleArgumentsInt(getParameters, xmlAsString);
         }
 
         /// <summary>
         /// Replaces all of the GET parameters in a string
         /// </summary>
-        /// <param name="getParameters"></param>
+        /// <param name="arguments"></param>
         /// <param name="xmlAsString"></param>
         /// <returns></returns>
-        private string ReplaceGetParametersInt(IDictionary<string, string> getParameters, string xmlAsString)
+        private string HandleArgumentsInt(IDictionary<string, object> arguments, string xmlAsString)
         {
             StringBuilder getArgumentsResolvedBuilder = new StringBuilder(Convert.ToInt32(1.1 * Convert.ToDouble(xmlAsString.Length)));
 
@@ -682,8 +683,8 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                     string argument = StringParser.XmlDecode(argumentAndTemplateParts[0].Trim());
                     string remainder = argumentAndTemplateParts[1];
 
-                    if (getParameters.ContainsKey(argument))
-                        getArgumentsResolvedBuilder.Append(getParameters[argument]);
+                    if (arguments.ContainsKey(argument))
+                        getArgumentsResolvedBuilder.Append(arguments[argument]);
                     else if ("!" == argument)
                         getArgumentsResolvedBuilder.Append(unique);
 
@@ -783,7 +784,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             }
             else
             {
-                Dictionary<string, string> getParameters = new Dictionary<string, string>();
+                Dictionary<string, object> getParameters = new Dictionary<string, object>();
 
                 foreach (XmlAttribute attribute in element.Attributes)
                     if ("" == attribute.NamespaceURI)
@@ -792,7 +793,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 Flatten(getParameters, "", templateInput);
 
                 foreach (XmlNode xmlNode in element.ChildNodes)
-                    ReplaceGetParameters(getParameters, xmlNode);
+                    HandleArguments(getParameters, xmlNode);
 
                 ReplaceNodes(element, element.ChildNodes);
             }
@@ -804,7 +805,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         /// <param name="getParameters"></param>
         /// <param name="prefix"></param>
         /// <param name="templateInput"></param>
-        private void Flatten(Dictionary<string, string> getParameters, string prefix, object templateInput)
+        public void Flatten(IDictionary<string, object> getParameters, string prefix, object templateInput)
         {
             if (templateInput is object[])
             {

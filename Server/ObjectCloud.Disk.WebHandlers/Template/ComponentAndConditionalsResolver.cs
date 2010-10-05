@@ -3,6 +3,7 @@
 // For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -33,7 +34,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             templateParsingState.ProcessElementForConditionalsAndComponents += ProcessElementForConditionalsAndComponents;
         }
 
-        void ProcessElementForConditionalsAndComponents(ITemplateParsingState templateParsingState, IDictionary<string, string> getParameters, XmlElement element)
+        void ProcessElementForConditionalsAndComponents(ITemplateParsingState templateParsingState, IDictionary<string, object> getParameters, XmlElement element)
         {
             if (element.NamespaceURI == templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace)
                 if (element.LocalName == "if")
@@ -46,7 +47,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
         private void HandleConditional(
             ITemplateParsingState templateParsingState,
-            IDictionary<string, string> getParameters,
+            IDictionary<string, object> getParameters,
             XmlNode conditionalNode)
         {
             Dictionary<string, ITemplateConditionHandler> templateConditionHandlers = templateParsingState.TemplateHandlerLocator.TemplateConditionHandlers;
@@ -101,7 +102,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
         private void LoadComponent(
             ITemplateParsingState templateParsingState,
-            IDictionary<string, string> getParameters,
+            IDictionary<string, object> getParameters,
             XmlElement element)
         {
             XmlAttribute srcAttribute = (XmlAttribute)element.Attributes.GetNamedItem("src", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
@@ -109,21 +110,21 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
             // handle GET parameters
             // First, handle oc:getpassthrough
-            IDictionary<string, string> myGetParameters;
+            IDictionary<string, object> myGetParameters;
             XmlAttribute getpassthroughAttribute = (XmlAttribute)element.Attributes.GetNamedItem("getpassthough", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
             if (null == getpassthroughAttribute)
             {
-                myGetParameters = DictionaryFunctions.Create<string, string>(getParameters);
+                myGetParameters = DictionaryFunctions.Create<string, object>(getParameters);
                 myGetParameters.Remove("Method");
                 myGetParameters.Remove("Action");
             }
             else
             {
                 if ("false" == getpassthroughAttribute.Value)
-                    myGetParameters = new Dictionary<string, string>();
+                    myGetParameters = new Dictionary<string, object>();
                 else
                 {
-                    myGetParameters = DictionaryFunctions.Create<string, string>(getParameters);
+                    myGetParameters = DictionaryFunctions.Create<string, object>(getParameters);
                     myGetParameters.Remove("Method");
                     myGetParameters.Remove("Action");
                 }
@@ -225,8 +226,8 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 XmlNode resultNode;
                 string url = urlAttribute.Value;
 
-                foreach (KeyValuePair<string, string> getParameter in myGetParameters)
-                    url = HTTPStringFunctions.AppendGetParameter(url, getParameter.Key, getParameter.Value);
+                foreach (KeyValuePair<string, object> getParameter in myGetParameters)
+                    url = HTTPStringFunctions.AppendGetParameter(url, getParameter.Key, getParameter.Value.ToString());
 
                 try
                 {
@@ -277,7 +278,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
 
         private void LoadSnipit(
             ITemplateParsingState templateParsingState,
-            IDictionary<string, string> getParameters,
+            IDictionary<string, object> getParameters,
             XmlElement element)
         {
             XmlAttribute srcAttribute = (XmlAttribute)element.Attributes.GetNamedItem("src", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
