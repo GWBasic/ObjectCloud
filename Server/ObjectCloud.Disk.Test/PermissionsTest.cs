@@ -55,7 +55,7 @@ namespace ObjectCloud.Disk.Test
             string filename = SRandom.Next<long>().ToString();
             rootDirectoryHandler.CreateFile(filename, "text", TestUser_1.Id);
 
-            rootDirectoryHandler.SetPermission(null, filename, TestUser_2.Id, FilePermissionEnum.Administer, false, false);
+            rootDirectoryHandler.SetPermission(null, filename, new ID<IUserOrGroup, Guid>[] { TestUser_2.Id }, FilePermissionEnum.Administer, false, false);
 
             IFileContainer file = rootDirectoryHandler.OpenFile(filename);
 
@@ -68,7 +68,7 @@ namespace ObjectCloud.Disk.Test
             string filename = SRandom.Next<long>().ToString();
             IFileContainer fileContainer = rootDirectoryHandler.CreateFile(filename, "text", TestUser_1.Id).FileContainer;
 
-            rootDirectoryHandler.SetNamedPermission(fileContainer.FileId, "test", TestUser_2.Id, false);
+            rootDirectoryHandler.SetNamedPermission(fileContainer.FileId, "test", new ID<IUserOrGroup, Guid>[] { TestUser_2.Id }, false);
 
             Assert.IsTrue(
                 rootDirectoryHandler.HasNamedPermissions(fileContainer.FileId, new string[] { "test" }, TestUser_2.Id),
@@ -84,7 +84,7 @@ namespace ObjectCloud.Disk.Test
             rootDirectoryHandler.SetNamedPermission(
                 fileContainer.FileId,
                 "test",
-                FileHandlerFactoryLocator.UserFactory.Everybody.Id,
+                new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Everybody.Id },
                 false);
 
             Assert.IsTrue(
@@ -98,13 +98,13 @@ namespace ObjectCloud.Disk.Test
             string filename = SRandom.Next<long>().ToString();
             rootDirectoryHandler.CreateFile(filename, "text", TestUser_2.Id);
 
-            rootDirectoryHandler.SetPermission(null, filename, TestUser_1.Id, FilePermissionEnum.Write, false, false);
+            rootDirectoryHandler.SetPermission(null, filename, new ID<IUserOrGroup, Guid>[] { TestUser_1.Id }, FilePermissionEnum.Write, false, false);
 
             IFileContainer file = rootDirectoryHandler.OpenFile(filename);
 
             Assert.AreEqual(FilePermissionEnum.Write, file.LoadPermission(TestUser_1.Id), "Wrong permission persisted");
 
-            rootDirectoryHandler.SetPermission(null, filename, TestUser_1.Id, FilePermissionEnum.Read, false, false);
+            rootDirectoryHandler.SetPermission(null, filename, new ID<IUserOrGroup, Guid>[] { TestUser_1.Id }, FilePermissionEnum.Read, false, false);
 
             file = rootDirectoryHandler.OpenFile(filename);
 
@@ -117,13 +117,13 @@ namespace ObjectCloud.Disk.Test
             string filename = SRandom.Next<long>().ToString();
             rootDirectoryHandler.CreateFile(filename, "text", TestUser_2.Id);
 
-            rootDirectoryHandler.SetPermission(null, filename, TestUser_1.Id, FilePermissionEnum.Write, false, false);
+            rootDirectoryHandler.SetPermission(null, filename, new ID<IUserOrGroup, Guid>[] { TestUser_1.Id }, FilePermissionEnum.Write, false, false);
 
             IFileContainer file = rootDirectoryHandler.OpenFile(filename);
 
             Assert.AreEqual(FilePermissionEnum.Write, file.LoadPermission(TestUser_1.Id), "Wrong permission persisted");
 
-            rootDirectoryHandler.RemovePermission(filename, TestUser_1.Id);
+            rootDirectoryHandler.RemovePermission(filename, new ID<IUserOrGroup, Guid>[] { TestUser_1.Id });
 
             file = rootDirectoryHandler.OpenFile(filename);
 
@@ -136,8 +136,8 @@ namespace ObjectCloud.Disk.Test
             string filename = SRandom.Next<long>().ToString();
             rootDirectoryHandler.CreateFile(filename, "text", TestUser_2.Id);
 
-            rootDirectoryHandler.SetPermission(null, filename, TestUser_1.Id, FilePermissionEnum.Write, false, false);
-            rootDirectoryHandler.SetPermission(null, filename, TestUser_2.Id, FilePermissionEnum.Write, false, false);
+            rootDirectoryHandler.SetPermission(null, filename, new ID<IUserOrGroup, Guid>[] { TestUser_1.Id }, FilePermissionEnum.Write, false, false);
+            rootDirectoryHandler.SetPermission(null, filename, new ID<IUserOrGroup, Guid>[] { TestUser_2.Id }, FilePermissionEnum.Write, false, false);
 
             // This shouldn't crash
             rootDirectoryHandler.DeleteFile(null, filename);
@@ -251,8 +251,8 @@ namespace ObjectCloud.Disk.Test
 			IFileContainer fileContainer = dir.OpenFile(filename);
 			
 			Assert.IsNull(fileContainer.LoadPermission(TestUser_2.Id), "User should not have any permissions to the file");
-			
-            rootDirectoryHandler.SetPermission(null, dirname, TestUser_2.Id, FilePermissionEnum.Read, true, false);
+
+            rootDirectoryHandler.SetPermission(null, dirname, new ID<IUserOrGroup, Guid>[] { TestUser_2.Id }, FilePermissionEnum.Read, true, false);
 
 			FilePermissionEnum? filePermission = fileContainer.LoadPermission(TestUser_2.Id);
 			Assert.IsNotNull(filePermission, "User should have read permissions to the file");
@@ -274,7 +274,7 @@ namespace ObjectCloud.Disk.Test
 			
 			Assert.IsNull(fileContainer.LoadPermission(TestUser_2.Id), "User should not have any permissions to the file");
 
-            rootDirectoryHandler.SetPermission(null, dirname, FileHandlerFactoryLocator.UserFactory.Everybody.Id, FilePermissionEnum.Read, true, false);
+            rootDirectoryHandler.SetPermission(null, dirname, new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Everybody.Id }, FilePermissionEnum.Read, true, false);
 
 			FilePermissionEnum? filePermission = fileContainer.LoadPermission(TestUser_2.Id);
 			Assert.IsNotNull(filePermission, "User should have read permissions to the file");
@@ -296,8 +296,8 @@ namespace ObjectCloud.Disk.Test
 			
 			Assert.IsNull(fileContainer.LoadPermission(TestUser_2.Id), "User should not have any permissions to the file");
 
-            dir.SetPermission(null, filename, FileHandlerFactoryLocator.UserFactory.Everybody.Id, FilePermissionEnum.Read, true, false);
-            dir.SetPermission(null, filename, TestUser_2.Id, FilePermissionEnum.Write, true, false);
+            dir.SetPermission(null, filename, new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Everybody.Id }, FilePermissionEnum.Read, true, false);
+            dir.SetPermission(null, filename, new ID<IUserOrGroup, Guid>[] { TestUser_2.Id }, FilePermissionEnum.Write, true, false);
 
 			FilePermissionEnum? filePermission = fileContainer.LoadPermission(TestUser_2.Id);
 			Assert.IsNotNull(filePermission, "User should have write permissions to the file");
@@ -319,8 +319,8 @@ namespace ObjectCloud.Disk.Test
 			
 			Assert.IsNull(fileContainer.LoadPermission(TestUser_2.Id), "User should not have any permissions to the file");
 
-            rootDirectoryHandler.SetPermission(null, dirname, FileHandlerFactoryLocator.UserFactory.Everybody.Id, FilePermissionEnum.Read, true, false);
-            rootDirectoryHandler.SetPermission(null, dirname, TestUser_2.Id, FilePermissionEnum.Write, true, false);
+            rootDirectoryHandler.SetPermission(null, dirname, new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Everybody.Id }, FilePermissionEnum.Read, true, false);
+            rootDirectoryHandler.SetPermission(null, dirname, new ID<IUserOrGroup, Guid>[] { TestUser_2.Id }, FilePermissionEnum.Write, true, false);
 
 			FilePermissionEnum? filePermission = fileContainer.LoadPermission(TestUser_2.Id);
 			Assert.IsNotNull(filePermission, "User should have write permissions to the file");

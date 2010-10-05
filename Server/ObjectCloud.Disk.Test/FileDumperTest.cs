@@ -253,10 +253,9 @@ namespace ObjectCloud.Disk.Test
             ID<IUserOrGroup, Guid> trashId = new ID<IUserOrGroup, Guid>(Guid.NewGuid());
 
             IUserFactory userFactory = FileHandlerFactoryLocator.UserFactory;
-            sourceDir.SetPermission(null, "text", userFactory.AnonymousUser.Id, FilePermissionEnum.Read, true, false);
-            sourceDir.SetPermission(null, "text", userFactory.AuthenticatedUsers.Id, FilePermissionEnum.Write, false, false);
-            sourceDir.SetPermission(null, "text", userFactory.LocalUsers.Id, FilePermissionEnum.Administer, true, false);
-            sourceDir.SetPermission(null, "text", trashId, FilePermissionEnum.Read, true, false);
+            sourceDir.SetPermission(null, "text", new ID<IUserOrGroup, Guid>[] { userFactory.AnonymousUser.Id, trashId }, FilePermissionEnum.Read, true, false);
+            sourceDir.SetPermission(null, "text", new ID<IUserOrGroup, Guid>[] { userFactory.AuthenticatedUsers.Id }, FilePermissionEnum.Write, false, false);
+            sourceDir.SetPermission(null, "text", new ID<IUserOrGroup, Guid>[] { userFactory.LocalUsers.Id }, FilePermissionEnum.Administer, true, false);
 
             string dumpDestination = Path.GetTempFileName();
             File.Delete(dumpDestination);

@@ -39,7 +39,7 @@ namespace ObjectCloud.Disk.Implementation
 
             usersDirectory.DeleteFile(null, "anonymous");
 			usersDirectory.RestoreFile("anonymous avatar.jpg", "image", "anonymous avatar.jpg", userFactory.RootUser.Id);
-			usersDirectory.SetPermission(null, "anonymous avatar.jpg", userFactory.Everybody.Id, FilePermissionEnum.Read, false, false);
+			usersDirectory.SetPermission(null, "anonymous avatar.jpg", new ID<IUserOrGroup, Guid>[] {userFactory.Everybody.Id}, FilePermissionEnum.Read, false, false);
 			anonymousUser.UserHandler.Set(null, "Avatar", "/Users/anonymous avatar.jpg");
 
             IUser rootUser = userManager.CreateUser(
@@ -51,12 +51,12 @@ namespace ObjectCloud.Disk.Implementation
 			IDirectoryHandler rootUserDirectoryHandler = usersDirectory.OpenFile("root").CastFileHandler<IDirectoryHandler>();
 			rootUserDirectoryHandler.RestoreFile("Root Avatar.jpg", "image", "Root Avatar.jpg", userFactory.RootUser.Id);
 			rootUser.UserHandler.Set(rootUser, "Avatar", "/Users/root/Root Avatar.jpg");
-			rootUserDirectoryHandler.SetPermission(null, "Root Avatar.jpg", userFactory.Everybody.Id, FilePermissionEnum.Read, false, false);
+			rootUserDirectoryHandler.SetPermission(null, "Root Avatar.jpg", new ID<IUserOrGroup, Guid>[] {userFactory.Everybody.Id}, FilePermissionEnum.Read, false, false);
 
 			// Let the root user see information about the anonymous user
 			IFileContainer anonymousUserFileContainer = usersDirectory.OpenFile("anonymous.user");
 			usersDirectory.Chown(null, anonymousUserFileContainer.FileId, rootUser.Id);
-			usersDirectory.RemovePermission("anonymous.user", anonymousUser.Id);
+			usersDirectory.RemovePermission("anonymous.user", new ID<IUserOrGroup, Guid>[] { anonymousUser.Id });
 			
             // Create groups
             IGroup everybody = userManager.CreateGroup(userFactory.Everybody.Name, null, userFactory.Everybody.Id, true, true, GroupType.Private);
@@ -71,7 +71,7 @@ namespace ObjectCloud.Disk.Implementation
             usersDirectory.SetPermission(
                 null,
                 "UserDB",
-                everybody.Id,
+                new ID<IUserOrGroup, Guid>[] {everybody.Id},
                 ObjectCloud.Interfaces.Security.FilePermissionEnum.Read,
                 false,
                 false);
@@ -80,7 +80,7 @@ namespace ObjectCloud.Disk.Implementation
             usersDirectory.SetPermission(
                 null,
                 "UserDB",
-                administrators.Id,
+                new ID<IUserOrGroup, Guid>[] { administrators.Id },
                 ObjectCloud.Interfaces.Security.FilePermissionEnum.Administer,
                 false,
                 false);
@@ -95,7 +95,7 @@ namespace ObjectCloud.Disk.Implementation
             rootDirectoryHandler.SetPermission(
                 null,
                 "Shell",
-                everybody.Id,
+                new ID<IUserOrGroup, Guid>[] {everybody.Id},
                 FilePermissionEnum.Read,
                 true,
                 false);
@@ -110,7 +110,7 @@ namespace ObjectCloud.Disk.Implementation
             rootDirectoryHandler.SetPermission(
                 null,
                 "API",
-                everybody.Id,
+                new ID<IUserOrGroup, Guid>[] {everybody.Id},
                 FilePermissionEnum.Read,
                 true,
                 false);
@@ -125,7 +125,7 @@ namespace ObjectCloud.Disk.Implementation
             rootDirectoryHandler.SetPermission(
                 null,
                 "Templates",
-                everybody.Id,
+                new ID<IUserOrGroup, Guid>[] {everybody.Id},
                 FilePermissionEnum.Read,
                 true,
                 false);
@@ -140,7 +140,7 @@ namespace ObjectCloud.Disk.Implementation
             rootDirectoryHandler.SetPermission(
                 null,
                 "Tests",
-                everybody.Id,
+                new ID<IUserOrGroup, Guid>[] {everybody.Id},
                 FilePermissionEnum.Read,
                 true,
                 false);
@@ -155,7 +155,7 @@ namespace ObjectCloud.Disk.Implementation
             rootDirectoryHandler.SetPermission(
                 null,
                 "Pages",
-                everybody.Id,
+                new ID<IUserOrGroup, Guid>[] {everybody.Id},
                 FilePermissionEnum.Read,
                 true,
                 false);
@@ -170,7 +170,7 @@ namespace ObjectCloud.Disk.Implementation
             rootDirectoryHandler.SetPermission(
                 null,
                 "Docs",
-                everybody.Id,
+                new ID<IUserOrGroup, Guid>[] {everybody.Id},
                 FilePermissionEnum.Read,
                 true,
                 false);
@@ -185,7 +185,7 @@ namespace ObjectCloud.Disk.Implementation
             rootDirectoryHandler.SetPermission(
                 null,
                 "Classes",
-                everybody.Id,
+                new ID<IUserOrGroup, Guid>[] {everybody.Id},
                 FilePermissionEnum.Read,
                 true,
                 false);
@@ -200,7 +200,7 @@ namespace ObjectCloud.Disk.Implementation
             rootDirectoryHandler.SetPermission(
                 null,
                 "DefaultTemplate",
-                everybody.Id,
+                new ID<IUserOrGroup, Guid>[] {everybody.Id},
                 FilePermissionEnum.Read,
                 true,
                 false);
@@ -215,7 +215,7 @@ namespace ObjectCloud.Disk.Implementation
             rootDirectoryHandler.SetPermission(
                 null,
                 "index.page",
-                everybody.Id,
+                new ID<IUserOrGroup, Guid>[] { everybody.Id },
                 FilePermissionEnum.Read,
                 true,
                 false);
@@ -230,7 +230,7 @@ namespace ObjectCloud.Disk.Implementation
             rootDirectoryHandler.SetPermission(
                 null,
                 "favicon.ico",
-                everybody.Id,
+                new ID<IUserOrGroup, Guid>[] { everybody.Id },
                 FilePermissionEnum.Read,
                 true,
                 false);
@@ -252,7 +252,7 @@ namespace ObjectCloud.Disk.Implementation
             SystemDirectory.SetPermission(
                 null,
                 "SessionManager",
-                FileHandlerFactoryLocator.UserFactory.AuthenticatedUsers.Id,
+                new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.AuthenticatedUsers.Id },
                 FilePermissionEnum.Read,
                 false,
                 false);
@@ -266,7 +266,7 @@ namespace ObjectCloud.Disk.Implementation
             SystemDirectory.SetPermission(
                 null,
                 "Proxy",
-                FileHandlerFactoryLocator.UserFactory.Everybody.Id,
+                new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Everybody.Id },
                 FilePermissionEnum.Read,
                 false,
                 false);
@@ -280,7 +280,7 @@ namespace ObjectCloud.Disk.Implementation
             SystemDirectory.SetPermission(
                 null,
                 "Log",
-                FileHandlerFactoryLocator.UserFactory.Administrators.Id,
+                new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Administrators.Id },
                 FilePermissionEnum.Administer,
                 true,
                 false);
@@ -329,7 +329,7 @@ namespace ObjectCloud.Disk.Implementation
                 rootDirectoryHandler.SetPermission(
                     null,
                     "DefaultTemplate",
-                    FileHandlerFactoryLocator.UserFactory.Everybody.Id,
+                    new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Everybody.Id },
                     FilePermissionEnum.Read,
                     true,
                     false);
@@ -372,7 +372,7 @@ namespace ObjectCloud.Disk.Implementation
                 systemDirectory.SetPermission(
                     null,
                     "BrowserInfo",
-                    FileHandlerFactoryLocator.UserFactory.Everybody.Id,
+                    new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Everybody.Id },
                     FilePermissionEnum.Read,
                     true,
                     false);
@@ -388,7 +388,7 @@ namespace ObjectCloud.Disk.Implementation
                 systemDirectory.SetPermission(
                     null,
                     "Comet",
-                    FileHandlerFactoryLocator.UserFactory.Everybody.Id,
+                    new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Everybody.Id },
                     FilePermissionEnum.Read,
                     true,
                     false);
@@ -401,7 +401,7 @@ namespace ObjectCloud.Disk.Implementation
                 cometDirectory.SetPermission(
                     null,
                     "Loopback",
-                    FileHandlerFactoryLocator.UserFactory.Everybody.Id,
+                    new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Everybody.Id },
                     FilePermissionEnum.Read,
                     true,
                     false);
@@ -414,7 +414,7 @@ namespace ObjectCloud.Disk.Implementation
                 cometDirectory.SetPermission(
                     null,
                     "Echo",
-                    FileHandlerFactoryLocator.UserFactory.Everybody.Id,
+                    new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Everybody.Id },
                     FilePermissionEnum.Read,
                     true,
                     false);
@@ -427,7 +427,7 @@ namespace ObjectCloud.Disk.Implementation
                 cometDirectory.SetPermission(
                     null,
                     "Multiplexer",
-                    FileHandlerFactoryLocator.UserFactory.Everybody.Id,
+                    new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Everybody.Id },
                     FilePermissionEnum.Read,
                     true,
                     false);
@@ -440,7 +440,7 @@ namespace ObjectCloud.Disk.Implementation
                 cometDirectory.SetPermission(
                     null,
                     "LoopbackQuality",
-                    FileHandlerFactoryLocator.UserFactory.Everybody.Id,
+                    new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Everybody.Id },
                     FilePermissionEnum.Read,
                     true,
                     false);
@@ -456,7 +456,7 @@ namespace ObjectCloud.Disk.Implementation
                 systemDirectory.SetPermission(
                     null,
                     "TemplateEngine",
-                    FileHandlerFactoryLocator.UserFactory.Everybody.Id,
+                    new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Everybody.Id },
                     FilePermissionEnum.Read,
                     true,
                     false);
@@ -472,7 +472,7 @@ namespace ObjectCloud.Disk.Implementation
                 systemDirectory.SetPermission(
                     null,
                     "JavascriptInterpreter",
-                    FileHandlerFactoryLocator.UserFactory.Everybody.Id,
+                    new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Everybody.Id },
                     FilePermissionEnum.Read,
                     true,
                     false);
@@ -490,7 +490,7 @@ namespace ObjectCloud.Disk.Implementation
                 usersDirectory.SetPermission(
                     null,
                     groupFileName,
-                    FileHandlerFactoryLocator.UserFactory.Administrators.Id,
+                    new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Administrators.Id },
                     FilePermissionEnum.Read,
                     true,
                     true);
@@ -526,7 +526,7 @@ insert into Metadata (Name, Value) values ('GroupId', @groupId);
                 systemDirectory.SetPermission(
                     null,
                     "Documentation",
-                    FileHandlerFactoryLocator.UserFactory.Everybody.Id,
+                    new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Everybody.Id },
                     FilePermissionEnum.Read,
                     true,
                     false);
@@ -544,7 +544,7 @@ insert into Metadata (Name, Value) values ('GroupId', @groupId);
                 rootDirectoryHandler.SetPermission(
                     null,
                     "Actions",
-                    FileHandlerFactoryLocator.UserFactory.Everybody.Id,
+                    new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Everybody.Id },
                     FilePermissionEnum.Read,
                     true,
                     false);
@@ -553,15 +553,15 @@ insert into Metadata (Name, Value) values ('GroupId', @groupId);
 			// Let the root user see information about the anonymous user
 			IFileContainer anonymousUserFileContainer = usersDirectory.OpenFile("anonymous.user");
 			usersDirectory.Chown(null, anonymousUserFileContainer.FileId, FileHandlerFactoryLocator.UserFactory.RootUser.Id);
-			usersDirectory.RemovePermission("anonymous.user", FileHandlerFactoryLocator.UserFactory.AnonymousUser.Id);
+            usersDirectory.RemovePermission("anonymous.user", new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.AnonymousUser.Id });
 
             if (!usersDirectory.IsFilePresent("ParticleAvatars"))
             {
                 usersDirectory.CreateFile("ParticleAvatars", "directory", null);
                 usersDirectory.SetPermission(
                     null, 
-                    "ParticleAvatars", 
-                    FileHandlerFactoryLocator.UserFactory.LocalUsers.Id, 
+                    "ParticleAvatars",
+                    new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.LocalUsers.Id }, 
                     FilePermissionEnum.Read, 
                     true, 
                     false);

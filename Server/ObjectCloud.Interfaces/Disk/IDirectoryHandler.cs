@@ -118,14 +118,14 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="userId">The user to set the permission for</param>
         /// <param name="filePermission">The permission value</param>
         /// <exception cref="FileDoesNotExist">Thrown if the file does not exist</exception>
-        void SetPermission(ID<IUserOrGroup, Guid>? assigningPermission, string filename, ObjectCloud.Common.ID<IUserOrGroup, Guid> userOrGroupId, FilePermissionEnum level, bool inherit, bool sendNotifications);
+        void SetPermission(ID<IUserOrGroup, Guid>? assigningPermission, string filename, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, FilePermissionEnum level, bool inherit, bool sendNotifications);
 
         /// <summary>
         /// Removes a permission for a given user
         /// </summary>
         /// <param name="userId">The user to remove the permission for</param>
         /// <exception cref="FileDoesNotExist">Thrown if the file does not exist</exception>
-        void RemovePermission(string filename, ID<IUserOrGroup, Guid> userOrGroupId);
+        void RemovePermission(string filename, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds);
 		
 		/// <summary>
 		/// Returns all permissions for the file 
@@ -219,7 +219,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="namedPermission"></param>
         /// <param name="userOrGroupId"></param>
         /// <param name="inherit"></param>
-        void SetNamedPermission(IFileId fileId, string namedPermission, ID<IUserOrGroup, Guid> userOrGroupId, bool inherit);
+        void SetNamedPermission(IFileId fileId, string namedPermission, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, bool inherit);
 
         /// <summary>
         /// Removes a named permission
@@ -227,7 +227,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="fileId"></param>
         /// <param name="namedPermission"></param>
         /// <param name="userOrGroupId"></param>
-        void RemoveNamedPermission(IFileId fileId, string namedPermission, ID<IUserOrGroup, Guid> userOrGroupId);
+        void RemoveNamedPermission(IFileId fileId, string namedPermission, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds);
 
         /// <summary>
         /// True if any of the users or groups has the named permission
