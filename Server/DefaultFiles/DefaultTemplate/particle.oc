@@ -4,18 +4,27 @@
    <oc:css src="/DefaultTemplate/particle.css" />
 
    <script>
-      runNotificationViewer(
-         '<oc:component oc:url="/Users/UserDB?Method=GetUsername" />');
+      runNotificationViewer('[_User.Name_]');
    </script>
 
    <oc:script src="/Shell/Particle/viewer.js" />
 
 </oc:inserthead>
 
-   <div class="notifications" id="notificationsDiv" />
+   <oc:if>
+      <oc:islocal>
+         <oc:component oc:src="/DefaultTemplate/status.oc" />
+         <div class="notifications" id="notificationsDiv" />
 
-   <oc:jsontemplate
-      oc:src="/DefaultTemplate/notification.occ"
-      oc:url="/Users/[name].user?Method=GetNotifications&amp;maxNotifications=25" />
+         <oc:jsontemplate
+            oc:src="/DefaultTemplate/notification.occ"
+            oc:url="/Users/[name].user?Method=GetNotifications&amp;maxNotifications=25" />
+      </oc:islocal>
+      <oc:else>
+         You must be logged in to see notifications
+         <hr />
+         <oc:component oc:src="/DefaultTemplate/login.oc" />
+      </oc:else>
+   </oc:if>
 
 </oc:componentdef>

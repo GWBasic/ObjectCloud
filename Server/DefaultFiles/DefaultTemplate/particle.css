@@ -8,3 +8,15 @@ div.notificationLink
    margin-left:50px;
    background-color:#cccccc;
 }
+
+form.status
+{
+   margin-left:50px;
+   margin-bottom:50px;
+   background-color:#cccccc;
+}
+
+form.status textarea
+{
+   width: 500px;
+}
