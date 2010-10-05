@@ -320,11 +320,27 @@ namespace ObjectCloud.Disk.FileHandlers
             return new Wrapped<FileId>(fileId);
         }
 
-        public void SetPermission(ID<IUserOrGroup, Guid>? assigningPermission, string filename, ID<IUserOrGroup, Guid> userOrGroupId, FilePermissionEnum level, bool inherit, bool sendNotifications)
+        public void SetPermission(ID<IUserOrGroup, Guid>? assigningPermission, string filename, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, FilePermissionEnum level, bool inherit, bool sendNotifications)
         {
+            FileId fileId = FileIDCacheByName[filename].Value;
+
             DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
             {
-                SetPermissionOnTransaction(assigningPermission, filename, userOrGroupId, level, inherit, sendNotifications, transaction);
+                foreach (ID<IUserOrGroup, Guid> userOrGroupId in userOrGroupIds)
+                    DatabaseConnection.Permission.Upsert(
+                        Permission_Table.FileId == (ID<IFileContainer, long>)fileId & Permission_Table.UserOrGroupId == userOrGroupId,
+                        delegate(IPermission_Writable newPermission)
+                        {
+                            newPermission.FileId = fileId;
+                            newPermission.Level = level;
+                            newPermission.UserOrGroupId = userOrGroupId;
+                            newPermission.Inherit = inherit;
+                            newPermission.SendNotifications = sendNotifications;
+                        });
+
+                PermissionsCacheWithInherit.Clear();
+                PermissionsCacheWithoutInherit.Clear();
+
                 transaction.Commit();
             });
 
@@ -340,64 +356,13 @@ namespace ObjectCloud.Disk.FileHandlers
             OnDirectoryChanged();
         }
 
-        /// <summary>
-        /// Helper for setting a permission once a transaction is entered
-        /// </summary>
-        /// <param name="assigningPermission"></param>
-        /// <param name="filename"></param>
-        /// <param name="userOrGroupId"></param>
-        /// <param name="level"></param>
-        /// <param name="inherit"></param>
-        /// <param name="transaction"></param>
-        private bool SetPermissionOnTransaction(ID<IUserOrGroup, Guid>? assigningPermission, string filename, ID<IUserOrGroup, Guid> userOrGroupId, FilePermissionEnum level, bool inherit, bool sendNotifications, IDatabaseTransaction transaction)
-        {
-            bool updated = false;
-
-            FileId fileId = FileIDCacheByName[filename].Value;
-
-            // If there is already a permission in the DB, update it, else, create a new entry
-
-            IPermission_Readable permission = DatabaseConnection.Permission.SelectSingle(
-                Permission_Table.FileId == fileId & Permission_Table.UserOrGroupId == userOrGroupId);
-
-            if (null == permission)
-            {
-                updated = true;
-
-                DatabaseConnection.Permission.Insert(delegate(IPermission_Writable newPermission)
-                {
-                    newPermission.FileId = fileId;
-                    newPermission.Level = level;
-                    newPermission.UserOrGroupId = userOrGroupId;
-                    newPermission.Inherit = inherit;
-                    newPermission.SendNotifications = sendNotifications;
-                });
-            }
-            else
-            {
-                DatabaseConnection.Permission.Update(
-                    Permission_Table.FileId == fileId & Permission_Table.UserOrGroupId == userOrGroupId,
-                    delegate(IPermission_Writable newPermission)
-                    {
-                        newPermission.Level = level;
-                        newPermission.Inherit = inherit;
-                        newPermission.SendNotifications = sendNotifications;
-                    });
-            }
-
-            PermissionsCacheWithInherit.Clear();
-            PermissionsCacheWithoutInherit.Clear();
-
-            return updated;
-        }
-
-        public void RemovePermission(string filename, ObjectCloud.Common.ID<IUserOrGroup, Guid> userId)
+        public void RemovePermission(string filename, IEnumerable<ID<IUserOrGroup, Guid>> userOrIdGroupIds)
         {
             DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
             {
                 IFileId fileId = FileIDCacheByName[filename].Value;
 
-                DatabaseConnection.Permission.Delete(Permission_Table.FileId == fileId & Permission_Table.UserOrGroupId == userId);
+                DatabaseConnection.Permission.Delete(Permission_Table.FileId == fileId & Permission_Table.UserOrGroupId.In(userOrIdGroupIds));
 
                 transaction.Commit();
             });
@@ -1059,7 +1024,7 @@ namespace ObjectCloud.Disk.FileHandlers
                                 bool sendNotifications = false;
                                 bool.TryParse(sendNotificationsString, out sendNotifications);
 
-                                SetPermission(null, filename, userOrGroupId, level, inherit, sendNotifications);
+                                SetPermission(null, filename, new ID<IUserOrGroup, Guid>[] { userOrGroupId }, level, inherit, sendNotifications);
                             }
                 }
 
@@ -1282,27 +1247,13 @@ namespace ObjectCloud.Disk.FileHandlers
             return DatabaseConnection.File.SelectSingle(File_Table.FileId == fileId).OwnerId;
         }
 
-        public void SetNamedPermission(IFileId fileId, string namedPermission, ID<IUserOrGroup, Guid> userOrGroupId, bool inherit)
+        public void SetNamedPermission(IFileId fileId, string namedPermission, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, bool inherit)
         {
             DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
             {
-                INamedPermission_Readable np = DatabaseConnection.NamedPermission.SelectSingle(
-                    NamedPermission_Table.FileId == fileId & NamedPermission_Table.NamedPermission == namedPermission & NamedPermission_Table.UserOrGroup == userOrGroupId);
-
-                if (null == np)
-                {
-                    DatabaseConnection.NamedPermission.Insert(delegate(INamedPermission_Writable np_w)
-                    {
-                        np_w.FileId = (FileId)fileId;
-                        np_w.Inherit = inherit;
-                        np_w.NamedPermission = namedPermission;
-                        np_w.UserOrGroup = userOrGroupId;
-                    });
-                }
-                else
-                {
-                    DatabaseConnection.NamedPermission.Update(
-                        NamedPermission_Table.FileId == fileId & NamedPermission_Table.NamedPermission == namedPermission & NamedPermission_Table.UserOrGroup == userOrGroupId,
+                foreach (ID<IUserOrGroup, Guid> userOrGroupId in userOrGroupIds)
+                    DatabaseConnection.NamedPermission.Upsert(
+                        NamedPermission_Table.FileId == (ID<IFileContainer, long>)((FileId)fileId) & NamedPermission_Table.NamedPermission == namedPermission & NamedPermission_Table.UserOrGroup == userOrGroupId,
                         delegate(INamedPermission_Writable np_w)
                         {
                             np_w.FileId = (FileId)fileId;
@@ -1310,16 +1261,15 @@ namespace ObjectCloud.Disk.FileHandlers
                             np_w.NamedPermission = namedPermission;
                             np_w.UserOrGroup = userOrGroupId;
                         });
-                }
 
                 transaction.Commit();
             });
         }
 
-        public void RemoveNamedPermission(IFileId fileId, string namedPermission, ID<IUserOrGroup, Guid> userOrGroupId)
+        public void RemoveNamedPermission(IFileId fileId, string namedPermission, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds)
         {
             DatabaseConnection.NamedPermission.Delete(
-                NamedPermission_Table.FileId == fileId & NamedPermission_Table.NamedPermission == namedPermission & NamedPermission_Table.UserOrGroup == userOrGroupId);
+                NamedPermission_Table.FileId == fileId & NamedPermission_Table.NamedPermission == namedPermission & NamedPermission_Table.UserOrGroup.In(userOrGroupIds));
         }
 
         public bool HasNamedPermissions(IFileId fileId, IEnumerable<string> namedPermissions, ID<IUserOrGroup, Guid> userId)

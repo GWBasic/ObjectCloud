@@ -85,7 +85,13 @@ namespace ObjectCloud.Disk.FileHandlers
                 string userFileName = name + ".user";
                 newUser = usersDirectory.CreateSystemFile<IUserHandler>(userFileName, "user", userObj.Id);
                 newUser.Name = name;
-                usersDirectory.SetPermission(null, userFileName, FileHandlerFactoryLocator.UserFactory.Everybody.Id, FilePermissionEnum.Read, false, false);
+                usersDirectory.SetPermission(
+                    null,
+                    userFileName,
+                    new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Everybody.Id },
+                    FilePermissionEnum.Read,
+                    false,
+                    false);
             }
             catch
             {
@@ -202,11 +208,24 @@ namespace ObjectCloud.Disk.FileHandlers
                     {
                         throw new UserAlreadyExistsException(name + " already exists");
                     }
-                    groupObjectDestinationDirectory.SetPermission(ownerId, groupFileName, groupId, FilePermissionEnum.Read, true, true);
+
+                    groupObjectDestinationDirectory.SetPermission(
+                        ownerId, 
+                        groupFileName, 
+                        new ID<IUserOrGroup, Guid>[] { groupId }, 
+                        FilePermissionEnum.Read, 
+                        true, 
+                        true);
 
                     // Everyone can read a public group
                     if (GroupType.Public == groupType)
-                        usersDirectory.SetPermission(ownerId, groupFileName, FileHandlerFactoryLocator.UserFactory.Everybody.Id, FilePermissionEnum.Read, true, false);
+                        usersDirectory.SetPermission(
+                            ownerId, 
+                            groupFileName, 
+                            new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Everybody.Id }, 
+                            FilePermissionEnum.Read, 
+                            true, 
+                            false);
 
                     groupDB.Set(owner, "GroupId", groupId.Value.ToString());
                 }

@@ -138,7 +138,7 @@ namespace ObjectCloud.Particle.UnitTests
 
             lock (key)
             {
-                TestDirectory.SetPermission(sender.Id, file.FileContainer.Filename, localRecipient.Id, FilePermissionEnum.Read, true, true);
+                TestDirectory.SetPermission(sender.Id, file.FileContainer.Filename, new ID<IUserOrGroup, Guid>[] { localRecipient.Id }, FilePermissionEnum.Read, true, true);
 
                 bool notified = Monitor.Wait(key, TimeSpan.FromSeconds(20));
                 Assert.IsTrue(notified, "Timeout waiting for notification");

@@ -278,22 +278,68 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="UserOrGroupId"></param>
         /// <param name="SendNotifications"></param>
         /// <param name="namedPermissions"></param>
+        /// <param name="UserOrGroupIds"></param>
+        /// <param name="UserOrGroups"></param>
         [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Primitive, FilePermissionEnum.Administer)]
-        public IWebResults SetPermission(IWebConnection webConnection, string UserOrGroupId, string UserOrGroup, string FilePermission, bool? Inherit, bool? SendNotifications, string[] namedPermissions)
+        public IWebResults SetPermission(
+            IWebConnection webConnection, 
+            string UserOrGroupId, 
+            string UserOrGroup,
+            string[] UserOrGroups,
+            string[] UserOrGroupIds,
+            string FilePermission, 
+            bool? Inherit, 
+            bool? SendNotifications, 
+            string[] namedPermissions)
         {
-            ID<IUserOrGroup, Guid> userOrGroupId;
+            Set<ID<IUserOrGroup, Guid>> userOrGroupIds = new Set<ID<IUserOrGroup,Guid>>();
 
+            // Build list of IDs to check
+            Set<ID<IUserOrGroup, Guid>> userOrGroupIdsToCheck = new Set<ID<IUserOrGroup, Guid>>();
+            if (null != UserOrGroupIds)
+                foreach (string userOrGroupIdString in UserOrGroupIds)
+                    userOrGroupIdsToCheck.Add(new ID<IUserOrGroup, Guid>(new Guid(userOrGroupIdString)));
             if (null != UserOrGroupId)
-                userOrGroupId = new ID<IUserOrGroup, Guid>(new Guid(UserOrGroupId));
-            else
-                try
+                userOrGroupIdsToCheck.Add(new ID<IUserOrGroup, Guid>(new Guid(UserOrGroupId)));
+
+            // Build list of usernames to check
+            Set<string> userOrGroupsToCheck = new Set<string>();
+            if (null != UserOrGroups)
+                foreach (string userOrGroupName in UserOrGroups)
+                    userOrGroupsToCheck.Add(userOrGroupName);
+            if (null != UserOrGroup)
+                userOrGroupsToCheck.Add(UserOrGroup);
+
+            // Build set of user and group IDs while verifying that they exist
+            object errorObject = "";
+            try
+            {
+                foreach (ID<IUserOrGroup, Guid> userOrGroupId in userOrGroupIdsToCheck)
                 {
-                    userOrGroupId = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupOrOpenId(UserOrGroup.Trim()).Id;
+                    errorObject = userOrGroupId;
+
+                    // Verify that user exists
+                    IUserOrGroup toVerify =
+                        FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroup(userOrGroupId);
+
+                    userOrGroupIds.Add(toVerify.Id);
                 }
-                catch (UnknownUser)
+
+                foreach (string userOrGroupName in userOrGroupsToCheck)
                 {
-                    return WebResults.From(Status._406_Not_Acceptable, UserOrGroup + " does not exist");
+                    errorObject = userOrGroupName;
+
+                    // Verify that user exists
+                    IUserOrGroup toVerify =
+                        FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupOrOpenId(userOrGroupName.Trim());
+
+                    userOrGroupIds.Add(toVerify.Id);
                 }
+            }
+            catch (UnknownUser)
+            {
+                return WebResults.From(Status._406_Not_Acceptable, errorObject.ToString() + " does not exist");
+            }
 
             FilePermissionEnum? level = null;
             if (null != FilePermission)
@@ -313,7 +359,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 FileHandler.FileContainer.ParentDirectoryHandler.SetPermission(
                    webConnection.Session.User.Id,
                    FileHandler.FileContainer.Filename,
-                   userOrGroupId,
+                   userOrGroupIds,
                    level.Value,
                    inherit,
                    sendNotifications);
@@ -323,14 +369,14 @@ namespace ObjectCloud.Disk.WebHandlers
 						FileHandler.FileContainer.ParentDirectoryHandler.SetNamedPermission(
 	                        FileContainer.FileId,
 	                        namedPermission,
-	                        userOrGroupId,
+	                        userOrGroupIds,
 	                        inherit);
 				
                 return WebResults.From(Status._202_Accepted, "Permission set to " + level.ToString());
             }
             else
             {
-                FileHandler.FileContainer.ParentDirectoryHandler.RemovePermission(FileHandler.FileContainer.Filename, userOrGroupId);
+                FileHandler.FileContainer.ParentDirectoryHandler.RemovePermission(FileHandler.FileContainer.Filename, userOrGroupIds);
                 return WebResults.From(Status._202_Accepted, "Permission removed");
             }
         }
@@ -489,12 +535,12 @@ namespace ObjectCloud.Disk.WebHandlers
 			if (null != UserOrGroupId)
 				userOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroup(new ID<IUserOrGroup, Guid>(UserOrGroupId.Value));
 			else
-            		userOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupOrOpenId(usernameOrGroup);
+                userOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupOrOpenId(usernameOrGroup);
 
             FileContainer.ParentDirectoryHandler.SetNamedPermission(
                 FileContainer.FileId,
                 namedPermission,
-                userOrGroup.Id,
+                new ID<IUserOrGroup, Guid>[] { userOrGroup.Id },
                 inherit);
 
             return WebResults.From(Status._202_Accepted);
@@ -516,12 +562,12 @@ namespace ObjectCloud.Disk.WebHandlers
 			if (null != UserOrGroupId)
 				userOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroup(new ID<IUserOrGroup, Guid>(UserOrGroupId.Value));
 			else
-            		userOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupOrOpenId(usernameOrGroup);
+            	userOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupOrOpenId(usernameOrGroup);
 
             FileContainer.ParentDirectoryHandler.RemoveNamedPermission(
                 FileContainer.FileId,
                 namedPermission,
-                userOrGroup.Id);
+                new ID<IUserOrGroup, Guid>[] { userOrGroup.Id });
 
             return WebResults.From(Status._202_Accepted);
         }

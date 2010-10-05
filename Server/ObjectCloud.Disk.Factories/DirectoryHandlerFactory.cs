@@ -131,7 +131,13 @@ namespace ObjectCloud.Disk.Factories
                                 bool sendNotifications = false;
                                 bool.TryParse(sendNotificationsString, out sendNotifications);
 
-                                target.SetPermission(null, filename, userOrGroupId, level, inherit, sendNotifications);
+                                target.SetPermission(
+                                    null,
+                                    filename,
+                                    new ID<IUserOrGroup, Guid>[] {userOrGroupId},
+                                    level,
+                                    inherit,
+                                    sendNotifications);
                             }
                 }
             }

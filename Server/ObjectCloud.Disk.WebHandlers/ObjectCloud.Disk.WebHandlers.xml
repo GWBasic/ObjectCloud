@@ -57,7 +57,7 @@
             <param name="webConnection"></param>
             <returns></returns>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.WebHandler`1.SetPermission(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String,System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.String[])">
+        <member name="M:ObjectCloud.Disk.WebHandlers.WebHandler`1.SetPermission(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String[],System.String[],System.String,System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.String[])">
             <summary>
             Sets the user's permission for the given file.  Either the user or group ID or name are set
             </summary>
@@ -69,6 +69,8 @@
             <param name="UserOrGroupId"></param>
             <param name="SendNotifications"></param>
             <param name="namedPermissions"></param>
+            <param name="UserOrGroupIds"></param>
+            <param name="UserOrGroups"></param>
         </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.WebHandler`1.GetPermission(ObjectCloud.Interfaces.WebServer.IWebConnection)">
             <summary>
@@ -2213,7 +2215,7 @@
             <returns></returns>
             <param name="FileName"></param>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.SetFilePermission(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String,System.String,System.Nullable{System.Boolean},System.Nullable{System.Boolean})">
+        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.SetFilePermission(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String[],System.String[],System.String,System.String,System.Nullable{System.Boolean},System.Nullable{System.Boolean})">
             <summary>
             Sets the user's permission for the given file.  Either the user or group ID or name are set
             </summary>
@@ -2225,6 +2227,8 @@
             <param name="UserOrGroup"></param>
             <param name="UserOrGroupId"></param>
             <param name="SendNotifications"></param>
+            <param name="UserOrGroupIds"></param>
+            <param name="UserOrGroups"></param>
         </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.GetFilePermissions(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
             <summary>

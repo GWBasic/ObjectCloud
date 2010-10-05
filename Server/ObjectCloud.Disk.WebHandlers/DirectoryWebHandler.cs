@@ -348,8 +348,19 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="UserOrGroup"></param>
         /// <param name="UserOrGroupId"></param>
         /// <param name="SendNotifications"></param>
+        /// <param name="UserOrGroupIds"></param>
+        /// <param name="UserOrGroups"></param>
         [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Administer)]
-        public IWebResults SetFilePermission(IWebConnection webConnection, string UserOrGroupId, string UserOrGroup, string FileName, string FilePermission, bool? Inherit, bool? SendNotifications)
+        public IWebResults SetFilePermission(
+            IWebConnection webConnection,
+            string UserOrGroupId,
+            string UserOrGroup,
+            string[] UserOrGroupIds,
+            string[] UserOrGroups,
+            string FileName, 
+            string FilePermission, 
+            bool? Inherit, 
+            bool? SendNotifications)
         {
             IFileContainer file;
 
@@ -363,7 +374,8 @@ namespace ObjectCloud.Disk.WebHandlers
                     WebResults.From(Status._404_Not_Found, FileName + " doesn't exist"));
             }
 
-            return file.WebHandler.SetPermission(webConnection, UserOrGroupId, UserOrGroup, FilePermission, Inherit, SendNotifications, null);
+            return file.WebHandler.SetPermission(
+                webConnection, UserOrGroupId, UserOrGroup, UserOrGroups, UserOrGroupIds, FilePermission, Inherit, SendNotifications, null);
         }
 		
 		/// <summary>

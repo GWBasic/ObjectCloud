@@ -155,10 +155,8 @@ namespace ObjectCloud.Disk.Test
             // Create users and group
             FileHandlerFactoryLocator.UserManagerHandler.AddUserToGroup(User1.Id, Group.Id);
 
-            directory.SetPermission(null, related1Container.Filename, User1.Id, FilePermissionEnum.Read, false, false);
-            directory.SetPermission(null, related2Container.Filename, Group.Id, FilePermissionEnum.Read, false, false);
-            directory.SetPermission(null, related3Container.Filename, User2.Id, FilePermissionEnum.Read, false, false);
-            directory.FileContainer.ParentDirectoryHandler.SetPermission(null, directory.FileContainer.Filename, User3.Id, FilePermissionEnum.Read, true, false);
+            directory.SetPermission(null, related1Container.Filename, new ID<IUserOrGroup, Guid>[] { User1.Id, Group.Id, User2.Id }, FilePermissionEnum.Read, false, false);
+            directory.FileContainer.ParentDirectoryHandler.SetPermission(null, directory.FileContainer.Filename, new ID<IUserOrGroup, Guid>[] { User3.Id }, FilePermissionEnum.Read, true, false);
 
             List<IFileContainer> fileContainers;
 
@@ -199,9 +197,8 @@ namespace ObjectCloud.Disk.Test
                 FileHandlerFactoryLocator.UserFactory.RootUser.Id);
 
             IFileContainer parentContainer = directory.CreateFile("parent", "text", User1.Id).FileContainer;
-            directory.SetNamedPermission(parentContainer.FileId, "aaa", User2.Id, false);
-            directory.SetNamedPermission(parentContainer.FileId, "aaa", User3.Id, false);
-            directory.SetPermission(null, parentContainer.Filename, User3.Id, FilePermissionEnum.Read, false, false);
+            directory.SetNamedPermission(parentContainer.FileId, "aaa", new ID<IUserOrGroup, Guid>[] { User2.Id, User3.Id }, false);
+            directory.SetPermission(null, parentContainer.Filename, new ID<IUserOrGroup, Guid>[] { User3.Id }, FilePermissionEnum.Read, false, false);
 
             IFileContainer relatedContainer = directory.CreateFile("related.txt", "text", User2.Id).FileContainer;
             directory.AddRelationship(parentContainer, relatedContainer, "aaa", false);
@@ -224,11 +221,11 @@ namespace ObjectCloud.Disk.Test
                 FileHandlerFactoryLocator.UserFactory.RootUser.Id);
 
             IFileContainer parentContainer = directory.CreateFile("parent", "text", User1.Id).FileContainer;
-            directory.SetNamedPermission(parentContainer.FileId, "aaa", User2.Id, false);
-            directory.SetNamedPermission(parentContainer.FileId, "aaa", User3.Id, false);
-            directory.SetNamedPermission(parentContainer.FileId, "bbb", User2.Id, false);
-            directory.SetNamedPermission(parentContainer.FileId, "bbb", User3.Id, false);
-            directory.SetPermission(null, parentContainer.Filename, User3.Id, FilePermissionEnum.Read, false, false);
+            directory.SetNamedPermission(parentContainer.FileId, "aaa", new ID<IUserOrGroup, Guid>[] { User2.Id }, false);
+            directory.SetNamedPermission(parentContainer.FileId, "aaa", new ID<IUserOrGroup, Guid>[] { User3.Id }, false);
+            directory.SetNamedPermission(parentContainer.FileId, "bbb", new ID<IUserOrGroup, Guid>[] { User2.Id }, false);
+            directory.SetNamedPermission(parentContainer.FileId, "bbb", new ID<IUserOrGroup, Guid>[] { User3.Id }, false);
+            directory.SetPermission(null, parentContainer.Filename, new ID<IUserOrGroup, Guid>[] { User3.Id }, FilePermissionEnum.Read, false, false);
 
             IFileContainer relatedContainerA = directory.CreateFile("relatedA.txt", "text", User2.Id).FileContainer;
             directory.AddRelationship(parentContainer, relatedContainerA, "aaa", false);
