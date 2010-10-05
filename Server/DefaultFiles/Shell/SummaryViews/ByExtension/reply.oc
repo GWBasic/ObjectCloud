@@ -1,0 +1,8 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
+
+   <oc:trim maxtags="30" maxlength="150">
+      <oc:safeparse oc:xmlparsemode="xmlthenhtml"><oc:component oc:url="[_filename_]" Method="ReadAll" /></oc:safeparse>
+   </oc:trim>
+   <a href="[_objectUrl_]"> more...</a>
+
+</oc:componentdef>
