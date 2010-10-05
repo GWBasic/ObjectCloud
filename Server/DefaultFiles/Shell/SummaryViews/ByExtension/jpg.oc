@@ -1,0 +1,3 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
+   <br /><a href="[_objectUrl_]"><img src="[_objectUrl_]?Method=GetScaled&amp;width=400&amp;maxHeight=250" oc:browsercache="date" /></a>
+</oc:componentdef>

@@ -202,11 +202,11 @@ namespace ObjectCloud.Interfaces.Disk
             if (null != fileContainer.Extension)
                 filename = string.Format(
                     "/Shell/SummaryViews/ByExtension/{0}.oc", 
-                    fileContainer.Extension);
+                    fileContainer.Extension.ToLowerInvariant());
             else
                 filename = string.Format(
                     "/Shell/SummaryViews/ByType/{0}.oc",
-                    fileContainer.TypeId);
+                    fileContainer.TypeId.ToLowerInvariant());
 
             Dictionary<string, object> getParameters = new Dictionary<string, object>();
             getParameters["filename"] = fileContainer.FullPath;
