@@ -28,10 +28,10 @@
 
    <hr />
 
-   <form action="/Users/UserDB?Method=OpenIDLogin" method="POST"> 
+   <form action="/Users/UserDB?Method=OpenIDLogin" method="POST" target="_top"> 
       OpenID <img src="/Shell/OpenID/login-bg.gif" />: <input type="text" name="openid_url" id="openid_url"/> 
       <input type="submit" value="OpenID login"/> 
-      <input type="hidden" name="redirect" id="Login_redirect"/> 
+      <input type="hidden" name="redirect" class="openId_redirect"/> 
    </form> 
 
 </oc:componentdef>

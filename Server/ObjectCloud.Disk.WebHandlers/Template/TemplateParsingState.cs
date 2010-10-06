@@ -625,14 +625,15 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         /// <param name="getParameters"></param>
         private void AugmentGetParameters(IDictionary<string, object> getParameters)
         {
-            // Add some default user information
-            if (!getParameters.ContainsKey("User.Identity"))
-                if (WebConnection.Session.User.Id != FileHandlerFactoryLocator.UserFactory.AnonymousUser.Id)
+            if (WebConnection.Session.User.Id != FileHandlerFactoryLocator.UserFactory.AnonymousUser.Id)
+            {
+                // Add some default user information
+                if (!getParameters.ContainsKey("User.Identity"))
                     getParameters["User.Identity"] = WebConnection.Session.User.Identity;
 
-            if (!getParameters.ContainsKey("User.Name"))
-                if (WebConnection.Session.User.Local)
+                if (!getParameters.ContainsKey("User.Name"))
                     getParameters["User.Name"] = WebConnection.Session.User.Name;
+            }
         }
 
         /// <summary>

@@ -76,4 +76,6 @@ $(document).ready(function()
 
    Login_UpdateKeepAlive();
 
+   // Make sure that OpenID can properly redirect
+   $('input.openId_redirect').val(window.location.href);
 });

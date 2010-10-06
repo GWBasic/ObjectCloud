@@ -288,12 +288,12 @@ namespace ObjectCloud.Disk.FileHandlers
                             EstablishTrustDatasByToken.Remove(token);
                         }
 
-                        DatabaseConnection.Recipient.Insert(delegate(IRecipient_Writable recipient)
-                        {
-                            recipient.receiveNotificationEndpoint = receiveNotificationEndpoint;
-                            recipient.senderToken = senderToken;
-                            recipient.userID = sender.Id;
-                        });
+                        DatabaseConnection.Recipient.Upsert(
+                            Recipient_Table.receiveNotificationEndpoint == receiveNotificationEndpoint & Recipient_Table.userID == sender.Id,
+                            delegate(IRecipient_Writable recipient)
+                            {
+                                recipient.senderToken = senderToken;
+                            });
 
                         callback(senderToken);
                     }
