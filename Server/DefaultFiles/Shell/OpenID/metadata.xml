@@ -35,4 +35,8 @@
 			Inherit="False"
 			SendNotifications="False" />
 	</File>
+	<File
+		Name="OpenIDRedirect.oc"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 </Directory>

@@ -1,9 +1,9 @@
 <oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
 
-   <a href="[_objectUrl_]">
-      <oc:trim maxtags="30" maxlength="150">
-         <oc:safeparse><oc:component oc:url="[_filename_]" Method="ReadAll" /></oc:safeparse>
-      </oc:trim>
-   </a>
+   <oc:jsontemplate
+      oc:datafile="[_filename_]" filename="[_filename_]" objectUrl="[_objectUrl_]">
 
+      <oc:trim maxtags="30" maxlength="150">[_Status_]</oc:trim>
+      <a href="[__UP.objectUrl_]">more...</a>
+   </oc:jsontemplate>
 </oc:componentdef>

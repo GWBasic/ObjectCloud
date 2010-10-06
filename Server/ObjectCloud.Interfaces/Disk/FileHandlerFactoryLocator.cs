@@ -5,9 +5,11 @@
 using System;
 using System.Collections.Generic;
 
+using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Javascript;
 using ObjectCloud.Interfaces.Security;
 using ObjectCloud.Interfaces.Templating;
+using ObjectCloud.Interfaces.Utilities;
 using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.Interfaces.Disk
@@ -238,5 +240,20 @@ namespace ObjectCloud.Interfaces.Disk
             set { _TemplateHandlerLocator = value; }
         }
         private TemplateHandlerLocator _TemplateHandlerLocator;
+
+        /// <summary>
+        /// All of the file extensions that shouldn't have notifications sent
+        /// </summary>
+        public Set<string> NoParticle
+        {
+            get 
+            {
+                if (null == _NoParticle)
+                    _NoParticle = new JSONSetReader(this, "/Actions/NoParticle.json");
+
+                return _NoParticle.Set; 
+            }
+        }
+        private JSONSetReader _NoParticle = null;
     }
 }

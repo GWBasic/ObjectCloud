@@ -1,4 +1,4 @@
-// Scripts: /API/jquery.js, /Users/[name].user?Method=GetJSW&assignToVariable=NotificationsProxy, /API/Comet/CometProtocol.js
+// Scripts: /API/jquery.js, /Users/[name].user?Method=GetJSW&assignToVariable=NotificationsProxy, /API/Comet/CometProtocol.js, /API/jquery-ui.auto.js, /API/Url.js
 
 // http://jasonwyatt.tumblr.com/post/206787093/javascript-escapehtml-string-function
 String.prototype.escapeHTML = function(){
@@ -49,10 +49,29 @@ function runNotificationViewer(currentUserName)
    });
 }
 
+var url = Url.parseCurrent();
+
 function reformatNotification(notification)
 {
    var objectElements;
    var objectUrl = notification.attr('src');
+   var senderIdentity = notification.attr('senderIdentity');
+
+   $('a', notification).each(function()
+   {
+      var me = $(this);
+
+      if (undefined == me.attr('target'))
+         juiauto_makeiFrameLink(me);
+
+      var href = me.attr('href');
+      if (undefined != href)
+         if (url.server != Url.parse(href).server)
+            me.attr(
+               'href',
+               url.protocol + url.server + '/Shell/OpenID/OpenIDRedirect.oc?senderIdentity=' +
+               Url.encode(senderIdentity) + '&url=' + Url.encode(objectUrl));
+   });
 
    if (notificationsOnScreen[objectUrl])
    {

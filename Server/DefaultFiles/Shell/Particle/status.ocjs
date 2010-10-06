@@ -1,8 +1,44 @@
-// some javascript
+// Handles when a user posts his or her status
 
-// The Scripts: syntax is supported
+var args = getPost();
+var connectionMetadata = getConnectionMetadata();
 
-// Do not use return statements
-// To return a value, simply make it the last thunk:
+var userDir = open('/Users/' + connectionMetadata.name);
 
-"This will be returned";
+var statusContents = 
+   {
+      Status: args.status
+   };
+
+var userOrGroups = [];
+for (property in args)
+   if (0 == property.indexOf('recipient_'))
+      if (args[property].length > 0)
+         userOrGroups.push(args[property]);
+
+var statusFile = userDir.CreateFile_Sync(
+   {
+      extension: 'status',
+      fileNameSuggestion: args.status
+   });
+
+try
+{
+   statusFile.WriteAll_Sync(JSON.stringify(statusContents));
+
+   statusFile.SetPermission_Sync(
+      {
+         FilePermission: 'Read',
+         Inherit: true,
+         SendNotifications: true,
+         namedPermissions: ['reply'],
+         UserOrGroups: userOrGroups
+      });
+}
+catch (exception)
+{
+   userDir.DeleteFile_Sync({ FileName: statusFile.Filename });
+   throw exception;
+}
+
+"success";

@@ -333,15 +333,23 @@ namespace ObjectCloud.Disk.WebHandlers
             }
 
             List<Dictionary<string, object>> toReturn = new List<Dictionary<string, object>>();
+            //Dictionary<string, Dictionary<string, object>> resultsBySender = new Dictionary<string, Dictionary<string, object>>();
 
             foreach (Dictionary<NotificationColumn, object> notificationFromDB in FileHandler.GetNotifications(
                 newestNotificationId, oldestNotificationId, maxNotifications, objectUrls, senderIdentities, desiredValuesSet))
             {
                 Dictionary<string, object> notification = ConvertNotificationFromDBToNotificationForWeb(includeAvatarUrl, notificationFromDB);
+
+                /*resultsBySender[notificationFromDB[NotificationColumn.SenderIdentity].ToString()] = notification;
+
+                object linkedSenderIdentity;
+                if (notificationFromDB.TryGetValue(NotificationColumn.LinkedSenderIdentity, out linkedSenderIdentity))
+                    resultsBySender[linkedSenderIdentity.ToString()] = notification;*/
+
                 toReturn.Add(notification);
             }
 
-            // TODO:  sender avatar and ignored
+            // TODO:  linked sender avatar and ignored
 
             return WebResults.ToJson(toReturn);
         }

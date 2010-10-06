@@ -296,6 +296,12 @@ namespace ObjectCloud.Interfaces.Disk
         /// A <see cref="IEnumerable"/>
         /// </returns>
         IEnumerable<IGroupAndAlias> GetAllGroups(ID<IUserOrGroup, Guid> userId);
+
+        /// <summary>
+        /// Returns all local user IDs
+        /// </summary>
+        /// <returns></returns>
+        IEnumerable<ID<IUserOrGroup, Guid>> GetAllLocalUserIds();
 		
 		/// <summary>
 		/// Returns all groups that a user owns 
@@ -427,6 +433,13 @@ namespace ObjectCloud.Interfaces.Disk
             string changeData,
             int maxRetries,
             TimeSpan transportErrorDelay);
+
+        /// <summary>
+        /// Returns information needed to speed up an OpenID login when viewing an object from a sender
+        /// </summary>
+        /// <param name="senderIdentity"></param>
+        /// <returns></returns>
+        RapidLoginInfo GetRapidLoginInfo(string senderIdentity);
     }
 
     /// <summary>
@@ -448,5 +461,16 @@ namespace ObjectCloud.Interfaces.Disk
         /// The OpenIDs or WebFinders that are valid for this endpoint
         /// </summary>
         public List<string> RecipientIdentities;
+    }
+
+    /// <summary>
+    /// Encapsulates information needed to facilitate quickly logging in through OpenID
+    /// </summary>
+    public struct RapidLoginInfo
+    {
+        public string LoginUrl;
+        public string LoginUrlOpenID;
+        public string LoginUrlWebFinger;
+        public string LoginUrlRedirect;
     }
 }

@@ -174,4 +174,8 @@
 			Inherit="False"
 			SendNotifications="False" />
 	</File>
+	<File
+		Name="StatusViewer.oc"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 </Directory>

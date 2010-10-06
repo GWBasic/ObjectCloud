@@ -114,6 +114,7 @@
     <Compile Include="Templating\TemplateHandlerLocator.cs" />
     <Compile Include="Templating\TemplatingConstants.cs" />
     <Compile Include="Utilities\JSONNamedSetReader.cs" />
+    <Compile Include="Utilities\JSONSetReader.cs" />
     <Compile Include="WebServer\BlockingShellWebConnection.cs" />
     <Compile Include="Security\ChannelEndpointMinimumPermissionAttribute.cs" />
     <Compile Include="WebServer\CookieToSet.cs" />

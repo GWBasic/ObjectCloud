@@ -142,6 +142,11 @@ namespace ObjectCloud.Interfaces.Disk
             string verb,
             object changeData)
         {
+            // Do not send a notification if this is a file type that shouldn't have notifications sent
+            if (null != FileContainer.Extension)
+                if (FileHandlerFactoryLocator.NoParticle.Contains(FileContainer.Extension))
+                    return;
+
             // Do not send notifications while the system is starting up
             if (!FileHandlerFactoryLocator.FileSystemResolver.IsStarted)
                 return;
@@ -255,12 +260,15 @@ namespace ObjectCloud.Interfaces.Disk
             // Load the recipients based on who has permission / owns the file
             IEnumerable<FilePermission> permissions = FileContainer.ParentDirectoryHandler.GetPermissions(FileContainer.Filename);
 
-            List<ID<IUserOrGroup, Guid>> userOrGroupIds = new List<ID<IUserOrGroup, Guid>>();
+            Set<ID<IUserOrGroup, Guid>> userOrGroupIds = new Set<ID<IUserOrGroup, Guid>>();
 
             // send the notification to all users who have permission to this file...
             foreach (FilePermission filePermission in permissions)
                 if (filePermission.SendNotifications)
-                    userOrGroupIds.Add(filePermission.UserOrGroupId);
+                    if (filePermission.UserOrGroupId == FileHandlerFactoryLocator.UserFactory.Everybody.Id || filePermission.UserOrGroupId == FileHandlerFactoryLocator.UserFactory.LocalUsers.Id)
+                        userOrGroupIds.AddRange(FileHandlerFactoryLocator.UserManagerHandler.GetAllLocalUserIds());
+                    else
+                        userOrGroupIds.Add(filePermission.UserOrGroupId);
 
             // ... and the owner
             userOrGroupIds.Add(FileContainer.OwnerId.Value);

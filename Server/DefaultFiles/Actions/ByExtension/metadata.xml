@@ -325,6 +325,10 @@
 			SendNotifications="False" />
 	</File>
 	<File
+		Name="status"
+		TypeId="name-value"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
 		Name="text"
 		TypeId="name-value"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">

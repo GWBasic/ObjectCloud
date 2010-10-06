@@ -26,6 +26,15 @@
 
 $(document).ready(function()
 {
+   // Links that should look like buttons
+   $('.juiauto_button').button();
+
+   // Links that are displayed in a modal dialog box with an iFrame
+   juiauto_makeiFrameLink($('.juiauto_modal'));
+});
+
+function juiauto_makeiFrameLink(anchor)
+{
    // from http://james.padolsey.com/javascript/get-document-height-cross-browser/
    function getDocHeight() {
        var D = document;
@@ -36,11 +45,7 @@ $(document).ready(function()
        );
    }
 
-   // Links that should look like buttons
-   $('.juiauto_button').button();
-
-   // Links that are displayed in a modal dialog box with an iFrame
-   $('.juiauto_modal').click(function()
+   anchor.click(function()
    {
       // Make sure there's a link to display
       if (!this.href)
@@ -86,4 +91,4 @@ $(document).ready(function()
 
       return false;
    });
-});
+}

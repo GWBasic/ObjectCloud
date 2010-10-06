@@ -13,6 +13,10 @@
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 	<File
+		Name="status.json"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
 		Name="user.json"
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />

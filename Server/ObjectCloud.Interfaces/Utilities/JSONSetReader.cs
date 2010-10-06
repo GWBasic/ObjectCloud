@@ -14,9 +14,9 @@ using ObjectCloud.Interfaces.Disk;
 
 namespace ObjectCloud.Interfaces.Utilities
 {
-    public class JSONNamedSetReader : HasFileHandlerFactoryLocator
+    public class JSONSetReader : HasFileHandlerFactoryLocator
     {
-        public JSONNamedSetReader(FileHandlerFactoryLocator fileHandlerFactoryLocator, string filename)
+        public JSONSetReader(FileHandlerFactoryLocator fileHandlerFactoryLocator, string filename)
         {
             FileHandlerFactoryLocator = fileHandlerFactoryLocator;
             Filename = filename;
@@ -27,40 +27,34 @@ namespace ObjectCloud.Interfaces.Utilities
         /// <summary>
         /// The named set that's stored in this JSON file
         /// </summary>
-        public Dictionary<string, Set<string>> NamedSet
+        public Set<string> Set
         {
             get
             {
-                Dictionary<string, Set<string>> namedSet = _NamedSet;
+                Set<string> set = _Set;
 
-                if (null == namedSet)
+                if (null == set)
                 {
-                    namedSet = new Dictionary<string, Set<string>>();
+                    set = new Set<string>();
 
                     IFileContainer fileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(Filename);
                     ITextHandler textHandler = fileContainer.CastFileHandler<ITextHandler>();
 
-                    Dictionary<string, object> namedSetFromFile = JsonReader.Deserialize<Dictionary<string, object>>(textHandler.ReadAll());
-                    foreach (KeyValuePair<string, object> namespaceKVP in namedSetFromFile)
-                    {
-                        Set<string> validTags = new Set<string>(Enumerable<string>.Cast((IEnumerable)namespaceKVP.Value));
-                        namedSet[namespaceKVP.Key] = validTags;
-                    }
+                    foreach (string item in JsonReader.Deserialize<object[]>(textHandler.ReadAll()))
+                        set.Add(item);
 
-                    textHandler.ContentsChanged += new EventHandler<ITextHandler, EventArgs>(textHandler_ContentsChanged);
-
-                    _NamedSet = namedSet;
+                    _Set = set;
                 }
 
-                return namedSet;
+                return set;
             }
         }
-        private Dictionary<string, Set<string>> _NamedSet = null;
+        private Set<string> _Set = null;
 
         void textHandler_ContentsChanged(ITextHandler sender, EventArgs e)
         {
             sender.ContentsChanged -= new EventHandler<ITextHandler, EventArgs>(textHandler_ContentsChanged);
-            _NamedSet = null;
+            _Set = null;
         }
     }
 }

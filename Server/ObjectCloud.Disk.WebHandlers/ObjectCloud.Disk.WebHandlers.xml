@@ -740,6 +740,14 @@
             Delegate for RecieveNotification
             </summary>
         </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetRapidLoginInfo(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
+            <summary>
+            Assists in getting information needed to perform a rapid login for an openID
+            </summary>
+            <param name="webConnection"></param>
+            <param name="senderIdentity"></param>
+            <returns></returns>
+        </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.Login(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
             <summary>
             Logs in

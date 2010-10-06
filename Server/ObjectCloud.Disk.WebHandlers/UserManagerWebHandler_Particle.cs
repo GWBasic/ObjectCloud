@@ -271,7 +271,7 @@ namespace ObjectCloud.Disk.WebHandlers
                     validSummaryViewTagsAndAttributes["p"] = new Set<string>();
                     validSummaryViewTagsAndAttributes["div"] = new Set<string>();
                     validSummaryViewTagsAndAttributes["span"] = new Set<string>();
-                    validSummaryViewTagsAndAttributes["a"] = new Set<string>("href", "src");
+                    validSummaryViewTagsAndAttributes["a"] = new Set<string>("href", "src", "target");
                     validSummaryViewTagsAndAttributes["br"] = new Set<string>();
                     validSummaryViewTagsAndAttributes["img"] = new Set<string>("src");
                     validSummaryViewTagsAndAttributes["b"] = new Set<string>();
@@ -371,6 +371,16 @@ namespace ObjectCloud.Disk.WebHandlers
                             node.LocalName,
                             node.OuterXml);
                 }
+                else if (node.LocalName == "a" && attribute.LocalName == "target")
+                    if (!(attribute.Value == "_top" || attribute.Value == "_blank"))
+                    {
+                        node.Attributes.Remove(attribute);
+
+                        errorBuilder.AppendFormat(
+                                "{0} is not a valid value for target: {1} ",
+                                attribute.Value,
+                                node.OuterXml);
+                    }
 
             foreach (XmlNode subNode in Enumerable<XmlNode>.FastCopy(Enumerable<XmlNode>.Cast(node.ChildNodes)))
                 ValidateSummaryView(subNode, errorBuilder);
@@ -528,6 +538,29 @@ namespace ObjectCloud.Disk.WebHandlers
             {
                 log.Error("Error in ReceiveNotification for " + recipient, e);
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// Assists in getting information needed to perform a rapid login for an openID
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="senderIdentity"></param>
+        /// <returns></returns>
+        [WebCallable(Interfaces.WebServer.WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JSON, FilePermissionEnum.Read)]
+        public IWebResults GetRapidLoginInfo(IWebConnection webConnection, string senderIdentity)
+        {
+            if ((!webConnection.Session.User.Local )|| (webConnection.Session.User.Id == FileHandlerFactoryLocator.UserFactory.AnonymousUser.Id))
+                return WebResults.From(Status._403_Forbidden, "You must be a local user to see login information");
+
+            try
+            {
+                return WebResults.ToJson(FileHandler.GetRapidLoginInfo(senderIdentity));
+            }
+            catch (ParticleException pe)
+            {
+                log.Error(senderIdentity + " is not known", pe);
+                return WebResults.From(Status._404_Not_Found, senderIdentity + " unknown");
             }
         }
     }

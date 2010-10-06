@@ -20,7 +20,7 @@ function setupStatusForm(statusForm)
          {
             $('.status_showduringsubmit').hide();
             $('.status_hideduringsubmit').show();
-            alert('status posted');
+            //alert('status posted');
 
             me.before(nextStatusForm);
             me.remove();

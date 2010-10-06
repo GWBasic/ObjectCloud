@@ -3,7 +3,7 @@
    <oc:script src="/API/prettyPrintDates.js" />
 </oc:inserthead>
 
-   <div class="notification" src="[_objectUrl_]">
+   <div class="notification" src="[_objectUrl_]" senderIdentity="[_senderIdentity_]">
       <a href="[_senderIdentity_]">
          <img src="[_senderAvatarUrl_]&amp;maxWidth=100" />
       </a>: 

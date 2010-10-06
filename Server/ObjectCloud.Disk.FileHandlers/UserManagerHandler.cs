@@ -1100,5 +1100,11 @@ namespace ObjectCloud.Disk.FileHandlers
                 yield return CreateGroupAndAliasObject(groupFromDB, groupAliasFromDB);
             }
         }
+
+        public IEnumerable<ID<IUserOrGroup, Guid>> GetAllLocalUserIds()
+        {
+            foreach (IUsers_Readable user in DatabaseConnection.Users.Select(Users_Table.PasswordMD5 != "openid" & Users_Table.BuiltIn == false))
+                yield return user.ID;
+        }
     }
 }

@@ -1,0 +1,3 @@
+[
+   {"NamedPermission":"reply", "Label": "Respond", "Default":true, "FooterComponent": "/Shell/Communication/Replier.oc"}
+]

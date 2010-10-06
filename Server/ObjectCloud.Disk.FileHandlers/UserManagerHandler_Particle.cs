@@ -611,5 +611,21 @@ namespace ObjectCloud.Disk.FileHandlers
                 new KeyValuePair<string, string>("verb", verb),
                 new KeyValuePair<string, string>("changeData", changeData));
         }
+
+        public RapidLoginInfo GetRapidLoginInfo(string senderIdentity)
+        {
+            ISender_Readable sender = DatabaseConnection.Sender.SelectSingle(Sender_Table.identity == senderIdentity);
+
+            if (null == sender)
+                throw new ParticleException("No information is known about " + senderIdentity);
+
+            RapidLoginInfo toReturn = new RapidLoginInfo();
+            toReturn.LoginUrl = sender.loginURL;
+            toReturn.LoginUrlOpenID = sender.loginURLOpenID;
+            toReturn.LoginUrlRedirect = sender.loginURLRedirect;
+            toReturn.LoginUrlWebFinger = sender.loginURLWebFinger;
+
+            return toReturn;
+        }
     }
 }
