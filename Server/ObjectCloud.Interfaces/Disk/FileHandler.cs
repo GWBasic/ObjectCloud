@@ -142,11 +142,6 @@ namespace ObjectCloud.Interfaces.Disk
             string verb,
             object changeData)
         {
-            // Do not send a notification if this is a file type that shouldn't have notifications sent
-            if (null != FileContainer.Extension)
-                if (FileHandlerFactoryLocator.NoParticle.Contains(FileContainer.Extension))
-                    return;
-
             // Do not send notifications while the system is starting up
             if (!FileHandlerFactoryLocator.FileSystemResolver.IsStarted)
                 return;
@@ -158,6 +153,11 @@ namespace ObjectCloud.Interfaces.Disk
                 return;
             if (null == FileHandlerFactoryLocator)
                 return;
+
+            // Do not send a notification if this is a file type that shouldn't have notifications sent
+            if (null != FileContainer.Extension)
+                if (FileHandlerFactoryLocator.NoParticle.Contains(FileContainer.Extension))
+                    return;
 
             if (null == sender)
                 return;
