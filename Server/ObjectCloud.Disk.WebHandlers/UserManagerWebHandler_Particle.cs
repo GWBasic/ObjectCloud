@@ -308,7 +308,7 @@ namespace ObjectCloud.Disk.WebHandlers
             try
             {
                 XmlDocument xmlDocument = new XmlDocument();
-                xmlDocument.LoadXml(string.Format("<summaryView>{0}</summaryView>"));
+                xmlDocument.LoadXml(string.Format("<summaryView>{0}</summaryView>", summaryView));
 
                 summaryViewNode = xmlDocument.FirstChild;
             }
@@ -333,6 +333,10 @@ namespace ObjectCloud.Disk.WebHandlers
 
         private void ValidateSummaryView(XmlNode node, StringBuilder errorBuilder)
         {
+            // Allow text to pass through
+            if (node is XmlText)
+                return;
+
             // Outright remove the node if it's not supported
             Set<string> supportedAttributes;
             if (!ValidSummaryViewTagsAndAttributes.TryGetValue(node.LocalName, out supportedAttributes))
@@ -365,7 +369,8 @@ namespace ObjectCloud.Disk.WebHandlers
                 {
                     node.Attributes.Remove(attribute);
 
-                    errorBuilder.AppendFormat(
+                    if (attribute.LocalName != "xmlns")
+                        errorBuilder.AppendFormat(
                             "{0} is not a valid attribute in <{1}>: {2} ",
                             attribute.LocalName,
                             node.LocalName,

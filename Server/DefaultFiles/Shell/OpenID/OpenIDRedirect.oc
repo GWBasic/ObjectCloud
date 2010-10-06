@@ -16,12 +16,12 @@
    </oc:jsontemplate>
 
    <script>
-      /*$(document).ready(function()
+      $(document).ready(function()
       {
          var form = $('form');
          form.submit();
          form.hide();
-      });*/
+      });
    </script>
 
 </oc:componentdef>

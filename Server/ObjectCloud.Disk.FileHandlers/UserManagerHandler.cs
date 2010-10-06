@@ -433,7 +433,12 @@ namespace ObjectCloud.Disk.FileHandlers
                     nameOrGroupOrIdentity.Length - localIdentityPrefix.Length - 5);
             }
 
+            // This will find local users but not openID users
             IUsers_Readable user = DatabaseConnection.Users.SelectSingle(Users_Table.Name == nameOrGroupOrIdentity.ToLowerInvariant());
+
+            // This will find local openID users
+            if (null == user)
+                user = DatabaseConnection.Users.SelectSingle(Users_Table.Name == nameOrGroupOrIdentity);
 
             // If there is a matching user, return it
             if (null != user)

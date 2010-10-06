@@ -376,7 +376,7 @@ namespace ObjectCloud.Disk.WebHandlers
                             notification["senderAvatarUrl"] = senderUser.Identity + "?Method=GetAvatar";
                         else
                             notification["senderAvatarUrl"] = string.Format(
-                                "{0}/{1}.jpg",
+                                "{0}/{1}.jpg?Method=GetScaled",
                                 ParticleAvatarsDirectory.FileContainer.ObjectUrl,
                                 senderUser.Id.ToString());
                     }
