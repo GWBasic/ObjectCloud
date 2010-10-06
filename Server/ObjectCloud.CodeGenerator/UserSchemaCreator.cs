@@ -67,7 +67,17 @@ namespace ObjectCloud.CodeGenerator
                         new Column("OpenId", NotNull.String)
                     }));
 
-            database.Version = 3;
+            database.Tables.Add(
+                new Table(
+                    "Trusted",
+                    new Column("Domain", NotNull.String),
+                    new Column[]
+                    {
+                        new Column("Login", Null.Bool),
+                        new Column("Link", Null.Bool)
+                    }));
+
+            database.Version = 4;
 
             return database;
         }

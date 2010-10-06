@@ -65,7 +65,7 @@ namespace ObjectCloud.ORM.DataAccess.DomainModel
         {
             get { return _TimeSpan; }
         }
-        private static readonly ColumnType _TimeSpan = new ColumnType(ColumnType.SqlTypes.Long, ColumnType.Null.Allowed, typeof(TimeSpan), "TimeSpan.FromTicks({0})", "{0}.Ticks");
+        private static readonly ColumnType _TimeSpan = new ColumnType(ColumnType.SqlTypes.Long, ColumnType.Null.Allowed, typeof(TimeSpan?), "TimeSpan.FromTicks({0})", "{0}.Ticks");
 
         /// <summary>
         /// Column type for booleans
@@ -74,6 +74,6 @@ namespace ObjectCloud.ORM.DataAccess.DomainModel
         {
             get { return _Bool; }
         }
-        private static readonly ColumnType _Bool = new ColumnType(ColumnType.SqlTypes.Boolean, ColumnType.Null.Allowed, typeof(bool), "1 == {0}", "{0}.Value ? 1 : 0");
+        private static readonly ColumnType _Bool = new ColumnType(ColumnType.SqlTypes.Boolean, ColumnType.Null.Allowed, typeof(bool?), "1 == {0}", "{0}.Value ? 1 : 0");
     }
 }

@@ -74,6 +74,22 @@ PRAGMA user_version = 3;
 
                 command.ExecuteNonQuery();
             }
+
+            if (version < 4)
+            {
+                command = connection.CreateCommand();
+                command.CommandText =
+@"create table Trusted 
+(
+	Login			boolean,
+	Link			boolean,
+	Domain			string not null	primary key
+);
+PRAGMA user_version = 4;
+";
+
+                command.ExecuteNonQuery();
+            }
         }
     }
 }
