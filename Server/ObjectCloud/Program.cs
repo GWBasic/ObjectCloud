@@ -37,6 +37,8 @@ namespace ObjectCloud
                 {
                     string hostname = Dns.GetHostName();
                     IPHostEntry IPHost = Dns.GetHostEntry(hostname);
+					
+					List<string> hostnames = new List<string>();
 
                     // When the hostname isn't specified, the current IP is defaulted to
                     // This is because the OpenID functionality needs stable hostnames in order to work.
@@ -44,10 +46,13 @@ namespace ObjectCloud
                     foreach (IPAddress address in IPHost.AddressList)
                         // For now, just grab the 1st IPv4 address...  I don't know how to handle IPv6
                         if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-                        {
-                            fileHandlerFactoryLocator.Hostname = address.ToString();
-                            break;
-                        }
+							hostnames.Add(address.ToString());
+					
+					if (hostnames.Count > 0)
+					{
+						hostnames.Sort();
+						fileHandlerFactoryLocator.Hostname = hostnames[0];
+					}
                 }
 
                 if (0 == args.Length)
