@@ -3,25 +3,25 @@
    <oc:script src="/API/jquery.js" />
 </oc:inserthead>
 
-   Redirecting to [_url_]...
+   Redirecting to [_url_] ...
 
    <oc:jsontemplate
-      oc:url="/Users/UserDB?Method=GetRapidLoginInfo?senderIdentity=[_senderIdentity_]"
+      oc:url="/Users/UserDB?Method=GetRapidLoginInfo&amp;senderIdentity=[_senderIdentity_]"
       url="[_url_]">
-      <form method="post" action=[_LoginUrl_]">
-         <input type="hidden" name="[_LoginUrlOpenID_] value="[_User.Identity_]" />
-         <input type="hidden" name="[_LoginUrlRedirect_]" value="[_UP.url_]" />
+      <form method="post" action="[_LoginUrl_]">
+         <input type="hidden" name="[_LoginUrlOpenID_]" value="[_User.Identity_]" />
+         <input type="hidden" name="[_LoginUrlRedirect_]" value="[__UP.url_]" />
          <input type="submit" value="Click here to continue" />
-      <form>
+      </form>
    </oc:jsontemplate>
 
    <script>
-      $(document).ready(function()
+      /*$(document).ready(function()
       {
          var form = $('form');
          form.submit();
          form.hide();
-      });
+      });*/
    </script>
 
 </oc:componentdef>

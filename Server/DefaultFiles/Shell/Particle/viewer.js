@@ -70,7 +70,7 @@ function reformatNotification(notification)
             me.attr(
                'href',
                url.protocol + url.server + '/Shell/OpenID/OpenIDRedirect.oc?senderIdentity=' +
-               Url.encode(senderIdentity) + '&url=' + Url.encode(objectUrl));
+               escape(senderIdentity) + '&url=' + escape(objectUrl));
    });
 
    if (notificationsOnScreen[objectUrl])
