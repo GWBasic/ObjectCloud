@@ -704,7 +704,14 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Naked)]
 		public IWebResults OpenIDLogin(IWebConnection webConnection)
 		{
+            string redirect;
 			string openIdIdentity = webConnection.PostArgumentOrException("openid_url");
+
+            // If the user is trying to log in as the currently-logged in user, just follow the redirect
+            // This will streamline when a user clicks on a link in the particle viewer
+            if (openIdIdentity == webConnection.Session.User.Identity)
+                if (webConnection.PostParameters.TryGetValue("redirect", out redirect))
+                    return WebResults.Redirect(redirect);
 			
 			NameValueCollection openIdClientArgs = new NameValueCollection();
 			
@@ -715,8 +722,8 @@ namespace ObjectCloud.Disk.WebHandlers
 			// TODO:  Don't hardcode path when this object is able to know its own path
             string returnUrl = "http://" + FileHandlerFactoryLocator.HostnameAndPort + "/Users/UserDB?Method=CompleteOpenIdLogin";
 
-            if (webConnection.PostParameters.ContainsKey("redirect"))
-                returnUrl = HTTPStringFunctions.AppendGetParameter(returnUrl, "redirect", webConnection.PostParameters["redirect"]);
+            if (webConnection.PostParameters.TryGetValue("redirect", out redirect))
+                returnUrl = HTTPStringFunctions.AppendGetParameter(returnUrl, "redirect", redirect);
 
             openIdClient.ReturnUrl = new Uri(returnUrl);
 
