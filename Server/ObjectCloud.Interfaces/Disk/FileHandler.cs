@@ -162,27 +162,42 @@ namespace ObjectCloud.Interfaces.Disk
             if (null == sender)
                 return;
 
+            // Do not send a notification if this is a file type that shouldn't have notifications sent
+            if (null != FileContainer.Extension)
+                if (FileHandlerFactoryLocator.NoParticle.Contains(FileContainer.Extension))
+                    return;
+
             // Do not send notifications if the owner is an OpenID
             // TODO:  Sometime later this might be supported, but it introduces a security concern
             if (!sender.Local)
                 return;
 
-            Set<IUser> recipients = new Set<IUser>(GetNotificationRecipients());
-
-            // Attempt to get a summary view
-            string summaryView = GenerateSummaryView(FileContainer);
-
-            FileHandlerFactoryLocator.UserManagerHandler.SendNotification(
-                sender,
-                false,
-                recipients,
-                FileContainer.ObjectUrl,
-                summaryView,
-                null != FileContainer.Extension ? FileContainer.Extension : FileContainer.TypeId,
-                verb,
-                null != changeData ? JsonWriter.Serialize(changeData) : null,
-                30,
-                TimeSpan.FromMinutes(5));
+			ThreadPool.QueueUserWorkItem(delegate(object state)
+			{
+				try
+				{
+		            Set<IUser> recipients = new Set<IUser>(GetNotificationRecipients());
+		
+		            // Attempt to get a summary view
+		            string summaryView = GenerateSummaryView(FileContainer);
+		
+		            FileHandlerFactoryLocator.UserManagerHandler.SendNotification(
+		                sender,
+		                false,
+		                recipients,
+		                FileContainer.ObjectUrl,
+		                summaryView,
+		                null != FileContainer.Extension ? FileContainer.Extension : FileContainer.TypeId,
+		                verb,
+		                null != changeData ? JsonWriter.Serialize(changeData) : null,
+		                30,
+		                TimeSpan.FromMinutes(5));
+				}
+				catch (Exception e)
+				{
+					log.Error("Exception when sending a notification", e);
+				}
+			});
         }
 
         public ITemplateEngine TemplateEngine
