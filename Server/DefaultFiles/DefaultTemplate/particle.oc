@@ -1,18 +1,20 @@
 <oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" xmlns:af="appfeeds_templating">
-<oc:inserthead>
+   <oc:inserthead>
 
-   <oc:css src="/DefaultTemplate/particle.css" />
+      <oc:css src="/DefaultTemplate/particle.css" />
 
-   <script>
-      runNotificationViewer('[_User.Name_]');
-   </script>
+      <script>
+         runNotificationViewer('[_User.Name_]');
+      </script>
 
-   <oc:script src="/Shell/Particle/viewer.js" />
+      <oc:script src="/Shell/Particle/viewer.js" />
 
-</oc:inserthead>
+   </oc:inserthead>
 
    <oc:if>
       <oc:islocal>
+         <a href="/DefaultTemplate/upload.oc">upload</a>
+         <hr />
          <oc:component oc:src="/DefaultTemplate/status.oc" />
          <div class="notifications" id="notificationsDiv" />
 

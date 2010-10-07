@@ -1,0 +1,6 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" xmlns:af="appfeeds_templating">
+
+   <h1>Upload</h1>
+   <oc:component oc:src="/Shell/Editors/Upload.oc" />
+
+</oc:componentdef>

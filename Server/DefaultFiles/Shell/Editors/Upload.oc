@@ -1,0 +1,8 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" xmlns:af="appfeeds_templating">
+   <oc:inserthead>
+      <oc:script src="/Shell/Editors/Upload.js" />
+   </oc:inserthead>
+
+   Upload is currently unsupported
+
+</oc:componentdef>
