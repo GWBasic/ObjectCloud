@@ -1,0 +1,23 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
+   <oc:inserthead>
+      <title>[_User.Name_] logging into [_Domain_]</title>
+      <oc:script src="/Shell/OpenID/OpenIDLandingPage.js" />
+
+      <script>
+         setupOpenIDForm('[_User.Identity_]', [_OriginalParameters_]);
+      </script>
+
+   </oc:inserthead>
+
+   <h1>[_User.Name_] logging into [_Domain_]</h1>
+   <a href="[_User.Identity_]">
+      <img src="[_User.Identity_]?Method=GetAvatar&amp;maxWidth=350&amp;maxHeight=350" />
+   </a>
+
+   <form class="openIdPasswordForm" method="POST" action="/Users/UserDB?Method=ProvideOpenID">
+      <span class="password">Password: <input type="password" name="password" /><br /></span>
+      Automatically log into [_Domain_] <input type="checkbox" name="remember" checked="true" /><br />
+      <input type="submit" value="Login with OpenID" />
+   </form>
+
+</oc:componentdef>

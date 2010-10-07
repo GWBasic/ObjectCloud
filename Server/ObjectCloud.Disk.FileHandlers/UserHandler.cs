@@ -281,5 +281,50 @@ namespace ObjectCloud.Disk.FileHandlers
             if (null != NotificationRecieved)
                 NotificationRecieved(this, new EventArgs<Dictionary<NotificationColumn, object>>(notification));
         }
+
+
+        public void SetRememberOpenIDLogin(string domain, bool remember)
+        {
+            DatabaseConnection.Trusted.Upsert(
+                Trusted_Table.Domain == domain.ToLowerInvariant(),
+                delegate(ITrusted_Writable trusted)
+                {
+                    trusted.Login = remember;
+                });
+        }
+
+        public bool IsRememberOpenIDLogin(string domain)
+        {
+            ITrusted_Readable trusted = DatabaseConnection.Trusted.SelectSingle(
+                Trusted_Table.Domain == domain.ToLowerInvariant());
+
+            if (null != trusted)
+                if (null != trusted.Login)
+                    return trusted.Login.Value;
+
+            return false;
+        }
+
+        public void SetRememberOpenIDLink(string domain, bool remember)
+        {
+            DatabaseConnection.Trusted.Upsert(
+                Trusted_Table.Domain == domain.ToLowerInvariant(),
+                delegate(ITrusted_Writable trusted)
+                {
+                    trusted.Link = remember;
+                });
+        }
+
+        public bool IsRememberOpenIDLink(string domain)
+        {
+            ITrusted_Readable trusted = DatabaseConnection.Trusted.SelectSingle(
+                Trusted_Table.Domain == domain.ToLowerInvariant());
+
+            if (null != trusted)
+                if (null != trusted.Link)
+                    return trusted.Link.Value;
+
+            return false;
+        }
     }
 }

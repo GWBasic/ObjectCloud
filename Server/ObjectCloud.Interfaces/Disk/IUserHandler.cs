@@ -62,5 +62,33 @@ namespace ObjectCloud.Interfaces.Disk
         /// Occurs when a notification is recieved
         /// </summary>
         event EventHandler<IUserHandler, EventArgs<Dictionary<NotificationColumn, object>>> NotificationRecieved;
-	}
+
+        /// <summary>
+        /// Speicifies if the user should automatically log into a domain through openID
+        /// </summary>
+        /// <param name="domain"></param>
+        /// <param name="remember"></param>
+        void SetRememberOpenIDLogin(string domain, bool remember);
+
+        /// <summary>
+        /// Loads if the user should automatically log into a domain through openID
+        /// </summary>
+        /// <param name="domain"></param>
+        /// <returns></returns>
+        bool IsRememberOpenIDLogin(string domain);
+
+        /// <summary>
+        /// Sets if links established on a domain should automatically be authenticated
+        /// </summary>
+        /// <param name="domain"></param>
+        /// <param name="remember"></param>
+        void SetRememberOpenIDLink(string domain, bool remember);
+
+        /// <summary>
+        /// Loads if links established on a domain should automatically be authenticated
+        /// </summary>
+        /// <param name="domain"></param>
+        /// <returns></returns>
+        bool IsRememberOpenIDLink(string domain);
+    }
 }

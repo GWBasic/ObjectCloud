@@ -27,6 +27,11 @@ namespace ObjectCloud.Interfaces.WebServer
             return new StringWebResults(status, text);
         }
 
+        public static IWebResults From(Status status, string text, string contentType)
+        {
+            return new StringWebResults(status, text, contentType);
+        }
+
         public static IWebResults From(Status status, Stream stream)
         {
             return new StreamWebResults(status, stream);

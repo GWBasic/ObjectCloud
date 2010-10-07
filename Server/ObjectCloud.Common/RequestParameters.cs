@@ -17,8 +17,14 @@ namespace ObjectCloud.Common
     public class RequestParameters : IDictionary<string, string>, ICloneable
     {
 		private static ILog log = LogManager.GetLogger<RequestParameters>();
-		
+
         public RequestParameters() { }
+
+        public RequestParameters(IDictionary<string, string> toCopy)
+        {
+            foreach (KeyValuePair<string, string> kvp in toCopy)
+                Add(kvp);
+        }
 
         public RequestParameters(string unparsedParameters)
         {

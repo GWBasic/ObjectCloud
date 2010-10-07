@@ -23,6 +23,13 @@ namespace ObjectCloud.Interfaces.WebServer
                 ContentType = "text/plain";
             }
 
+            internal StringWebResults(Status status, string resultsAsString, string contentType)
+                : base(status)
+            {
+                _ResultsAsString = resultsAsString;
+                ContentType = contentType;
+            }
+
             internal StringWebResults(IDictionary<string, string> headers, Status status, string resultsAsString)
                 : base(headers, status)
             {

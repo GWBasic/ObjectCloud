@@ -73,10 +73,15 @@ namespace ObjectCloud.Disk.WebHandlers
 
             // Everyone else gets real XML
             toReturn = WebResults.From(Status._200_OK, results);
-            toReturn.ContentType = "application/xhtml+xml";
+            toReturn.ContentType = ContentType;
 
             return toReturn;
         }
+
+        /// <summary>
+        /// The default content type
+        /// </summary>
+        public const string ContentType = "application/xhtml+xml";
 
         /// <summary>
         /// Evaluates the named template

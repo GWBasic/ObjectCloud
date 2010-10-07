@@ -193,13 +193,44 @@ namespace ObjectCloud.Disk.WebHandlers
             if (getParameters.ContainsKey("Method"))
                 getParameters.Remove("Method");
 
-            string getParametersAsJSON = JsonWriter.Serialize(getParameters);
+            Uri domainUri = new Uri(getParameters["openid.return_to"]);
 
-            string shellUrl = HTTPStringFunctions.AppendGetParameter("/Shell/OpenID/OpenIDLandingPage.wchtml", "OriginalParameters", getParametersAsJSON);
-            shellUrl = HTTPStringFunctions.AppendGetParameter(shellUrl, "openid.identity", webConnection.GetArgumentOrException("openid.identity"));
+            // Find out if the user should automatically be logged in
+            if (webConnection.Session.User.Id == FileContainer.OwnerId)
+                if (FileHandler.IsRememberOpenIDLogin(domainUri.Host))
+                {
+                    RequestParameters postParameters = new RequestParameters(webConnection.GetParameters);
+                    postParameters.Remove("Method");
+                    postParameters["remember"] = "on";
 
-            return webConnection.ShellTo(shellUrl);
+                    IWebConnection shellConnection = new BlockingShellWebConnection(
+                        "/Users/UserDB",
+                        webConnection,
+                        postParameters,
+                        webConnection.CookiesFromBrowser);
+
+                    return UserManagerWebHandler.ProvideOpenID(shellConnection);
+                }
+
+            RequestParameters templateInput = new RequestParameters();
+            templateInput["OriginalParameters"] = JsonWriter.Serialize(getParameters);
+            templateInput["Domain"] = domainUri.Host;
+
+            return webConnection.ShellTo("/DefaultTemplate/openidlandingpage.oc?"
+                + templateInput.ToURLEncodedString());
         }
+
+        private UserManagerWebHandler UserManagerWebHandler
+        {
+            get 
+            {
+                if (null == _UserManagerWebHandler)
+                    _UserManagerWebHandler = (UserManagerWebHandler)FileHandlerFactoryLocator.UserManagerHandler.FileContainer.WebHandler;
+
+                return _UserManagerWebHandler; 
+            }
+        }
+        private UserManagerWebHandler _UserManagerWebHandler = null;
 
         /// <summary>
         /// Changes the user's password

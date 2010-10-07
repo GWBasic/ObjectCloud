@@ -1448,6 +1448,11 @@
             WebHandler for files that don't have any web access
             </summary>
         </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.TemplateEngine.ContentType">
+            <summary>
+            The default content type
+            </summary>
+        </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.Evaluate(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
             <summary>
             Evaluates the named template

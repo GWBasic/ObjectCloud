@@ -809,6 +809,7 @@ namespace ObjectCloud.Disk.WebHandlers
 				try
 				{
 					user = FileHandler.GetUser(name, password);
+                    webConnection.Session.Login(user);
 	            }
 	            catch (WrongPasswordException)
 	            {
@@ -823,13 +824,15 @@ namespace ObjectCloud.Disk.WebHandlers
 				user = webConnection.Session.User;
 			
 			IUserHandler userHandler = user.UserHandler;
+            bool remember = webConnection.PostParameters.ContainsKey("remember");
 
 			// Extract out originating GET parameters that need to be passed through to the destination web site
 			Dictionary<string, string> getParametersToPass = new Dictionary<string, string>();
 			foreach (KeyValuePair<string, string> getParameter in webConnection.PostParameters)
 				if (!getParameter.Key.StartsWith("openid."))
 					if ("password" != getParameter.Key)
-						getParametersToPass.Add(getParameter.Key, getParameter.Value);
+                        if ("remember" != getParameter.Key)
+						    getParametersToPass.Add(getParameter.Key, getParameter.Value);
 			
 			// Delegate specific logic to the correct method based on openid.mode
 			string openIdMode = webConnection.PostArgumentOrException("openid.mode");
@@ -837,7 +840,7 @@ namespace ObjectCloud.Disk.WebHandlers
 			{
 				case("checkid_setup"):
 				{
-					return CheckID_Setup(webConnection, user.Id, userHandler, getParametersToPass);
+					return CheckID_Setup(webConnection, user.Id, userHandler, getParametersToPass, remember);
 				}
 				default:
 				{
@@ -860,7 +863,12 @@ namespace ObjectCloud.Disk.WebHandlers
             return name;
         }
 		
-		private IWebResults CheckID_Setup(IWebConnection webConnection, ID<IUserOrGroup, Guid> userId, IUserHandler userHandler, IDictionary<string, string> getParametersToPass)
+		private IWebResults CheckID_Setup(
+            IWebConnection webConnection,
+            ID<IUserOrGroup, Guid> userId,
+            IUserHandler userHandler,
+            IDictionary<string, string> getParametersToPass,
+            bool remember)
 		{
 			StringBuilder additionalGetParameters = new StringBuilder();
 			foreach (KeyValuePair<string, string> getParameter in getParametersToPass)
@@ -876,6 +884,10 @@ namespace ObjectCloud.Disk.WebHandlers
 			  	HTTPStringFunctions.EncodeRequestParametersForBrowser(FileHandler.CreateAssociationHandle(userId)));
 
 			string redirectURL = webConnection.PostArgumentOrException("openid.return_to");
+
+            Uri domainUri = new Uri(redirectURL);
+            userHandler.SetRememberOpenIDLogin(domainUri.Host, remember);
+
 			string toReturnTo;
 			if (redirectURL.Contains("?"))
 				toReturnTo = string.Format("{0}&{1}", redirectURL, additionalGetParameters.ToString());
