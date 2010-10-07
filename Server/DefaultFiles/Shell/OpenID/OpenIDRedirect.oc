@@ -8,7 +8,7 @@
    <oc:jsontemplate
       oc:url="/Users/UserDB?Method=GetRapidLoginInfo&amp;senderIdentity=[_senderIdentity_]"
       url="[_url_]">
-      <form method="post" action="[_LoginUrl_]">
+      <form class="openidform" method="post" action="[_LoginUrl_]">
          <input type="hidden" name="[_LoginUrlOpenID_]" value="[_User.Identity_]" />
          <input type="hidden" name="[_LoginUrlRedirect_]" value="[__UP.url_]" />
          <input type="submit" value="Click here to continue" />
@@ -16,9 +16,9 @@
    </oc:jsontemplate>
 
    <script>
-      $(document).ready(function()
+      $(window).load(function()
       {
-         var form = $('form');
+         var form = $('form.openidform');
          form.submit();
          form.hide();
       });
