@@ -756,16 +756,18 @@ namespace ObjectCloud.Disk.WebHandlers
 			
 			string identity = webConnection.EitherArgumentOrException("openid.identity");
 
-			try
-			{
-				IUser user = FileHandler.GetOpenIdUser(identity);
-				webConnection.Session.Login(user);
+            try
+            {
+                IUser user = FileHandler.GetOpenIdUser(identity);
+                webConnection.Session.Login(user);
 
                 // success
-                if (webConnection.GetParameters.ContainsKey("redirect"))
-                    return WebResults.Redirect(webConnection.GetParameters["redirect"]);
-                else
-                    return WebResults.From(Status._202_Accepted, user.Name + " logged in");
+                string redirect;
+                if (webConnection.GetParameters.TryGetValue("redirect", out redirect))
+                    if (redirect.Length > 0)
+                        return WebResults.Redirect(redirect);
+
+                return WebResults.From(Status._202_Accepted, user.Name + " logged in");
             }
             catch (WrongPasswordException)
             {

@@ -79,7 +79,8 @@ namespace ObjectCloud.Interfaces.WebServer
         {
             IWebResults toReturn = From(
                 Status._303_See_Other,
-                "<html><head><title>Redirect</title></head><body><a href=\"" + url + "\">click here</a></body></html>");
+                "<html><head><title>Redirect</title></head><body><a href=\"" + url + "\">click here</a><script>window.location.href = '" + url + "';</script></body></html>",
+                "text/html");
 
             toReturn.Headers["Location"] = url;
 

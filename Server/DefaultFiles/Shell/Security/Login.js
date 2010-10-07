@@ -16,6 +16,9 @@ function Login_UpdateKeepAlive()
 
 $(document).ready(function()
 {
+   // Make sure that OpenID can properly redirect
+   $('input.openId_redirect').val(window.location.href);
+
    // Register login / out handlers
 
    $('.Login_logoutButton').click(function()
@@ -97,7 +100,4 @@ $(document).ready(function()
    });
 
    Login_UpdateKeepAlive();
-
-   // Make sure that OpenID can properly redirect
-   $('input.openId_redirect').val(window.location.href);
 });
