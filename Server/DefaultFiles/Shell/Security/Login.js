@@ -46,6 +46,28 @@ $(document).ready(function()
       return false;
    });
 
+   var hiddenForm = $('.Login_hiddenForm');
+   hiddenForm.hide();
+
+   $('.Login_loginDialog').click(function()
+   {
+      var dialog = hiddenForm.dialog(
+      {
+         modal:true,
+         position:'top',
+         title: 'Login?',
+         buttons:
+         {
+            Cancel: function()
+            {
+               dialog.dialog('close');
+            }
+         }
+      });
+
+      return false;
+   });
+
    $('form.Login_LoginForm').submit(function()
    {
       var me = $(this);

@@ -10,17 +10,7 @@
      </oc:can>
    </oc:if>
 
-   <oc:if>
-      <oc:isloggedin>
-         Remember me <input class="Login_KeepAlive" type="checkbox" />
-         <span class="Login_MaxAgeSpan">for <input class="Login_MaxAge" type="text" size="5" /> days</span>.
-         <a class="Login_logoutButton" href="">Logout</a><br />
-      </oc:isloggedin>
-   </oc:if>
-
-   <hr />
-
-   <form class="Login_LoginForm"> 
+   <form class="Login_LoginForm" method="POST" action="/User/UserDB?Method=Login"> 
       Username: <input type="text" name="username"/><br />
       Password: <input type="password" name="password"/><br /> 
       <input class="Login_loginButton" type="submit" value="login"/> 
@@ -28,10 +18,10 @@
 
    <hr />
 
-   <form action="/Users/UserDB?Method=OpenIDLogin" method="POST" target="_top"> 
+   <form action="/Users/UserDB?Method=OpenIDLogin" method="POST"> 
       OpenID <img src="/Shell/OpenID/login-bg.gif" />: <input type="text" name="openid_url" id="openid_url"/> 
       <input type="submit" value="OpenID login"/> 
-      <input type="hidden" name="redirect" class="openId_redirect"/> 
+      <input type="hidden" name="redirect" id="Login_redirect"/> 
    </form> 
 
 </oc:componentdef>
