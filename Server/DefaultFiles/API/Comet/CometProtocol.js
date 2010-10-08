@@ -326,7 +326,7 @@ var CP_QualityReliable =
             {
                // communicate a bungy transport
                callbacks.flashError(transport, sendId);
-            },
+            }
          });
 
       transport.startSend();

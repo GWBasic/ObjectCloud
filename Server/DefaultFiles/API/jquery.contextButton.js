@@ -37,8 +37,8 @@ jQuery.fn.contextButton = function(options) {
    if (!options)
       options = {};
 
-   if (!options.class)
-      options.class = "ui-widget-content";
+   if (!options.menuClass)
+      options.menuClass = "ui-widget-content";
 
    if (!options.buttonClass)
       options.buttonClass = "ui-button";
@@ -77,7 +77,7 @@ jQuery.fn.contextButton = function(options) {
       button.addClass(options.buttonClass);
 
       var contextMenu = $('<div></div>');
-      contextMenu.addClass(options.class);
+      contextMenu.addClass(options.menuClass);
       contextMenu.css('position', 'absolute');
       contextMenu.css('max-width', options.maxWidth);
 

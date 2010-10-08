@@ -58,7 +58,7 @@ function setIndexFile(me, dir)
 
    dir.SetIndexFile(
       {
-         IndexFile: indexFile,
+         IndexFile: indexFile
       },
       function(message)
       {
@@ -232,7 +232,7 @@ function displayFiles(directory, files, dir)
             {
                dir.DeleteFile(
                   {
-                     FileName: file.Filename,
+                     FileName: file.Filename
                   },
                   function() {});
             }

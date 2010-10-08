@@ -66,23 +66,40 @@ namespace ObjectCloud.Disk.WebHandlers
                 IWebResults toReturn;
 
                 // Hack to work around a bug in IE handling xhtml
-                // What's going on is that I'm using a horrible hack to remove all namespaces from the <html> tag and turn this into an SGML-HTML document instead of xml-html
+                // Basically, IE won't handle &gt; and &lt; in xhtml
                 string userAgent;
                 if (webConnection.Headers.TryGetValue("USER-AGENT", out userAgent))
                     if (userAgent.Contains(" MSIE "))
                     {
-                        // <?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" 
-
                         StreamReader sr = new StreamReader(results);
                         string result = sr.ReadToEnd();
-                        result = result.Replace("<?xml version=\"1.0\" encoding=\"utf-8\"?><html", "");
+						result = result.Replace("<?xml version=\"1.0\" encoding=\"utf-8\"?><html", "");
                         result = result.Split(new char[] { '>' }, 2)[1];
                         result = "<!DOCTYPE html>\n<html>" + result;
+					
+					    string[] splitAtScriptTag = result.Split(new string[] {"<script>"}, StringSplitOptions.None);
+						StringBuilder resultBuilder = new StringBuilder(splitAtScriptTag[0]);
+					
+						for (int ctr = 1; ctr < splitAtScriptTag.Length; ctr++)
+						{
+							string[] scriptAndPostTags = splitAtScriptTag[ctr].Split(new string[] {"</script>"}, StringSplitOptions.None);
+						
+							if (scriptAndPostTags.Length == 1)
+								resultBuilder.Append(scriptAndPostTags[0]);
+							else
+							{
+								string script = scriptAndPostTags[0].Replace("&gt;", ">").Replace("&lt;", "<");
+								resultBuilder.Append("<script>");
+								resultBuilder.Append(script);
+								resultBuilder.Append("</script>");
+								resultBuilder.Append(scriptAndPostTags[1]);
+							}
+						}
 
-                        toReturn = WebResults.From(Status._200_OK, result);
-                        toReturn.ContentType = "text/html";
-
-                        return toReturn;
+                        toReturn = WebResults.From(Status._200_OK, resultBuilder.ToString());
+		                toReturn.ContentType = "text/html";
+		
+		                return toReturn;
                     }
 
                 // Everyone else gets real XML
