@@ -53,11 +53,34 @@ th
 
 /* Start of Header Content */
 
+.binarycloud
+{
+   float: left;
+   margin-right: -20em;
+   font-size: 0.5em;
+   color: #ddd;
+}
+
+.logo
+{
+   float: left;
+}
+
+.logotitle
+{
+   font-size: 4em;
+   font-family: courier;
+}
+
+.logoslogan
+{
+   font-family: courier;
+   margin-left: 10em;
+}
 
 #header {
 	text-align: left;
 	width:1000px;
-	height:80px;
    color: #FFFFFF;
    background: #9999FF;
 }
@@ -304,12 +327,6 @@ td
 th
 {
    background: #BBBBBB;
-}
-
-div.logotitle
-{
-   font-size: 4em;
-   font-family: courier;
 }
 
 div.contents

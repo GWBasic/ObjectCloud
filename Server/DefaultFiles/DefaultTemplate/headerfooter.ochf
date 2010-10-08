@@ -18,27 +18,32 @@
             </script>
          </oc:isadministrator>
       </oc:if>
-     <div id="container"> 
-       <div id="header"> 
-          <a href="/"><img id="headerlogofloat" src="/Pages/objectcloud%20logo.png?Method=GetScaled&amp;height=80" /></a> 
-             
+   <div id="container"> 
+      <div id="header"> 
+<pre class="binarycloud">                      0011 000
+                    11000 11000
+   0010      0110      0000 11        010
+  001011   11100011 10   1110   000  11111 11
+ 1 11001110000   111010        1110 0000 00001
+ 0001110011001111000000      000 00111 1001 00
+  111 00  000111 11 11         000 001100 101
+   1111    0000   000         11111 00011101
+                                 110011  00</pre>
+         <div class="logo">
+            <div class="logotitle">
+               ObjectCloud
+            </div>
+            <div class="logoslogan">
+               Own your data
+            </div>
+         </div>
          <div id="account"> 
             <div id="accountblock" style="float: right">
                <oc:component oc:src="login.occ" />
             </div>
          </div>
-         <div style="float: clear"></div>
+         <div style="clear: both"></div>
          </div> 
-
-         <script>
-            var myUrl = Url.parseCurrent();
-
-             if (myUrl.arguments.tag)
-             {
-                $('#tagInput')[0].value = myUrl.arguments.tag;
-                $('#tagInput')[0].style.color = 'black';
-            }
-         </script>
 
          <oc:component oc:src="navbar.oc" />
 
