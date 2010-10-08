@@ -561,6 +561,24 @@ namespace ObjectCloud.Disk.WebHandlers
             string redirectUrl,
             string linkID)
         {
+            Uri domainUrl = new Uri(objectUrl);
+
+            // If the currently-logged-in user trusts the originating host, then bypass this page
+            if (FileContainer.Owner.Identity == ownerIdentity)
+                if (FileHandler.IsRememberOpenIDLink(domainUrl.Host))
+                    return ((UserManagerWebHandler)FileHandlerFactoryLocator.UserManagerHandler.FileContainer.WebHandler).UserConfirmLink(
+                        webConnection,
+                        objectUrl,
+                        ownerIdentity,
+                        linkedSummaryView,
+                        linkUrl,
+                        linkDocumentType,
+                        recipients,
+                        redirectUrl,
+                        linkID,
+                        null,
+                        "on");
+
             Dictionary<string, object> clpArgs = new Dictionary<string, object>();
             clpArgs["objectUrl"] = objectUrl;
             clpArgs["ownerIdentity"] = ownerIdentity;
@@ -571,7 +589,6 @@ namespace ObjectCloud.Disk.WebHandlers
             clpArgs["redirectUrl"] = redirectUrl;
             clpArgs["linkID"] = linkID;
 
-            Uri domainUrl = new Uri(objectUrl);
             clpArgs["Domain"] = domainUrl.Host;
 
             return TemplateEngine.Evaluate(

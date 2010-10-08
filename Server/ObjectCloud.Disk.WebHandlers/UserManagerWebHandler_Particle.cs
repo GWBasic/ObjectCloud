@@ -574,6 +574,51 @@ namespace ObjectCloud.Disk.WebHandlers
                 return WebResults.From(Status._404_Not_Found, senderIdentity + " unknown");
             }
         }
+
+        /// <summary>
+        /// Handles when a user confirms linking on another server, including starting to call particle.confirmLink on remote servers
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="objectUrl"></param>
+        /// <param name="ownerIdentity"></param>
+        /// <param name="linkedSummaryView"></param>
+        /// <param name="linkUrl"></param>
+        /// <param name="linkDocumentType"></param>
+        /// <param name="recipients"></param>
+        /// <param name="redirectUrl"></param>
+        /// <param name="linkID"></param>
+        /// <param name="password"></param>
+        /// <param name="remember"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Read)]
+        public IWebResults UserConfirmLink(
+            IWebConnection webConnection,
+            string objectUrl,
+            string ownerIdentity,
+            string linkedSummaryView,
+            string linkUrl,
+            string linkDocumentType,
+            string recipients,
+            string redirectUrl,
+            string linkID,
+            string password,
+            string remember)
+        {
+            if (ownerIdentity != webConnection.Session.User.Identity)
+            {
+                string name = GetLocalUserNameFromOpenID(ownerIdentity);
+
+                // Load the user and verify the password
+                LoadUserAndVerifyPassword(webConnection, name, password);
+            }
+
+            Uri domainUri = new Uri(objectUrl);
+
+            webConnection.Session.User.UserHandler.SetRememberOpenIDLink(domainUri.Host, remember != null);
+
+            throw new NotImplementedException();
+            //return WebResults.Redirect(redirectUrl);
+        }
     }
 
     delegate void ReceiveNotificationDelegateType(

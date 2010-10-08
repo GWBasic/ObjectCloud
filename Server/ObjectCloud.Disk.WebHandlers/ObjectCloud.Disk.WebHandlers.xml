@@ -748,6 +748,23 @@
             <param name="senderIdentity"></param>
             <returns></returns>
         </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.UserConfirmLink(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Handles when a user confirms linking on another server, including starting to call particle.confirmLink on remote servers
+            </summary>
+            <param name="webConnection"></param>
+            <param name="objectUrl"></param>
+            <param name="ownerIdentity"></param>
+            <param name="linkedSummaryView"></param>
+            <param name="linkUrl"></param>
+            <param name="linkDocumentType"></param>
+            <param name="recipients"></param>
+            <param name="redirectUrl"></param>
+            <param name="linkID"></param>
+            <param name="password"></param>
+            <param name="remember"></param>
+            <returns></returns>
+        </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.Login(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
             <summary>
             Logs in

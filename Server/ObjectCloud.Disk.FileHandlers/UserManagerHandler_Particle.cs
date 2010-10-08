@@ -383,6 +383,11 @@ namespace ObjectCloud.Disk.FileHandlers
             GetEndpoint("confirmLinkPage", identity, callback, errorCallback);
         }
 
+        public void GetConfirmLinkEnpoint(string identity, GenericArgument<string> callback, GenericArgument<Exception> errorCallback)
+        {
+            GetEndpoint("confirmLink", identity, callback, errorCallback);
+        }
+
         private void GetEndpoint(string endpoint, string identity, GenericArgument<string> callback, GenericArgument<Exception> errorCallback)
         {
             Endpoints.GetEndpoints(

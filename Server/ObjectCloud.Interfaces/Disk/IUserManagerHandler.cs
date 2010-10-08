@@ -414,6 +414,13 @@ namespace ObjectCloud.Interfaces.Disk
         void GetConfirmLinkPageEnpoint(string identity, GenericArgument<string> callback, GenericArgument<Exception> errorCallback);
 
         /// <summary>
+        /// Responds with the endpoint needed to confirm a link by the user POSTing to it
+        /// </summary>
+        /// <param name="identity"></param>
+        /// <param name="callback"></param>
+        void GetConfirmLinkEnpoint(string identity, GenericArgument<string> callback, GenericArgument<Exception> errorCallback);
+
+        /// <summary>
         /// Gets the sender token ID for the given sender token, or returns false if the sender token is unknown
         /// </summary>
         /// <param name="senderToken"></param>

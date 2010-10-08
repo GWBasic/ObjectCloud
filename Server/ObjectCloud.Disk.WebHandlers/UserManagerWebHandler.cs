@@ -815,19 +815,7 @@ namespace ObjectCloud.Disk.WebHandlers
 				string password = webConnection.PostArgumentOrException("password");
 				
 				// Load the user and verify the password
-				try
-				{
-					user = FileHandler.GetUser(name, password);
-                    webConnection.Session.Login(user);
-	            }
-	            catch (WrongPasswordException)
-	            {
-	                return WebResults.From(Status._401_Unauthorized, "Bad Password");
-	            }
-	            catch (UnknownUser)
-	            {
-	                return WebResults.From(Status._404_Not_Found, "Unknown user");
-	            }
+                user = LoadUserAndVerifyPassword(webConnection, name, password);
 			}
 			else
 				user = webConnection.Session.User;
@@ -857,6 +845,27 @@ namespace ObjectCloud.Disk.WebHandlers
 				}
 			}
 		}
+
+        private IUser LoadUserAndVerifyPassword(IWebConnection webConnection, string name, string password)
+        {
+            IUser user;
+            try
+            {
+                user = FileHandler.GetUser(name, password);
+                webConnection.Session.Login(user);
+            }
+            catch (WrongPasswordException)
+            {
+                throw new WebResultsOverrideException(
+                    WebResults.From(Status._401_Unauthorized, "Bad Password"));
+            }
+            catch (UnknownUser)
+            {
+                throw new WebResultsOverrideException(
+                    WebResults.From(Status._404_Not_Found, "Unknown user"));
+            }
+            return user;
+        }
 
         private string GetLocalUserNameFromOpenID(string requestedIdentity)
         {
