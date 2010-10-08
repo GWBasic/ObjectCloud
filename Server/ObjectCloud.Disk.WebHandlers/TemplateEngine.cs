@@ -40,12 +40,24 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.Primitive, FilePermissionEnum.Read)]
         public IWebResults Evaluate(IWebConnection webConnection, string filename)
         {
+            Dictionary<string, object> arguments = new Dictionary<string, object>();
+            foreach (KeyValuePair<string, string> getParameter in webConnection.GetParameters)
+                arguments[getParameter.Key] = getParameter.Value;
+
+            return Evaluate(webConnection, filename, arguments);
+        }
+
+        /// <summary>
+        /// Evaluates the named template
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="filename"></param>
+        /// <param name="arguments"></param>
+        /// <returns></returns>
+        public IWebResults Evaluate(IWebConnection webConnection, string filename, IDictionary<string, object> arguments)
+        {
             try
             {
-                Dictionary<string, object> arguments = new Dictionary<string, object>();
-                foreach (KeyValuePair<string, string> getParameter in webConnection.GetParameters)
-                    arguments[getParameter.Key] = getParameter.Value;
-
                 Stream results = EvaluateToStream(
                     webConnection,
                     arguments,
@@ -286,7 +298,7 @@ namespace ObjectCloud.Disk.WebHandlers
             templateDocument.NodeRemoved -= documentChanged;
         }
 
-        /// <summary>
+        /*// <summary>
         /// Evaluates the named template
         /// </summary>
         /// <param name="webConnection"></param>
@@ -301,7 +313,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             return WebResults.From(Status._200_OK,
                 EvaluateComponent(webConnection, filename, arguments));
-        }
+        }*/
 
         /// <summary>
         /// Evaluates the named template

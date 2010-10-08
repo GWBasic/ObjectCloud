@@ -1202,6 +1202,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             Dictionary<string, object> clpArgs = new Dictionary<string, object>();
             clpArgs["objectUrl"] = FileContainer.ObjectUrl;
+            clpArgs["ownerIdentity"] = relatedContainer.Owner.Identity;
             clpArgs["linkedSummaryView"] = linkNotificationInformation.linkSummaryView;
             clpArgs["linkUrl"] = relatedContainer.ObjectUrl;
             clpArgs["linkDocumentType"] = relatedContainer.DocumentType;

@@ -1353,6 +1353,21 @@
             <returns></returns>
             <returns>Notifications for the user in JSON format.  These are scrubbed and "eval-safe"</returns>
         </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.ConfirmLinkPage(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Displays a page to confirm that the user linked two objects
+            </summary>
+            <param name="webConnection"></param>
+            <param name="objectUrl"></param>
+            <param name="ownerIdentity"></param>
+            <param name="linkedSummaryView"></param>
+            <param name="linkUrl"></param>
+            <param name="linkDocumentType"></param>
+            <param name="recipients"></param>
+            <param name="redirectUrl"></param>
+            <param name="linkID"></param>
+            <returns></returns>
+        </member>
         <member name="P:ObjectCloud.Disk.WebHandlers.UserWebHandler.ParticleAvatarsDirectory">
             <summary>
             
@@ -1461,20 +1476,21 @@
             <param name="filename"></param>
             <returns></returns>
         </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.Evaluate(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.Collections.Generic.IDictionary{System.String,System.Object})">
+            <summary>
+            Evaluates the named template
+            </summary>
+            <param name="webConnection"></param>
+            <param name="filename"></param>
+            <param name="arguments"></param>
+            <returns></returns>
+        </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.EvaluateToStream(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Collections.Generic.IDictionary{System.String,System.Object},System.String)">
             <summary>
             Evaluates the named template
             </summary>
             <param name="webConnection"></param>
             <param name="arguments"></param>
-            <param name="filename"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.EvaluateComponent(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
-            <summary>
-            Evaluates the named template
-            </summary>
-            <param name="webConnection"></param>
             <param name="filename"></param>
             <returns></returns>
         </member>

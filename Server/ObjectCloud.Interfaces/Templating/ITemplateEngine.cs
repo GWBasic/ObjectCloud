@@ -30,6 +30,8 @@ namespace ObjectCloud.Interfaces.Templating
     {
         IWebResults Evaluate(IWebConnection webConnection, string filename);
 
+        IWebResults Evaluate(IWebConnection webConnection, string filename, IDictionary<string, object> arguments);
+
         /// <summary>
         /// Evaluates the named template
         /// </summary>
@@ -42,7 +44,7 @@ namespace ObjectCloud.Interfaces.Templating
             IDictionary<string, object> arguments,
             string filename);
 
-        IWebResults EvaluateComponent(IWebConnection webConnection, string filename);
+        //IWebResults EvaluateComponent(IWebConnection webConnection, string filename);
 
         string EvaluateComponent(IWebConnection webConnection, string filename, object templateInput);
     }

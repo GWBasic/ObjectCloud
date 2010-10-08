@@ -535,5 +535,49 @@ namespace ObjectCloud.Disk.WebHandlers
             }
         }
         private TemplateEngine _TemplateEngine = null;
+
+        /// <summary>
+        /// Displays a page to confirm that the user linked two objects
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="objectUrl"></param>
+        /// <param name="ownerIdentity"></param>
+        /// <param name="linkedSummaryView"></param>
+        /// <param name="linkUrl"></param>
+        /// <param name="linkDocumentType"></param>
+        /// <param name="recipients"></param>
+        /// <param name="redirectUrl"></param>
+        /// <param name="linkID"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Read)]
+        public IWebResults ConfirmLinkPage(
+            IWebConnection webConnection,
+            string objectUrl,
+            string ownerIdentity,
+            string linkedSummaryView,
+            string linkUrl,
+            string linkDocumentType,
+            string recipients,
+            string redirectUrl,
+            string linkID)
+        {
+            Dictionary<string, object> clpArgs = new Dictionary<string, object>();
+            clpArgs["objectUrl"] = objectUrl;
+            clpArgs["ownerIdentity"] = ownerIdentity;
+            clpArgs["linkedSummaryView"] = linkedSummaryView;
+            clpArgs["linkUrl"] = linkUrl;
+            clpArgs["linkDocumentType"] = linkDocumentType;
+            clpArgs["recipients"] = recipients;
+            clpArgs["redirectUrl"] = redirectUrl;
+            clpArgs["linkID"] = linkID;
+
+            Uri domainUrl = new Uri(objectUrl);
+            clpArgs["Domain"] = domainUrl.Host;
+
+            return TemplateEngine.Evaluate(
+                webConnection,
+                "/Shell/Particle/ConfirmLink.oc",
+                clpArgs);
+        }
     }
 }

@@ -1,0 +1,49 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" xmlns:af="appfeeds_templating">
+   <oc:inserthead>
+      <title>Confirm that you created [_linkUrl_].</title>
+      <oc:css src="/DefaultTemplate/particle.css">
+   </oc:inserthead>
+
+   [_ownerIdentity_]<br />
+   <img src="[_ownerIdentity_]?Method=GetAvatar&amp;maxWidth=350&amp;maxHeight=350" />
+
+   <h1>Confirm that you created <a href="[_linkUrl_]">[_linkUrl_]<a/></h1>
+
+   <form method="POST" action="/User/UserDB?Method=UserConfirmLink">
+
+      <input type="hidden" name="objectUrl" value="[_objectUrl_]" />
+      <input type="hidden" name="ownerIdentity" value="[_ownerIdentity_]" />
+      <input type="hidden" name="linkedSummaryView" value="[_linkedSummaryView_]" />
+      <input type="hidden" name="linkUrl" value="[_linkUrl_]" />
+      <input type="hidden" name="linkDocumentType" value="[_linkDocumentType_]" />
+      <input type="hidden" name="recipients" value="[_recipients_]" />
+      <input type="hidden" name="redirectUrl" value="[_redirectUrl_]" />
+      <input type="hidden" name="linkID" value="[_linkID_]" />
+
+      <oc:if>
+         <oc:isequal l="[_User.Identity_]" r="[_ownerIdentity_]" />
+         <oc:else>
+            Password: <input type="password" name="password" /><br />
+         </oc:else>
+      </oc:if>
+
+      Remember [_Domain_] for linking <input type="checkbox" name="remember" checked="true" /><br />
+      <input type="submit" value="confirm" />
+      <a href="[_redirectUrl_]">Cancel</a>
+   </form>
+
+   <a href="[_linkUrl_]">[_linkUrl_]<a/> ([_linkDocumentType_]):<br />
+   <div class="notificationLink">
+      <oc:safeparse>[_linkedSummaryView_]</oc:safeparse>
+   </div>
+
+   Applies to <a href="[_objectUrl_]">[_objectUrl_]</a>:<br />
+   <iframe src="[_objectUrl_]" style="width: 80%; height="350px" />
+
+   <div class="recipients">
+      <oc:jsontemplate data="[_recipients_]">
+         <span class="recipient"><a href="[__]">[__]</a></span>
+      </oc:jsontemplate>
+   </div>
+
+</oc:componentdef>
