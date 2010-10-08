@@ -765,6 +765,16 @@
             <param name="remember"></param>
             <returns></returns>
         </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.NotificationLinkConfirmationsByObjectUrlByLinkID">
+            <summary>
+            NotificationLinkConfirmations, first by ObjectUrl, then by LinkID
+            </summary>
+        </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.NotificationLinkConfirmationTimer">
+            <summary>
+            Periodically cleans up outstanding establish trust request data
+            </summary>
+        </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.Login(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
             <summary>
             Logs in
@@ -992,6 +1002,11 @@
         <member name="P:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.ValidSummaryViewTagsAndAttributes">
             <summary>
             The valid summary view tags and attributes.  Each tag is a key, and then there is a set of valid attributes
+            </summary>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.NotificationLinkConfirmation">
+            <summary>
+            Encapsulates data required to confirm a link
             </summary>
         </member>
         <member name="T:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler">

@@ -234,7 +234,7 @@ namespace ObjectCloud.Disk.FileHandlers
             GenericArgument<Exception> errorCallback)
         {
             // Make sure the timer is created
-            if (null == EstablishTrustDatasByToken)
+            if (null == EstablishTrustDataTimer)
             {
                 Timer timer = new Timer(EstablishTrustDataCleanup, null, 600000, 600000);
                 if (null != Interlocked.CompareExchange<Timer>(ref EstablishTrustDataTimer, timer, null))

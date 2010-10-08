@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Text;
+using System.Threading;
 using System.Xml;
 
 using Common.Logging;
@@ -655,6 +656,163 @@ namespace ObjectCloud.Disk.WebHandlers
 
             return WebResults.Redirect(redirectUrl);
         }
+
+        private ReaderWriterLockSlim NotificationLinkConfirmationLock = new ReaderWriterLockSlim();
+
+        /// <summary>
+        /// NotificationLinkConfirmations, first by ObjectUrl, then by LinkID
+        /// </summary>
+        private Dictionary<string, Dictionary<string, NotificationLinkConfirmation>> NotificationLinkConfirmationsByObjectUrlByLinkID
+            = new Dictionary<string, Dictionary<string, NotificationLinkConfirmation>>();
+
+        private NotificationLinkConfirmation GetNotificationLinkConfirmation(string objectUrl, string linkID)
+        {
+            // Make sure the timer is created
+            if (null == NotificationLinkConfirmationTimer)
+            {
+                Timer timer = new Timer(NotificationLinkConfirmationCleanup, null, 600000, 600000);
+                if (null != Interlocked.CompareExchange<Timer>(ref NotificationLinkConfirmationTimer, timer, null))
+                    timer.Dispose();
+            }
+
+            // Get the dictionary for the the object url
+            Dictionary<string, NotificationLinkConfirmation> forObjectUrl;
+
+            NotificationLinkConfirmationLock.EnterUpgradeableReadLock();
+
+            try
+            {
+                // If there's no dictionary, aquire a write lock, re-check, and then create it
+                if (!NotificationLinkConfirmationsByObjectUrlByLinkID.TryGetValue(objectUrl, out forObjectUrl))
+                {
+                    NotificationLinkConfirmationLock.EnterWriteLock();
+
+                    try
+                    {
+                        if (!NotificationLinkConfirmationsByObjectUrlByLinkID.TryGetValue(objectUrl, out forObjectUrl))
+                        {
+                            forObjectUrl = new Dictionary<string, NotificationLinkConfirmation>();
+                            NotificationLinkConfirmationsByObjectUrlByLinkID[objectUrl] = forObjectUrl;
+                        }
+                    }
+                    finally
+                    {
+                        NotificationLinkConfirmationLock.ExitWriteLock();
+                    }
+                }
+
+                // Manipulation of the dictionary needs to happen within the read lock because NotificationLinkConfirmationsByObjectUrlByLinkID
+                // is also cleaned within a lock
+                lock (forObjectUrl)
+                {
+                    NotificationLinkConfirmation toReturn;
+
+                    if (!forObjectUrl.TryGetValue(linkID, out toReturn))
+                    {
+                        toReturn = new NotificationLinkConfirmation();
+                        forObjectUrl[linkID] = toReturn;
+                    }
+
+                    return toReturn;
+                }
+            }
+            finally
+            {
+                NotificationLinkConfirmationLock.ExitUpgradeableReadLock();
+            }
+
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Periodically cleans up outstanding establish trust request data
+        /// </summary>
+        private Timer NotificationLinkConfirmationTimer = null;
+
+        private void NotificationLinkConfirmationCleanup(object state)
+        {
+            NotificationLinkConfirmationLock.EnterWriteLock();
+
+            try
+            {
+                foreach (KeyValuePair<string, Dictionary<string, NotificationLinkConfirmation>> forObjectUrlKVP
+                    in Enumerable<KeyValuePair<string, Dictionary<string, NotificationLinkConfirmation>>>.FastCopy(NotificationLinkConfirmationsByObjectUrlByLinkID))
+                {
+                    lock (forObjectUrlKVP.Value)
+                    {
+                        foreach (KeyValuePair<string, NotificationLinkConfirmation> nlcKVP in
+                            Enumerable<KeyValuePair<string, NotificationLinkConfirmation>>.FastCopy(forObjectUrlKVP.Value))
+                        {
+                            if (nlcKVP.Value.Created.AddHours(1) < DateTime.UtcNow)
+                                forObjectUrlKVP.Value.Remove(nlcKVP.Key);
+                        }
+
+                        if (0 == forObjectUrlKVP.Value.Count)
+                            NotificationLinkConfirmationsByObjectUrlByLinkID.Remove(forObjectUrlKVP.Key);
+                    }
+                }
+            }
+            finally
+            {
+                NotificationLinkConfirmationLock.ExitWriteLock();
+            }
+        }
+
+        /// <summary>
+        /// Encapsulates data required to confirm a link
+        /// </summary>
+        private class NotificationLinkConfirmation
+        {
+            /*public IUser Sender;
+            public Set<string> SenderRecipientIdentities;
+            //public string ObjectUrl;
+            public string SummaryView;
+            public string DocumentType;
+            public string ChangeData;
+            //public string LinkID;
+
+            /// <summary>
+            /// The link info that came from the host's notification
+            /// </summary>
+            public LinkInfo NotificationLinkInfo;
+
+            /// <summary>
+            /// The link info that came from the identity's confirmation
+            /// </summary>
+            public LinkInfo ConfirmationLinkInfo;
+
+            public bool NotificationRecieved = false;
+            public bool ConfirmationRecieved = false;*/
+
+            public DateTime Created = DateTime.UtcNow;
+        }
+
+        /*// <summary>
+        /// Encapsulates information about the link that comes from both the notification and the confirmation
+        /// </summary>
+        private class LinkInfo
+        {
+            public string OwnerIdentity;
+            public string LinkUrl;
+            public string LinkSummaryView;
+            public string LinkDocumentType;
+
+            public override bool Equals(object obj)
+            {
+                if (obj is LinkInfo)
+                {
+                    LinkInfo other = (LinkInfo)obj;
+
+                    if (OwnerIdentity == other.OwnerIdentity)
+                        if (LinkUrl == other.LinkUrl)
+                            if (LinkSummaryView == other.LinkSummaryView)
+                                if (LinkDocumentType == other.LinkDocumentType)
+                                    return true;
+                }
+
+                return false;
+            }
+        }*/
     }
 
     delegate void ReceiveNotificationDelegateType(
