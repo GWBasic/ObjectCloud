@@ -122,16 +122,22 @@ namespace ObjectCloud.Disk.WebHandlers
                 webConnection.SendResults(WebResults.From(Status._401_Unauthorized, "Could not establish trust"));
             };
 
-            FileHandler.GetRespondTrustEnpoint(senderIdentity, delegate(string respondTrustEndpoint)
-            {
-                HttpWebClient httpWebClient = new HttpWebClient();
-                httpWebClient.BeginPost(
-                    respondTrustEndpoint,
-                    callback,
-                    errorCallback,
-                    new KeyValuePair<string, string>("token", token),
-                    new KeyValuePair<string, string>("senderToken", senderToken));
-            });
+            FileHandler.GetRespondTrustEnpoint(
+                senderIdentity,
+                delegate(string respondTrustEndpoint)
+                {
+                    HttpWebClient httpWebClient = new HttpWebClient();
+                    httpWebClient.BeginPost(
+                        respondTrustEndpoint,
+                        callback,
+                        errorCallback,
+                        new KeyValuePair<string, string>("token", token),
+                        new KeyValuePair<string, string>("senderToken", senderToken));
+                },
+                delegate(Exception e)
+                {
+                    log.Error("Can not get the endpoint to respond establishing trust from within a call to EstablishTrust", e);
+                });
 
             return null;
         }

@@ -6,17 +6,21 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+using Common.Logging;
 using JsonFx.Json;
 
 using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Javascript;
 using ObjectCloud.Interfaces.Security;
+using ObjectCloud.Interfaces.Templating;
 using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.Interfaces.Disk
 {
     public abstract class FileContainerBase : IFileContainer
     {
+        private static ILog log = LogManager.GetLogger<FileContainerBase>();
+
         public FileContainerBase(
             IFileHandler fileHandler,
             IFileId fileId,
@@ -291,6 +295,17 @@ namespace ObjectCloud.Interfaces.Disk
         }
         private string _Extension = null;
 
+        public string DocumentType
+        {
+            get 
+            { 
+                if (null != Extension)
+                    return Extension;
+                else
+                    return TypeId;
+            }
+        }
+
         public string ObjectUrl
         {
             get { return "http://" + FileHandlerFactoryLocator.HostnameAndPort + FullPath; }
@@ -336,5 +351,97 @@ namespace ObjectCloud.Interfaces.Disk
             return filename;
         }
 
+        public string GenerateSummaryView()
+        {
+            string filename;
+
+            if (null != Extension)
+                filename = string.Format(
+                    "/Shell/SummaryViews/ByExtension/{0}.oc",
+                    Extension.ToLowerInvariant());
+            else
+                filename = string.Format(
+                    "/Shell/SummaryViews/ByType/{0}.oc",
+                    TypeId.ToLowerInvariant());
+
+            Dictionary<string, object> getParameters = new Dictionary<string, object>();
+            getParameters["filename"] = FullPath;
+            getParameters["objectUrl"] = ObjectUrl;
+            getParameters["HeaderFooterOverride"] = "/DefaultTemplate/summaryview.ochf";
+
+            ISession session = FileHandlerFactoryLocator.SessionManagerHandler.CreateSession();
+            session.Login(Owner);
+
+            string summaryView;
+            try
+            {
+                IWebConnection webConnection = new BlockingShellWebConnection(
+                    FileHandlerFactoryLocator.WebServer,
+                    session,
+                    FullPath,
+                    null,
+                    null,
+                    new CookiesFromBrowser(),
+                    CallingFrom.Web,
+                    WebMethod.GET);
+
+                summaryView = TemplateEngine.EvaluateComponent(webConnection, filename, getParameters);
+            }
+            catch (Exception e)
+            {
+                log.Error("Exception when generating a summary view to send in a notification for " + FullPath, e);
+                summaryView = string.Format("<a href=\"{0}\">{0}</a>", ObjectUrl);
+            }
+            finally
+            {
+                FileHandlerFactoryLocator.SessionManagerHandler.EndSession(session.SessionId);
+            }
+
+            return summaryView;
+        }
+
+        public ITemplateEngine TemplateEngine
+        {
+            get
+            {
+                if (null == _TemplateEngine)
+                {
+                    IFileContainer templateEngineFileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("/System/TemplateEngine");
+                    _TemplateEngine = (ITemplateEngine)templateEngineFileContainer.WebHandler;
+                }
+
+                return _TemplateEngine;
+            }
+        }
+        private ITemplateEngine _TemplateEngine = null;
+
+        public IEnumerable<string> GetNotificationRecipientIdentities()
+        {
+            IEnumerable<IUser> notificationRecipients = GetNotificationRecipients();
+            foreach (IUser user in notificationRecipients)
+                yield return user.Identity;
+        }
+
+        public IEnumerable<IUser> GetNotificationRecipients()
+        {
+            // Load the recipients based on who has permission / owns the file
+            IEnumerable<FilePermission> permissions = ParentDirectoryHandler.GetPermissions(Filename);
+
+            Set<ID<IUserOrGroup, Guid>> userOrGroupIds = new Set<ID<IUserOrGroup, Guid>>();
+
+            // send the notification to all users who have permission to this file...
+            foreach (FilePermission filePermission in permissions)
+                if (filePermission.SendNotifications)
+                    if (filePermission.UserOrGroupId == FileHandlerFactoryLocator.UserFactory.Everybody.Id || filePermission.UserOrGroupId == FileHandlerFactoryLocator.UserFactory.LocalUsers.Id)
+                        userOrGroupIds.AddRange(FileHandlerFactoryLocator.UserManagerHandler.GetAllLocalUserIds());
+                    else
+                        userOrGroupIds.Add(filePermission.UserOrGroupId);
+
+            // ... and the owner
+            userOrGroupIds.Add(OwnerId.Value);
+
+            IEnumerable<IUser> notificationRecipients = FileHandlerFactoryLocator.UserManagerHandler.GetUsersAndResolveGroupsToUsers(userOrGroupIds);
+            return notificationRecipients;
+        }
     }
 }

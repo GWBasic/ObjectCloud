@@ -52,7 +52,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <summary>
         /// Sends a notification
         /// </summary>
-        void SendLinkNotificationFrom(
+        LinkNotificationInformation SendLinkNotificationFrom(
             IUser sender,
             IFileContainer linkedFile);
 
@@ -124,5 +124,11 @@ namespace ObjectCloud.Interfaces.Disk
             get { return _RelatedFile; }
         }
         private readonly IFileContainer _RelatedFile;
+    }
+
+    public struct LinkNotificationInformation
+    {
+        public string linkID;
+        public string linkSummaryView;
     }
 }

@@ -371,20 +371,30 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <summary>
         /// Responds with the endpoint needed to respond trust
         /// </summary>
-        /// <param name="openIdOrWebFinger"></param>
+        /// <param name="identity"></param>
         /// <param name="callback"></param>
-        public void GetRespondTrustEnpoint(string openIdOrWebFinger, GenericArgument<string> callback)
+        public void GetRespondTrustEnpoint(string identity, GenericArgument<string> callback, GenericArgument<Exception> errorCallback)
+        {
+            GetEndpoint("respondTrust", identity, callback, errorCallback);
+        }
+
+        public void GetConfirmLinkPageEnpoint(string identity, GenericArgument<string> callback, GenericArgument<Exception> errorCallback)
+        {
+            GetEndpoint("confirmLinkPage", identity, callback, errorCallback);
+        }
+
+        private void GetEndpoint(string endpoint, string identity, GenericArgument<string> callback, GenericArgument<Exception> errorCallback)
         {
             Endpoints.GetEndpoints(
-                openIdOrWebFinger,
+                identity,
                 false,
                 delegate(Endpoints endpoints)
                 {
-                    callback(endpoints["respondTrust"]);
+                    callback(endpoints[endpoint]);
                 },
                 delegate(Exception e)
                 {
-                    callback("???");
+                    errorCallback(e);
                 });
         }
 

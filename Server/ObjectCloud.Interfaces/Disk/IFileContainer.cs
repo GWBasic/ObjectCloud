@@ -96,6 +96,11 @@ namespace ObjectCloud.Interfaces.Disk
         string Extension { get; }
 
         /// <summary>
+        /// The document type
+        /// </summary>
+        string DocumentType { get; }
+
+        /// <summary>
         /// The file's URL
         /// </summary>
         string ObjectUrl { get; }
@@ -126,5 +131,23 @@ namespace ObjectCloud.Interfaces.Disk
         /// </summary>
         /// <returns></returns>
         string GetNamedPermissionsConfigurationFilename();
+
+        /// <summary>
+        /// Returns a summary view of the file
+        /// </summary>
+        /// <returns></returns>
+        string GenerateSummaryView();
+
+        /// <summary>
+        /// Returns all of the current recipients of notifications
+        /// </summary>
+        /// <returns></returns>
+        IEnumerable<IUser> GetNotificationRecipients();
+
+        /// <summary>
+        /// Returns all of the identities of notification recipients
+        /// </summary>
+        /// <returns></returns>
+        IEnumerable<string> GetNotificationRecipientIdentities();
     }
 }

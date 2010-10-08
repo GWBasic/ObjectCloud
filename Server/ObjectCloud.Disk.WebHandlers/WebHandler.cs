@@ -1158,8 +1158,11 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="filename"></param>
         /// <param name="relationship"></param>
         /// <param name="inheritPermission">Set to true if the related file should inherit READ permissions from the parent file.  That is, anyone who has at least READ permission to the parent file will be able to read the related file.  In order for this to work, the user must have administer permissions to the related file or an error will occur</param>
-        /// <returns></returns>
-        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Administer)]
+        /// <returns>JSON object with two properties:  confirmLinkPage, the endpoint to POST the user to in order to confirm that the user posted the link.  args:  The arguments that must be URLencoded in the post request to confirmLinkPage.  Note, you must add redirectUrl based on the implemented workflow.</returns>
+        [WebCallable(
+            WebCallingConvention.POST_application_x_www_form_urlencoded,
+            WebReturnConvention.JSON,
+            FilePermissionEnum.Administer)]
         public IWebResults AddRelatedFile(IWebConnection webConnection, string filename, string relationship, bool? inheritPermission)
         {
             if (null == FileContainer.ParentDirectoryHandler)
@@ -1194,10 +1197,35 @@ namespace ObjectCloud.Disk.WebHandlers
                         "You must have administer permission to " + relatedContainer.FullPath + 
                         " in order for it to inherit permissions from the parent file"));
 
-            FileContainer.ParentDirectoryHandler.AddRelationship(
+            LinkNotificationInformation linkNotificationInformation = FileContainer.ParentDirectoryHandler.AddRelationship(
                 FileContainer, relatedContainer, relationship, inheritPermissionValue);
 
-            return WebResults.From(Status._202_Accepted);
+            Dictionary<string, object> clpArgs = new Dictionary<string, object>();
+            clpArgs["objectUrl"] = FileContainer.ObjectUrl;
+            clpArgs["linkedSummaryView"] = linkNotificationInformation.linkSummaryView;
+            clpArgs["linkUrl"] = relatedContainer.ObjectUrl;
+            clpArgs["linkDocumentType"] = relatedContainer.DocumentType;
+            clpArgs["recipients"] = new List<object>(Enumerable<object>.Cast(
+                FileContainer.GetNotificationRecipientIdentities())).ToArray();
+            clpArgs["linkID"] = linkNotificationInformation.linkID;
+
+            FileHandlerFactoryLocator.UserManagerHandler.GetConfirmLinkPageEnpoint(
+                relatedContainer.Owner.Identity,
+                delegate(string confirmLinkPage)
+                {
+                    Dictionary<string, object> toReturn = new Dictionary<string, object>();
+                    toReturn["confirmLinkPage"] = confirmLinkPage;
+                    toReturn["args"] = clpArgs;
+
+                    webConnection.SendResults(WebResults.ToJson(toReturn));
+                },
+                delegate(Exception e)
+                {
+                    webConnection.SendResults(WebResults.From(
+                        Status._412_Precondition_Failed, "Could not find particle.confirmLinkPage endpoint"));
+                });
+
+            return null;
         }
 
         /// <summary>

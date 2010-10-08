@@ -40,42 +40,49 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.Primitive, FilePermissionEnum.Read)]
         public IWebResults Evaluate(IWebConnection webConnection, string filename)
         {
-            Dictionary<string, object> arguments = new Dictionary<string, object>();
-            foreach (KeyValuePair<string, string> getParameter in webConnection.GetParameters)
-                arguments[getParameter.Key] = getParameter.Value;
+            try
+            {
+                Dictionary<string, object> arguments = new Dictionary<string, object>();
+                foreach (KeyValuePair<string, string> getParameter in webConnection.GetParameters)
+                    arguments[getParameter.Key] = getParameter.Value;
 
-            Stream results = EvaluateToStream(
-                webConnection,
-                arguments,
-                filename);
+                Stream results = EvaluateToStream(
+                    webConnection,
+                    arguments,
+                    filename);
 
-            IWebResults toReturn;
+                IWebResults toReturn;
 
-            // Hack to work around a bug in IE handling xhtml
-            // What's going on is that I'm using a horrible hack to remove all namespaces from the <html> tag and turn this into an SGML-HTML document instead of xml-html
-            string userAgent;
-            if (webConnection.Headers.TryGetValue("USER-AGENT", out userAgent))
-                if (userAgent.Contains(" MSIE "))
-                {
-                    // <?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" 
+                // Hack to work around a bug in IE handling xhtml
+                // What's going on is that I'm using a horrible hack to remove all namespaces from the <html> tag and turn this into an SGML-HTML document instead of xml-html
+                string userAgent;
+                if (webConnection.Headers.TryGetValue("USER-AGENT", out userAgent))
+                    if (userAgent.Contains(" MSIE "))
+                    {
+                        // <?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" 
 
-                    StreamReader sr = new StreamReader(results);
-                    string result = sr.ReadToEnd();
-                    result = result.Replace("<?xml version=\"1.0\" encoding=\"utf-8\"?><html", "");
-                    result = result.Split(new char[] { '>' }, 2)[1];
-                    result = "<!DOCTYPE html>\n<html>" + result;
+                        StreamReader sr = new StreamReader(results);
+                        string result = sr.ReadToEnd();
+                        result = result.Replace("<?xml version=\"1.0\" encoding=\"utf-8\"?><html", "");
+                        result = result.Split(new char[] { '>' }, 2)[1];
+                        result = "<!DOCTYPE html>\n<html>" + result;
 
-                    toReturn = WebResults.From(Status._200_OK, result);
-                    toReturn.ContentType = "text/html";
+                        toReturn = WebResults.From(Status._200_OK, result);
+                        toReturn.ContentType = "text/html";
 
-                    return toReturn;
-                }
+                        return toReturn;
+                    }
 
-            // Everyone else gets real XML
-            toReturn = WebResults.From(Status._200_OK, results);
-            toReturn.ContentType = ContentType;
+                // Everyone else gets real XML
+                toReturn = WebResults.From(Status._200_OK, results);
+                toReturn.ContentType = ContentType;
 
-            return toReturn;
+                return toReturn;
+            }
+            catch (TemplateException te)
+            {
+                throw new WebResultsOverrideException(WebResults.From(Status._500_Internal_Server_Error, te.Message), te);
+            }
         }
 
         /// <summary>
@@ -556,6 +563,8 @@ namespace ObjectCloud.Disk.WebHandlers
             IFileContainer templateFileContainer,
             TemplateParsingState templateParsingState)
         {
+            Set<string> checkedHeaderFooters = new Set<string>();
+
             XmlDocument templateDocument = templateParsingState.LoadXmlDocumentAndReplaceGetParameters(arguments, templateFileContainer, XmlParseMode.Xml);
 			
 			// I think this is to work around an issue when directly viewing a template with an empty <oc:component /> tag
@@ -584,6 +593,11 @@ namespace ObjectCloud.Disk.WebHandlers
 				string headerFooterOverride;
 				if (webConnection.GetParameters.TryGetValue("HeaderFooterOverride", out headerFooterOverride))
 					headerFooter = headerFooterOverride;
+
+                if (checkedHeaderFooters.Contains(headerFooter))
+                    throw new TemplateException("Looping within templates:  " + headerFooter + " eventually points to itself as a headerfooter!!!");
+                else
+                    checkedHeaderFooters.Add(headerFooter);
 
                 templateParsingState.SetCWD(nodesToInsert, templateFileContainer.ParentDirectoryHandler.FileContainer.FullPath);
 
@@ -654,6 +668,25 @@ The tag must be empty with no attributes.  This is where the content for each pa
             }
 
             templateParsingState.SetCWD(templateDocument.ChildNodes, templateFileContainer.ParentDirectoryHandler.FileContainer.FullPath);
+        }
+
+        /// <summary>
+        /// Exceptions that originate from within the templating engine
+        /// </summary>
+        public class TemplateException : Exception
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="message"></param>
+            public TemplateException(string message) : base(message) { }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="message"></param>
+            /// <param name="inner"></param>
+            public TemplateException(string message, Exception inner) : base(message, inner) { }
         }
 
         /// <summary>

@@ -113,9 +113,14 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="messageSummary"></param>
         public void SendShareNotificationFrom(IUser sender)
         {
-            List<string> recipientIdentities = new List<string>(GetNotificationRecipientIdentities());
+            List<string> recipientIdentities = new List<string>(FileContainer.GetNotificationRecipientIdentities());
             SendNotification(sender, "share", recipientIdentities.ToArray());
         }
+
+        /// <summary>
+        /// The next linkId to use in SendLinkNotificationFrom
+        /// </summary>
+        private long NextLinkID = SRandom.Next<long>();
 
         /// <summary>
         /// Sends a notification
@@ -125,16 +130,27 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="summaryViewParent">The summary view will be all child nodes</param>
         /// <param name="documentType"></param>
         /// <param name="messageSummary"></param>
-        public void SendLinkNotificationFrom(
+        public LinkNotificationInformation SendLinkNotificationFrom(
             IUser sender,
             IFileContainer linkedFileContainer)
         {
+            string linkSummaryView = linkedFileContainer.GenerateSummaryView();
+            string linkID = Interlocked.Increment(ref NextLinkID).ToString();
+
             Dictionary<string, object> changeData = new Dictionary<string,object>();
-            changeData["URL"] = linkedFileContainer.ObjectUrl;
-            changeData["summaryView"] = GenerateSummaryView(linkedFileContainer);
-            changeData["owner"] = linkedFileContainer.Owner.Identity;
+            changeData["linkUrl"] = linkedFileContainer.ObjectUrl;
+            changeData["linkSummaryView"] = linkSummaryView;
+            changeData["linkDocumentType"] = linkedFileContainer.DocumentType;
+            changeData["ownerIdentity"] = linkedFileContainer.Owner.Identity;
+            changeData["linkID"] = linkID;
 
             SendNotification(sender, "link", changeData);
+
+            LinkNotificationInformation toReturn = new LinkNotificationInformation();
+            toReturn.linkID = linkID;
+            toReturn.linkSummaryView = linkSummaryView;
+
+            return toReturn;
         }
 
         private void SendNotification(
@@ -176,10 +192,10 @@ namespace ObjectCloud.Interfaces.Disk
 			{
 				try
 				{
-		            Set<IUser> recipients = new Set<IUser>(GetNotificationRecipients());
+		            Set<IUser> recipients = new Set<IUser>(FileContainer.GetNotificationRecipients());
 		
 		            // Attempt to get a summary view
-		            string summaryView = GenerateSummaryView(FileContainer);
+		            string summaryView = FileContainer.GenerateSummaryView();
 		
 		            FileHandlerFactoryLocator.UserManagerHandler.SendNotification(
 		                sender,
@@ -187,7 +203,7 @@ namespace ObjectCloud.Interfaces.Disk
 		                recipients,
 		                FileContainer.ObjectUrl,
 		                summaryView,
-		                null != FileContainer.Extension ? FileContainer.Extension : FileContainer.TypeId,
+		                FileContainer.DocumentType,
 		                verb,
 		                null != changeData ? JsonWriter.Serialize(changeData) : null,
 		                30,
@@ -198,98 +214,6 @@ namespace ObjectCloud.Interfaces.Disk
 					log.Error("Exception when sending a notification", e);
 				}
 			});
-        }
-
-        public ITemplateEngine TemplateEngine
-        {
-            get 
-            {
-                if (null == _TemplateEngine)
-                {
-                    IFileContainer templateEngineFileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("/System/TemplateEngine");
-                    _TemplateEngine = (ITemplateEngine)templateEngineFileContainer.WebHandler;
-                }
-
-                return _TemplateEngine; 
-            }
-        }
-        private ITemplateEngine _TemplateEngine = null;
-
-        private string GenerateSummaryView(IFileContainer fileContainer)
-        {
-            string filename;
-
-            if (null != fileContainer.Extension)
-                filename = string.Format(
-                    "/Shell/SummaryViews/ByExtension/{0}.oc", 
-                    fileContainer.Extension.ToLowerInvariant());
-            else
-                filename = string.Format(
-                    "/Shell/SummaryViews/ByType/{0}.oc",
-                    fileContainer.TypeId.ToLowerInvariant());
-
-            Dictionary<string, object> getParameters = new Dictionary<string, object>();
-            getParameters["filename"] = fileContainer.FullPath;
-            getParameters["objectUrl"] = fileContainer.ObjectUrl;
-            getParameters["HeaderFooterOverride"] = "/DefaultTemplate/summaryview.ochf";
-
-            ISession session = FileHandlerFactoryLocator.SessionManagerHandler.CreateSession();
-            session.Login(fileContainer.Owner);
-
-            string summaryView;
-            try
-            {
-                IWebConnection webConnection = new BlockingShellWebConnection(
-                    FileHandlerFactoryLocator.WebServer,
-                    session,
-                    fileContainer.FullPath,
-                    null,
-                    null,
-                    new CookiesFromBrowser(),
-                    CallingFrom.Web,
-                    WebMethod.GET);
-
-                summaryView = TemplateEngine.EvaluateComponent(webConnection, filename, getParameters);
-            }
-            catch (Exception e)
-            {
-                log.Error("Exception when generating a summary view to send in a notification for " + fileContainer.FullPath, e);
-                summaryView = string.Format("<a href=\"{0}\">{0}</a>", FileContainer.ObjectUrl);
-            }
-            finally
-            {
-                FileHandlerFactoryLocator.SessionManagerHandler.EndSession(session.SessionId);
-            }
-            return summaryView;
-        }
-
-        private IEnumerable<string> GetNotificationRecipientIdentities()
-        {
-            IEnumerable<IUser> notificationRecipients = GetNotificationRecipients();
-            foreach (IUser user in notificationRecipients)
-                yield return user.Identity;
-        }
-
-        private IEnumerable<IUser> GetNotificationRecipients()
-        {
-            // Load the recipients based on who has permission / owns the file
-            IEnumerable<FilePermission> permissions = FileContainer.ParentDirectoryHandler.GetPermissions(FileContainer.Filename);
-
-            Set<ID<IUserOrGroup, Guid>> userOrGroupIds = new Set<ID<IUserOrGroup, Guid>>();
-
-            // send the notification to all users who have permission to this file...
-            foreach (FilePermission filePermission in permissions)
-                if (filePermission.SendNotifications)
-                    if (filePermission.UserOrGroupId == FileHandlerFactoryLocator.UserFactory.Everybody.Id || filePermission.UserOrGroupId == FileHandlerFactoryLocator.UserFactory.LocalUsers.Id)
-                        userOrGroupIds.AddRange(FileHandlerFactoryLocator.UserManagerHandler.GetAllLocalUserIds());
-                    else
-                        userOrGroupIds.Add(filePermission.UserOrGroupId);
-
-            // ... and the owner
-            userOrGroupIds.Add(FileContainer.OwnerId.Value);
-
-            IEnumerable<IUser> notificationRecipients = FileHandlerFactoryLocator.UserManagerHandler.GetUsersAndResolveGroupsToUsers(userOrGroupIds);
-            return notificationRecipients;
         }
 
         public virtual void SyncFromLocalDisk(string localDiskPath, bool force)

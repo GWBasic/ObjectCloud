@@ -1160,7 +1160,7 @@ namespace ObjectCloud.Disk.FileHandlers
             }
         }
 
-        public virtual void AddRelationship(IFileContainer parentFile, IFileContainer relatedFile, string relationship, bool inheritPermission)
+        public virtual LinkNotificationInformation AddRelationship(IFileContainer parentFile, IFileContainer relatedFile, string relationship, bool inheritPermission)
         {
             DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
             {
@@ -1189,9 +1189,12 @@ namespace ObjectCloud.Disk.FileHandlers
                 transaction.Commit();
             });
 
-            parentFile.FileHandler.SendLinkNotificationFrom(parentFile.Owner, relatedFile);
+            LinkNotificationInformation toReturn = 
+                parentFile.FileHandler.SendLinkNotificationFrom(parentFile.Owner, relatedFile);
 
             parentFile.FileHandler.OnRelationshipAdded(new RelationshipEventArgs(relatedFile, relationship));
+
+            return toReturn;
         }
 
         public void DeleteRelationship(IFileContainer parentFile, IFileContainer relatedFile, string relationship)

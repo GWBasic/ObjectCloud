@@ -402,9 +402,16 @@ namespace ObjectCloud.Interfaces.Disk
         /// <summary>
         /// Responds with the endpoint needed to respond trust
         /// </summary>
-        /// <param name="openIdOrWebFinger"></param>
+        /// <param name="identity"></param>
         /// <param name="callback"></param>
-        void GetRespondTrustEnpoint(string openIdOrWebFinger, GenericArgument<string> callback);
+        void GetRespondTrustEnpoint(string identity, GenericArgument<string> callback, GenericArgument<Exception> errorCallback);
+
+        /// <summary>
+        /// Responds with the endpoint needed to confirm a link by the user POSTing to it
+        /// </summary>
+        /// <param name="identity"></param>
+        /// <param name="callback"></param>
+        void GetConfirmLinkPageEnpoint(string identity, GenericArgument<string> callback, GenericArgument<Exception> errorCallback);
 
         /// <summary>
         /// Gets the sender token ID for the given sender token, or returns false if the sender token is unknown

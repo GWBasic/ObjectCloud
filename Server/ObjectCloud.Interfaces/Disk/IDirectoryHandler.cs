@@ -94,7 +94,8 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="relatedFile">The related file's container.  This must be present in the directory</param>
         /// <param name="relationship">The name of the relationship</param>
         /// <param name="inherit">True if the related file should inherit read permissions from the parent</param>
-        void AddRelationship(
+        /// <returns>Information needed for particle.confirmLink</returns>
+        LinkNotificationInformation AddRelationship(
             IFileContainer parentFile,
             IFileContainer relatedFile,
             string relationship,
