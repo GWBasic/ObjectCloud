@@ -122,13 +122,13 @@ namespace ObjectCloud.Disk.WebHandlers
                 webConnection.SendResults(WebResults.From(Status._401_Unauthorized, "Could not establish trust"));
             };
 
-            FileHandler.GetRespondTrustEnpoint(
+            FileHandler.GetEndpoints(
                 senderIdentity,
-                delegate(string respondTrustEndpoint)
+                delegate(IEndpoints endpoints)
                 {
                     HttpWebClient httpWebClient = new HttpWebClient();
                     httpWebClient.BeginPost(
-                        respondTrustEndpoint,
+                        endpoints[ParticleEndpoint.RespondTrust],
                         callback,
                         errorCallback,
                         new KeyValuePair<string, string>("token", token),
@@ -581,7 +581,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="webConnection"></param>
         /// <param name="objectUrl"></param>
         /// <param name="ownerIdentity"></param>
-        /// <param name="linkedSummaryView"></param>
+        /// <param name="linkSummaryView"></param>
         /// <param name="linkUrl"></param>
         /// <param name="linkDocumentType"></param>
         /// <param name="recipients"></param>
@@ -595,29 +595,65 @@ namespace ObjectCloud.Disk.WebHandlers
             IWebConnection webConnection,
             string objectUrl,
             string ownerIdentity,
-            string linkedSummaryView,
+            string linkSummaryView,
             string linkUrl,
             string linkDocumentType,
-            string recipients,
+            string[] recipients,
             string redirectUrl,
             string linkID,
             string password,
             string remember)
         {
+            IUser user;
             if (ownerIdentity != webConnection.Session.User.Identity)
             {
                 string name = GetLocalUserNameFromOpenID(ownerIdentity);
 
                 // Load the user and verify the password
-                LoadUserAndVerifyPassword(webConnection, name, password);
+                user = LoadUserAndVerifyPassword(webConnection, name, password);
             }
+            else
+                user = webConnection.Session.User;
 
             Uri domainUri = new Uri(objectUrl);
 
             webConnection.Session.User.UserHandler.SetRememberOpenIDLink(domainUri.Host, remember != null);
 
-            throw new NotImplementedException();
-            //return WebResults.Redirect(redirectUrl);
+            FileHandler.GetEndpointInfos(
+                user,
+                false,
+                recipients,
+                ParticleEndpoint.ConfirmLink,
+                delegate(EndpointInfo endpointInfo)
+                {
+                    HttpWebClient httpWebClient = new HttpWebClient();
+                        httpWebClient.BeginPost(
+                        endpointInfo.Endpoint,
+                        delegate(HttpResponseHandler httpResponseHandler) 
+                        {
+                        },
+                        delegate(Exception e)
+                        {
+                            log.Warn("Exception calling particle.confirmLink for " + StringGenerator.GenerateCommaSeperatedList(endpointInfo.RecipientIdentities), e);
+                        },
+                        new KeyValuePair<string, string>("objectUrl", objectUrl),
+                        new KeyValuePair<string, string>("senderToken", endpointInfo.SenderToken),
+                        new KeyValuePair<string, string>("linkSummaryView", linkSummaryView),
+                        new KeyValuePair<string, string>("linkUrl", linkUrl),
+                        new KeyValuePair<string, string>("linkDocumentType", linkDocumentType),
+                        new KeyValuePair<string, string>("linkID", linkID),
+                        new KeyValuePair<string, string>("recipients", JsonWriter.Serialize(endpointInfo.RecipientIdentities)));
+                },
+                delegate(IEnumerable<string> recipientsInError)
+                {
+                    log.Warn("Could not get particle.confirmLink for the following recipients: " + StringGenerator.GenerateCommaSeperatedList(recipientsInError));
+                },
+                delegate(Exception e)
+                {
+                    log.Error("Exception getting recipient information for particle.confirmLink", e);
+                });
+
+            return WebResults.Redirect(redirectUrl);
         }
     }
 

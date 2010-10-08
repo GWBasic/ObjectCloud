@@ -542,7 +542,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="webConnection"></param>
         /// <param name="objectUrl"></param>
         /// <param name="ownerIdentity"></param>
-        /// <param name="linkedSummaryView"></param>
+        /// <param name="linkSummaryView"></param>
         /// <param name="linkUrl"></param>
         /// <param name="linkDocumentType"></param>
         /// <param name="recipients"></param>
@@ -554,10 +554,10 @@ namespace ObjectCloud.Disk.WebHandlers
             IWebConnection webConnection,
             string objectUrl,
             string ownerIdentity,
-            string linkedSummaryView,
+            string linkSummaryView,
             string linkUrl,
             string linkDocumentType,
-            string recipients,
+            string[] recipients,
             string redirectUrl,
             string linkID)
         {
@@ -570,7 +570,7 @@ namespace ObjectCloud.Disk.WebHandlers
                         webConnection,
                         objectUrl,
                         ownerIdentity,
-                        linkedSummaryView,
+                        linkSummaryView,
                         linkUrl,
                         linkDocumentType,
                         recipients,
@@ -582,7 +582,7 @@ namespace ObjectCloud.Disk.WebHandlers
             Dictionary<string, object> clpArgs = new Dictionary<string, object>();
             clpArgs["objectUrl"] = objectUrl;
             clpArgs["ownerIdentity"] = ownerIdentity;
-            clpArgs["linkedSummaryView"] = linkedSummaryView;
+            clpArgs["linkSummaryView"] = linkSummaryView;
             clpArgs["linkUrl"] = linkUrl;
             clpArgs["linkDocumentType"] = linkDocumentType;
             clpArgs["recipients"] = recipients;

@@ -34,7 +34,7 @@
 
    <a href="[_linkUrl_]">[_linkUrl_]<a/> ([_linkDocumentType_]):<br />
    <div class="notificationLink">
-      <oc:safeparse>[_linkedSummaryView_]</oc:safeparse>
+      <oc:safeparse>[_linkSummaryView_]</oc:safeparse>
    </div>
 
    Applies to <a href="[_objectUrl_]">[_objectUrl_]</a>:<br />

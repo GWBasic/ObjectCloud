@@ -365,11 +365,12 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="errorCallback">Called when an error occurs establishing recipient information</param>
         /// <param name="exceptionCallback">Callback for unhandled exceptions</param>
         /// <returns></returns>
-        void GetRecipientInfos(
+        void GetEndpointInfos(
             IUserOrGroup sender, 
             bool forceRefresh, 
             IEnumerable<string> recipientIdentities,
-            GenericArgument<RecipientInfo> callback,
+            ParticleEndpoint particleEndpoint,
+            GenericArgument<EndpointInfo> callback,
             GenericArgument<IEnumerable<string>> errorCallback,
             GenericArgument<Exception> exceptionCallback);
 
@@ -404,21 +405,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// </summary>
         /// <param name="identity"></param>
         /// <param name="callback"></param>
-        void GetRespondTrustEnpoint(string identity, GenericArgument<string> callback, GenericArgument<Exception> errorCallback);
-
-        /// <summary>
-        /// Responds with the endpoint needed to confirm a link by the user POSTing to it
-        /// </summary>
-        /// <param name="identity"></param>
-        /// <param name="callback"></param>
-        void GetConfirmLinkPageEnpoint(string identity, GenericArgument<string> callback, GenericArgument<Exception> errorCallback);
-
-        /// <summary>
-        /// Responds with the endpoint needed to confirm a link by the user POSTing to it
-        /// </summary>
-        /// <param name="identity"></param>
-        /// <param name="callback"></param>
-        void GetConfirmLinkEnpoint(string identity, GenericArgument<string> callback, GenericArgument<Exception> errorCallback);
+        void GetEndpoints(string identity, GenericArgument<IEndpoints> callback, GenericArgument<Exception> errorCallback);
 
         /// <summary>
         /// Gets the sender token ID for the given sender token, or returns false if the sender token is unknown
@@ -459,7 +446,7 @@ namespace ObjectCloud.Interfaces.Disk
     /// <summary>
     /// Encapsulates information about a recipient when sending a notification
     /// </summary>
-    public struct RecipientInfo
+    public struct EndpointInfo
     {
         /// <summary>
         /// The sender token that's used to identify the sender
@@ -467,9 +454,9 @@ namespace ObjectCloud.Interfaces.Disk
         public string SenderToken;
 
         /// <summary>
-        /// The URL of the endpoint used for recieving a notification
+        /// The requested endpoint
         /// </summary>
-        public string RecieveNotificationEndpoint;
+        public string Endpoint;
 
         /// <summary>
         /// The OpenIDs or WebFinders that are valid for this endpoint

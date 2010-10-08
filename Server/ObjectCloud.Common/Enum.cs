@@ -60,6 +60,45 @@ namespace ObjectCloud.Common
             return false;
         }
 
+
+        /// <summary>
+        /// Tries to parse the enum, assigns it to target if it can be parsed
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="target"></param>
+        public static bool TryParseCaseInsensitive(string value, out TEnum target)
+        {
+            if (null == CaseInsensitiveValues)
+            {
+                Dictionary<string, TEnum> caseInsensitiveValues = new Dictionary<string, TEnum>();
+
+                foreach (TEnum tenum in Values)
+                {
+                    string namedValue = tenum.ToString().ToLowerInvariant();
+
+                    if (caseInsensitiveValues.ContainsKey(namedValue))
+                        throw new AmbiguousEnumNameException(namedValue);
+
+                    caseInsensitiveValues[namedValue] = tenum;
+                }
+
+                // Assigment is performed this way to mitigate threading issues when verifying that no duplicates exist
+                CaseInsensitiveValues = caseInsensitiveValues;
+            }
+
+            return CaseInsensitiveValues.TryGetValue(value.ToLowerInvariant(), out target);
+        }
+
+        private static Dictionary<string, TEnum> CaseInsensitiveValues = null;
+
+        /// <summary>
+        /// Thrown when attempting to parse an enum in a case-insenstive manner and there are multiple values that are the same when case is ignored
+        /// </summary>
+        public class AmbiguousEnumNameException : Exception
+        {
+            internal AmbiguousEnumNameException(string namedValue) : base(namedValue + " is ambiguous in parsing in a case insensitive manner") { }
+        }
+
         /// <summary>
         /// Retrieves an array of the values of the constants in a specified enumeration. 
         /// </summary>

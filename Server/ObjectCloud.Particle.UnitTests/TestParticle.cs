@@ -18,6 +18,7 @@ using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
+using ObjectCloud.Interfaces.WebServer;
 using ObjectCloud.Disk.Implementation;
 using ObjectCloud.WebServer.Test;
 
@@ -49,8 +50,8 @@ namespace ObjectCloud.Particle.UnitTests
 
             object pulser = new object();
 
-            RecipientInfo recipientInfo = default(RecipientInfo);
-            GenericArgument<RecipientInfo> callback = delegate(RecipientInfo recipientInfoCB)
+            EndpointInfo recipientInfo = default(EndpointInfo);
+            GenericArgument<EndpointInfo> callback = delegate(EndpointInfo recipientInfoCB)
             {
                 recipientInfo = recipientInfoCB;
 
@@ -77,10 +78,11 @@ namespace ObjectCloud.Particle.UnitTests
 
             lock (pulser)
             {
-                FileHandlerFactoryLocator.UserManagerHandler.GetRecipientInfos(
+                FileHandlerFactoryLocator.UserManagerHandler.GetEndpointInfos(
                     user,
                     false,
                     new string[] { target.Identity },
+                    ParticleEndpoint.ReceiveNotification,
                     callback,
                     errorCallback,
                     exceptionCallback);
@@ -98,7 +100,7 @@ namespace ObjectCloud.Particle.UnitTests
             Assert.IsNotNull(recipientInfo.SenderToken);
             Assert.AreEqual(
                     string.Format("http://{0}/Users/UserDB?Method=ReceiveNotification", SecondFileHandlerFactoryLocator.HostnameAndPort),
-                    recipientInfo.RecieveNotificationEndpoint);
+                    recipientInfo.Endpoint);
         }
 
         [Test]

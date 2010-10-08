@@ -748,14 +748,14 @@
             <param name="senderIdentity"></param>
             <returns></returns>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.UserConfirmLink(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String)">
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.UserConfirmLink(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String,System.String,System.String,System.String[],System.String,System.String,System.String,System.String)">
             <summary>
             Handles when a user confirms linking on another server, including starting to call particle.confirmLink on remote servers
             </summary>
             <param name="webConnection"></param>
             <param name="objectUrl"></param>
             <param name="ownerIdentity"></param>
-            <param name="linkedSummaryView"></param>
+            <param name="linkSummaryView"></param>
             <param name="linkUrl"></param>
             <param name="linkDocumentType"></param>
             <param name="recipients"></param>
@@ -1370,14 +1370,14 @@
             <returns></returns>
             <returns>Notifications for the user in JSON format.  These are scrubbed and "eval-safe"</returns>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.ConfirmLinkPage(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String)">
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.ConfirmLinkPage(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String,System.String,System.String,System.String[],System.String,System.String)">
             <summary>
             Displays a page to confirm that the user linked two objects
             </summary>
             <param name="webConnection"></param>
             <param name="objectUrl"></param>
             <param name="ownerIdentity"></param>
-            <param name="linkedSummaryView"></param>
+            <param name="linkSummaryView"></param>
             <param name="linkUrl"></param>
             <param name="linkDocumentType"></param>
             <param name="recipients"></param>

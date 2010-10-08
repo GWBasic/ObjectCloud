@@ -1210,12 +1210,12 @@ namespace ObjectCloud.Disk.WebHandlers
                 FileContainer.GetNotificationRecipientIdentities())).ToArray();
             clpArgs["linkID"] = linkNotificationInformation.linkID;
 
-            FileHandlerFactoryLocator.UserManagerHandler.GetConfirmLinkPageEnpoint(
+            FileHandlerFactoryLocator.UserManagerHandler.GetEndpoints(
                 relatedContainer.Owner.Identity,
-                delegate(string confirmLinkPage)
+                delegate(IEndpoints endpoints)
                 {
                     Dictionary<string, object> toReturn = new Dictionary<string, object>();
-                    toReturn["confirmLinkPage"] = confirmLinkPage;
+                    toReturn["confirmLinkPage"] = endpoints[ParticleEndpoint.ConfirmLinkPage];
                     toReturn["args"] = clpArgs;
 
                     webConnection.SendResults(WebResults.ToJson(toReturn));

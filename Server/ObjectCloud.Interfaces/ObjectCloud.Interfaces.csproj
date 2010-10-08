@@ -121,6 +121,7 @@
     <Compile Include="WebServer\HasWebResultsException.cs" />
     <Compile Include="WebServer\IChannelEventWebAdaptor.cs" />
     <Compile Include="WebServer\ICometTransport.cs" />
+    <Compile Include="WebServer\IEndpoints.cs" />
     <Compile Include="WebServer\IQueuingReliableCometTransport.cs" />
     <Compile Include="WebServer\IWebAccessCodeGenerator.cs" />
     <Compile Include="WebServer\IWebConnectionContent.cs" />
@@ -135,6 +136,7 @@
     <Compile Include="WebServer\MethodNameAndFileContainer.cs" />
     <Compile Include="Security\NamedPermissionAttribute.cs" />
     <Compile Include="WebServer\NonBlockingShellWebConnection.cs" />
+    <Compile Include="WebServer\ParticleEndpoint.cs" />
     <Compile Include="WebServer\QueuingReliableCometTransport.cs">
       <SubType>Code</SubType>
     </Compile>

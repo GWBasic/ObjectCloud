@@ -12,13 +12,14 @@ using Common.Logging;
 using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Disk;
+using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.Disk.FileHandlers.Particle
 {
     /// <summary>
     /// Holds the Particle endpoints for an openID
     /// </summary>
-    public class Endpoints
+    public class Endpoints : IEndpoints
     {
         private static ILog log = LogManager.GetLogger<Endpoints>();
 		
@@ -82,13 +83,17 @@ namespace ObjectCloud.Disk.FileHandlers.Particle
 
                         // Get the specific action...
                         string[] endpointPrefix = linkTag.Split(new string[] { "rel=\"particle." }, StringSplitOptions.RemoveEmptyEntries);
-                        string endpoint = endpointPrefix[endpointPrefix.Length - 1].Split('"')[0];
+                        string endpointString = endpointPrefix[endpointPrefix.Length - 1].Split('"')[0];
 
-                        // Get the specific href...
-                        string[] hrefPrefix = linkTag.Split(new string[] { "href=\"" }, StringSplitOptions.RemoveEmptyEntries);
-                        string href = hrefPrefix[hrefPrefix.Length - 1].Split('"')[0];
+                        ParticleEndpoint endpoint;
+                        if (Enum<ParticleEndpoint>.TryParseCaseInsensitive(endpointString, out endpoint))
+                        {
+                            // Get the specific href...
+                            string[] hrefPrefix = linkTag.Split(new string[] { "href=\"" }, StringSplitOptions.RemoveEmptyEntries);
+                            string href = hrefPrefix[hrefPrefix.Length - 1].Split('"')[0];
 
-                        KnownEndpoints[endpoint] = href;
+                            KnownEndpoints[endpoint] = href;
+                        }
                     }
             }
         }
@@ -114,14 +119,14 @@ namespace ObjectCloud.Disk.FileHandlers.Particle
         /// <summary>
         /// The known endpoints
         /// </summary>
-        private readonly Dictionary<string, string> KnownEndpoints = new Dictionary<string, string>();
+        private readonly Dictionary<ParticleEndpoint, string> KnownEndpoints = new Dictionary<ParticleEndpoint, string>();
 
         /// <summary>
         /// Returns the url for the endpoint, or null if it doesn't exist
         /// </summary>
         /// <param name="endpoint"></param>
         /// <returns></returns>
-        public string this[string endpoint]
+        public string this[ParticleEndpoint endpoint]
         {
             get
             {
@@ -135,11 +140,13 @@ namespace ObjectCloud.Disk.FileHandlers.Particle
         }
 
         /// <summary>
-        /// Thrown if an endpoint is unknown
+        /// Returns true if the endpoint exists
         /// </summary>
-        public class UnknownEndpoint : ParticleException
+        /// <param name="endpoint"></param>
+        /// <returns></returns>
+        public bool ContainsEndpoint(ParticleEndpoint endpoint)
         {
-            public UnknownEndpoint(string message) : base(message) { }
+            return KnownEndpoints.ContainsKey(endpoint);
         }
 
         /// <summary>
@@ -147,9 +154,9 @@ namespace ObjectCloud.Disk.FileHandlers.Particle
         /// </summary>
         /// <param name="endpoint"></param>
         /// <returns></returns>
-        public bool ContainsEndpoint(string endpoint)
+        public bool TryGetEndpoint(ParticleEndpoint endpoint, out string endpointString)
         {
-            return KnownEndpoints.ContainsKey(endpoint);
+            return KnownEndpoints.TryGetValue(endpoint, out endpointString);
         }
 
         /// <summary>
