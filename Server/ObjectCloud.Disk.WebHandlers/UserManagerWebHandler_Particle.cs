@@ -720,8 +720,6 @@ namespace ObjectCloud.Disk.WebHandlers
             {
                 NotificationLinkConfirmationLock.ExitUpgradeableReadLock();
             }
-
-            throw new NotImplementedException();
         }
 
         /// <summary>
