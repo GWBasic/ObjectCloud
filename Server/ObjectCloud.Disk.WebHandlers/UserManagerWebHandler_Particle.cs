@@ -233,6 +233,10 @@ namespace ObjectCloud.Disk.WebHandlers
                 if (!linkChangeData.TryGetValue("linkID", out linkID))
                     throw new WebResultsOverrideException(WebResults.From(Status._400_Bad_Request, "linkID missing from change data"));
 
+                // Remove the linkID as it's not needed to persist
+                linkChangeData.Remove("linkID");
+                changeData = JsonWriter.Serialize(linkChangeData);
+
                 NotificationLinkConfirmation nlc = GetNotificationLinkConfirmation(objectUrl, linkID.ToString());
 
                 nlc.ChangeData = changeData;

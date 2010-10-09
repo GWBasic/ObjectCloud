@@ -176,7 +176,7 @@ namespace ObjectCloud.Particle.UnitTests
             Assert.IsTrue(recipients.Contains(recipient.Identity));
 
             // sumaryView and timestamp are untested
-            Assert.IsNotNull(notification[NotificationColumn.SummaryView]);
+            Assert.AreEqual(file.FileContainer.GenerateSummaryView(), notification[NotificationColumn.SummaryView]);
             Assert.IsNotNull(notification[NotificationColumn.Timestamp]);
         }
 
@@ -241,7 +241,8 @@ namespace ObjectCloud.Particle.UnitTests
                     new KeyValuePair<string, string>("linkDocumentType", linked.FileContainer.DocumentType),
                     new KeyValuePair<string, string>("linkID", linked.FileContainer.DocumentType),
                     new KeyValuePair<string, string>("recipients", JsonWriter.Serialize(new string[] { hostUser.Identity, identityUser.Identity, recipientUser.Identity })),
-                    new KeyValuePair<string, string>("linkID", lci.linkID));
+                    new KeyValuePair<string, string>("linkID", lci.linkID),
+                    new KeyValuePair<string, string>("redirectUrl", "/"));
 
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
 
@@ -249,11 +250,44 @@ namespace ObjectCloud.Particle.UnitTests
             {
                 while (incomingNotifications.Count < 6)
 
-                    if (!Monitor.Wait(incomingNotifications, 5000))
+                    if (!Monitor.Wait(incomingNotifications, 10000))
                         Assert.Fail("Did not get a confirmation notification");
             }
 
             Assert.AreEqual(6, incomingNotifications.Count);
+
+            int numLinkNotifications = 0;
+            int numLinkIDs = 0;
+
+            foreach (Dictionary<NotificationColumn, object> notification in incomingNotifications)
+                if ("link" == notification[NotificationColumn.Verb].ToString())
+                {
+                    numLinkNotifications++;
+
+                    Assert.AreEqual(file.FileContainer.ObjectUrl, notification[NotificationColumn.ObjectUrl]);
+                    Assert.AreEqual(file.FileContainer.Owner.Identity, notification[NotificationColumn.SenderIdentity]);
+
+                    Dictionary<string, object> linkChangeData =
+                        JsonReader.Deserialize<Dictionary<string, object>>(notification[NotificationColumn.ChangeData].ToString());
+
+                    Assert.IsTrue(linkChangeData.ContainsKey("linkUrl"));
+                    Assert.AreEqual(linked.FileContainer.ObjectUrl, linkChangeData["linkUrl"]);
+
+                    Assert.IsTrue(linkChangeData.ContainsKey("linkSummaryView"));
+                    Assert.AreEqual(linked.FileContainer.GenerateSummaryView(), linkChangeData["linkSummaryView"]);
+
+                    Assert.IsTrue(linkChangeData.ContainsKey("linkDocumentType"));
+                    Assert.AreEqual(linked.FileContainer.DocumentType, linkChangeData["linkDocumentType"]);
+
+                    Assert.IsTrue(linkChangeData.ContainsKey("ownerIdentity"));
+                    Assert.AreEqual(linked.FileContainer.Owner.Identity, linkChangeData["ownerIdentity"]);
+
+                    if (linkChangeData.ContainsKey("linkID"))
+                        numLinkIDs++;
+                }
+
+            Assert.AreEqual(3, numLinkNotifications);
+            Assert.AreEqual(1, numLinkIDs); // Because linkID isn't removed from local notifications
         }
     }
 }
