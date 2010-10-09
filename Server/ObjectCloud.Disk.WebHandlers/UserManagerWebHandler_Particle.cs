@@ -194,13 +194,13 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <returns></returns>
         [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Read)]
         public IWebResults ReceiveNotification(
-            IWebConnection webConnection, 
-            string senderToken, 
-            string[] recipients, 
-            string objectUrl, 
-            string summaryView, 
-            string documentType, 
-            string verb, 
+            IWebConnection webConnection,
+            string senderToken,
+            string[] recipients,
+            string objectUrl,
+            string summaryView,
+            string documentType,
+            string verb,
             string changeData)
         {
             string senderIdentity;
@@ -224,44 +224,98 @@ namespace ObjectCloud.Disk.WebHandlers
             if (null != changeDataError)
                 errors["changeData"] = changeDataError;
 
-            // Start handling the result for each recipient
-            IAsyncResult[] receiveNotificationDelegateResults = new IAsyncResult[recipients.Length];
-            for (int ctr = 0; ctr < recipients.Length; ctr++)
-                receiveNotificationDelegateResults[ctr] = ReceiveNotificationDelegate.BeginInvoke(
-                    webConnection,
-                    senderIdentity,
-                    recipients[ctr],
-                    objectUrl,
-                    summaryView,
-                    documentType,
-                    verb,
-                    changeData,
-                    linkedSenderIdentity,
-                    null,
-                    null);
-
-            // Wait for all notifications to be written to the database and aggregate errors
-            for (int ctr = 0; ctr < recipients.Length; ctr++)
+            if ("link" == verb)
             {
-                try
+                // First, link notifications are held in RAM
+                Dictionary<string, object> linkChangeData = JsonReader.Deserialize<Dictionary<string, object>>(changeData);
+
+                object linkID;
+                if (!linkChangeData.TryGetValue("linkID", out linkID))
+                    throw new WebResultsOverrideException(WebResults.From(Status._400_Bad_Request, "linkID missing from change data"));
+
+                NotificationLinkConfirmation nlc = GetNotificationLinkConfirmation(objectUrl, linkID.ToString());
+
+                nlc.ChangeData = changeData;
+                nlc.DocumentType = documentType;
+                nlc.SenderIdentity = senderIdentity;
+                nlc.SummaryView = summaryView;
+
+                nlc.NotificationLinkInfo = new LinkInfo();
+                nlc.NotificationLinkInfo.RecipientIdentities = new Set<string>(recipients);
+                ReadLinkInfo(linkChangeData, ref nlc.NotificationLinkInfo.LinkDocumentType, "linkDocumentType");
+                ReadLinkInfo(linkChangeData, ref nlc.NotificationLinkInfo.LinkSummaryView, "linkSummaryView");
+                ReadLinkInfo(linkChangeData, ref nlc.NotificationLinkInfo.LinkUrl, "linkUrl");
+                ReadLinkInfo(linkChangeData, ref nlc.NotificationLinkInfo.OwnerIdentity, "ownerIdentity");
+
+                ProcessNotificationLinkConfirmation(objectUrl, nlc);
+
+                // then make sure users are valid
+                for (int ctr = 0; ctr < recipients.Length; ctr++)
                 {
-                    ReceiveNotificationDelegate.EndInvoke(receiveNotificationDelegateResults[ctr]);
-                }
-                catch (UnknownUser)
-                {
-                    errors[recipients[ctr]] = "notFound";
-                }
-                catch
-                {
-                    errors[recipients[ctr]] = "error";
+                    try
+                    {
+                        GetUserFromNotificationRecipient(recipients[ctr]);
+                    }
+                    catch (UnknownUser)
+                    {
+                        errors[recipients[ctr]] = "notFound";
+                    }
+                    catch
+                    {
+                        errors[recipients[ctr]] = "error";
+                    }
                 }
             }
+            else
+            {
+                // All other notifications are handled per the spec
 
+                // Start handling the result for each recipient
+                IAsyncResult[] receiveNotificationDelegateResults = new IAsyncResult[recipients.Length];
+                for (int ctr = 0; ctr < recipients.Length; ctr++)
+                    receiveNotificationDelegateResults[ctr] = ReceiveNotificationDelegate.BeginInvoke(
+                        senderIdentity,
+                        recipients[ctr],
+                        objectUrl,
+                        summaryView,
+                        documentType,
+                        verb,
+                        changeData,
+                        linkedSenderIdentity,
+                        null,
+                        null);
+
+                // Wait for all notifications to be written to the database and aggregate errors
+                for (int ctr = 0; ctr < recipients.Length; ctr++)
+                {
+                    try
+                    {
+                        ReceiveNotificationDelegate.EndInvoke(receiveNotificationDelegateResults[ctr]);
+                    }
+                    catch (UnknownUser)
+                    {
+                        errors[recipients[ctr]] = "notFound";
+                    }
+                    catch
+                    {
+                        errors[recipients[ctr]] = "error";
+                    }
+                }
+            }
             // If there are no errors, return a 200 ok, else, return an accepted with the errors
             if (errors.Count == 0)
                 return WebResults.From(Status._200_OK);
             else
                 return WebResults.From(Status._202_Accepted, JsonWriter.Serialize(errors));
+        }
+
+        private void ReadLinkInfo(Dictionary<string, object> linkChangeData, ref string property, string name)
+        {
+            object propertyFromObject;
+            if (!linkChangeData.TryGetValue(name, out propertyFromObject))
+                throw new WebResultsOverrideException(WebResults.From(Status._400_Bad_Request, name + " missing from change data"));
+
+            property = propertyFromObject.ToString();
         }
 
         /// <summary>
@@ -515,7 +569,6 @@ namespace ObjectCloud.Disk.WebHandlers
         private readonly ReceiveNotificationDelegateType ReceiveNotificationDelegate;
 
         private void ReceiveNotification(
-            IWebConnection webConnection, 
             string senderIdentity, 
             string recipient, 
             string objectUrl, 
@@ -527,15 +580,7 @@ namespace ObjectCloud.Disk.WebHandlers
         {
             try
             {
-                string name = GetLocalUserNameFromOpenID(recipient);
-
-                IUser user = FileHandler.GetUser(name);
-
-                if (user == FileHandlerFactoryLocator.UserFactory.AnonymousUser.UserHandler)
-                    throw new SecurityException("The anonymous user can not recieve notifications");
-
-                if (user == FileHandlerFactoryLocator.UserFactory.RootUser.UserHandler)
-                    throw new SecurityException("The root user can not recieve notifications from the public internet");
+                IUser user = GetUserFromNotificationRecipient(recipient);
                 
                 user.UserHandler.ReceiveNotification(
                     senderIdentity,
@@ -551,6 +596,20 @@ namespace ObjectCloud.Disk.WebHandlers
                 log.Error("Error in ReceiveNotification for " + recipient, e);
                 throw;
             }
+        }
+
+        private IUser GetUserFromNotificationRecipient(string recipient)
+        {
+            string name = GetLocalUserNameFromOpenID(recipient);
+
+            IUser user = FileHandler.GetUser(name);
+
+            if (user == FileHandlerFactoryLocator.UserFactory.AnonymousUser.UserHandler)
+                throw new SecurityException("The anonymous user can not recieve notifications");
+
+            if (user == FileHandlerFactoryLocator.UserFactory.RootUser.UserHandler)
+                throw new SecurityException("The root user can not recieve notifications from the public internet");
+            return user;
         }
 
         /// <summary>
@@ -657,6 +716,48 @@ namespace ObjectCloud.Disk.WebHandlers
             return WebResults.Redirect(redirectUrl);
         }
 
+        
+        /// <summary>
+        /// Handles when an identity server confirms that a user made a link
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="objectUrl"></param>
+        /// <param name="senderToken"></param>
+        /// <param name="linkSummaryView"></param>
+        /// <param name="linkUrl"></param>
+        /// <param name="linkDocumentType"></param>
+        /// <param name="recipients"></param>
+        /// <param name="linkID"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Read)]
+        public IWebResults ConfirmLink(
+            IWebConnection webConnection,
+            string objectUrl,
+            string senderToken,
+            string linkSummaryView,
+            string linkUrl,
+            string linkDocumentType,
+            string[] recipients,
+            string linkID)
+        {
+            string senderIdentity;
+            if (!FileHandler.TryGetSenderIdentity(senderToken, out senderIdentity))
+                return WebResults.From(Status._412_Precondition_Failed, "senderToken");
+
+            NotificationLinkConfirmation notificationLinkConfirmation = GetNotificationLinkConfirmation(objectUrl, linkID);
+
+            notificationLinkConfirmation.ConfirmationLinkInfo = new LinkInfo();
+            notificationLinkConfirmation.ConfirmationLinkInfo.LinkDocumentType = linkDocumentType;
+            notificationLinkConfirmation.ConfirmationLinkInfo.LinkSummaryView = linkSummaryView;
+            notificationLinkConfirmation.ConfirmationLinkInfo.LinkUrl = linkUrl;
+            notificationLinkConfirmation.ConfirmationLinkInfo.OwnerIdentity = senderIdentity;
+            notificationLinkConfirmation.ConfirmationLinkInfo.RecipientIdentities = new Set<string>(recipients);
+
+            ProcessNotificationLinkConfirmation(objectUrl, notificationLinkConfirmation);
+
+            return WebResults.From(Status._200_OK);
+        }
+
         private ReaderWriterLockSlim NotificationLinkConfirmationLock = new ReaderWriterLockSlim();
 
         /// <summary>
@@ -756,18 +857,57 @@ namespace ObjectCloud.Disk.WebHandlers
             }
         }
 
+        private void ProcessNotificationLinkConfirmation(
+            string objectUrl,
+            NotificationLinkConfirmation notificationLinkConfirmation)
+        {
+            if (2 != Interlocked.Increment(ref notificationLinkConfirmation.NumItemsRecieved))
+                // Not ready for processing
+                return;
+
+            if (!notificationLinkConfirmation.NotificationLinkInfo.Equals(
+                notificationLinkConfirmation.ConfirmationLinkInfo))
+            {
+                log.Warn("Notification confirmation mismatch on a link: " + JsonWriter.Serialize(notificationLinkConfirmation));
+                return;
+            }
+
+            IEnumerable<string> recipients = 
+                notificationLinkConfirmation.ConfirmationLinkInfo.RecipientIdentities.Intersection(
+                    notificationLinkConfirmation.ConfirmationLinkInfo.RecipientIdentities);
+
+            // Start handling the result for each recipient
+            foreach (string recipient in recipients)
+                ThreadPool.QueueUserWorkItem(delegate(object recipientObj)
+                {
+                    try
+                    {
+                        ReceiveNotification(
+                            notificationLinkConfirmation.SenderIdentity,
+                            recipientObj.ToString(),
+                            objectUrl,
+                            notificationLinkConfirmation.SummaryView,
+                            notificationLinkConfirmation.DocumentType,
+                            "link",
+                            notificationLinkConfirmation.ChangeData,
+                            notificationLinkConfirmation.ConfirmationLinkInfo.OwnerIdentity);
+                    }
+                    catch (Exception e)
+                    {
+                        log.Warn("Exception processing a confirmed link notification", e);
+                    }
+                }, recipient);
+        }
+
         /// <summary>
         /// Encapsulates data required to confirm a link
         /// </summary>
         private class NotificationLinkConfirmation
         {
-            /*public IUser Sender;
-            public Set<string> SenderRecipientIdentities;
-            //public string ObjectUrl;
+            public string SenderIdentity;
             public string SummaryView;
             public string DocumentType;
             public string ChangeData;
-            //public string LinkID;
 
             /// <summary>
             /// The link info that came from the host's notification
@@ -779,17 +919,20 @@ namespace ObjectCloud.Disk.WebHandlers
             /// </summary>
             public LinkInfo ConfirmationLinkInfo;
 
-            public bool NotificationRecieved = false;
-            public bool ConfirmationRecieved = false;*/
+            /// <summary>
+            /// The algorithm to know when both a notification and confirmation have come in is to increment this using interlocked, when 2 is returned, then it's time to process the notification
+            /// </summary>
+            public int NumItemsRecieved = 0;
 
             public DateTime Created = DateTime.UtcNow;
         }
 
-        /*// <summary>
+        /// <summary>
         /// Encapsulates information about the link that comes from both the notification and the confirmation
         /// </summary>
         private class LinkInfo
         {
+            public Set<string> RecipientIdentities;
             public string OwnerIdentity;
             public string LinkUrl;
             public string LinkSummaryView;
@@ -810,11 +953,24 @@ namespace ObjectCloud.Disk.WebHandlers
 
                 return false;
             }
-        }*/
+
+            public override int GetHashCode()
+            {
+                int[] toHash = new int[]
+                {
+                    RecipientIdentities.GetHashCode(),
+                    OwnerIdentity.GetHashCode(),
+                    LinkUrl.GetHashCode(),
+                    LinkSummaryView.GetHashCode(),
+                    LinkDocumentType.GetHashCode()
+                };
+
+                return toHash.GetHashCode();
+            }
+        }
     }
 
     delegate void ReceiveNotificationDelegateType(
-            IWebConnection webConnection,
             string senderIdentity,
             string recipient,
             string objectUrl,

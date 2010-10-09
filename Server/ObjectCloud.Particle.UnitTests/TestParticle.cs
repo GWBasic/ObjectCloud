@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.IO;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Xml;
@@ -24,7 +25,7 @@ using ObjectCloud.WebServer.Test;
 
 namespace ObjectCloud.Particle.UnitTests
 {
-    public class TestParticle : HasSecondServer
+    public class TestParticle : HasThirdServer
     {
         private IDirectoryHandler TestDirectory
         {
@@ -177,6 +178,82 @@ namespace ObjectCloud.Particle.UnitTests
             // sumaryView and timestamp are untested
             Assert.IsNotNull(notification[NotificationColumn.SummaryView]);
             Assert.IsNotNull(notification[NotificationColumn.Timestamp]);
+        }
+
+        /// <summary>
+        /// Verifies linking
+        /// </summary>
+        [Test]
+        public void VerifyLinkConfirmation()
+        {
+            string hostUsername = "user" + SRandom.Next(0, int.MaxValue).ToString();
+            string identityUsername = "user" + SRandom.Next(0, int.MaxValue).ToString();
+            string recipientUsername = "user" + SRandom.Next(0, int.MaxValue).ToString();
+
+            IUser hostUser = FileHandlerFactoryLocator.UserManagerHandler.CreateUser(hostUsername, "pw");
+            IUser identityUser = SecondFileHandlerFactoryLocator.UserManagerHandler.CreateUser(identityUsername, "pw");
+            IUser recipientUser = ThirdFileHandlerFactoryLocator.UserManagerHandler.CreateUser(recipientUsername, "pw");
+
+            List<Dictionary<NotificationColumn, object>> incomingNotifications = new List<Dictionary<NotificationColumn, object>>();
+            EventHandler<IUserHandler,EventArgs<Dictionary<NotificationColumn,object>>> nreh = 
+                delegate(IUserHandler sender, EventArgs<Dictionary<NotificationColumn, object>> e)
+                {
+                    lock (incomingNotifications)
+                    {
+                        incomingNotifications.Add(e.Value);
+                        Monitor.Pulse(incomingNotifications);
+                    }
+                };
+
+            hostUser.UserHandler.NotificationRecieved += nreh;
+            identityUser.UserHandler.NotificationRecieved += nreh;
+            recipientUser.UserHandler.NotificationRecieved += nreh;
+
+            IUser identityUserOnHost = FileHandlerFactoryLocator.UserManagerHandler.GetOpenIdUser(identityUser.Identity);
+            IUser recipientUserOnHost = FileHandlerFactoryLocator.UserManagerHandler.GetOpenIdUser(recipientUser.Identity);
+
+            IFileHandler file = TestDirectory.CreateFile("test" + SRandom.Next().ToString(), "text", hostUser.Id);
+            TestDirectory.SetPermission(
+                hostUser.Id,
+                file.FileContainer.Filename,
+                new ID<IUserOrGroup, Guid>[] { identityUserOnHost.Id, recipientUserOnHost.Id },
+                FilePermissionEnum.Read,
+                true,
+                true);
+
+            IFileHandler linked = TestDirectory.CreateFile("linked" + SRandom.Next().ToString(), "text", identityUserOnHost.Id);
+            LinkNotificationInformation lci = TestDirectory.AddRelationship(
+                file.FileContainer,
+                linked.FileContainer,
+                "reply",
+                true);
+
+            HttpWebClient httpWebClient = new HttpWebClient();
+
+            Login(httpWebClient, identityUser.Name, "pw", SecondFileHandlerFactoryLocator.WebServer.Port);
+
+            HttpResponseHandler response = httpWebClient.Post(
+                SecondFileHandlerFactoryLocator.UserManagerHandler.FileContainer.ObjectUrl + "?Method=UserConfirmLink",
+                    new KeyValuePair<string, string>("objectUrl", file.FileContainer.ObjectUrl),
+                    new KeyValuePair<string, string>("ownerIdentity", identityUser.Identity),
+                    new KeyValuePair<string, string>("linkSummaryView", lci.linkSummaryView),
+                    new KeyValuePair<string, string>("linkUrl", linked.FileContainer.ObjectUrl),
+                    new KeyValuePair<string, string>("linkDocumentType", linked.FileContainer.DocumentType),
+                    new KeyValuePair<string, string>("linkID", linked.FileContainer.DocumentType),
+                    new KeyValuePair<string, string>("recipients", JsonWriter.Serialize(new string[] { hostUser.Identity, identityUser.Identity, recipientUser.Identity })),
+                    new KeyValuePair<string, string>("linkID", lci.linkID));
+
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+
+            lock (incomingNotifications)
+            {
+                while (incomingNotifications.Count < 6)
+
+                    if (!Monitor.Wait(incomingNotifications, 10))
+                        Assert.Fail("Did not get a confirmation notification");
+            }
+
+            Assert.AreEqual(6, incomingNotifications.Count);
         }
     }
 }

@@ -765,6 +765,20 @@
             <param name="remember"></param>
             <returns></returns>
         </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.ConfirmLink(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String,System.String,System.String,System.String[],System.String)">
+            <summary>
+            Handles when an identity server confirms that a user made a link
+            </summary>
+            <param name="webConnection"></param>
+            <param name="objectUrl"></param>
+            <param name="senderToken"></param>
+            <param name="linkSummaryView"></param>
+            <param name="linkUrl"></param>
+            <param name="linkDocumentType"></param>
+            <param name="recipients"></param>
+            <param name="linkID"></param>
+            <returns></returns>
+        </member>
         <member name="F:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.NotificationLinkConfirmationsByObjectUrlByLinkID">
             <summary>
             NotificationLinkConfirmations, first by ObjectUrl, then by LinkID
@@ -1007,6 +1021,26 @@
         <member name="T:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.NotificationLinkConfirmation">
             <summary>
             Encapsulates data required to confirm a link
+            </summary>
+        </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.NotificationLinkConfirmation.NotificationLinkInfo">
+            <summary>
+            The link info that came from the host's notification
+            </summary>
+        </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.NotificationLinkConfirmation.ConfirmationLinkInfo">
+            <summary>
+            The link info that came from the identity's confirmation
+            </summary>
+        </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.NotificationLinkConfirmation.NumItemsRecieved">
+            <summary>
+            The algorithm to know when both a notification and confirmation have come in is to increment this using interlocked, when 2 is returned, then it's time to process the notification
+            </summary>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.LinkInfo">
+            <summary>
+            Encapsulates information about the link that comes from both the notification and the confirmation
             </summary>
         </member>
         <member name="T:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler">

@@ -101,9 +101,14 @@ namespace ObjectCloud.WebServer.Test
 
         public void Login(HttpWebClient httpWebClient, string username, string password)
         {
+            Login(httpWebClient, username, password, WebServer.Port);
+        }
+
+        public void Login(HttpWebClient httpWebClient, string username, string password, int port)
+        {
             // Log in as root
             HttpResponseHandler webResponse = httpWebClient.Post(
-                "http://localhost:" + WebServer.Port + "/Users/UserDB?Method=Login",
+                "http://localhost:" + port + "/Users/UserDB?Method=Login",
                 new KeyValuePair<string, string>("username", username),
                 new KeyValuePair<string, string>("password", password));
 

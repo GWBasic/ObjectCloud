@@ -71,6 +71,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HasThirdServer.cs" />
     <Compile Include="HasSecondServer.cs" />
     <Compile Include="PermissionsTests\HasSecondContext.cs">
       <SubType>Code</SubType>
@@ -166,6 +167,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="Test.ThirdWebServer.ObjectCloudConfig.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Content Include="ObjectCloud.WebServer.Test.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

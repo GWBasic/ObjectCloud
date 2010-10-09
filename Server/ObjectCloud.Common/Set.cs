@@ -153,6 +153,13 @@ namespace ObjectCloud.Common
         {
             return InnerDictionary.ToString();
         }
+
+        public IEnumerable<T> Intersection(Set<T> other)
+        {
+            foreach (T item in this)
+                if (other.Contains(item))
+                    yield return item;
+        }
     }
 
     /// <summary>
