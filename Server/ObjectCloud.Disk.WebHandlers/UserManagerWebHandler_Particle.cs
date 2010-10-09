@@ -687,22 +687,23 @@ namespace ObjectCloud.Disk.WebHandlers
                 delegate(EndpointInfo endpointInfo)
                 {
                     HttpWebClient httpWebClient = new HttpWebClient();
-                        httpWebClient.BeginPost(
-                            endpointInfo.Endpoint,
-                            delegate(HttpResponseHandler httpResponseHandler) 
-                            {
-                            },
-                            delegate(Exception e)
-                            {
-                                log.Warn("Exception calling particle.confirmLink for " + StringGenerator.GenerateCommaSeperatedList(endpointInfo.RecipientIdentities), e);
-                            },
-                            new KeyValuePair<string, string>("objectUrl", objectUrl),
-                            new KeyValuePair<string, string>("senderToken", endpointInfo.SenderToken),
-                            new KeyValuePair<string, string>("linkSummaryView", linkSummaryView),
-                            new KeyValuePair<string, string>("linkUrl", linkUrl),
-                            new KeyValuePair<string, string>("linkDocumentType", linkDocumentType),
-                            new KeyValuePair<string, string>("linkID", linkID),
-                            new KeyValuePair<string, string>("recipients", JsonWriter.Serialize(endpointInfo.RecipientIdentities)));
+
+                    httpWebClient.BeginPost(
+                        endpointInfo.Endpoint,
+                        delegate(HttpResponseHandler httpResponseHandler) 
+                        {
+                        },
+                        delegate(Exception e)
+                        {
+                            log.Warn("Exception calling particle.confirmLink for " + StringGenerator.GenerateCommaSeperatedList(endpointInfo.RecipientIdentities), e);
+                        },
+                        new KeyValuePair<string, string>("objectUrl", objectUrl),
+                        new KeyValuePair<string, string>("senderToken", endpointInfo.SenderToken),
+                        new KeyValuePair<string, string>("linkSummaryView", linkSummaryView),
+                        new KeyValuePair<string, string>("linkUrl", linkUrl),
+                        new KeyValuePair<string, string>("linkDocumentType", linkDocumentType),
+                        new KeyValuePair<string, string>("linkID", linkID),
+                        new KeyValuePair<string, string>("recipients", JsonWriter.Serialize(endpointInfo.RecipientIdentities)));
                 },
                 delegate(IEnumerable<string> recipientsInError)
                 {
