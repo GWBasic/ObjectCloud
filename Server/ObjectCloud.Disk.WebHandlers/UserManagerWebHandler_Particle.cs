@@ -247,7 +247,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 ReadLinkInfo(linkChangeData, ref nlc.NotificationLinkInfo.LinkUrl, "linkUrl");
                 ReadLinkInfo(linkChangeData, ref nlc.NotificationLinkInfo.OwnerIdentity, "ownerIdentity");
 
-                ProcessNotificationLinkConfirmation(objectUrl, nlc);
+                ProcessNotificationLinkConfirmation(objectUrl, linkID.ToString(), nlc);
 
                 // then make sure users are valid
                 for (int ctr = 0; ctr < recipients.Length; ctr++)
@@ -753,7 +753,7 @@ namespace ObjectCloud.Disk.WebHandlers
             notificationLinkConfirmation.ConfirmationLinkInfo.OwnerIdentity = senderIdentity;
             notificationLinkConfirmation.ConfirmationLinkInfo.RecipientIdentities = new Set<string>(recipients);
 
-            ProcessNotificationLinkConfirmation(objectUrl, notificationLinkConfirmation);
+            ProcessNotificationLinkConfirmation(objectUrl, linkID, notificationLinkConfirmation);
 
             return WebResults.From(Status._200_OK);
         }
@@ -830,40 +830,89 @@ namespace ObjectCloud.Disk.WebHandlers
 
         private void NotificationLinkConfirmationCleanup(object state)
         {
-            NotificationLinkConfirmationLock.EnterWriteLock();
-
             try
             {
-                foreach (KeyValuePair<string, Dictionary<string, NotificationLinkConfirmation>> forObjectUrlKVP
-                    in Enumerable<KeyValuePair<string, Dictionary<string, NotificationLinkConfirmation>>>.FastCopy(NotificationLinkConfirmationsByObjectUrlByLinkID))
-                {
-                    lock (forObjectUrlKVP.Value)
-                    {
-                        foreach (KeyValuePair<string, NotificationLinkConfirmation> nlcKVP in
-                            Enumerable<KeyValuePair<string, NotificationLinkConfirmation>>.FastCopy(forObjectUrlKVP.Value))
-                        {
-                            if (nlcKVP.Value.Created.AddHours(1) < DateTime.UtcNow)
-                                forObjectUrlKVP.Value.Remove(nlcKVP.Key);
-                        }
+                NotificationLinkConfirmationLock.EnterWriteLock();
 
-                        if (0 == forObjectUrlKVP.Value.Count)
-                            NotificationLinkConfirmationsByObjectUrlByLinkID.Remove(forObjectUrlKVP.Key);
+                try
+                {
+                    foreach (KeyValuePair<string, Dictionary<string, NotificationLinkConfirmation>> forObjectUrlKVP
+                        in Enumerable<KeyValuePair<string, Dictionary<string, NotificationLinkConfirmation>>>.FastCopy(NotificationLinkConfirmationsByObjectUrlByLinkID))
+                    {
+                        lock (forObjectUrlKVP.Value)
+                        {
+                            foreach (KeyValuePair<string, NotificationLinkConfirmation> nlcKVP in
+                                Enumerable<KeyValuePair<string, NotificationLinkConfirmation>>.FastCopy(forObjectUrlKVP.Value))
+                            {
+                                if (nlcKVP.Value.Created.AddHours(1) < DateTime.UtcNow)
+                                    forObjectUrlKVP.Value.Remove(nlcKVP.Key);
+                            }
+
+                            if (0 == forObjectUrlKVP.Value.Count)
+                                NotificationLinkConfirmationsByObjectUrlByLinkID.Remove(forObjectUrlKVP.Key);
+                        }
                     }
                 }
+                finally
+                {
+                    NotificationLinkConfirmationLock.ExitWriteLock();
+                }
             }
-            finally
+            catch (Exception e)
             {
-                NotificationLinkConfirmationLock.ExitWriteLock();
+                log.Error("Exception cleaning up unconfirmed link notifications", e);
             }
         }
 
         private void ProcessNotificationLinkConfirmation(
             string objectUrl,
+            string linkID,
             NotificationLinkConfirmation notificationLinkConfirmation)
         {
             if (2 != Interlocked.Increment(ref notificationLinkConfirmation.NumItemsRecieved))
                 // Not ready for processing
                 return;
+
+            // Remove old NotificationLinkConfirmation from RAM
+            ThreadPool.QueueUserWorkItem(delegate(object state)
+            {
+                try
+                {
+                    NotificationLinkConfirmationLock.EnterUpgradeableReadLock();
+
+                    try
+                    {
+                        Dictionary<string, NotificationLinkConfirmation> objectUrlDictionary;
+                        if (NotificationLinkConfirmationsByObjectUrlByLinkID.TryGetValue(objectUrl, out objectUrlDictionary))
+                            lock (objectUrlDictionary)
+                            {
+                                objectUrlDictionary.Remove(linkID);
+
+                                if (0 == objectUrlDictionary.Count)
+                                {
+                                    NotificationLinkConfirmationLock.EnterWriteLock();
+
+                                    try
+                                    {
+                                        NotificationLinkConfirmationsByObjectUrlByLinkID.Remove(objectUrl);
+                                    }
+                                    finally
+                                    {
+                                        NotificationLinkConfirmationLock.ExitWriteLock();
+                                    }
+                                }
+                            }
+                    }
+                    finally
+                    {
+                        NotificationLinkConfirmationLock.ExitUpgradeableReadLock();
+                    }
+                }
+                catch (Exception e)
+                {
+                    log.Error("Exception cleaning " + objectUrl + " from the cached link notifications", e);
+                }
+            });
 
             if (!notificationLinkConfirmation.NotificationLinkInfo.Equals(
                 notificationLinkConfirmation.ConfirmationLinkInfo))
