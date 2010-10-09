@@ -249,7 +249,7 @@ namespace ObjectCloud.Particle.UnitTests
             {
                 while (incomingNotifications.Count < 6)
 
-                    if (!Monitor.Wait(incomingNotifications, 10))
+                    if (!Monitor.Wait(incomingNotifications, 5000))
                         Assert.Fail("Did not get a confirmation notification");
             }
 

@@ -450,7 +450,7 @@ namespace ObjectCloud.Disk.FileHandlers
                         try
                         {
                             Dictionary<string, object> parsedChangeData = JsonReader.Deserialize<Dictionary<string, object>>(changeData);
-                            linkedSenderIdentity = parsedChangeData["owner"].ToString();
+                            linkedSenderIdentity = parsedChangeData["ownerIdentity"].ToString();
                         }
                         catch (Exception e)
                         {
