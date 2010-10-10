@@ -14,22 +14,22 @@ namespace ObjectCloud.Common
     /// <typeparam name="T"></typeparam>
     public class Set<T> : ICollection<T>
     {
-        public Set() { }
+        public Set() 
+        {
+            Wrapped = new HashSet<T>();
+        }
 
         public Set(params T[] contents)
         {
-            foreach (T item in contents)
-                Add(item);
+            Wrapped = new HashSet<T>(contents);
         }
 
         public Set(IEnumerable<T> contents)
         {
-            if (null != contents)
-                foreach (T item in contents)
-                    Add(item);
+            Wrapped = new HashSet<T>(contents);
         }
 
-        private Dictionary<T, T> InnerDictionary = new Dictionary<T, T>();
+        private HashSet<T> Wrapped;
 
         /// <summary>
         /// Adds an item to the Set. 
@@ -37,8 +37,7 @@ namespace ObjectCloud.Common
         /// <param name="item">The object to add to the set</param>
         public void Add(T item)
         {
-            if (!InnerDictionary.ContainsKey(item))
-                InnerDictionary.Add(item, item);
+            Wrapped.Add(item);
         }
 
         /// <summary>
@@ -56,7 +55,7 @@ namespace ObjectCloud.Common
         /// </summary>
         public void Clear()
         {
-            InnerDictionary.Clear();
+            Wrapped.Clear();
         }
 
         /// <summary>
@@ -66,7 +65,7 @@ namespace ObjectCloud.Common
         /// <returns>The object to locate in the Set.</returns>
         public bool Contains(T item)
         {
-            return InnerDictionary.ContainsKey(item);
+            return Wrapped.Contains(item);
         }
 
         /// <summary>
@@ -89,7 +88,7 @@ namespace ObjectCloud.Common
         /// </summary>
         public int Count
         {
-            get { return InnerDictionary.Count; }
+            get { return Wrapped.Count; }
         }
 
         /// <summary>
@@ -107,7 +106,7 @@ namespace ObjectCloud.Common
         /// <returns>true if item was successfully removed from the Set; otherwise, false. This method also returns false if item is not found in the original Set. </returns>
         public bool Remove(T item)
         {
-            return InnerDictionary.Remove(item);
+            return Wrapped.Remove(item);
         }
 
         /// <summary>
@@ -116,12 +115,12 @@ namespace ObjectCloud.Common
         /// <returns></returns>
         public IEnumerator<T> GetEnumerator()
         {
-            return InnerDictionary.Keys.GetEnumerator();
+            return Wrapped.GetEnumerator();
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
-            return InnerDictionary.Keys.GetEnumerator();
+            return Wrapped.GetEnumerator();
         }
 
         public override bool Equals(object obj)
@@ -146,12 +145,12 @@ namespace ObjectCloud.Common
 
         public override int GetHashCode()
         {
-            return InnerDictionary.GetHashCode();
+            return Wrapped.GetHashCode();
         }
 
         public override string ToString()
         {
-            return InnerDictionary.ToString();
+            return Wrapped.ToString();
         }
 
         public IEnumerable<T> Intersection(Set<T> other)
