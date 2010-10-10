@@ -433,7 +433,8 @@ namespace ObjectCloud.Interfaces.Disk
             foreach (FilePermission filePermission in permissions)
                 if (filePermission.SendNotifications)
                     if (filePermission.UserOrGroupId == FileHandlerFactoryLocator.UserFactory.Everybody.Id || filePermission.UserOrGroupId == FileHandlerFactoryLocator.UserFactory.LocalUsers.Id)
-                        userOrGroupIds.AddRange(FileHandlerFactoryLocator.UserManagerHandler.GetAllLocalUserIds());
+                        foreach (ID<IUserOrGroup, Guid> userOrGroupId in FileHandlerFactoryLocator.UserManagerHandler.GetAllLocalUserIds())
+                            userOrGroupIds.Add(userOrGroupId);
                     else
                         userOrGroupIds.Add(filePermission.UserOrGroupId);
 

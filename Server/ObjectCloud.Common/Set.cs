@@ -12,16 +12,11 @@ namespace ObjectCloud.Common
     /// Implements Set functionality by using a dictionary indexed by T
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class Set<T> : ICollection<T>
+    public class Set<T> : IEnumerable<T>
     {
         public Set() 
         {
             Wrapped = new HashSet<T>();
-        }
-
-        public Set(params T[] contents)
-        {
-            Wrapped = new HashSet<T>(contents);
         }
 
         public Set(IEnumerable<T> contents)
@@ -38,16 +33,6 @@ namespace ObjectCloud.Common
         public void Add(T item)
         {
             Wrapped.Add(item);
-        }
-
-        /// <summary>
-        /// Adds a range of items to the set
-        /// </summary>
-        /// <param name="items"></param>
-        public void AddRange(IEnumerable<T> items)
-        {
-            foreach (T item in items)
-                Add(item);
         }
 
         /// <summary>
@@ -68,7 +53,7 @@ namespace ObjectCloud.Common
             return Wrapped.Contains(item);
         }
 
-        /// <summary>
+        /*// <summary>
         /// Copies the elements of the Set to an Array, starting at a particular Array index. 
         /// </summary>
         /// <param name="array">The one-dimensional Array that is the destination of the elements copied from ICollection. The Array must have zero-based indexing.</param>
@@ -81,7 +66,7 @@ namespace ObjectCloud.Common
                 array[ctr] = t;
                 ctr++;
             }
-        }
+        }*/
 
         /// <summary>
         /// Gets the number of elements contained in the Set.
@@ -153,11 +138,9 @@ namespace ObjectCloud.Common
             return Wrapped.ToString();
         }
 
-        public IEnumerable<T> Intersection(Set<T> other)
+        public void IntersectWith(IEnumerable<T> other)
         {
-            foreach (T item in this)
-                if (other.Contains(item))
-                    yield return item;
+            Wrapped.IntersectWith(other);
         }
     }
 

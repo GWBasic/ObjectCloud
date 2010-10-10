@@ -336,9 +336,9 @@ namespace ObjectCloud.Disk.WebHandlers
                     validSummaryViewTagsAndAttributes["p"] = new Set<string>();
                     validSummaryViewTagsAndAttributes["div"] = new Set<string>();
                     validSummaryViewTagsAndAttributes["span"] = new Set<string>();
-                    validSummaryViewTagsAndAttributes["a"] = new Set<string>("href", "src", "target");
+                    validSummaryViewTagsAndAttributes["a"] = new Set<string>(new string[] { "href", "src", "target" });
                     validSummaryViewTagsAndAttributes["br"] = new Set<string>();
-                    validSummaryViewTagsAndAttributes["img"] = new Set<string>("src");
+                    validSummaryViewTagsAndAttributes["img"] = new Set<string>(new string[] { "src" });
                     validSummaryViewTagsAndAttributes["b"] = new Set<string>();
                     validSummaryViewTagsAndAttributes["em"] = new Set<string>();
                     validSummaryViewTagsAndAttributes["i"] = new Set<string>();
@@ -359,7 +359,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// The valid summary view classes
         /// </summary>
         private static Set<string> ValidSummaryViewClasses = new Set<string>(
-            "particle_large", "particle_small", "particle_emphasis", "particle_right", "particle_left", "particle_clear");
+            new string[] { "particle_large", "particle_small", "particle_emphasis", "particle_right", "particle_left", "particle_clear" });
 
         /// <summary>
         /// Validates a summary view, removing invalid tags, attributes, and css classes
@@ -926,9 +926,8 @@ namespace ObjectCloud.Disk.WebHandlers
                 return;
             }
 
-            IEnumerable<string> recipients = 
-                notificationLinkConfirmation.ConfirmationLinkInfo.RecipientIdentities.Intersection(
-                    notificationLinkConfirmation.ConfirmationLinkInfo.RecipientIdentities);
+            Set<string> recipients = new Set<string>(notificationLinkConfirmation.NotificationLinkInfo.RecipientIdentities);
+            recipients.IntersectWith(notificationLinkConfirmation.ConfirmationLinkInfo.RecipientIdentities);
 
             // Start handling the result for each recipient
             foreach (string recipient in recipients)
