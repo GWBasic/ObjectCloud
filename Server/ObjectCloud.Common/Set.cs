@@ -12,14 +12,14 @@ namespace ObjectCloud.Common
     /// Implements Set functionality by using a dictionary indexed by T
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class Set<T> : IEnumerable<T>
+    public class HashSet<T> : IEnumerable<T>
     {
-        public Set() 
+        public HashSet() 
         {
             Wrapped = new HashSet<T>();
         }
 
-        public Set(IEnumerable<T> contents)
+        public HashSet(IEnumerable<T> contents)
         {
             Wrapped = new HashSet<T>(contents);
         }
@@ -148,5 +148,5 @@ namespace ObjectCloud.Common
     /// A set of objects
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class Set : Set<object> { }
+    public class Set : HashSet<object> { }
 }

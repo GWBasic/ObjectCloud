@@ -985,13 +985,13 @@ namespace ObjectCloud.Interfaces.WebServer
         /// </summary>
         public abstract void SendResults(IWebResults webResults);
 
-        public abstract Set<IFileContainer> TouchedFiles { get; }
+        public abstract HashSet<IFileContainer> TouchedFiles { get; }
 
-        public virtual Set<string> Scripts
+        public virtual HashSet<string> Scripts
         {
             get { return _Scripts; }
         }
-        private readonly Set<string> _Scripts = new Set<string>();
+        private readonly HashSet<string> _Scripts = new HashSet<string>();
 
         /// <summary>
         /// Precalculated browser cache urls

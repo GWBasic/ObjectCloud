@@ -427,7 +427,7 @@ namespace ObjectCloud.Interfaces.Disk
             // Load the recipients based on who has permission / owns the file
             IEnumerable<FilePermission> permissions = ParentDirectoryHandler.GetPermissions(Filename);
 
-            Set<ID<IUserOrGroup, Guid>> userOrGroupIds = new Set<ID<IUserOrGroup, Guid>>();
+            HashSet<ID<IUserOrGroup, Guid>> userOrGroupIds = new HashSet<ID<IUserOrGroup, Guid>>();
 
             // send the notification to all users who have permission to this file...
             foreach (FilePermission filePermission in permissions)

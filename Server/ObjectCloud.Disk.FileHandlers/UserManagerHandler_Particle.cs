@@ -50,7 +50,7 @@ namespace ObjectCloud.Disk.FileHandlers
             GenericArgument<IEnumerable<string>> errorCallback,
             GenericArgument<Exception> exceptionCallback)
         {
-            Set<string> recipientIdentities = new Set<string>(recipientIdentitiesArg);
+            HashSet<string> recipientIdentities = new HashSet<string>(recipientIdentitiesArg);
 
             long outstandingRequests = recipientIdentities.Count;
 
@@ -84,7 +84,7 @@ namespace ObjectCloud.Disk.FileHandlers
         private void GetRecipientInfos(
             IUserOrGroup sender,
             bool forceRefresh,
-            Set<string> recipientIdentities, 
+            HashSet<string> recipientIdentities, 
             LockFreeQueue<Endpoints> loadedEndpoints,
             ParticleEndpoint particleEndpoint,
             GenericArgument<EndpointInfo> callback,

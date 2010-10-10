@@ -152,7 +152,7 @@ namespace ObjectCloud.Particle.UnitTests
             VerifyNotificiationRecieved(recipient, sender, file, notification);
 
             List<Dictionary<NotificationColumn, object>> notifications = new List<Dictionary<NotificationColumn,object>>(
-                recipient.UserHandler.GetNotifications(null, null, null, null, null, new Set<NotificationColumn>(Enum<NotificationColumn>.Values)));
+                recipient.UserHandler.GetNotifications(null, null, null, null, null, new HashSet<NotificationColumn>(Enum<NotificationColumn>.Values)));
 
             Assert.AreEqual(1, notifications.Count);
             VerifyNotificiationRecieved(recipient, sender, file, notifications[0]);
@@ -169,7 +169,7 @@ namespace ObjectCloud.Particle.UnitTests
             Assert.IsNotNull(notification[NotificationColumn.ChangeData]);
             object parsedChangeData = JsonReader.Deserialize(notification[NotificationColumn.ChangeData].ToString());
             Assert.IsInstanceOf<System.Collections.IEnumerable>(parsedChangeData);
-            Set<string> recipients = new Set<string>(Enumerable<string>.Cast((System.Collections.IEnumerable)parsedChangeData));
+            HashSet<string> recipients = new HashSet<string>(Enumerable<string>.Cast((System.Collections.IEnumerable)parsedChangeData));
 
             Assert.AreEqual(2, recipients.Count);
             Assert.IsTrue(recipients.Contains(sender.Identity));

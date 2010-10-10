@@ -56,7 +56,7 @@ namespace ObjectCloud.Interfaces.Disk
             long? maxNotifications,
             IEnumerable<string> objectUrls,
             IEnumerable<string> senderIdentities,
-            Set<NotificationColumn> desiredValues);
+            HashSet<NotificationColumn> desiredValues);
 
         /// <summary>
         /// Occurs when a notification is recieved

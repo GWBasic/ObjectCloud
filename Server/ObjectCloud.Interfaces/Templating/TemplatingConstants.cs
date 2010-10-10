@@ -97,12 +97,12 @@ namespace ObjectCloud.Interfaces.Templating
         /// <summary>
         /// Namespaces for HTML tags
         /// </summary>
-        public Set<string> HtmlNamespaces
+        public HashSet<string> HtmlNamespaces
         {
             get { return _HtmlNamespaces; }
             set { _HtmlNamespaces = value; }
         }
-        private Set<string> _HtmlNamespaces;
+        private HashSet<string> _HtmlNamespaces;
 
         /// <summary>
         /// All of the indexed strings will be replaced by their corresponding value when converting HTML to XHTML

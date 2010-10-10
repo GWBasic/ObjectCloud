@@ -26,7 +26,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <summary>
         /// In-memory sender tokens that are awaiting storage in the database because of a pending respondTrust call
         /// </summary>
-        private Set<string> PendingSenderTokens = new Set<string>();
+        private HashSet<string> PendingSenderTokens = new HashSet<string>();
 
         /// <summary>
         /// Establishes trust between a sender and this server
@@ -245,7 +245,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 nlc.SummaryView = summaryView;
 
                 nlc.NotificationLinkInfo = new LinkInfo();
-                nlc.NotificationLinkInfo.RecipientIdentities = new Set<string>(recipients);
+                nlc.NotificationLinkInfo.RecipientIdentities = new HashSet<string>(recipients);
                 ReadLinkInfo(linkChangeData, ref nlc.NotificationLinkInfo.LinkDocumentType, "linkDocumentType");
                 ReadLinkInfo(linkChangeData, ref nlc.NotificationLinkInfo.LinkSummaryView, "linkSummaryView");
                 ReadLinkInfo(linkChangeData, ref nlc.NotificationLinkInfo.LinkUrl, "linkUrl");
@@ -325,26 +325,26 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <summary>
         /// The valid summary view tags and attributes.  Each tag is a key, and then there is a set of valid attributes
         /// </summary>
-        public static Dictionary<string, Set<string>> ValidSummaryViewTagsAndAttributes
+        public static Dictionary<string, HashSet<string>> ValidSummaryViewTagsAndAttributes
         {
             get 
             {
                 if (null == _ValidSummaryViewTagsAndAttributes)
                 {
-                    Dictionary<string, Set<string>> validSummaryViewTagsAndAttributes = new Dictionary<string, Set<string>>();
+                    Dictionary<string, HashSet<string>> validSummaryViewTagsAndAttributes = new Dictionary<string, HashSet<string>>();
 
-                    validSummaryViewTagsAndAttributes["p"] = new Set<string>();
-                    validSummaryViewTagsAndAttributes["div"] = new Set<string>();
-                    validSummaryViewTagsAndAttributes["span"] = new Set<string>();
-                    validSummaryViewTagsAndAttributes["a"] = new Set<string>(new string[] { "href", "src", "target" });
-                    validSummaryViewTagsAndAttributes["br"] = new Set<string>();
-                    validSummaryViewTagsAndAttributes["img"] = new Set<string>(new string[] { "src" });
-                    validSummaryViewTagsAndAttributes["b"] = new Set<string>();
-                    validSummaryViewTagsAndAttributes["em"] = new Set<string>();
-                    validSummaryViewTagsAndAttributes["i"] = new Set<string>();
-                    validSummaryViewTagsAndAttributes["li"] = new Set<string>();
-                    validSummaryViewTagsAndAttributes["ol"] = new Set<string>();
-                    validSummaryViewTagsAndAttributes["ul"] = new Set<string>();
+                    validSummaryViewTagsAndAttributes["p"] = new HashSet<string>();
+                    validSummaryViewTagsAndAttributes["div"] = new HashSet<string>();
+                    validSummaryViewTagsAndAttributes["span"] = new HashSet<string>();
+                    validSummaryViewTagsAndAttributes["a"] = new HashSet<string>(new string[] { "href", "src", "target" });
+                    validSummaryViewTagsAndAttributes["br"] = new HashSet<string>();
+                    validSummaryViewTagsAndAttributes["img"] = new HashSet<string>(new string[] { "src" });
+                    validSummaryViewTagsAndAttributes["b"] = new HashSet<string>();
+                    validSummaryViewTagsAndAttributes["em"] = new HashSet<string>();
+                    validSummaryViewTagsAndAttributes["i"] = new HashSet<string>();
+                    validSummaryViewTagsAndAttributes["li"] = new HashSet<string>();
+                    validSummaryViewTagsAndAttributes["ol"] = new HashSet<string>();
+                    validSummaryViewTagsAndAttributes["ul"] = new HashSet<string>();
 
                     // Assignment is performed atomically to avoid threading issues
                     _ValidSummaryViewTagsAndAttributes = validSummaryViewTagsAndAttributes;
@@ -353,12 +353,12 @@ namespace ObjectCloud.Disk.WebHandlers
                 return _ValidSummaryViewTagsAndAttributes; 
             }
         }
-        private static Dictionary<string, Set<string>> _ValidSummaryViewTagsAndAttributes = null;
+        private static Dictionary<string, HashSet<string>> _ValidSummaryViewTagsAndAttributes = null;
 
         /// <summary>
         /// The valid summary view classes
         /// </summary>
-        private static Set<string> ValidSummaryViewClasses = new Set<string>(
+        private static HashSet<string> ValidSummaryViewClasses = new HashSet<string>(
             new string[] { "particle_large", "particle_small", "particle_emphasis", "particle_right", "particle_left", "particle_clear" });
 
         /// <summary>
@@ -403,7 +403,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 return;
 
             // Outright remove the node if it's not supported
-            Set<string> supportedAttributes;
+            HashSet<string> supportedAttributes;
             if (!ValidSummaryViewTagsAndAttributes.TryGetValue(node.LocalName, out supportedAttributes))
             {
                 node.ParentNode.RemoveChild(node);
@@ -417,7 +417,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 if (attribute.LocalName == "class")
                 {
                     // verify classes
-                    Set<string> verifiedClasses = new Set<string>();
+                    HashSet<string> verifiedClasses = new HashSet<string>();
 
                     foreach (string classString in StringParser.Parse(attribute.Value, new string[] { " " }))
                         if (ValidSummaryViewClasses.Contains(classString))
@@ -756,7 +756,7 @@ namespace ObjectCloud.Disk.WebHandlers
             notificationLinkConfirmation.ConfirmationLinkInfo.LinkSummaryView = linkSummaryView;
             notificationLinkConfirmation.ConfirmationLinkInfo.LinkUrl = linkUrl;
             notificationLinkConfirmation.ConfirmationLinkInfo.OwnerIdentity = senderIdentity;
-            notificationLinkConfirmation.ConfirmationLinkInfo.RecipientIdentities = new Set<string>(recipients);
+            notificationLinkConfirmation.ConfirmationLinkInfo.RecipientIdentities = new HashSet<string>(recipients);
 
             ProcessNotificationLinkConfirmation(objectUrl, linkID, notificationLinkConfirmation);
 
@@ -926,7 +926,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 return;
             }
 
-            Set<string> recipients = new Set<string>(notificationLinkConfirmation.NotificationLinkInfo.RecipientIdentities);
+            HashSet<string> recipients = new HashSet<string>(notificationLinkConfirmation.NotificationLinkInfo.RecipientIdentities);
             recipients.IntersectWith(notificationLinkConfirmation.ConfirmationLinkInfo.RecipientIdentities);
 
             // Start handling the result for each recipient
@@ -985,7 +985,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// </summary>
         private class LinkInfo
         {
-            public Set<string> RecipientIdentities;
+            public HashSet<string> RecipientIdentities;
             public string OwnerIdentity;
             public string LinkUrl;
             public string LinkSummaryView;

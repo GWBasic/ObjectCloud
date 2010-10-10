@@ -182,7 +182,7 @@ namespace ObjectCloud.Interfaces.WebServer
             }
         }
 
-        public override Set<ObjectCloud.Interfaces.Disk.IFileContainer> TouchedFiles
+        public override HashSet<ObjectCloud.Interfaces.Disk.IFileContainer> TouchedFiles
         {
             get
             {
@@ -190,14 +190,14 @@ namespace ObjectCloud.Interfaces.WebServer
                     return BaseWebConnection.TouchedFiles;
 
                 if (null == _TouchedFiles)
-                    _TouchedFiles = new Set<ObjectCloud.Interfaces.Disk.IFileContainer>();
+                    _TouchedFiles = new HashSet<ObjectCloud.Interfaces.Disk.IFileContainer>();
 
                 return _TouchedFiles;
             }
         }
-        private Set<ObjectCloud.Interfaces.Disk.IFileContainer> _TouchedFiles;
+        private HashSet<ObjectCloud.Interfaces.Disk.IFileContainer> _TouchedFiles;
 
-        public override Set<string> Scripts
+        public override HashSet<string> Scripts
         {
             get
             {
@@ -205,12 +205,12 @@ namespace ObjectCloud.Interfaces.WebServer
                     return BaseWebConnection.Scripts;
 
                 if (null == _Scripts)
-                    _Scripts = new Set<string>();
+                    _Scripts = new HashSet<string>();
 
                 return _Scripts;
             }
         }
-        private Set<string> _Scripts;
+        private HashSet<string> _Scripts;
 
         public override string GetBrowserCacheUrl(string url)
         {

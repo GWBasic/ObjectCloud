@@ -149,7 +149,7 @@ namespace ObjectCloud.WebServer.Implementation
                         if (WebServer.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(RequestedFile).LoadPermission(Session.User.Id) >=
                             FilePermissionEnum.Read)
                         {
-                            Set<IFileContainer> touchedFiles = Session.GetFilesTouchedForUrl(RequestedFile);
+                            HashSet<IFileContainer> touchedFiles = Session.GetFilesTouchedForUrl(RequestedFile);
 
                             if (null != touchedFiles)
                             {
@@ -410,11 +410,11 @@ namespace ObjectCloud.WebServer.Implementation
             return toReturn.ToString();
         }
 
-        public override Set<IFileContainer> TouchedFiles
+        public override HashSet<IFileContainer> TouchedFiles
         {
             get { return _TouchedFiles; }
         }
-        private readonly Set<IFileContainer> _TouchedFiles = new Set<IFileContainer>();
+        private readonly HashSet<IFileContainer> _TouchedFiles = new HashSet<IFileContainer>();
 		
 		/// <summary>
 		/// The web server 

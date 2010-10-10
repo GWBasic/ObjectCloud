@@ -559,7 +559,7 @@ namespace ObjectCloud.Disk.FileHandlers
                 return new Wrapped<FilePermissionEnum?>(null);
             else
                 return new Wrapped<FilePermissionEnum?>(
-                    LoadPermissionFromRelated(new IFileId[] { args.FileId }, args.UserAndGroupIds, new Set<IFileId>(), 0));
+                    LoadPermissionFromRelated(new IFileId[] { args.FileId }, args.UserAndGroupIds, new HashSet<IFileId>(), 0));
         }
 
         /// <summary>
@@ -618,7 +618,7 @@ namespace ObjectCloud.Disk.FileHandlers
         private FilePermissionEnum? LoadPermissionFromRelated(
             IEnumerable<IFileId> fileIds,
             IEnumerable<ID<IUserOrGroup, Guid>> userAndGroupIds,
-            Set<IFileId> alreadyChecked,
+            HashSet<IFileId> alreadyChecked,
             uint recurse)
         {
             FilePermissionEnum? highestPermission = null;
@@ -1079,7 +1079,7 @@ namespace ObjectCloud.Disk.FileHandlers
             DateTime? oldest,
             uint? maxToReturn)
         {
-            Set<FileId> filesToInspect = new Set<FileId>();
+            HashSet<FileId> filesToInspect = new HashSet<FileId>();
 
             // First get the related files
 
@@ -1114,7 +1114,7 @@ namespace ObjectCloud.Disk.FileHandlers
             {
                 userOrGroupIds = GetAllUserAndGroupIdsThatApplyToUser(userId);
 
-                if (null != LoadPermissionFromRelated(new IFileId[] { parentFileId }, userOrGroupIds, new Set<IFileId>(), 0))
+                if (null != LoadPermissionFromRelated(new IFileId[] { parentFileId }, userOrGroupIds, new HashSet<IFileId>(), 0))
                     inspectPermissions = false;
             }
 
@@ -1130,7 +1130,7 @@ namespace ObjectCloud.Disk.FileHandlers
                 IEnumerable<IPermission_Readable> permissions = DatabaseConnection.Permission.Select(
                     Permission_Table.FileId.In(filesToInspect) & Permission_Table.UserOrGroupId.In(userOrGroupIds));
 
-                filesToInspect = new Set<FileId>();
+                filesToInspect = new HashSet<FileId>();
 
                 foreach (IPermission_Readable permission in permissions)
                     filesToInspect.Add(permission.FileId);

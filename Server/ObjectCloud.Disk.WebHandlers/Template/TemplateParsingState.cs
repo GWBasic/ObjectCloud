@@ -65,7 +65,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         /// <summary>
         /// set of loaded scripts
         /// </summary>
-        private Set<string> ScriptsSet = new Set<string>();
+        private HashSet<string> ScriptsSet = new HashSet<string>();
 
         public void AddScript(string script)
         {
@@ -310,7 +310,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         /// <summary>
         /// All of the nodes where GET arguments will not be processed, indexed by localname then by namespace
         /// </summary>
-        public Dictionary<string, Set<string>> DeferedNodes = new Dictionary<string, Set<string>>();
+        public Dictionary<string, HashSet<string>> DeferedNodes = new Dictionary<string, HashSet<string>>();
 
         /// <summary>
         /// Indicates that ObjectCloud will not replace GET variables or handle sub-nodes in a specific kind of node, but will instead defer processing until the node is handled later
@@ -319,11 +319,11 @@ namespace ObjectCloud.Disk.WebHandlers.Template
         /// <param name="namespaceURI"></param>
         public void RegisterDeferedNode(string localName, string namespaceURI)
         {
-            Set<string> set;
+            HashSet<string> set;
 
             if (!DeferedNodes.TryGetValue(localName, out set))
             {
-                set = new Set<string>();
+                set = new HashSet<string>();
                 DeferedNodes[localName] = set;
             }
 
@@ -575,7 +575,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             if (xmlNode.HasChildNodes)
             {
                 bool recurseToChildren = true;
-                Set<string> set;
+                HashSet<string> set;
 
                 // If this node is a defered node, then don't recurse to its children
                 if (DeferedNodes.TryGetValue(xmlNode.LocalName, out set))
@@ -868,7 +868,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 {
                     yield return (XmlElement)childNode;
 
-                    Set<string> badNamespaces;
+                    HashSet<string> badNamespaces;
 
                     if (DeferedNodes.TryGetValue(childNode.LocalName, out badNamespaces))
                     {

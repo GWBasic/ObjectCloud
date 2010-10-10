@@ -244,7 +244,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <summary>
         /// All of the file extensions that shouldn't have notifications sent
         /// </summary>
-        public Set<string> NoParticle
+        public HashSet<string> NoParticle
         {
             get 
             {

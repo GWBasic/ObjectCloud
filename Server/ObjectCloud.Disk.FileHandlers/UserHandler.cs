@@ -196,7 +196,7 @@ namespace ObjectCloud.Disk.FileHandlers
             long? maxNotificationsLong,
             IEnumerable<string> objectUrls,
             IEnumerable<string> senderIdentities,
-            Set<NotificationColumn> desiredValues)
+            HashSet<NotificationColumn> desiredValues)
         {
             if (this == FileHandlerFactoryLocator.UserFactory.AnonymousUser.UserHandler)
                 throw new SecurityException("The anonymous user can not recieve notifications");

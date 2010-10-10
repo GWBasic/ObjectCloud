@@ -91,8 +91,8 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <summary>
         /// All of the objects with an open database connection, this prevents them from being garbage collected
         /// </summary>
-        private static Set<HasDatabaseFileHandler<TDatabaseConnector, TDatabaseConnection, TDatabaseTransaction>> 
-            HaveOpenConnection = new Set<HasDatabaseFileHandler<TDatabaseConnector, TDatabaseConnection, TDatabaseTransaction>>();
+        private static HashSet<HasDatabaseFileHandler<TDatabaseConnector, TDatabaseConnection, TDatabaseTransaction>> 
+            HaveOpenConnection = new HashSet<HasDatabaseFileHandler<TDatabaseConnector, TDatabaseConnection, TDatabaseTransaction>>();
 
         void DbConnection_StateChange(object sender, System.Data.StateChangeEventArgs e)
         {

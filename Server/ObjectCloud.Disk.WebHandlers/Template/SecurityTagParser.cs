@@ -109,7 +109,7 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             {
                 bool safe = false;
 
-                Set<string> safeTagNames;
+                HashSet<string> safeTagNames;
 
                 if (xmlNode is XmlText)
                     safe = true;

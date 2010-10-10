@@ -19,7 +19,7 @@ namespace ObjectCloud.Disk.Test
     [TestFixture]
     public class TestCache
     {
-        private Set<long> CreatedObjects;
+        private HashSet<long> CreatedObjects;
 
         /// <summary>
         /// Object that holds some memory in the cache
@@ -38,11 +38,18 @@ namespace ObjectCloud.Disk.Test
         Exception Exception;
 
         [Test]
+        public void RunTest1000()
+        {
+            MaxIterations = 1000;
+            RunTest();
+        }
+
+        /*[Test]
         public void RunTest100000()
         {
             MaxIterations = 100000;
             RunTest();
-        }
+        }*/
 
         /*[Test]
         public void RunTest10000000()
@@ -66,7 +73,7 @@ namespace ObjectCloud.Disk.Test
             ObjectCloud.Common.Cache.MemorySizeLimits = new long[] { 210959812, 3000000000, 4000000000 };
             ObjectCloud.Common.Cache.MaxMemory = 2 * 210959812;
             ObjectCloud.Common.Cache.CacheHitsPerInspection = 100;
-            CreatedObjects = new Set<long>();
+            CreatedObjects = new HashSet<long>();
 
             try
             {

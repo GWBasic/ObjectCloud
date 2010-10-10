@@ -88,7 +88,7 @@ namespace ObjectCloud.Interfaces.WebServer
 		/// <param name="toSend">
 		/// A <see cref="System.Object"/>
 		/// </param>
-		private Set<IQueuingReliableCometTransport> ChannelsInt = new Set<IQueuingReliableCometTransport>();
+		private HashSet<IQueuingReliableCometTransport> ChannelsInt = new HashSet<IQueuingReliableCometTransport>();
 
         /// <summary>
         /// Allows iteration over each connected channel, thus each channel can be sent specific targetted data

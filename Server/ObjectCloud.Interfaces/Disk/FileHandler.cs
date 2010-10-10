@@ -192,7 +192,7 @@ namespace ObjectCloud.Interfaces.Disk
 			{
 				try
 				{
-		            Set<IUser> recipients = new Set<IUser>(FileContainer.GetNotificationRecipients());
+		            HashSet<IUser> recipients = new HashSet<IUser>(FileContainer.GetNotificationRecipients());
 		
 		            // Attempt to get a summary view
 		            string summaryView = FileContainer.GenerateSummaryView();

@@ -105,9 +105,9 @@ namespace ObjectCloud.Disk.FileHandlers
                 yield return id.Value;
         }
 
-        public static Set<long> ToSet(IEnumerable<FileId> ids)
+        public static HashSet<long> ToSet(IEnumerable<FileId> ids)
         {
-            Set<long> toReturn = new Set<long>();
+            HashSet<long> toReturn = new HashSet<long>();
 
             foreach (FileId id in ids)
                 toReturn.Add(id.Value);

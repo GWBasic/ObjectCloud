@@ -95,7 +95,7 @@
       <object id="TemplatingConstants" type="ObjectCloud.Interfaces.Templating.TemplatingConstants">
         
         <property name="HtmlNamespaces">
-          <object type="ObjectCloud.Common.Set&lt;string&gt;">
+          <object type="System.Collections.Generic.HashSet&lt;string&gt;">
             <constructor-arg>
               <object id="HtmlNamespacesValue" type="string[]" >
                 <constructor-arg value="2" />

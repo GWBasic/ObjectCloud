@@ -17,20 +17,20 @@ namespace ObjectCloud.WebAccessCodeGenerators
     {
         static JavascriptWrapperGenerator()
         {
-            WrappersCache = new Cache<Set<Type>, List<string>>(GenerateWrapperForCache);
+            WrappersCache = new Cache<HashSet<Type>, List<string>>(GenerateWrapperForCache);
         }
 
         /// <summary>
         /// Cache of generated JavaScript wrappers
         /// </summary>
-        private static Cache<Set<Type>, List<string>> WrappersCache;
+        private static Cache<HashSet<Type>, List<string>> WrappersCache;
 
-        public List<string> GenerateWrapper(Set<Type> webHandlerTypes)
+        public List<string> GenerateWrapper(HashSet<Type> webHandlerTypes)
         {
             return WrappersCache[webHandlerTypes];
         }
 
-        private static List<string> GenerateWrapperForCache(Set<Type> types)
+        private static List<string> GenerateWrapperForCache(HashSet<Type> types)
         {
             List<string> javascriptMethods = new List<string>();
 

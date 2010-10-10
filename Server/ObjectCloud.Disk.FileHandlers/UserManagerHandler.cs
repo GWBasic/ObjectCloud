@@ -539,7 +539,7 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public IEnumerable<IUser> GetUsersAndResolveGroupsToUsers(IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds)
         {
-            Set<IUser> toReturn = new Set<IUser>();
+            HashSet<IUser> toReturn = new HashSet<IUser>();
 
             foreach (IUsers_Readable user in DatabaseConnection.Users.Select(Users_Table.ID.In(userOrGroupIds)))
                 toReturn.Add(CreateUserObject(user));

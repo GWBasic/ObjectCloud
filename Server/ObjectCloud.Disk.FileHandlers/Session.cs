@@ -139,19 +139,19 @@ namespace ObjectCloud.Disk.FileHandlers
         /// </summary>
         Dictionary<string, WeakReference> FilesTouchedForUrls = new Dictionary<string, WeakReference>();
 
-        public Set<IFileContainer> GetFilesTouchedForUrl(string url)
+        public HashSet<IFileContainer> GetFilesTouchedForUrl(string url)
         {
             using (TimedLock.Lock(userLock))
             {
                 WeakReference wr = null;
                 if (FilesTouchedForUrls.TryGetValue(url, out wr))
-                    return (Set<IFileContainer>)wr.Target;
+                    return (HashSet<IFileContainer>)wr.Target;
             }
 
             return null;
         }
 
-        public void SetFilesTouchedForUrl(string url, Set<IFileContainer> touchedFiles)
+        public void SetFilesTouchedForUrl(string url, HashSet<IFileContainer> touchedFiles)
         {
             using (TimedLock.Lock(userLock))
                 FilesTouchedForUrls[url] = new WeakReference(touchedFiles);

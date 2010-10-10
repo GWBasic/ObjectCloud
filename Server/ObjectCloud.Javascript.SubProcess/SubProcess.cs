@@ -34,7 +34,7 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <summary>
         /// The sub processes
         /// </summary>
-        static Set<Process> SubProcesses = new Set<Process>();
+        static HashSet<Process> SubProcesses = new HashSet<Process>();
 
         static SubProcess()
         {
@@ -68,9 +68,9 @@ namespace ObjectCloud.Javascript.SubProcess
 
                 SubProcessIdWriteStream = pkp.StandardInput;
 
-                Set<Process> subProcesses;
+                HashSet<Process> subProcesses;
                 using (TimedLock.Lock(SubProcesses))
-                    subProcesses = new Set<Process>(SubProcesses);
+                    subProcesses = new HashSet<Process>(SubProcesses);
 
                 using (TimedLock.Lock(SubProcessIdWriteStream))
                     foreach (Process subProcess in subProcesses)

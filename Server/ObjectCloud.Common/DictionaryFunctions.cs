@@ -75,8 +75,8 @@ namespace ObjectCloud.Common
         public static bool Equals<TKey, TValue>(IDictionary<TKey, TValue> right, IDictionary<TKey, TValue> left)
             where TValue : class
         {
-            Set<TKey> rightKeys = new Set<TKey>(right.Keys);
-            Set<TKey> leftKeys = new Set<TKey>(left.Keys);
+            HashSet<TKey> rightKeys = new HashSet<TKey>(right.Keys);
+            HashSet<TKey> leftKeys = new HashSet<TKey>(left.Keys);
 
             if (!rightKeys.Equals(leftKeys))
                 return false;

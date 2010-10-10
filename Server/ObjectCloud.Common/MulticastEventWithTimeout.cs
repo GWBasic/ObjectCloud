@@ -88,7 +88,7 @@ namespace ObjectCloud.Common
         /// <summary>
         /// All of the listeners
         /// </summary>
-        private Set<Listener> Listeners = new Set<Listener>();
+        private HashSet<Listener> Listeners = new HashSet<Listener>();
 
         /// <summary>
         /// The sender

@@ -72,7 +72,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <summary>
         /// These methods are allowed even if the object is wrapped by a server-side javascript class
         /// </summary>
-        private static Set<string> AllowedBaseMethods = new Set<string>();
+        private static HashSet<string> AllowedBaseMethods = new HashSet<string>();
 
         static WebHandler()
         {
@@ -139,13 +139,13 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <summary>
         /// The web handler types
         /// </summary>
-        public Set<Type> WebHandlerTypes
+        public HashSet<Type> WebHandlerTypes
         {
             get 
             {
                 if (null == _WebHandlerTypes)
                 {
-                    Set<Type> webHandlerTypes = new Set<Type>();
+                    HashSet<Type> webHandlerTypes = new HashSet<Type>();
                     webHandlerTypes.Add(GetType());
 
                     foreach (IWebHandlerPlugin webHandlerPlugin in FileContainer.WebHandlerPlugins)
@@ -157,7 +157,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 return _WebHandlerTypes; 
             }
         }
-        private Set<Type> _WebHandlerTypes = null;
+        private HashSet<Type> _WebHandlerTypes = null;
 
         /// <summary>
         /// Returns a Javascript object that can perform all calls to all methods marked as WebCallable through AJAX.
@@ -292,10 +292,10 @@ namespace ObjectCloud.Disk.WebHandlers
             bool? SendNotifications, 
             string[] namedPermissions)
         {
-            Set<ID<IUserOrGroup, Guid>> userOrGroupIds = new Set<ID<IUserOrGroup,Guid>>();
+            HashSet<ID<IUserOrGroup, Guid>> userOrGroupIds = new HashSet<ID<IUserOrGroup,Guid>>();
 
             // Build list of IDs to check
-            Set<ID<IUserOrGroup, Guid>> userOrGroupIdsToCheck = new Set<ID<IUserOrGroup, Guid>>();
+            HashSet<ID<IUserOrGroup, Guid>> userOrGroupIdsToCheck = new HashSet<ID<IUserOrGroup, Guid>>();
             if (null != UserOrGroupIds)
                 foreach (string userOrGroupIdString in UserOrGroupIds)
                     userOrGroupIdsToCheck.Add(new ID<IUserOrGroup, Guid>(new Guid(userOrGroupIdString)));
@@ -303,7 +303,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 userOrGroupIdsToCheck.Add(new ID<IUserOrGroup, Guid>(new Guid(UserOrGroupId)));
 
             // Build list of usernames to check
-            Set<string> userOrGroupsToCheck = new Set<string>();
+            HashSet<string> userOrGroupsToCheck = new HashSet<string>();
             if (null != UserOrGroups)
                 foreach (string userOrGroupName in UserOrGroups)
                     userOrGroupsToCheck.Add(userOrGroupName);

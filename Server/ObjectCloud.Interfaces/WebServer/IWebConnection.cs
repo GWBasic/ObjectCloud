@@ -245,7 +245,7 @@ namespace ObjectCloud.Interfaces.WebServer
         /// <summary>
         /// All of the files that were touched while handling this request.  This is helpful for assisting with cache-control
         /// </summary>
-        Set<IFileContainer> TouchedFiles { get; }
+        HashSet<IFileContainer> TouchedFiles { get; }
 
         /// <summary>
         /// Generates the results that are returned to the client
@@ -256,7 +256,7 @@ namespace ObjectCloud.Interfaces.WebServer
         /// <summary>
         /// All of the scripts used with the web connection; check this set before adding another script tag
         /// </summary>
-        Set<string> Scripts { get; }
+        HashSet<string> Scripts { get; }
 
         /// <summary>
         /// Returns a url that contains the correct browser cache ID for the given URL

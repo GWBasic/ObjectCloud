@@ -105,9 +105,9 @@ namespace ObjectCloud.Common
                 yield return id.Value;
         }
 
-        public static Set<TID> ToSet(IEnumerable<ID<T, TID>> ids)
+        public static HashSet<TID> ToSet(IEnumerable<ID<T, TID>> ids)
         {
-            Set<TID> toReturn = new Set<TID>();
+            HashSet<TID> toReturn = new HashSet<TID>();
 
             foreach (ID<T, TID> id in ids)
                 toReturn.Add(id.Value);

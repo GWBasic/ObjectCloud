@@ -318,7 +318,7 @@ namespace ObjectCloud.Disk.WebHandlers.Comet
             /// <summary>
             /// Channels that the client keeps requesting
             /// </summary>
-            private Set<long> RequestedChannels = new Set<long>();
+            private HashSet<long> RequestedChannels = new HashSet<long>();
 
             /// <summary>
             /// All errors that occured when opening channels

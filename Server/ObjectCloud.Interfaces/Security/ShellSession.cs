@@ -81,12 +81,12 @@ namespace ObjectCloud.Interfaces.Security
             }
         }
 
-        public Set<IFileContainer> GetFilesTouchedForUrl(string url)
+        public HashSet<IFileContainer> GetFilesTouchedForUrl(string url)
         {
             throw new SecurityException("TouchedFilesForUrl not supported in a shell session");
         }
 
-        public void SetFilesTouchedForUrl(string url, Common.Set<Disk.IFileContainer> touchedFiles)
+        public void SetFilesTouchedForUrl(string url, HashSet<Disk.IFileContainer> touchedFiles)
         {
             throw new SecurityException("TouchedFilesForUrl not supported in a shell session");
         }

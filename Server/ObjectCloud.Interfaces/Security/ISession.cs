@@ -54,14 +54,14 @@ namespace ObjectCloud.Interfaces.Security
         /// </summary>
         /// <param name="url"></param>
         /// <returns></returns>
-        Set<IFileContainer> GetFilesTouchedForUrl(string url);
+        HashSet<IFileContainer> GetFilesTouchedForUrl(string url);
 
         /// <summary>
         /// Sets all of the files that were touched for a given URL.
         /// </summary>
         /// <param name="url"></param>
         /// <param name="filesTouched"></param>
-        void SetFilesTouchedForUrl(string url, Set<IFileContainer> touchedFiles);
+        void SetFilesTouchedForUrl(string url, HashSet<IFileContainer> touchedFiles);
 		
 		/// <summary>
 		/// Registers a comet transport with this session.  A when too many are registered, the oldest ones will be killed 

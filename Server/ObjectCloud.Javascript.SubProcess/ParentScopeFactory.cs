@@ -220,7 +220,7 @@ namespace ObjectCloud.Javascript.SubProcess
                 loadedScriptsModifiedTimes.Add(new KeyValuePair<IFileContainer, DateTime>(javascriptContainer, javascriptContainer.LastModified));
 
                 // Construct Javascript to shell to the "base" webHandler
-                Set<Type> webHandlerTypes = new Set<Type>(FileHandlerFactoryLocator.WebHandlerPlugins);
+                HashSet<Type> webHandlerTypes = new HashSet<Type>(FileHandlerFactoryLocator.WebHandlerPlugins);
                 if (null != fileType)
                     webHandlerTypes.Add(FileHandlerFactoryLocator.WebHandlerClasses[fileType]);
 
@@ -268,7 +268,7 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <param name="webConnection"></param>
         /// <param name="assignToVariable"></param>
         /// <returns></returns>
-        public string GetJavascriptWrapperForBase(string assignToVariable, Set<Type> webHandlerTypes)
+        public string GetJavascriptWrapperForBase(string assignToVariable, HashSet<Type> webHandlerTypes)
         {
             List<string> javascriptMethods =
                 FileHandlerFactoryLocator.WebServer.JavascriptWebAccessCodeGenerator.GenerateWrapper(webHandlerTypes);

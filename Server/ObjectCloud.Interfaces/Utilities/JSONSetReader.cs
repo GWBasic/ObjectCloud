@@ -27,15 +27,15 @@ namespace ObjectCloud.Interfaces.Utilities
         /// <summary>
         /// The named set that's stored in this JSON file
         /// </summary>
-        public Set<string> Set
+        public HashSet<string> Set
         {
             get
             {
-                Set<string> set = _Set;
+                HashSet<string> set = _Set;
 
                 if (null == set)
                 {
-                    set = new Set<string>();
+                    set = new HashSet<string>();
 
                     IFileContainer fileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(Filename);
                     ITextHandler textHandler = fileContainer.CastFileHandler<ITextHandler>();
@@ -49,7 +49,7 @@ namespace ObjectCloud.Interfaces.Utilities
                 return set;
             }
         }
-        private Set<string> _Set = null;
+        private HashSet<string> _Set = null;
 
         void textHandler_ContentsChanged(ITextHandler sender, EventArgs e)
         {

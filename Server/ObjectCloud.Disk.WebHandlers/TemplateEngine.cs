@@ -415,7 +415,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 headNode.AppendChild(scriptNode);
             }
 
-            Set<string> addedCssFiles = new Set<string>();
+            HashSet<string> addedCssFiles = new HashSet<string>();
             foreach (string cssFile in cssFiles)
                 if (!addedCssFiles.Contains(cssFile))
                 {
@@ -592,7 +592,7 @@ namespace ObjectCloud.Disk.WebHandlers
             IFileContainer templateFileContainer,
             TemplateParsingState templateParsingState)
         {
-            Set<string> checkedHeaderFooters = new Set<string>();
+            HashSet<string> checkedHeaderFooters = new HashSet<string>();
 
             XmlDocument templateDocument = templateParsingState.LoadXmlDocumentAndReplaceGetParameters(arguments, templateFileContainer, XmlParseMode.Xml);
 			

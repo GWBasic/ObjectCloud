@@ -329,23 +329,23 @@ namespace ObjectCloud.Disk.WebHandlers
                     Status._403_Forbidden,
                     "The anonymous user can not recieve notifications"));
 
-            Set<NotificationColumn> desiredValuesSet;
+            HashSet<NotificationColumn> desiredValuesSet;
 
             bool includeAvatarUrl = false;
 
             if (null == desiredValues)
             {
-                desiredValuesSet = new Set<NotificationColumn>(Enum<NotificationColumn>.Values);
+                desiredValuesSet = new HashSet<NotificationColumn>(Enum<NotificationColumn>.Values);
                 includeAvatarUrl = true;
             }
             else if (desiredValues.Length == 0)
             {
-                desiredValuesSet = new Set<NotificationColumn>(Enum<NotificationColumn>.Values);
+                desiredValuesSet = new HashSet<NotificationColumn>(Enum<NotificationColumn>.Values);
                 includeAvatarUrl = true;
             }
             else
             {
-                desiredValuesSet = new Set<NotificationColumn>();
+                desiredValuesSet = new HashSet<NotificationColumn>();
 
                 foreach (string desiredValue in desiredValues)
                 {

@@ -684,7 +684,7 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JSON)]
         	public IWebResults IsUserInGroupsOrMatch(IWebConnection webConnection, string[] groupAndUserNames)
 		{
-			Set<string> namesSet = new Set<string>(groupAndUserNames);
+			HashSet<string> namesSet = new HashSet<string>(groupAndUserNames);
 			
 			if (namesSet.Contains(webConnection.Session.User.Name))
 				return WebResults.ToJson(true);

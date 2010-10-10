@@ -27,15 +27,15 @@ namespace ObjectCloud.Interfaces.Utilities
         /// <summary>
         /// The named set that's stored in this JSON file
         /// </summary>
-        public Dictionary<string, Set<string>> NamedSet
+        public Dictionary<string, HashSet<string>> NamedSet
         {
             get
             {
-                Dictionary<string, Set<string>> namedSet = _NamedSet;
+                Dictionary<string, HashSet<string>> namedSet = _NamedSet;
 
                 if (null == namedSet)
                 {
-                    namedSet = new Dictionary<string, Set<string>>();
+                    namedSet = new Dictionary<string, HashSet<string>>();
 
                     IFileContainer fileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(Filename);
                     ITextHandler textHandler = fileContainer.CastFileHandler<ITextHandler>();
@@ -43,7 +43,7 @@ namespace ObjectCloud.Interfaces.Utilities
                     Dictionary<string, object> namedSetFromFile = JsonReader.Deserialize<Dictionary<string, object>>(textHandler.ReadAll());
                     foreach (KeyValuePair<string, object> namespaceKVP in namedSetFromFile)
                     {
-                        Set<string> validTags = new Set<string>(Enumerable<string>.Cast((IEnumerable)namespaceKVP.Value));
+                        HashSet<string> validTags = new HashSet<string>(Enumerable<string>.Cast((IEnumerable)namespaceKVP.Value));
                         namedSet[namespaceKVP.Key] = validTags;
                     }
 
@@ -55,7 +55,7 @@ namespace ObjectCloud.Interfaces.Utilities
                 return namedSet;
             }
         }
-        private Dictionary<string, Set<string>> _NamedSet = null;
+        private Dictionary<string, HashSet<string>> _NamedSet = null;
 
         void textHandler_ContentsChanged(ITextHandler sender, EventArgs e)
         {
