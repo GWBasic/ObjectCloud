@@ -385,7 +385,7 @@ namespace ObjectCloud.Interfaces.Disk
                     CallingFrom.Web,
                     WebMethod.GET);
 
-                summaryView = TemplateEngine.EvaluateComponent(webConnection, filename, getParameters);
+                summaryView = TemplateEngine.EvaluateComponentString(webConnection, filename, getParameters);
             }
             catch (Exception e)
             {

@@ -46,6 +46,6 @@ namespace ObjectCloud.Interfaces.Templating
 
         //IWebResults EvaluateComponent(IWebConnection webConnection, string filename);
 
-        string EvaluateComponent(IWebConnection webConnection, string filename, object templateInput);
+        string EvaluateComponentString(IWebConnection webConnection, string filename, object templateInput);
     }
 }

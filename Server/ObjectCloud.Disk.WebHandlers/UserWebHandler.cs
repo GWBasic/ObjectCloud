@@ -508,7 +508,7 @@ namespace ObjectCloud.Disk.WebHandlers
                     CallingFrom.Web,
                     WebMethod.GET);
 
-                notificationEvalutatedThroughTemplate = TemplateEngine.EvaluateComponent(
+                notificationEvalutatedThroughTemplate = TemplateEngine.EvaluateComponentString(
                     webConnection,
                     "/DefaultTemplate/notification.occ",
                     notification);

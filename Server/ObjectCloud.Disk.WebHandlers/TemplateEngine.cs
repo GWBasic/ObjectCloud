@@ -315,7 +315,7 @@ namespace ObjectCloud.Disk.WebHandlers
             templateDocument.NodeRemoved -= documentChanged;
         }
 
-        /*// <summary>
+        /// <summary>
         /// Evaluates the named template
         /// </summary>
         /// <param name="webConnection"></param>
@@ -329,8 +329,8 @@ namespace ObjectCloud.Disk.WebHandlers
                 arguments[getParameter.Key] = getParameter.Value;
 
             return WebResults.From(Status._200_OK,
-                EvaluateComponent(webConnection, filename, arguments));
-        }*/
+                EvaluateComponentString(webConnection, filename, arguments));
+        }
 
         /// <summary>
         /// Evaluates the named template
@@ -340,7 +340,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="templateInput"></param>
         /// <returns></returns>
         [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.Primitive, FilePermissionEnum.Read)]
-        public string EvaluateComponent(IWebConnection webConnection, string filename, object templateInput)
+        public string EvaluateComponentString(IWebConnection webConnection, string filename, object templateInput)
         {
             XmlDocument templateDocument;
             TemplateParsingState templateParsingState = CreateTemplateParsingState(webConnection);

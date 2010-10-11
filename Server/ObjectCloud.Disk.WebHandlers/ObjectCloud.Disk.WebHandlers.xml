@@ -1560,7 +1560,15 @@
             <param name="filename"></param>
             <returns></returns>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.EvaluateComponent(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.Object)">
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.EvaluateComponent(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
+            <summary>
+            Evaluates the named template
+            </summary>
+            <param name="webConnection"></param>
+            <param name="filename"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.EvaluateComponentString(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.Object)">
             <summary>
             Evaluates the named template
             </summary>

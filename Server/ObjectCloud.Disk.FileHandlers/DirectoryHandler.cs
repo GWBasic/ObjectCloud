@@ -32,7 +32,7 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             DatabaseConnector.DatabaseWritten += new EventHandler<IDatabaseConnector, EventArgs>(DatabaseConnector_TransactionCommitted);
 
-            FileHandlerCache = new Cache<string, IFileContainer>(CreateForCache);
+            FileContainerCache = new Cache<string, IFileContainer>(CreateForCache);
             OwnerIdCache = new Cache<IFileId, Wrapped<ID<IUserOrGroup, Guid>?>>(LoadOwnerIdForCache);
             FileIDCacheByName = new Cache<string, Wrapped<FileId>>(GetFileIdForCache);
             PermissionsCacheWithInherit = new Cache<string, Wrapped<FilePermissionEnum?>, LoadPermissionArgs>(LoadPermissionForCache);
@@ -61,13 +61,13 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <param name="e"></param>
         void DatabaseConnector_TransactionCommitted(IDatabaseConnector sender, EventArgs e)
         {
-            FileHandlerCache.Clear();
+            FileContainerCache.Clear();
         }
 
         /// <summary>
         /// Cache of pre-opened FileHandlers.  This is cleared whenever the database is written to
         /// </summary>
-        private Cache<string, IFileContainer> FileHandlerCache;
+        private Cache<string, IFileContainer> FileContainerCache;
 
         public IFileHandler CreateFile(string filename, string fileType, ID<IUserOrGroup, Guid>? ownerID)
         {
@@ -245,10 +245,10 @@ namespace ObjectCloud.Disk.FileHandlers
 
             // If no directory seperators are passed, just return the file
             if (splitAtDirs.Length == 1)
-                return FileHandlerCache[filename];
+                return FileContainerCache[filename];
 
             // A file in a sub directory was requested
-            IFileContainer subdirContainer = FileHandlerCache[splitAtDirs[0]];
+            IFileContainer subdirContainer = FileContainerCache[splitAtDirs[0]];
 
             return subdirContainer.CastFileHandler<IDirectoryHandler>().OpenFile(splitAtDirs[1]);
         }
@@ -529,6 +529,7 @@ namespace ObjectCloud.Disk.FileHandlers
             internal IFileId FileId;
             internal IEnumerable<ID<IUserOrGroup, Guid>> UserAndGroupIds;
             internal bool OnlyReturnInheritedPermissions;
+            internal uint Recurse;
         }
 
         /// <summary>
@@ -559,7 +560,7 @@ namespace ObjectCloud.Disk.FileHandlers
                 return new Wrapped<FilePermissionEnum?>(null);
             else
                 return new Wrapped<FilePermissionEnum?>(
-                    LoadPermissionFromRelated(new IFileId[] { args.FileId }, args.UserAndGroupIds, new HashSet<IFileId>(), 0));
+                    LoadPermissionFromRelated(new IFileId[] { args.FileId }, args.UserAndGroupIds, new HashSet<IFileId>(), args.Recurse));
         }
 
         /// <summary>
@@ -586,6 +587,11 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public FilePermissionEnum? LoadPermission(string filename, IEnumerable<ID<IUserOrGroup, Guid>> userAndGroupIds, bool onlyReturnInheritedPermissions)
         {
+            return LoadPermission(filename, userAndGroupIds, onlyReturnInheritedPermissions, 0);
+        }
+
+        public FilePermissionEnum? LoadPermission(string filename, IEnumerable<ID<IUserOrGroup, Guid>> userAndGroupIds, bool onlyReturnInheritedPermissions, uint recurse)
+        {
             IFileId fileId = FileIDCacheByName[filename].Value;
             string cacheKey = ConvertUserOrGroupIdsToString(fileId, userAndGroupIds);
 
@@ -593,6 +599,7 @@ namespace ObjectCloud.Disk.FileHandlers
             args.FileId = fileId;
             args.UserAndGroupIds = userAndGroupIds;
             args.OnlyReturnInheritedPermissions = onlyReturnInheritedPermissions;
+            args.Recurse = recurse;
 
             FilePermissionEnum? toReturn;
             if (onlyReturnInheritedPermissions)
@@ -626,7 +633,8 @@ namespace ObjectCloud.Disk.FileHandlers
             List<IFileId> inheritedParentIds = new List<IFileId>();
 
             // Load all of the parent related files
-            foreach (IRelationships_Readable relationship in DatabaseConnection.Relationships.Select(Relationships_Table.ReferencedFileId.In(fileIds)))
+            foreach (IRelationships_Readable relationship in DatabaseConnection.Relationships.Select(
+                Relationships_Table.ReferencedFileId.In(fileIds) & Relationships_Table.Inherit == true))
             {
                 FileId fileId = relationship.FileId;
 
@@ -645,13 +653,36 @@ namespace ObjectCloud.Disk.FileHandlers
                 return null;
 
             // Deal with explicitly set inherit permissions
+            HashSet<string> parentFileNames = new HashSet<string>();
+            HashSet<ID<IUserOrGroup, Guid>> parentOwners = new HashSet<ID<IUserOrGroup, Guid>>();
             // TODO:  This is very untested
             if (inheritedParentIds.Count > 0)
                 foreach (IFile_Readable file in DatabaseConnection.File.Select(File_Table.FileId.In(inheritedParentIds)))
                 {
-                    FilePermissionEnum? fromFile = LoadPermission(file.Name, userAndGroupIds, false);
+                    parentFileNames.Add(file.Name);
+
+                    if (null != file.OwnerId)
+                        parentOwners.Add(file.OwnerId.Value);
+                }
+
+            // If any of the users owns any of the parent files, then permission is granted
+            // Else, if any of the users has permission to any of the parent files, then permission is granted
+            parentOwners.IntersectWith(userAndGroupIds);
+            bool ownsParentFile = parentOwners.Count > 0;
+            parentOwners = null;
+
+            if (ownsParentFile)
+                highestPermission = FilePermissionEnum.Read;
+
+            else
+                foreach (string filename in parentFileNames)
+                {
+                    FilePermissionEnum? fromFile = LoadPermission(filename, userAndGroupIds, false, recurse + 1);
                     if (fromFile != null)
+                    {
                         highestPermission = FilePermissionEnum.Read;
+                        break;
+                    }
                 }
 
             // Scan the permissions of the parent related files
@@ -866,9 +897,9 @@ namespace ObjectCloud.Disk.FileHandlers
             });
 
             FileIDCacheByName.Remove(oldFilename);
-			FileHandlerCache.Remove(oldFilename);
+			FileContainerCache.Remove(oldFilename);
 
-            IFileContainer newFileContainer = FileHandlerCache[newFilename];
+            IFileContainer newFileContainer = FileContainerCache[newFilename];
             newFileContainer.WebHandler.FileContainer = newFileContainer;
             newFileContainer.WebHandler.ResetExecutionEnvironment();
 
