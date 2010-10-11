@@ -251,7 +251,7 @@ namespace ObjectCloud.Particle.UnitTests
                 while (incomingNotifications.Count < 6)
 
                     if (!Monitor.Wait(incomingNotifications, 10000))
-                        Assert.Fail("Did not get a confirmation notification");
+                        Assert.Fail("Did not get a confirmation notification, number of notifications: " + incomingNotifications.Count.ToString() + "\n" + JsonWriter.Serialize(incomingNotifications));
             }
 
             Assert.AreEqual(6, incomingNotifications.Count);
