@@ -994,22 +994,14 @@ namespace ObjectCloud.Disk.WebHandlers
 
             using (TimedLock.Lock(PurgeOldCometSessionsKey))
                 if (null == PurgeOldCometSessionsTimer)
-                {
-                    // This no-op is to work around a weird mono compiler bug...  Get rid of it once the mono compiler is updated!
-                    // https://bugzilla.novell.com/show_bug.cgi?id=554715
-                    if (noop < 0) noop = SRandom.Next<int>();
-
                     PurgeOldCometSessionsTimer = new Timer(
                         CleanOldTransports,
                         null,
                         TimeSpan.FromMilliseconds(0),
                         TimeSpan.FromSeconds(FileHandlerFactoryLocator.WebServer.CheckDeadConnectionsFrequencySeconds));
-                }
 
             return toReturn.CometTransport;
         }
-
-        private static int noop = 0;
 
         /// <summary>
         /// Holds all properties and permissions by Type for channel endpoints
