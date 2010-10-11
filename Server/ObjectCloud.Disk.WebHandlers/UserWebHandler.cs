@@ -564,20 +564,21 @@ namespace ObjectCloud.Disk.WebHandlers
             Uri domainUrl = new Uri(objectUrl);
 
             // If the currently-logged-in user trusts the originating host, then bypass this page
-            if (FileContainer.Owner.Identity == ownerIdentity)
-                if (FileHandler.IsRememberOpenIDLink(domainUrl.Host))
-                    return ((UserManagerWebHandler)FileHandlerFactoryLocator.UserManagerHandler.FileContainer.WebHandler).UserConfirmLink(
-                        webConnection,
-                        objectUrl,
-                        ownerIdentity,
-                        linkSummaryView,
-                        linkUrl,
-                        linkDocumentType,
-                        recipients,
-                        redirectUrl,
-                        linkID,
-                        null,
-                        "on");
+            if (webConnection.Session.User.Identity == FileContainer.Owner.Identity)
+                if (FileContainer.Owner.Identity == ownerIdentity)
+                    if (FileHandler.IsRememberOpenIDLink(domainUrl.Host))
+                        return ((UserManagerWebHandler)FileHandlerFactoryLocator.UserManagerHandler.FileContainer.WebHandler).UserConfirmLink(
+                            webConnection,
+                            objectUrl,
+                            ownerIdentity,
+                            linkSummaryView,
+                            linkUrl,
+                            linkDocumentType,
+                            recipients,
+                            redirectUrl,
+                            linkID,
+                            null,
+                            "on");
 
             Dictionary<string, object> clpArgs = new Dictionary<string, object>();
             clpArgs["objectUrl"] = objectUrl;
@@ -585,7 +586,7 @@ namespace ObjectCloud.Disk.WebHandlers
             clpArgs["linkSummaryView"] = linkSummaryView;
             clpArgs["linkUrl"] = linkUrl;
             clpArgs["linkDocumentType"] = linkDocumentType;
-            clpArgs["recipients"] = recipients;
+            clpArgs["recipients"] = JsonWriter.Serialize(recipients);
             clpArgs["redirectUrl"] = redirectUrl;
             clpArgs["linkID"] = linkID;
 

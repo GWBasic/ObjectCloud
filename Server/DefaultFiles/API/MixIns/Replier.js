@@ -1,16 +1,12 @@
 Replier_AddReply.webCallable = "POST_application_x_www_form_urlencoded";
 Replier_AddReply.minimumWebPermission = "Write";
 Replier_AddReply.namedPermissions = "reply";
-Replier_AddReply.webReturnConvention = "Status";
+Replier_AddReply.webReturnConvention = "JSON";
 function Replier_AddReply(replyText)
 {
-   var roots = base.GetRelatedFiles_Sync(
-      {
-         relationships: ["root"],
-         maxToReturn: 1
-      });
-
    var userMetadata = getConnectionMetadata();
+
+   var toReturn;
 
    callAsOwner(function()
    {
@@ -22,36 +18,25 @@ function Replier_AddReply(replyText)
             {
                extension: 'reply',
                fileNameSuggestion: fileMetadata.filename
-           });
+            });
 
          replyFile.WriteAll_Sync(sanitize(replyText));
-
-         if (0 == roots.length)
-            replyFile.AddRelatedFile_Sync(
-               {
-                  filename: fileMetadata.filename,
-                  relationship: "root"
-               });
-         else
-            replyFile.AddRelatedFile_Sync(
-               {
-                  filename: roots[0].FullPath,
-                  relationship: "root"
-               });
-
-         base.AddRelatedFile_Sync(
-               {
-                  filename: replyFile.Filename,
-                  relationship: "reply",
-                  inheritPermission: true
-               });
 
          replyFile.Chown_Sync(
             {
                newOwnerId: userMetadata.id
             });
+
+         toReturn = base.AddRelatedFile_Sync(
+            {
+               filename: replyFile.Filename,
+               relationship: "reply",
+               inheritPermission: true
+            });
       });
    });
+
+   return toReturn;
 }
 
 Replier_GetRepliesForDisplay.webCallable = "GET";

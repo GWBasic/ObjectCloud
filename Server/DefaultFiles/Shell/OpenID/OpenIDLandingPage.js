@@ -1,4 +1,4 @@
-// Scripts: /API/jquery.js
+// Scripts: /API/jquery.js, /API/jquery.addhiddentoform.js
 
 function setupOpenIDForm(identity, originalparameters)
 {
@@ -7,7 +7,12 @@ function setupOpenIDForm(identity, originalparameters)
       if (identity == originalparameters["openid.identity"])
          $('.password').hide();
 
-      $('form.openIdPasswordForm').each(function()
+      delete originalparameters['Method'];
+
+      $(form.openIdPasswordForm).addHiddenItems(originalparameters);
+
+      // replaced by /API/jquery.addhiddentoform.js
+      /*$('form.openIdPasswordForm').each(function()
       {
          var me = $(this);
 
@@ -20,6 +25,6 @@ function setupOpenIDForm(identity, originalparameters)
 
                 me.append(arg);
              }
-      });
+      });*/
    });
 }

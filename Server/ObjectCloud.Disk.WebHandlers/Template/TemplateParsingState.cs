@@ -508,7 +508,10 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                 SortedDictionary<string, object> sortedArguments = new SortedDictionary<string, object>(arguments);
 
                 foreach (KeyValuePair<string, object> getArgument in sortedArguments)
-                    commentBuilder.AppendFormat("\t{0}: {1}\n", getArgument.Key, getArgument.Value.ToString());
+                    if (null != getArgument.Value)
+                        commentBuilder.AppendFormat("\t{0}: {1}\n", getArgument.Key, getArgument.Value.ToString());
+                    else
+                        commentBuilder.AppendFormat("\t{0}: null\n", getArgument.Key);
 
                 commentBuilder.Append("\n\n");
 

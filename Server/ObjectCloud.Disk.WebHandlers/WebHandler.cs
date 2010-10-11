@@ -1202,23 +1202,40 @@ namespace ObjectCloud.Disk.WebHandlers
                 FileContainer.GetNotificationRecipientIdentities())).ToArray();
             clpArgs["linkID"] = linkNotificationInformation.linkID;
 
-            FileHandlerFactoryLocator.UserManagerHandler.GetEndpoints(
-                relatedContainer.Owner.Identity,
-                delegate(IEndpoints endpoints)
-                {
-                    Dictionary<string, object> toReturn = new Dictionary<string, object>();
-                    toReturn["confirmLinkPage"] = endpoints[ParticleEndpoint.ConfirmLinkPage];
-                    toReturn["args"] = clpArgs;
+            // This is done because this function is called from server-side Javascript
+            // Server-side Javascript only supports syncronous calls
+            object key = new object();
+            IWebResults toReturn = null;
 
-                    webConnection.SendResults(WebResults.ToJson(toReturn));
-                },
-                delegate(Exception e)
-                {
-                    webConnection.SendResults(WebResults.From(
-                        Status._412_Precondition_Failed, "Could not find particle.confirmLinkPage endpoint"));
-                });
+            lock (key)
+            {
+                FileHandlerFactoryLocator.UserManagerHandler.GetEndpoints(
+                    relatedContainer.Owner.Identity,
+                    delegate(IEndpoints endpoints)
+                    {
+                        Dictionary<string, object> linkResults = new Dictionary<string, object>();
+                        linkResults["confirmLinkPage"] = endpoints[ParticleEndpoint.ConfirmLinkPage];
+                        linkResults["args"] = clpArgs;
 
-            return null;
+                        toReturn = WebResults.ToJson(linkResults);
+
+                        lock (key)
+                            Monitor.Pulse(key);
+                    },
+                    delegate(Exception e)
+                    {
+                        toReturn = WebResults.From(
+                            Status._412_Precondition_Failed, "Could not find particle.confirmLinkPage endpoint");
+
+                        lock (key)
+                            Monitor.Pulse(key);
+                    });
+
+                if (null == toReturn)
+                    Monitor.Wait(key);
+            }
+
+            return toReturn;
         }
 
         /// <summary>

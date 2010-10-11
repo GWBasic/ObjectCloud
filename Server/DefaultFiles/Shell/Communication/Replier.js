@@ -1,4 +1,4 @@
-// Scripts: /API/jquery.js, /API/jquery.rte.js, /API/jquery.rte.tb.js
+// Scripts: /API/jquery.js, /API/jquery.rte.js, /API/jquery.rte.tb.js, /API/jquery.addhiddentoform.js
 
 var rpy_object = null;
 var rpy_oldHTML;
@@ -42,9 +42,23 @@ function rply_register(file)
          {
             replyText: rte.get_content()
          },
-         function()
+         function(linkConfirmationInformation)
          {
-            saveButton.unbind('click', saveFunction);
+            var args = linkConfirmationInformation.args;
+            args.redirectUrl = window.location.href;
+
+            var form = $('<form method="POST" />');
+            form.attr('action', linkConfirmationInformation.confirmLinkPage);
+            form.addHiddenItems(args);
+
+            var body = $('body');
+            body.html('<div class="title">Redirecting to confirmation page</div>');
+            body.append(form);
+
+            form.submit();
+
+
+            /*saveButton.unbind('click', saveFunction);
             savingSpan.hide();
             replyButton.show();
             replierDiv.empty();
@@ -52,7 +66,7 @@ function rply_register(file)
 
             // TODO:  this should be replaced with something that loads new replies through comet
             $('body').html('<div class="title">Loading...</div>');
-            window.location.href=window.location.href
+            window.location.href=window.location.href;*/
          },
          function()
          {
