@@ -14,11 +14,11 @@
       (<span class="date_ago">[_timeStamp_]</span>) <a href="[_objectUrl_]" target="_blank">&#x21AA;</a>
       <div class="notificationLinks">
          <oc:if>
-            <oc:hasvalue value="[_link.URL_]">
+            <oc:hasvalue value="[_link.linkUrl_]">
                <div class="notificationLink">
                   <div class="linkSummaryView">
-                     <a href="[_link.owner_]">[_link.owner_]</a>:
-                     <oc:safeparse>[_link.summaryView_]</oc:safeparse>
+                     <a href="[_link.ownerIdentity_]">[_link.ownerIdentity_]</a>:
+                     <oc:safeparse>[_link.linkSummaryView_]</oc:safeparse>
                   </div>
                   (<span class="date_ago">[_timeStamp_]</span>)
                   <a href="[_link.URL_]" target="_blank">&#x21AA;</a>

@@ -64,13 +64,17 @@ function reformatNotification(notification)
       if (undefined == me.attr('target'))
          juiauto_makeiFrameLink(me);
 
-      var href = me.attr('href');
-      if (undefined != href)
-         if (url.server != Url.parse(href).server)
-            me.attr(
-               'href',
-               url.protocol + url.server + '/Shell/OpenID/OpenIDRedirect.oc?senderIdentity=' +
-               escape(senderIdentity) + '&url=' + escape(objectUrl));
+      try
+      {
+         var href = me.attr('href');
+         if (undefined != href)
+            if (url.server != Url.parse(href).server)
+               me.attr(
+                  'href',
+                  url.protocol + url.server + '/Shell/OpenID/OpenIDRedirect.oc?senderIdentity=' +
+                  escape(senderIdentity) + '&url=' + escape(objectUrl));
+      }
+      catch (exception) {}
    });
 
    if (notificationsOnScreen[objectUrl])
