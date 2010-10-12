@@ -9,7 +9,7 @@ function setupOpenIDForm(identity, originalparameters)
 
       delete originalparameters['Method'];
 
-      $(form.openIdPasswordForm).addHiddenItems(originalparameters);
+      $('form.openIdPasswordForm').addHiddenItems(originalparameters);
 
       // replaced by /API/jquery.addhiddentoform.js
       /*$('form.openIdPasswordForm').each(function()
