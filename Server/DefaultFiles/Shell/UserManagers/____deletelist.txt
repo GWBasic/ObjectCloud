@@ -4,3 +4,4 @@ Create Account.wchtml
 Create Account.oc
 GroupPage.wchtml
 UserPage.wchtml
+UserManager.wchtml

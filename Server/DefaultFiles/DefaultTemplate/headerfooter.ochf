@@ -38,6 +38,7 @@
             </div>
          </div>
          <div id="account"> 
+            <div style="float: left"><img src="[_User.Identity_]?Method=GetAvatar&amp;maxHeight=100" /></div>
             <div id="accountblock" style="float: right">
                <oc:component oc:src="login.occ" />
             </div>

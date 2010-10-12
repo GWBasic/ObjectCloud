@@ -9,10 +9,10 @@
                <oc:islocal>
                  <oc:if>
                     <oc:isloggedin>
+                       <p><a href="/DefaultTemplate/particle.oc">Home</a></p>
                        <p><a href="/Users/[_User.Name_]">Files</a></p>
-                       <p><a href="/Shell/Viewers/NotificationsViewer.wchtml">Messages (Experimental)</a></p>
                        <p><a href="[_User.Identity_]">Profile</a></p>
-                       <p><a href="/Shell/UserManagers/UserManager.wchtml?Target=/Users/[_User.Name_].user">Account</a></p>
+                       <p><a href="/DefaultTemplate/usermanager.oc?Target=/Users/[_User.Name_].user">Account</a></p>
                     </oc:isloggedin>
                  </oc:if>
               </oc:islocal>

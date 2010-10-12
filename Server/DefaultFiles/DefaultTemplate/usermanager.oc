@@ -1,0 +1,35 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
+   <oc:inserthead>
+      <title>[_Target_]</title>
+      <oc:script src="/Shell/UserManagers/UserManager.js" />
+      <oc:open filename="[_Target_]" varname="UserWrapper" />
+
+      <script>
+         setupUserManager(UserWrapper);
+      </script>
+
+   </oc:inserthead>
+
+   <h1>Change Password</h1>
+   <form class="changepassword" method="POST" action="[_Target_]?Method=SetPassword" >
+      Old Password: <input class="oldpassword" type="password" /><br />
+      New Password: <input class="newpassword" type="password" /><br />
+      Verify Password: <input class="verifypassword" type="password" /><br />
+      <input class="changepasswordbutton" type="submit" value="Change Password" />
+      <span class="passwordsdontmatch">Passwords do not match</span>
+   </form>
+
+   <h1>Change Avatar</h1>
+   <form class="changeavatar" method="POST" action="[_Target_]?Method=Set">
+      <input type="hidden" name="name" value="Avatar" />
+      Full path to avatar: 
+
+      <oc:jsontemplate oc:url="[_Target_]?Method=GetAllData">
+         <input type="text" name="value" value="[_Avatar_]" />
+      </oc:jsontemplate>
+
+      (must be on this server)<br />
+      <input class="changeavatarbutton" type="submit" value="Change Avatar" />
+   </form>
+
+</oc:componentdef>
