@@ -1111,6 +1111,7 @@ namespace ObjectCloud.Disk.FileHandlers
             uint? maxToReturn)
         {
             HashSet<FileId> filesToInspect = new HashSet<FileId>();
+            HashSet<FileId> inherited = new HashSet<FileId>();
 
             // First get the related files
 
@@ -1124,7 +1125,10 @@ namespace ObjectCloud.Disk.FileHandlers
             foreach (IRelationships_Readable relationshipInDb in
                 DatabaseConnection.Relationships.Select(ComparisonCondition.Condense(comparisonConditions)))
             {
-                filesToInspect.Add(relationshipInDb.ReferencedFileId);
+                if (relationshipInDb.Inherit)
+                    inherited.Add(relationshipInDb.ReferencedFileId);
+                else
+                    filesToInspect.Add(relationshipInDb.ReferencedFileId);
             }
 
             // Now filer these files by permission if the user didn't inherit permission to this folder, or didn't inherit permission through a direct
@@ -1156,7 +1160,7 @@ namespace ObjectCloud.Disk.FileHandlers
                     inspectPermissions = false;
             }*/
 
-            if (inspectPermissions)
+            if (inspectPermissions & filesToInspect.Count > 0)
             {
                 IEnumerable<IPermission_Readable> permissions = DatabaseConnection.Permission.Select(
                     Permission_Table.FileId.In(filesToInspect) & Permission_Table.UserOrGroupId.In(userOrGroupIds));
@@ -1166,6 +1170,9 @@ namespace ObjectCloud.Disk.FileHandlers
                 foreach (IPermission_Readable permission in permissions)
                     filesToInspect.Add(permission.FileId);
             }
+
+            // Make sure to add files where there is an inherited permission
+            filesToInspect.UnionWith(inherited);
 
             comparisonConditions = new List<ComparisonCondition>();
             comparisonConditions.Add(File_Table.FileId.In(filesToInspect));
