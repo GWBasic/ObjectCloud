@@ -24,7 +24,7 @@ namespace ObjectCloud.Interfaces.WebServer
             IWebConnection webConnection,
             string objectUrl,
             string ownerIdentity,
-            string linkedSummaryView,
+            string linkSummaryView,
             string linkUrl,
             string linkDocumentType,
             string recipients,
