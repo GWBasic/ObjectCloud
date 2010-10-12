@@ -13,7 +13,7 @@
 
       <input type="hidden" name="objectUrl" value="[_objectUrl_]" />
       <input type="hidden" name="ownerIdentity" value="[_ownerIdentity_]" />
-      <input type="hidden" name="linkedSummaryView" value="[_linkedSummaryView_]" />
+      <input type="hidden" name="linkSummaryView" value="[_linkSummaryView_]" />
       <input type="hidden" name="linkUrl" value="[_linkUrl_]" />
       <input type="hidden" name="linkDocumentType" value="[_linkDocumentType_]" />
       <input type="hidden" name="recipients" value="[_recipients_]" />
