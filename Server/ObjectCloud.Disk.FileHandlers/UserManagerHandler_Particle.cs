@@ -93,9 +93,10 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             try
             {
-                // All of the unique particle.recieveNotification endpoints, with the recipients at each
+                // All of the unique particle endpoints, with the recipients at each
                 Dictionary<string, List<string>> recipientsAtEndpoints = new Dictionary<string, List<string>>();
                 Dictionary<string, string> establishTrustEndpoints = new Dictionary<string, string>();
+                Dictionary<string, string> requestedEndpoints = new Dictionary<string, string>();
 
                 Endpoints particleEndpoints;
                 while (loadedEndpoints.Dequeue(out particleEndpoints))
@@ -104,15 +105,16 @@ namespace ObjectCloud.Disk.FileHandlers
                     if (particleEndpoints.TryGetEndpoint(particleEndpoint, out endpoint))
                     {
                         List<string> users;
-                        if (recipientsAtEndpoints.TryGetValue(endpoint, out users))
+                        if (recipientsAtEndpoints.TryGetValue(particleEndpoints[ParticleEndpoint.ReceiveNotification], out users))
                             users.Add(particleEndpoints.OpenIdOrWebFinger);
                         else
                         {
                             users = new List<string>();
                             users.Add(particleEndpoints.OpenIdOrWebFinger);
 
-                            recipientsAtEndpoints[endpoint] = users;
-                            establishTrustEndpoints[endpoint] = particleEndpoints[ParticleEndpoint.EstablishTrust];
+                            recipientsAtEndpoints[particleEndpoints[ParticleEndpoint.ReceiveNotification]] = users;
+                            establishTrustEndpoints[particleEndpoints[ParticleEndpoint.ReceiveNotification]] = particleEndpoints[ParticleEndpoint.EstablishTrust];
+                            requestedEndpoints[particleEndpoints[ParticleEndpoint.ReceiveNotification]] = particleEndpoints[particleEndpoint];
                         }
                     }
                 }
@@ -120,14 +122,16 @@ namespace ObjectCloud.Disk.FileHandlers
                 if (!forceRefresh)
                 {
                     // Load for situations where trust is already established
-                    foreach (IRecipient_Readable recipient in DatabaseConnection.Recipient.Select(
+                    // copy is to avoid locked the database
+                    foreach (IRecipient_Readable recipient in Enumerable<IRecipient_Readable>.FastCopy(
+                        DatabaseConnection.Recipient.Select(
                         Recipient_Table.receiveNotificationEndpoint.In(recipientsAtEndpoints.Keys) &
-                        Recipient_Table.userID == sender.Id))
+                        Recipient_Table.userID == sender.Id)))
                     {
                         EndpointInfo recipientInfo = new EndpointInfo();
 
                         string endpoint;
-                        if (particleEndpoints.TryGetEndpoint(particleEndpoint, out endpoint))
+                        if (requestedEndpoints.TryGetValue(recipient.receiveNotificationEndpoint, out endpoint))
                         {
                             recipientInfo.RecipientIdentities = recipientsAtEndpoints[recipient.receiveNotificationEndpoint];
                             recipientInfo.Endpoint = endpoint;
@@ -147,6 +151,7 @@ namespace ObjectCloud.Disk.FileHandlers
                         endpointAndRecipients.Key,
                         establishTrustEndpoints[endpointAndRecipients.Key],
                         endpointAndRecipients.Value,
+                        requestedEndpoints[endpointAndRecipients.Key],
                         callback,
                         errorCallback);
             }
@@ -168,6 +173,7 @@ namespace ObjectCloud.Disk.FileHandlers
             string receiveNotificationEndpoint,
             string establishTrustEndpoint,
             List<string> recipients,
+            string requestedEndpoint,
             GenericArgument<EndpointInfo> callback,
             GenericArgument<IEnumerable<string>> errorCallback)
         {
@@ -175,7 +181,7 @@ namespace ObjectCloud.Disk.FileHandlers
             {
                 EndpointInfo recipientInfo = new EndpointInfo();
                 recipientInfo.RecipientIdentities = recipients;
-                recipientInfo.Endpoint = receiveNotificationEndpoint;
+                recipientInfo.Endpoint = requestedEndpoint;
                 recipientInfo.SenderToken = senderToken;
 
                 callback(recipientInfo);

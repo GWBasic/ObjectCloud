@@ -120,7 +120,22 @@ namespace ObjectCloud.Common.Threading
             toReturn.target = o;
 
             if (!Monitor.TryEnter(o, timeout))
+            {
+/*#if DEBUG
+                Thread lockHolder = null; ;
+                lock (LockHolders)
+                    LockHolders.TryGetValue(o, out lockHolder);
+
+                throw new LockTimeoutException(o, lockHolder);
+#else*/
                 throw new LockTimeoutException(o);
+//#endif
+            }
+
+/*#if DEBUG
+            lock (LockHolders)
+                LockHolders[o] = Thread.CurrentThread;
+#endif*/
 
             toReturn.myLockingThreadTimeoutDelegate = lockingThreadTimeoutDelegate;
 
@@ -137,6 +152,10 @@ namespace ObjectCloud.Common.Threading
             return toReturn;
         }
 
+/*#if DEBUG
+        static Dictionary<object, Thread> LockHolders = new Dictionary<object, Thread>();
+#endif*/
+
         /// <summary>
         /// This is the target of the lock
         /// </summary>
@@ -148,6 +167,11 @@ namespace ObjectCloud.Common.Threading
 
         public void Dispose()
         {
+/*#if DEBUG
+            lock (LockHolders)
+                LockHolders.Remove(Target);
+#endif*/
+
             Monitor.Exit(target);
 
             Thread = null;
@@ -256,6 +280,17 @@ namespace ObjectCloud.Common.Threading
             get { return _AttemptedToLock; }
         }
         private readonly object _AttemptedToLock;
+
+/*#if DEBUG
+
+        public Thread LockHolder;
+
+        public LockTimeoutException(object attemptedToLock, Thread lockHolder)
+            : this(attemptedToLock)
+        {
+            LockHolder = lockHolder;
+        }
+#endif*/
 
         public LockTimeoutException(object attemptedToLock)
             : base("Timeout waiting for lock")
