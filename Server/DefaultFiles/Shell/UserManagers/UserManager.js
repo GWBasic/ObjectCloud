@@ -41,5 +41,17 @@ function setupUserManager(userwrapper)
 
          return false;
       });
+
+      var changeAvatarForm = $('form.changeavatar');
+      changeAvatarForm.submit(function()
+      {
+         userwrapper.Set(
+         {
+            name: 'Avatar',
+            value: $('input.changeavatarclass', changeAvatarForm).val()
+         });
+
+         return false;
+      });
    });
 }

@@ -25,7 +25,7 @@
       Full path to avatar: 
 
       <oc:jsontemplate oc:url="[_Target_]?Method=GetAllData">
-         <input type="text" name="value" value="[_Avatar_]" />
+         <input class="changeavatarclass" type="text" name="value" value="[_Avatar_]" />
       </oc:jsontemplate>
 
       (must be on this server)<br />
