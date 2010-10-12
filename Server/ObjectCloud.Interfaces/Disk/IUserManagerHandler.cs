@@ -401,6 +401,12 @@ namespace ObjectCloud.Interfaces.Disk
             string loginUrlRedirect);
 
         /// <summary>
+        /// Deletes all trust that the user has established, requiring that trust is re-established when future notifications are sent
+        /// </summary>
+        /// <param name="userOrGroup"></param>
+        void DeleteAllEstablishedTrust(IUserOrGroup userOrGroup);
+
+        /// <summary>
         /// Responds with the endpoint needed to respond trust
         /// </summary>
         /// <param name="identity"></param>

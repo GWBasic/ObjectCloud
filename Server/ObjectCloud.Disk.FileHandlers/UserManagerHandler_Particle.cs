@@ -643,5 +643,10 @@ namespace ObjectCloud.Disk.FileHandlers
 
             return toReturn;
         }
+
+        public void DeleteAllEstablishedTrust(IUserOrGroup userOrGroup)
+        {
+            DatabaseConnection.Recipient.Delete(Recipient_Table.userID == userOrGroup.Id);
+        }
     }
 }

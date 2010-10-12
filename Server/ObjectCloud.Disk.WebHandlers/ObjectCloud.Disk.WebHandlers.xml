@@ -1353,6 +1353,15 @@
             <param name="webConnection"></param>
             <returns></returns>
         </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.Set(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
+            <summary>
+            Sets a named value
+            </summary>
+            <param name="webConnection"></param>
+            <param name="name"></param>
+            <param name="value"></param>
+            <returns></returns>
+        </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.SetAllData(ObjectCloud.Interfaces.WebServer.IWebConnection)">
             <summary>
             Sets all of the values based on the results of a POST query
