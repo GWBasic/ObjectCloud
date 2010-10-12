@@ -85,7 +85,25 @@ namespace ObjectCloud.Disk.WebHandlers
 
             return WebResults.ToJson(toWrite);
         }
-		
+
+        /// <summary>
+        /// Sets a named value
+        /// </summary>
+        /// <param name="webConnection"></param>
+        /// <param name="name"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Administer)]
+        public IWebResults Set(IWebConnection webConnection, string name, string value)
+        {
+            FileHandler.Set(webConnection.Session.User, name, value);
+
+            if (name == "Avatar")
+                NotifyTrustedClientsOfNewAvatar(webConnection);
+
+            return WebResults.From(Status._202_Accepted, "Saved");
+        }
+
         /// <summary>
         /// Sets all of the values based on the results of a POST query
         /// </summary>
@@ -94,12 +112,17 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Administer)]
         public IWebResults SetAllData(IWebConnection webConnection)
         {
+            string oldAvatar = GetAvatarFilename();
+
             // Decode the new pairs
             IDictionary<string, string> newPairs;
 
             newPairs = webConnection.PostParameters;
 
             FileHandler.WriteAll(webConnection.Session.User, newPairs, false);
+
+            if (oldAvatar != GetAvatarFilename())
+                NotifyTrustedClientsOfNewAvatar(webConnection);
 
             return WebResults.From(Status._202_Accepted, "Saved");
         }
@@ -113,6 +136,8 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.POST_JSON, WebReturnConvention.Status, FilePermissionEnum.Administer)]
         public IWebResults SetAllDataJson(IWebConnection webConnection, JsonReader pairs)
         {
+            string oldAvatar = GetAvatarFilename();
+
             // Decode the new pairs
             Dictionary<string, string> newPairs = new Dictionary<string, string>();
 
@@ -124,7 +149,15 @@ namespace ObjectCloud.Disk.WebHandlers
 
             FileHandler.WriteAll(webConnection.Session.User, newPairs, false);
 
+            if (oldAvatar != GetAvatarFilename())
+                NotifyTrustedClientsOfNewAvatar(webConnection);
+
             return WebResults.From(Status._202_Accepted, "Saved");
+        }
+
+        private void NotifyTrustedClientsOfNewAvatar(IWebConnection webConnection)
+        {
+            FileHandlerFactoryLocator.UserManagerHandler.DeleteAllEstablishedTrust(webConnection.Session.User);
         }
 		
 		/// <summary>
@@ -139,12 +172,7 @@ namespace ObjectCloud.Disk.WebHandlers
 		[WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.Primitive, FilePermissionEnum.Read)]
 		public IWebResults GetAvatar(IWebConnection webConnection)
 		{
-            string avatar;
-
-            if (FileHandler.Contains("Avatar"))
-                avatar = FileHandler["Avatar"];
-            else
-                avatar = "/Shell/UserManagers/No Profile.jpg";
+            string avatar = GetAvatarFilename();
 
             string requestString = HTTPStringFunctions.AppendGetParameter(avatar, "Method", "GetScaled");
             foreach (KeyValuePair<string, string> getParameter in webConnection.GetParameters)
@@ -155,6 +183,19 @@ namespace ObjectCloud.Disk.WebHandlers
             // This works around permissions issues
             return webConnection.ShellTo(requestString, FileContainer.Owner);
 		}
+
+        private string GetAvatarFilename()
+        {
+            if (FileHandler.Contains("Avatar"))
+            {
+                string avatar = FileHandler["Avatar"];
+
+                if (FileHandlerFactoryLocator.FileSystemResolver.IsFilePresent(avatar))
+                    return avatar;
+            }
+
+            return "/Shell/UserManagers/No Profile.jpg";
+        }
 
         /// <summary>
         /// Returns the page that's used when a user from this server is logging into another server.  (TODO, verify)
@@ -364,23 +405,13 @@ namespace ObjectCloud.Disk.WebHandlers
             }
 
             List<Dictionary<string, object>> toReturn = new List<Dictionary<string, object>>();
-            //Dictionary<string, Dictionary<string, object>> resultsBySender = new Dictionary<string, Dictionary<string, object>>();
 
             foreach (Dictionary<NotificationColumn, object> notificationFromDB in FileHandler.GetNotifications(
                 newestNotificationId, oldestNotificationId, maxNotifications, objectUrls, senderIdentities, desiredValuesSet))
             {
                 Dictionary<string, object> notification = ConvertNotificationFromDBToNotificationForWeb(includeAvatarUrl, notificationFromDB);
-
-                /*resultsBySender[notificationFromDB[NotificationColumn.SenderIdentity].ToString()] = notification;
-
-                object linkedSenderIdentity;
-                if (notificationFromDB.TryGetValue(NotificationColumn.LinkedSenderIdentity, out linkedSenderIdentity))
-                    resultsBySender[linkedSenderIdentity.ToString()] = notification;*/
-
                 toReturn.Add(notification);
             }
-
-            // TODO:  linked sender avatar and ignored
 
             return WebResults.ToJson(toReturn);
         }
@@ -393,33 +424,8 @@ namespace ObjectCloud.Disk.WebHandlers
 
             if (includeAvatarUrl)
             {
-                try
-                {
-                    // TODO:  This can really slow down if the OpenID isn't in the DB and the remote servers respond slowly!
-                    IUserOrGroup senderUserOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupOrOpenId(
-                        notificationFromDB[NotificationColumn.SenderIdentity].ToString(), true);
-
-                    if (senderUserOrGroup is IUser)
-                    {
-                        IUser senderUser = (IUser)senderUserOrGroup;
-
-                        if (senderUser.Local)
-                            notification["senderAvatarUrl"] = senderUser.Identity + "?Method=GetAvatar";
-                        else
-                            notification["senderAvatarUrl"] = string.Format(
-                                "{0}/{1}.jpg?Method=GetScaled",
-                                ParticleAvatarsDirectory.FileContainer.ObjectUrl,
-                                senderUser.Id.ToString());
-                    }
-                    else
-                        notification["senderAvatarUrl"] = "";
-                }
-                catch (Exception e)
-                {
-                    // This can happen if the server changes host name, or if an OpenID becomes invalid
-                    log.Error("Error when trying to determine if an identity is local", e);
-                    notification["senderAvatarUrl"] = "";
-                }
+                notification["senderAvatarUrl"] = 
+                    AssignAvatar(notificationFromDB[NotificationColumn.SenderIdentity].ToString());
             }
 
             notification["ignored"] = false;
@@ -438,12 +444,50 @@ namespace ObjectCloud.Disk.WebHandlers
 
                 case ("link"):
                     {
-                        notification["link"] = JsonReader.Deserialize(notificationFromDB[NotificationColumn.ChangeData].ToString());
+                        Dictionary<string, object> linkChangeData = JsonReader.Deserialize<Dictionary<string, object>>(
+                            notificationFromDB[NotificationColumn.ChangeData].ToString());
+
+                        notification["link"] = linkChangeData;
+
+                        object ownerIdentity;
+                        if (linkChangeData.TryGetValue("ownerIdentity", out ownerIdentity))
+                            linkChangeData["ownerAvatarUrl"] = AssignAvatar(ownerIdentity.ToString());
+                        
                         break;
                     }
             }
 
             return notification;
+        }
+
+        private string AssignAvatar(string identity)
+        {
+            try
+            {
+                // TODO:  This can really slow down if the OpenID isn't in the DB and the remote servers respond slowly!
+                IUserOrGroup senderUserOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupOrOpenId(
+                    identity, true);
+
+                if (senderUserOrGroup is IUser)
+                {
+                    IUser senderUser = (IUser)senderUserOrGroup;
+
+                    if (senderUser.Local)
+                        return senderUser.Identity + "?Method=GetAvatar";
+                    else
+                        return string.Format(
+                            "{0}/{1}.jpg?Method=GetScaled",
+                            ParticleAvatarsDirectory.FileContainer.ObjectUrl,
+                            senderUser.Id.ToString());
+                }
+            }
+            catch (Exception e)
+            {
+                // This can happen if the server changes host name, or if an OpenID becomes invalid
+                log.Error("Error when trying to determine if an identity is local", e);
+            }
+
+            return "";
         }
 
         /// <summary>
