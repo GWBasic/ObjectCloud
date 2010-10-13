@@ -30,7 +30,7 @@
     <Commandlineparameters>../../../ObjectCloud.DataAccess ../../../ObjectCloud.DataAccess.SQLite</Commandlineparameters>
     <CustomCommands>
       <CustomCommands>
-        <Command type="AfterBuild" command="mono ObjectCloud.CodeGenerator.exe ../../../ObjectCloud.DataAccess ../../../ObjectCloud.DataAccess.SQLite ../../../ObjectCloud.ORM.DataAccess.SQLite.Test" workingdir="${TargetDir}" />
+        <Command type="AfterBuild" command="mono ObjectCloud.CodeGenerator.exe ../../../ObjectCloud.DataAccess ../../../ObjectCloud.DataAccess.SQLite ../../../ObjectCloud.ORM.DataAccess.SQLite.Test ../../../ObjectCloud.CallHomePlugin" workingdir="${TargetDir}" />
       </CustomCommands>
     </CustomCommands>
   </PropertyGroup>
@@ -43,7 +43,7 @@
     <WarningLevel>4</WarningLevel>
     <CustomCommands>
       <CustomCommands>
-        <Command type="AfterBuild" command="mono ObjectCloud.CodeGenerator.exe ../../../ObjectCloud.DataAccess ../../../ObjectCloud.DataAccess.SQLite ../../../ObjectCloud.ORM.DataAccess.SQLite.Test" workingdir="${TargetDir}" />
+        <Command type="AfterBuild" command="mono ObjectCloud.CodeGenerator.exe ../../../ObjectCloud.DataAccess ../../../ObjectCloud.DataAccess.SQLite ../../../ObjectCloud.ORM.DataAccess.SQLite.Test ../../../ObjectCloud.CallHomePlugin" workingdir="${TargetDir}" />
       </CustomCommands>
     </CustomCommands>
   </PropertyGroup>
