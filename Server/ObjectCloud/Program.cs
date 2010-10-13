@@ -52,6 +52,7 @@ namespace ObjectCloud
 					{
 						hostnames.Sort();
 						fileHandlerFactoryLocator.Hostname = hostnames[0];
+                        fileHandlerFactoryLocator.CallHomeEndpoint = null;
 					}
                 }
 

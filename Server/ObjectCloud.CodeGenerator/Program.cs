@@ -190,6 +190,30 @@ namespace ObjectCloud.CodeGenerator
                 "ObjectCloud.DataAccess.Log");
 
             csharpGenerator.GenerateToFile();
+
+            // call home database
+            // **************************
+
+            mainFilename = baseDirectoryPrefix + Path.DirectorySeparatorChar + "CallHome.cs";
+            sqliteFilename = sqliteDirectoryPrefix + Path.DirectorySeparatorChar + "CallHome.cs";
+
+            database = (new CallHomeSchemaCreator()).Create();
+
+            csharpGenerator = new CSharpGenerator(mainFilename, "ObjectCloud.DataAccess.CallHome", new ISubGenerator[] 
+                { 
+                    new ObjectCloud.ORM.DataAccess.Generator.EntityGenerator(database, "ObjectCloud.DataAccess.CallHome")
+                });
+
+            csharpGenerator.GenerateToFile();
+
+            csharpGenerator = new CSharpGenerator(sqliteFilename, "ObjectCloud.DataAccess.SQLite.CallHome", new ISubGenerator[] 
+                { 
+                    new ObjectCloud.ORM.DataAccess.Generator.SqLite.EmbeddedDatabaseCreatorCodeGenerator(schemaGenerator, database, "ObjectCloud.DataAccess.CallHome"),
+                    new ObjectCloud.ORM.DataAccess.Generator.SqLite.EntityGenerator(database, "ObjectCloud.DataAccess.CallHome")
+                },
+                "ObjectCloud.DataAccess.CallHome");
+
+            csharpGenerator.GenerateToFile();
         }
     }
 }

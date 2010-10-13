@@ -6,7 +6,15 @@ This code is released under the Simple Public License (SimPL) 2.0.  Some additio
 For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
 -->
 
-	<FileSystem ConnectionString="./FileSystem" SyncronizeToDefaultFiles="true" />
+	<FileSystem
+    ConnectionString="./FileSystem"
+    SyncronizeToDefaultFiles="true"
+    CallHomeEndpoint="http://objectcloud.kicks-ass.net/Stats/CallHomeTracker.cht?Method=CallHome"/>
+  
+  <!-- The CallHomeEndpoint is used so we can know how many ObjectCloud servers are currently running.  Every hour or so, the server
+  POSTs its hostname to CallHomeEndpoint.  We then download /Shell/Version.json.  You can disable calling home by removing the above
+  CallHomeEndpoint.  (But please don't, it's nice to be able to know how many ObjectCloud servers are running and which versions they
+  use.)  -->
 
   <!-- WARNING!!!  You REALLY need a working domain if you're using ANY OpenID-related functionality on the public internet!!!
   If you do not have a domain on the public internet, but would like to experiment, you can get a free domain at dyndns.org -->
@@ -36,5 +44,6 @@ For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/licen
 
   <!-- When running a real server, this line should be deleted.  Writing to the console really kills performance -->
   <LogHandlerFactory WriteToConsole="true" />
+ 
 
 </ObjectCloudConfig>

@@ -57,6 +57,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CallHomeSchemaCreator.cs" />
     <Compile Include="DirectorySchemaCreator.cs" />
     <Compile Include="EventSchemaCreator.cs" />
     <Compile Include="NameValuePairsSchemaCreator.cs" />

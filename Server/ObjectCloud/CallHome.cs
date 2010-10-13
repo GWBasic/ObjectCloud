@@ -12,6 +12,7 @@ using System.Xml;
 
 using SignalHandller;
 
+using Common.Logging;
 using Spring.Context;
 using Spring.Context.Support;
 
@@ -25,8 +26,44 @@ namespace ObjectCloud
 {
     public static class CallHome
     {
+        private static ILog log = LogManager.GetLogger(typeof(CallHome));
+
         public static void StartCallHome(FileHandlerFactoryLocator fileHandlerFactoryLocator)
         {
+            if (null == fileHandlerFactoryLocator.CallHomeEndpoint)
+                return;
+
+            // Only call home when running on port 80
+            if (80 != fileHandlerFactoryLocator.WebServer.Port)
+                return;
+
+            FileHandlerFactoryLocator = fileHandlerFactoryLocator;
+
+            // Call home every hour
+            Timer = new Timer(CallHome, null, 0, 3600000);
+        }
+
+        private static FileHandlerFactoryLocator FileHandlerFactoryLocator;
+
+        private static Timer Timer;
+
+        private static void CallHome(object state)
+        {
+            HttpWebClient client = new HttpWebClient();
+
+            log.Info("Calling home to " + FileHandlerFactoryLocator.CallHomeEndpoint);
+
+            client.BeginPost(
+                FileHandlerFactoryLocator.CallHomeEndpoint,
+                delegate(HttpResponseHandler response)
+                {
+                    log.Info("Successfully called home to " + FileHandlerFactoryLocator.CallHomeEndpoint);
+                },
+                delegate(Exception e)
+                {
+                    log.Error("Exception when calling home to " + FileHandlerFactoryLocator.CallHomeEndpoint, e);
+                },
+                new KeyValuePair<string, string>("host", FileHandlerFactoryLocator.Hostname));
         }
     }
 }

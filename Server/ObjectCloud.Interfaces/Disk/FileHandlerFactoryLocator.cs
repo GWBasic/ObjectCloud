@@ -188,12 +188,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <summary>
         /// The hostname that this FileSystem is for.  Someday the server will need to support multiple hosts using appdomains.
         /// </summary>
-        public string Hostname
-        {
-            get { return _Hostname; }
-            set { _Hostname = value; }
-        }
-        private string _Hostname;
+        public string Hostname { get; set; }
 
         /// <summary>
         /// Returns the hostname with the port number, if applicable
@@ -255,5 +250,10 @@ namespace ObjectCloud.Interfaces.Disk
             }
         }
         private JSONSetReader _NoParticle = null;
+
+        /// <summary>
+        /// The server to use when calling home
+        /// </summary>
+        public string CallHomeEndpoint {get; set; }
     }
 }
