@@ -9,7 +9,7 @@ For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/licen
 	<FileSystem
     ConnectionString="./FileSystem"
     SyncronizeToDefaultFiles="true"
-    CallHomeEndpoint="http://objectcloud.kicks-ass.net/Stats/CallHomeTracker.cht?Method=CallHome"/>
+    CallHomeEndpoint="http://objectcloud.kicks-ass.net/Stats/CallHomeTracker?Method=CallHome"/>
   
   <!-- The CallHomeEndpoint is used so we can know how many ObjectCloud servers are currently running.  Every hour or so, the server
   POSTs its hostname to CallHomeEndpoint.  We then download /Shell/Version.json.  You can disable calling home by removing the above

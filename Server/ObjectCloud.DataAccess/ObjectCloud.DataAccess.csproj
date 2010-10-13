@@ -41,7 +41,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CallHome.cs" />
     <Compile Include="Directory.cs" />
     <Compile Include="Directory\File_Table.cs" />
     <Compile Include="NameValuePairs.cs" />

@@ -40,14 +40,14 @@ namespace ObjectCloud
             FileHandlerFactoryLocator = fileHandlerFactoryLocator;
 
             // Call home every hour
-            Timer = new Timer(CallHome, null, 0, 3600000);
+            Timer = new Timer(DoCallHome, null, 0, 3600000);
         }
 
         private static FileHandlerFactoryLocator FileHandlerFactoryLocator;
 
         private static Timer Timer;
 
-        private static void CallHome(object state)
+        private static void DoCallHome(object state)
         {
             HttpWebClient client = new HttpWebClient();
 

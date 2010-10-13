@@ -194,24 +194,26 @@ namespace ObjectCloud.CodeGenerator
             // call home database
             // **************************
 
-            mainFilename = baseDirectoryPrefix + Path.DirectorySeparatorChar + "CallHome.cs";
-            sqliteFilename = sqliteDirectoryPrefix + Path.DirectorySeparatorChar + "CallHome.cs";
+            string callHomeDirectoryPrefix = Path.GetFullPath(args[3]);
+
+            mainFilename = callHomeDirectoryPrefix + Path.DirectorySeparatorChar + "CallHome" + Path.DirectorySeparatorChar + "CallHome.cs";
+            sqliteFilename = callHomeDirectoryPrefix + Path.DirectorySeparatorChar + "CallHome" + Path.DirectorySeparatorChar + "CallHome_SQLite.cs";
 
             database = (new CallHomeSchemaCreator()).Create();
 
-            csharpGenerator = new CSharpGenerator(mainFilename, "ObjectCloud.DataAccess.CallHome", new ISubGenerator[] 
+            csharpGenerator = new CSharpGenerator(mainFilename, "ObjectCloud.CallHomePlugin.DataAccessBase", new ISubGenerator[] 
                 { 
-                    new ObjectCloud.ORM.DataAccess.Generator.EntityGenerator(database, "ObjectCloud.DataAccess.CallHome")
+                    new ObjectCloud.ORM.DataAccess.Generator.EntityGenerator(database, "ObjectCloud.CallHomePlugin.DataAccessBase")
                 });
 
             csharpGenerator.GenerateToFile();
 
-            csharpGenerator = new CSharpGenerator(sqliteFilename, "ObjectCloud.DataAccess.SQLite.CallHome", new ISubGenerator[] 
+            csharpGenerator = new CSharpGenerator(sqliteFilename, "ObjectCloud.CallHomePlugin.DataAccess", new ISubGenerator[] 
                 { 
-                    new ObjectCloud.ORM.DataAccess.Generator.SqLite.EmbeddedDatabaseCreatorCodeGenerator(schemaGenerator, database, "ObjectCloud.DataAccess.CallHome"),
-                    new ObjectCloud.ORM.DataAccess.Generator.SqLite.EntityGenerator(database, "ObjectCloud.DataAccess.CallHome")
+                    new ObjectCloud.ORM.DataAccess.Generator.SqLite.EmbeddedDatabaseCreatorCodeGenerator(schemaGenerator, database, "ObjectCloud.CallHomePlugin.DataAccessBase"),
+                    new ObjectCloud.ORM.DataAccess.Generator.SqLite.EntityGenerator(database, "ObjectCloud.CallHomePlugin.DataAccessBase")
                 },
-                "ObjectCloud.DataAccess.CallHome");
+                "ObjectCloud.CallHomePlugin.DataAccessBase");
 
             csharpGenerator.GenerateToFile();
         }

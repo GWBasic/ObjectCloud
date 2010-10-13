@@ -96,6 +96,6 @@
   </Target>
   -->
   <PropertyGroup>
-    <PostBuildEvent>$(TargetFileName) "$(SolutionDir)\ObjectCloud.DataAccess" "$(SolutionDir)\ObjectCloud.DataAccess.SQLite" "$(SolutionDir)\ObjectCloud.ORM.DataAccess.SQLite.Test"</PostBuildEvent>
+    <PostBuildEvent>$(TargetFileName) "$(SolutionDir)\ObjectCloud.DataAccess" "$(SolutionDir)\ObjectCloud.DataAccess.SQLite" "$(SolutionDir)\ObjectCloud.ORM.DataAccess.SQLite.Test" "$(SolutionDir)\ObjectCloud.CallHomePlugin"</PostBuildEvent>
   </PropertyGroup>
 </Project>

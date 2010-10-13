@@ -8,7 +8,7 @@ using System.Data;
 using System.Data.Common;
 using System.Text;
 
-namespace ObjectCloud.DataAccess.SQLite.CallHome
+namespace ObjectCloud.CallHomePlugin.DataAccess
 {
     public partial class DatabaseConnector
     {
