@@ -62,6 +62,10 @@ namespace ObjectCloud
                 delegate(Exception e)
                 {
                     log.Error("Exception when calling home to " + FileHandlerFactoryLocator.CallHomeEndpoint, e);
+				
+					// no-op for strict compiler
+					if (null == Timer)
+					{}
                 },
                 new KeyValuePair<string, string>("host", FileHandlerFactoryLocator.Hostname));
         }

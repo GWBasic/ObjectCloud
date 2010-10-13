@@ -39,6 +39,10 @@ namespace ObjectCloud.CallHomePlugin
 
         public override void Dump(string path, ID<IUserOrGroup, Guid> userId)
         {
+			// No-op for a strict compiler
+			if (null == ClearRunningObjectCloudInstanceInfoTimer)
+			{}
+			
             throw new NotImplementedException();
         }
 
