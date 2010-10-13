@@ -59,6 +59,8 @@ namespace ObjectCloud
                     using (IWebServer webServer = fileHandlerFactoryLocator.WebServer)
                     {
                         webServer.StartServer();
+
+                        CallHome.StartCallHome(fileHandlerFactoryLocator);
                         
 						object blockResult = Blocker.Block();
 					
