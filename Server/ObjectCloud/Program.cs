@@ -37,8 +37,8 @@ namespace ObjectCloud
                 {
                     string hostname = Dns.GetHostName();
                     IPHostEntry IPHost = Dns.GetHostEntry(hostname);
-					
-					List<string> hostnames = new List<string>();
+
+                    List<string> hostnames = new List<string>();
 
                     // When the hostname isn't specified, the current IP is defaulted to
                     // This is because the OpenID functionality needs stable hostnames in order to work.
@@ -46,14 +46,14 @@ namespace ObjectCloud
                     foreach (IPAddress address in IPHost.AddressList)
                         // For now, just grab the 1st IPv4 address...  I don't know how to handle IPv6
                         if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-							hostnames.Add(address.ToString());
-					
-					if (hostnames.Count > 0)
-					{
-						hostnames.Sort();
-						fileHandlerFactoryLocator.Hostname = hostnames[0];
+                            hostnames.Add(address.ToString());
+
+                    if (hostnames.Count > 0)
+                    {
+                        hostnames.Sort();
+                        fileHandlerFactoryLocator.Hostname = hostnames[0];
                         fileHandlerFactoryLocator.CallHomeEndpoint = null;
-					}
+                    }
                 }
 
                 if (0 == args.Length)
@@ -62,36 +62,24 @@ namespace ObjectCloud
                         webServer.StartServer();
 
                         CallHome.StartCallHome(fileHandlerFactoryLocator);
-                        
-						object blockResult = Blocker.Block();
-					
-						Console.WriteLine("Recieved " + blockResult.ToString());
 
-                        Thread forceExitThread = new Thread(delegate()
-                            {
-                                Thread.Sleep(3000);
-								System.Diagnostics.Process.GetCurrentProcess().Kill();
-                                	Environment.Exit(0);
-                            });
+                        object blockResult = Blocker.Block();
 
-                        forceExitThread.Name = "Forces the process to exit";
-                        forceExitThread.IsBackground = true;
-
-                        forceExitThread.Start();
+                        Console.WriteLine("Recieved " + blockResult.ToString());
                     }
                 else
                     switch (args[0])
                     {
-					    case ("GUI"):
-							{
-								System.Windows.Forms.Application.Run(new GUIForm(fileHandlerFactoryLocator));
+                        case ("GUI"):
+                            {
+                                System.Windows.Forms.Application.Run(new GUIForm(fileHandlerFactoryLocator));
 
                                 break;
-							}
+                            }
                         case ("dump"):
                             {
                                 // Key is the OC directory, value is the local destination
-                                Dictionary<string, string> toDump = new Dictionary<string,string>();
+                                Dictionary<string, string> toDump = new Dictionary<string, string>();
                                 for (int ctr = 1; ctr + 1 < args.Length; ctr = ctr + 2)
                                     toDump[args[ctr]] = args[ctr + 1];
 
@@ -169,35 +157,35 @@ namespace ObjectCloud
                                 break;
                             }
 
-						case ("restoresystem"):
-							{
-						        // Delete the contents of every system directory so that it's completely resored the next time ObjectCloud is loaded
-						
-						        IFileSystemResolver fileSystemResolver = fileHandlerFactoryLocator.FileSystemResolver;
-						        fileSystemResolver.Start();
-						
-								foreach (string dirNameToClean in new string[] {"Shell", "API", "Templates", "Tests", "Pages", "Docs", "Classes", "DefaultTemplate"})
-								{
-									IDirectoryHandler dirToClean = fileSystemResolver.ResolveFile(dirNameToClean).CastFileHandler<IDirectoryHandler>();
-							
-							        foreach (IFileContainer fileContainer in new List<IFileContainer>(dirToClean.Files))
-										try
-										{
-											Console.WriteLine("Deleting: " + fileContainer.FullPath);
-								
-											dirToClean.DeleteFile(
-									        	fileHandlerFactoryLocator.UserManagerHandler.Root,
-									            fileContainer.Filename);
-										}
-										catch (Exception e)
-										{
-											Console.WriteLine("Excpetion when deleting " + fileContainer.FullPath + "\n" + e.Message);
-										}
-								}
-							
-								break;
-		                    }
-				}
+                        case ("restoresystem"):
+                            {
+                                // Delete the contents of every system directory so that it's completely resored the next time ObjectCloud is loaded
+
+                                IFileSystemResolver fileSystemResolver = fileHandlerFactoryLocator.FileSystemResolver;
+                                fileSystemResolver.Start();
+
+                                foreach (string dirNameToClean in new string[] { "Shell", "API", "Templates", "Tests", "Pages", "Docs", "Classes", "DefaultTemplate" })
+                                {
+                                    IDirectoryHandler dirToClean = fileSystemResolver.ResolveFile(dirNameToClean).CastFileHandler<IDirectoryHandler>();
+
+                                    foreach (IFileContainer fileContainer in new List<IFileContainer>(dirToClean.Files))
+                                        try
+                                        {
+                                            Console.WriteLine("Deleting: " + fileContainer.FullPath);
+
+                                            dirToClean.DeleteFile(
+                                                fileHandlerFactoryLocator.UserManagerHandler.Root,
+                                                fileContainer.Filename);
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            Console.WriteLine("Excpetion when deleting " + fileContainer.FullPath + "\n" + e.Message);
+                                        }
+                                }
+
+                                break;
+                            }
+                    }
             }
             catch (Exception e)
             {
@@ -206,6 +194,23 @@ namespace ObjectCloud
 
                 if (System.Diagnostics.Debugger.IsAttached)
                     System.Diagnostics.Debugger.Break();
+            }
+            finally
+            {
+                // End all worker threads naturally
+                DelegateQueue.StopAll();
+
+                Thread forceExitThread = new Thread(delegate()
+                {
+                    Thread.Sleep(9000);
+                    System.Diagnostics.Process.GetCurrentProcess().Kill();
+                    Environment.Exit(0);
+                });
+
+                forceExitThread.Name = "Forces the process to exit";
+                forceExitThread.IsBackground = true;
+
+                forceExitThread.Start();
             }
         }
     }

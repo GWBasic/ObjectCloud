@@ -47,6 +47,29 @@ namespace ObjectCloud.Common.Threading
             Start();
         }
 
+        private static LockFreeQueue<WeakReference> RunningDelegateQueues = new LockFreeQueue<WeakReference>();
+
+        /// <summary>
+        /// Stops all delegate queue threads.  Call this to end a program naturally
+        /// </summary>
+        public static void StopAll()
+        {
+            WeakReference wr;
+            while (RunningDelegateQueues.Dequeue(out wr))
+                ThreadPool.QueueUserWorkItem(delegate(object state)
+                {
+                    try
+                    {
+                        DelegateQueue dq = (DelegateQueue)state;
+
+                        if (null != dq)
+                            dq.Stop();
+                    }
+                    // Swallow all exceptions for now
+                    catch { }
+                }, wr.Target);
+        }
+
         private void Start()
         {
             // Compare-exchange used in case multiple threads try to start the sub-threads
@@ -54,8 +77,6 @@ namespace ObjectCloud.Common.Threading
             {
                 for (int ctr = 0; ctr < NumThreads; ctr++)
                 {
-                    KeepRunning = new Wrapped<bool>(true);
-
                     Thread thread = new Thread(Work);
 
                     if (NumThreads == 1)
@@ -69,22 +90,19 @@ namespace ObjectCloud.Common.Threading
                 }
 
                 GC.ReRegisterForFinalize(this);
+
+                RunningDelegateQueues.Enqueue(new WeakReference(this));
             }
         }
 
         void QueuedDelegates_ItemAddedToEmptyQueue(LockFreeQueue<DelegateQueue.QueuedDelegate> sender, EventArgs e)
         {
-            lock (pulser)
+            lock (Pulser)
                 if (NumSuspendedThreads > 0)
-                    Monitor.Pulse(pulser);
+                    Monitor.Pulse(Pulser);
         }
 
         LockFreeQueue_WithCount<QueuedDelegate> QueuedDelegates = new LockFreeQueue_WithCount<QueuedDelegate>();
-
-        /// <summary>
-        /// This is wrapped so that, if the delegate queue is stopped, old threads can see false but new threads see a different value
-        /// </summary>
-        private Wrapped<bool> KeepRunning;
 
         private string Name;
 
@@ -130,9 +148,9 @@ namespace ObjectCloud.Common.Threading
             QueuedDelegates.Enqueue(queuedDelegate);
 
             if (NumSuspendedThreads > 0)
-                lock (pulser)
+                lock (Pulser)
                     if (NumSuspendedThreads > 0)
-                        Monitor.Pulse(pulser);
+                        Monitor.Pulse(Pulser);
 
             if (QueuedDelegates.Count > BusyThreshold)
                 if (0 == Interlocked.CompareExchange(ref BeganBusy, 1, 0))
@@ -152,7 +170,7 @@ namespace ObjectCloud.Common.Threading
         /// <summary>
         /// Used to indicate new delegates when a thread is running
         /// </summary>
-        private object pulser = new object();
+        private object Pulser = new object();
 
         /// <summary>
         /// This is used to communicate when the delegate queue is suspended
@@ -165,20 +183,18 @@ namespace ObjectCloud.Common.Threading
         void Work()
         {
             // Local instances used in case the delegate queue is stopped
-            Wrapped<bool> keepRunning = KeepRunning;
             LockFreeQueue_WithCount<QueuedDelegate> queuedDelegates = QueuedDelegates;
+            Thread[] threads = Threads;
 
-            while (keepRunning.Value)
+            while (threads == Threads)
             {
-                //thread.IsBackground = true;
-
                 // Wait until a new request comes in
                 // There's an automatic free to ensure that a request isn't left unfulfilled
                 // It's a random time period for the case when there's many threads handling the queue
-                lock (pulser)
+                lock (Pulser)
                 {
                     Interlocked.Increment(ref NumSuspendedThreads);
-                    Monitor.Wait(pulser, SRandom.Next(150000, 200000));
+                    Monitor.Wait(Pulser, SRandom.Next(150000, 200000));
                     Interlocked.Decrement(ref NumSuspendedThreads);
                 }
 
@@ -217,13 +233,14 @@ namespace ObjectCloud.Common.Threading
             if (null != threads)
                 if (threads == Interlocked.CompareExchange<Thread[]>(ref Threads, null, threads))
                 {
-                    KeepRunning.Value = false;
-
-                    lock (pulser)
-                        Monitor.PulseAll(pulser);
-
                     foreach (Thread thread in threads)
-                        thread.Join();
+                    {
+                        do
+                            lock (Pulser)
+                                Monitor.Pulse(Pulser);
+
+                        while (!thread.Join(250));
+                    }
 
                     GC.SuppressFinalize(this);
                 }
