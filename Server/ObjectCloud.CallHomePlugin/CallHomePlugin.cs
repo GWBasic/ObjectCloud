@@ -22,14 +22,14 @@ namespace ObjectCloud.CallHomePlugin
     {
         public override void Initialize()
         {
+            FileHandlerFactoryLocator.FileHandlerFactories["callhome"] = CallHomeFileHandlerFactory;
+            FileHandlerFactoryLocator.WebHandlerClasses["callhome"] = typeof(CallHomeWebHandler);
+
             FileHandlerFactoryLocator.RootDirectoryCreator = RootDirectoryCreator;
         }
 
-        public IRootDirectoryCreator RootDirectoryCreator
-        {
-            get { return _RootDirectoryCreator; }
-            set { _RootDirectoryCreator = value; }
-        }
-        private IRootDirectoryCreator _RootDirectoryCreator;
+        public IRootDirectoryCreator RootDirectoryCreator { get; set; }
+
+        public CallHomeFileHandlerFactory CallHomeFileHandlerFactory { get; set; }
     }
 }

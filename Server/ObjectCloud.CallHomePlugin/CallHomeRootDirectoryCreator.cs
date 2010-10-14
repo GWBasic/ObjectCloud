@@ -47,7 +47,7 @@ namespace ObjectCloud.CallHomePlugin
                 statsDirectory.CreateFile(
                     "CallHomeTracker",
                     "callhome",
-                    FileHandlerFactoryLocator.UserFactory.RootUser.Id).FileContainer.CastFileHandler<IDirectoryHandler>();
+                    FileHandlerFactoryLocator.UserFactory.RootUser.Id);
 
                 statsDirectory.SetPermission(
                     null,

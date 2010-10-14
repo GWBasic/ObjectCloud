@@ -120,6 +120,7 @@
   <ItemGroup>
     <Content Include="Plugin.CallHomePlugin.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
   </ItemGroup>
   <ItemGroup>

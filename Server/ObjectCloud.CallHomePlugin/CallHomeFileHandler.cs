@@ -118,9 +118,13 @@ namespace ObjectCloud.CallHomePlugin
         {
             IEnumerable<string> toReturn = RunningObjectCloudInstances;
 
-            if (null == RunningObjectCloudInstances)
+            if (null == toReturn)
                 lock (RunningObjectCloudInstancesKey)
-                    if (null == RunningObjectCloudInstances)
+                {
+                    // double-check in case other thread made assignment
+                    toReturn = RunningObjectCloudInstances;
+
+                    if (null == toReturn)
                     {
                         List<string> toReturnBuilder = new List<string>();
 
@@ -130,9 +134,11 @@ namespace ObjectCloud.CallHomePlugin
                             toReturnBuilder.Add(server.Hostname);
                         }
 
+                        toReturnBuilder.Sort();
                         toReturn = new ReadOnlyCollection<string>(toReturnBuilder);
                         RunningObjectCloudInstances = toReturn;
                     }
+                }
 
             return toReturn;
         }
