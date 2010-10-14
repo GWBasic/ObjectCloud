@@ -1,0 +1,37 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" xmlns:af="appfeeds_templating">
+   <oc:inserthead>
+
+      <!-- You'll probably want to change the title -->
+
+      <title>CHANGE THE ROOT PASSWORD NOW!!!</title>
+
+   </oc:inserthead>
+
+   <!-- You'll probably want to delete everything between here... -->
+
+   <div class="title">CHANGE THE ROOT PASSWORD NOW!!!</div>
+   <p style="font-size: 4em;">The default root password is "root," and you should change this very soon.</p>
+
+   <oc:if>
+      <oc:canadminister filename="/Users/root.user">
+         <oc:component oc:src="/DefaultTemplate/usermanager.oc" Target="/Users/root.user" />
+      </oc:canadminister>
+      <oc:else>
+         <p>To change the password, log in as root.</p>
+         <oc:component oc:src="/DefaultTemplate/login.oc" />
+      </oc:else>
+   </oc:if>
+
+   <p>After you change the root password, feel free to:
+      <ul>
+         <li><a href="/index.oc?Action=Edit">Edit this page</a></li>
+         <li><a href="/Docs/about.page">Visit the documentation</a></li>
+         <li><a href="/?Action=View">Explore ObjectCloud's filesystem</a></li>
+      </ul>
+   </p>
+
+   <!-- ... and here, but keep the tag below, because that's what shows all of the notifications! -->
+
+   <oc:component oc:src="/DefaultTemplate/particle.oc" />
+
+</oc:componentdef>

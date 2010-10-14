@@ -97,7 +97,7 @@ function doDirectory(directory, filetypes, dir)
          return false;
       });
 
-      var newTitle = '<a href="/">http://' + server + '</a>&#160;';
+      var newTitle = '<a href="/?Action=View">http://' + server + '</a>&#160;';
  
       // Display links to all parent directories
       var parentDirs = directory.split("/");
@@ -110,7 +110,7 @@ function doDirectory(directory, filetypes, dir)
          if (parentDir.length > 0)
          {
             pathBuilder = pathBuilder + parentDir + "/";
-            newTitle += '/ <a href="/' + pathBuilder + '">' + parentDir + '</a> ';
+            newTitle += '/ <a href="/' + pathBuilder + '?Action=View">' + parentDir + '</a> ';
          }
       }
 
@@ -148,10 +148,15 @@ function displayFiles(directory, files, dir)
       table.append(row);
 
       var filenameCell = $('<td />');
-      var filenameLink = $('<a style="font-size: 1.5em" href="' + directory + file.Filename + '">' + file.Filename + '</a>');
+      var filenameLink = $('<a style="font-size: 1.5em">' + file.Filename + '</a>');
 
       if (file.TypeId != "directory")
-         filenameLink.attr('target', '_blank'); 
+      {
+         filenameLink.attr('target', '_blank');
+         filenameLink.attr('href', directory + file.Filename);
+      }
+      else
+         filenameLink.attr('href', directory + file.Filename + '?Action=View');
 
       filenameCell.append(filenameLink);
 

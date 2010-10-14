@@ -205,16 +205,16 @@ namespace ObjectCloud.Disk.Implementation
                 true,
                 false);
 
-            // Create index.wchtml
+            // Create index.oc
             rootDirectoryHandler.RestoreFile(
-                "index.page",
+                "index.oc",
                 "text",
-                "." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "index.page",
+                "." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "index.oc",
                 rootUser.Id);
 
             rootDirectoryHandler.SetPermission(
                 null,
-                "index.page",
+                "index.oc",
                 new ID<IUserOrGroup, Guid>[] { everybody.Id },
                 FilePermissionEnum.Read,
                 true,
@@ -235,7 +235,7 @@ namespace ObjectCloud.Disk.Implementation
                 true,
                 false);
 
-            rootDirectoryHandler.IndexFile = "index.page";
+            rootDirectoryHandler.IndexFile = "index.oc";
 
             // "/System/SessionManager"
             IDirectoryHandler SystemDirectory = (IDirectoryHandler)rootDirectoryHandler.CreateFile(
@@ -352,8 +352,8 @@ namespace ObjectCloud.Disk.Implementation
                 true);
 
             // Do not syncronize the index file; this is for the user to update.  It's just a web component anyway
-            //IFileHandler indexFile = rootDirectoryHandler.OpenFile("index.page").FileHandler;
-            //indexFile.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "index.page");
+            //IFileHandler indexFile = rootDirectoryHandler.OpenFile("index.oc").FileHandler;
+            //indexFile.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "index.oc");
 
             DoUpgrades(rootDirectoryHandler);
         }
