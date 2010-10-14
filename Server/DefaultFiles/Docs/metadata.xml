@@ -91,6 +91,10 @@
 			SendNotifications="False" />
 	</File>
 	<File
+		Name="contact.page"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
 		Name="create blog.page"
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
@@ -120,6 +124,10 @@
 			Inherit="False"
 			SendNotifications="False" />
 	</File>
+	<File
+		Name="developer.page"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 	<File
 		Name="faq.page"
 		TypeId="text"
@@ -347,6 +355,10 @@
 			SendNotifications="False" />
 	</File>
 	<File
+		Name="tryit.page"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
 		Name="walkthrough"
 		TypeId="directory"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
@@ -438,21 +450,6 @@
 	</File>
 	<File
 		Name="what_is_a_webOS.page"
-		TypeId="text"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
-		<Permission
-			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
-			Level="Administer"
-			Inherit="False"
-			SendNotifications="False" />
-		<Permission
-			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
-			Level="Administer"
-			Inherit="False"
-			SendNotifications="False" />
-	</File>
-	<File
-		Name="why.page"
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission

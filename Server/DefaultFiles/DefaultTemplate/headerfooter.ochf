@@ -47,11 +47,10 @@
 
          <div class="staticmenu">
             <!-- Place static links here -->
-            <a href="/Docs/about.page">Docs</a> - 
-            <a href="http://appfeeds.com">Contact</a> - 
-            <a href="/Docs/about.page">Docs</a> - 
-            <a href="http://appfeeds.com">Contact</a> - 
-            <a href="/Docs/about.page">Docs</a>
+            <a href="/Docs/about.page">About</a> - 
+            <a href="/Docs/tryit.page">Try it out!</a> - 
+            <a href="/Docs/developer.page">Developer</a> - 
+            <a href="/Docs/contact.page">Contact</a>
          </div>
       </div>
       <div style="clear: both" />

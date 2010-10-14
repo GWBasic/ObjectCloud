@@ -257,25 +257,29 @@ div.navbar
 	
 	}
 	
-#createbtn{
-margin-top: 10px;
-margin-bottom:5px;
-border: 0px;
+#createbtn
+{
+   margin-top: 10px;
+   margin-bottom:5px;
+   border: 0px;
 }
 
 	
-#updatebtn{
-	float: right;
-	}
+#updatebtn
+{
+   float: right;
+}
 	
-#disabled {
-	color:#999;
+#disabled 
+{
+   color:#999;
 }
 
-input {
-	padding:0px;
-	font-size: 11px;
-	}
+input
+{
+   padding:0px;
+   font-size: 11px;
+}
 	
 hr {
 	border: 1px solid #bfbfbf;	
@@ -350,7 +354,7 @@ div.contents
 {
    color: black;
    background: white;
-   margin: 1em 0 0 11em;
+   margin: 1em 5px 0 11em;
 }
 
 div.objectbar
@@ -361,25 +365,43 @@ div.objectbar
 h1
 {
    font-size: 1.5em;
-   font-weight: bold; 
+   font-weight: bold;
+   padding: 30px 0px 3px 0px;
+   margin: 0px;
+   color: #435b77;
 }
 
 h2
 {
    font-size: 1.25em;
    font-weight: bold; 
+   padding: 0px 0px 3px 20px;
+   margin: 0px;
+   color: #435b77;
 }
 
 h3
 {
    font-size: 1.1em;
    font-weight: bold; 
+   padding: 0px 0px 3px 20px;
+   margin: 0px;
+   color: #435b77;
 }
 
 h4
 {
    font-size: 1em;
    font-weight: bold; 
+   padding: 0px 0px 3px 20px;
+   margin: 0px;
+   color: #435b77;
+}
+
+div.contents p
+{
+   padding: 0px 0px 10px 20px;
+   margin: 0px;
 }
 
 div.title
@@ -387,6 +409,7 @@ div.title
    font-size: 2em;
    text-align: center;
    font-weight: bold; 
+   color: #435b77;
 }
 
 .title a:link
