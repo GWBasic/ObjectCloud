@@ -18,7 +18,8 @@
             </script>
          </oc:isadministrator>
       </oc:if>
-      <div class="header"> 
+      <div class="header">
+         <div class="maxwidth">
 <pre class="binarycloud"><a href="/">
                       0011 000
                     11000 11000
@@ -29,38 +30,43 @@
   111 00  000111 11 11         000 001100 101
    1111    0000   000         11111 00011101
                                  110011  00</a></pre>
-         <div class="logo">
-            <div class="logotitle">
-               <a href="/">ObjectCloud</a>
+            <div class="logo">
+               <div class="logotitle">
+                  <a href="/">ObjectCloud</a>
+               </div>
+               <div class="logoslogan">
+                  <a href="/">Own your data</a>
+               </div>
             </div>
-            <div class="logoslogan">
-               <a href="/">Own your data</a>
-            </div>
-         </div>
-         <div id="account">
-            <oc:if>
-               <oc:isloggedin>
-                  <div style="float: left"><img src="[_User.Identity_]?Method=GetAvatar&amp;maxHeight=100" /></div>
-               </oc:isloggedin>
-            </oc:if>
-            <div id="accountblock" style="float: right">
-               <oc:component oc:src="login.occ" />
+            <div id="account">
+               <div id="accountblock" style="float: right">
+                  <oc:component oc:src="login.occ" />
+               </div>
             </div>
          </div>
-      </div> 
-      <div style="clear: both"></div>
+
+         <div class="staticmenu">
+            <!-- Place static links here -->
+            <a href="/Docs/about.page">Docs</a> - 
+            <a href="http://appfeeds.com">Contact</a> - 
+            <a href="/Docs/about.page">Docs</a> - 
+            <a href="http://appfeeds.com">Contact</a> - 
+            <a href="/Docs/about.page">Docs</a>
+         </div>
+      </div>
+      <div style="clear: both" />
 
       <oc:component oc:src="navbar.oc" />
 
+      <!-- Don't delete this tag, this is where the wrapped content goes -->
       <div class="contents"><oc:component /></div>
 
-      <div style="clear: both"></div>
-
-      <hr />
-      <div class="footer">
+      <div class="footer maxwidth">
+         <hr />
          <a href="http://objectcloud.com"><img src="/Pages/powered-by-banner.png" alt="Powered by ObjectCloud" /></a>
-         <oc:jsontemplate oc:url="/Shell/version.json" Method="ReadAll">
-            <div>
+         <p>ObjectCloud is copyright 2009, 2010, <a href="http://andrewrondeau.com">Andrew Rondeau</a> and is released under an open-source license.  For more information, view <a href="/Docs/license.oc">/Docs/license.oc</a></p>
+         <p>
+            <oc:jsontemplate oc:url="/Shell/version.json" Method="ReadAll">
                   ObjectCloud version [_Major_].[_Minor_], [_State_]
 
                   <oc:if>
@@ -77,9 +83,8 @@
                          <em>WARNING!  THIS IS AN UNSTABLE RELEASE</em>
                      </oc:else>
                   </oc:if>
-            </div>
-         ObjectCloud is copyright 2009, 2010, <a href="http://andrewrondeau.com">Andrew Rondeau</a> and is released under an open-source license.  For more information, view <a href="/Docs/license.oc">/Docs/license.oc</a>
-         </oc:jsontemplate>
+            </oc:jsontemplate>
+         </p>
       </div>
    </body>
 </html>

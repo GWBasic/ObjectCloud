@@ -94,4 +94,8 @@
 			Inherit="False"
 			SendNotifications="False" />
 	</File>
+	<File
+		Name="powered-by-banner-small.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 </Directory>

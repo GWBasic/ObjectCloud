@@ -45,9 +45,10 @@ th
 .binarycloud
 {
    float: left;
-   margin-right: -20em;
+   margin-right: -30em;
    font-size: 0.5em;
    color: #ddd;
+   padding-left: 7em;
 }
 
 .binarycloud a:link
@@ -76,6 +77,7 @@ th
 {
    float: left;
    font-family: courier-new, courier;
+   margin-top: 20px;
 }
 
 .logotitle
@@ -95,6 +97,12 @@ th
    color: #fff;
 }
 
+.logo a:hover
+{
+   color: #ffffff;
+   background-color: transparent;
+}
+
 .logoslogan
 {
    margin-left: 10em;
@@ -112,23 +120,19 @@ th
    background-position:top;
 }
 
-.header a:hover
+.maxwidth
 {
-   color: #ffffff;
-   background-color: #4c637d;
+   max-width: 1000px;
 }
-
-#headerlogofloat {
-	border:0px;
-	float: left;
-}
-
 
 #account 
 {
    float: right;
    margin-right: 20px;
-   margin-top: 10px;
+   margin-top: 20px;
+   background: #99c7fb;
+   font-size: 0.75em;
+   text-align: right
 }
 
 #accountblock a {
@@ -136,33 +140,64 @@ th
    color:#fff;
 }
 
-#accountblock img {
-   border: 0px;
+#accountblock a:hover
+{
+   color: #ffffff;
+   background-color: #4c637d;
 }
+
+div.staticmenu
+{
+   position: absolute;
+   top: 70px;
+   left: 500px;
+   font-size: 1.5em;
+   background: #99c7fb;
+}
+
+.staticmenu a:link
+{
+   text-decoration:none;
+   color: #fff;
+}
+
+.staticmenu a:visited
+{
+   text-decoration:none;
+   color: #fff;
+}
+
+.staticmenu a:hover
+{ 
+   color: #ffffff;
+   background-color: #99c7fb;
+   text-decoration: none;
+}
+
+.staticmenu a:active
+{ 
+   color: #ffffff;
+   background-color: #000000;
+   text-decoration: none;
+}
+
 
 /* Start of Body Content */
 
-.contents 
+div.contents 
 {
    max-width: 800px;
+   border: 1px solid #4c637d;
+   padding: 5px;
 }
 
 /* Start of Menu Content */
-p.navbar 
-{
-   padding: 5px;
-   font-size:13px;
-   font-weight:bold;
-   line-height:9px;
-}
-
 div.navbar
 {
    width: 155px;
-   text-align:right;
    float: left;
    background-color: #fff;
-   padding-right: 5px;
+   padding-left: 5px;
 }
 
 .navbar a:link
@@ -197,8 +232,16 @@ div.navbar
    font-size: 0.6em;
 }
 
+.navbarimage
+{
+   float: left;
+   margin-right: 3px;
+}
 
-
+.navbaruserlinks
+{
+   font-size: 0.75em;
+}
 	
 #hrbar {
 
@@ -268,6 +311,12 @@ div.footer
    margin-top:20px;
    text-align:center;
    width: 100%;
+   clear: both;
+}
+
+img.footer
+{
+   border-style: none;
 }
 	
 table

@@ -5,13 +5,7 @@
 </oc:inserthead>
 
    <oc:if>
-     <oc:can filename="/Users/UserDB" namedpermission="CreateUser">
-        <a href="/DefaultTemplate/createaccount.oc">Create Account</a>
-     </oc:can>
-   </oc:if>
-   <oc:if>
       <oc:isloggedin>
-         Welcome <a href="[_User.Identity_]">[_User.Name_]</a><br />
          Remember me <input class="Login_KeepAlive" type="checkbox" />
          <span class="Login_MaxAgeSpan">for <input class="Login_MaxAge" type="text" size="5" /> days</span>.<br />
          <a class="Login_logoutButton" href="">Logout</a> -

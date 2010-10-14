@@ -58,14 +58,7 @@ $(document).ready(function()
       {
          modal:true,
          position:'top',
-         title: 'Login?',
-         buttons:
-         {
-            Cancel: function()
-            {
-               dialog.dialog('close');
-            }
-         }
+         title: 'Login?'
       });
 
       return false;

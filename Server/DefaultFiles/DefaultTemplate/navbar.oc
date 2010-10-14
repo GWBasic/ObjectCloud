@@ -12,25 +12,27 @@
    10000
 </pre>
       <oc:if>
-         <oc:islocal>
-            <oc:if>
-               <oc:isloggedin>
-                  <p><a href="/Users/[_User.Name_]">Files</a></p>
-                  <p><a href="[_User.Identity_]">Profile</a></p>
-                  <p><a href="/DefaultTemplate/usermanager.oc?Target=/Users/[_User.Name_].user">Account</a></p>
-               </oc:isloggedin>
-            </oc:if>
-         </oc:islocal>
-      </oc:if>
-
-      <oc:if>
          <oc:isloggedin>
+            <div class="navbarimage">
+               <a href="[_User.Identity_]">
+                  <img src="[_User.Identity_]?Method=GetAvatar&amp;maxWidth=50" />
+               </a>
+            </div>
+            <span class="navbaruserlinks">
+               <a href="[_User.Identity_]">
+                  [_User.Name_] (Profile)
+               </a>
+               <a href="/DefaultTemplate/usermanager.oc?Target=/Users/[_User.Name_].user">Account</a>
+            </span>
+            <hr style="clear: both" />
+            <oc:if>
+               <oc:islocal>
+                  <p><a href="/Users/[_User.Name_]">Files</a></p>
+               </oc:islocal>
+            </oc:if>
             <p><a href="/Shell/UserManagers/GroupManager.wchtml">Groups</a></p>
          </oc:isloggedin>
       </oc:if>
-
-      <p><a href="/Shell/Developer.oc">Developer Controls</a></p>
-
 
 <pre class="navbinarycloud">
                00
@@ -46,6 +48,7 @@
     1  11111 0
      00110
 </pre>
+      <p><a href="/Shell/Developer.oc">Developer Controls</a></p>
    </div>
 
 </oc:componentdef>
