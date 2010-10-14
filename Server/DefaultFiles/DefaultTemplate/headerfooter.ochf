@@ -18,36 +18,37 @@
             </script>
          </oc:isadministrator>
       </oc:if>
-      <div id="header"> 
-<div class="binarycloud"><a href="/">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;0011&#160;000<br/>
-&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;11000&#160;11000<br/>
-&#160;&#160;&#160;0010&#160;&#160;&#160;&#160;&#160;&#160;0110&#160;&#160;&#160;&#160;&#160;&#160;0000&#160;11&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;010<br/>
-&#160;&#160;001011&#160;&#160;&#160;11100011&#160;10&#160;&#160;&#160;1110&#160;&#160;&#160;000&#160;&#160;11111&#160;11<br/>
-&#160;1&#160;11001110000&#160;&#160;&#160;111010&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;1110&#160;0000&#160;00001<br/>
-&#160;0001110011001111000000&#160;&#160;&#160;&#160;&#160;&#160;000&#160;00111&#160;1001&#160;00<br/>
-&#160;&#160;111&#160;00&#160;&#160;000111&#160;11&#160;11&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;000&#160;001100&#160;101<br/>
-&#160;&#160;&#160;1111&#160;&#160;&#160;&#160;0000&#160;&#160;&#160;000&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;11111&#160;00011101<br/>
-&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;110011&#160;&#160;00</a></div>
-      <div class="logo">
-         <div class="logotitle">
-            <a href="/">ObjectCloud</a>
+      <div class="header"> 
+<pre class="binarycloud"><a href="/">
+                      0011 000
+                    11000 11000
+   0010      0110      0000 11        010
+  001011   11100011 10   1110   000  11111 11
+ 1 11001110000   111010        1110 0000 00001
+ 0001110011001111000000      000 00111 1001 00
+  111 00  000111 11 11         000 001100 101
+   1111    0000   000         11111 00011101
+                                 110011  00</a></pre>
+         <div class="logo">
+            <div class="logotitle">
+               <a href="/">ObjectCloud</a>
+            </div>
+            <div class="logoslogan">
+               <a href="/">Own your data</a>
+            </div>
          </div>
-         <div class="logoslogan">
-            <a href="/">Own your data</a>
+         <div id="account">
+            <oc:if>
+               <oc:isloggedin>
+                  <div style="float: left"><img src="[_User.Identity_]?Method=GetAvatar&amp;maxHeight=100" /></div>
+               </oc:isloggedin>
+            </oc:if>
+            <div id="accountblock" style="float: right">
+               <oc:component oc:src="login.occ" />
+            </div>
          </div>
-      </div>
-      <div id="account"> 
-         <oc:if>
-            <oc:isloggedin>
-               <div style="float: left"><img src="[_User.Identity_]?Method=GetAvatar&amp;maxHeight=100" /></div>
-            </oc:isloggedin>
-         </oc:if>
-         <div id="accountblock" style="float: right">
-            <oc:component oc:src="login.occ" />
-         </div>
-      </div>
-      <div style="clear: both"></div>
       </div> 
+      <div style="clear: both"></div>
 
       <oc:component oc:src="navbar.oc" />
 
@@ -55,6 +56,7 @@
 
       <div style="clear: both"></div>
 
+      <hr />
       <div class="footer">
          <a href="http://objectcloud.com"><img src="/Pages/powered-by-banner.png" alt="Powered by ObjectCloud" /></a>
          <oc:jsontemplate oc:url="/Shell/version.json" Method="ReadAll">

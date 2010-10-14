@@ -5,29 +5,28 @@ body
 { 
    margin: 0 auto;
    font-family:Arial, Helvetica, sans-serif;
-   //background: #ddf;
 }
 
 a:link
 { 
-   color: #4444aa;
+   color: #5e728c;
 }
 
 a:visited
 { 
-   color: #444477;
+   color: #364150;
 }
 
 a:hover
 {
-   color: #9999FF;
-   background-color: #444477;
+   color: #ffffff;
+   background-color: #99c7fb;
 }
 
 a:active
 {
-   color: #9999FF;
-   background-color: #444477;
+   color: #ffffff;
+   background-color: #000000;
 }
 
 
@@ -54,7 +53,7 @@ th
 .binarycloud a:link
 {
    color: #ddd;
-   font-family: courier;
+   font-family: courier-new, courier;
    text-decoration:none;
 }
 
@@ -76,7 +75,7 @@ th
 .logo
 {
    float: left;
-   font-family: courier;
+   font-family: courier-new, courier;
 }
 
 .logotitle
@@ -96,24 +95,27 @@ th
    color: #fff;
 }
 
-.logo a:hover
-{
-   text-decoration:none;
-   color: #fff;
-   background: transparent;
-}
-
 .logoslogan
 {
    margin-left: 10em;
 }
 
-#header 
+.header 
 {
    text-align: left;
    width: 100%;
+   height: 120px;
    color: #fff;
-   background: #99f;
+   background: #99c7fb;
+   background-image:url(/DefaultTemplate/header.png?BrowserCache=1);
+   background-repeat:repeat-x;
+   background-position:top;
+}
+
+.header a:hover
+{
+   color: #ffffff;
+   background-color: #4c637d;
 }
 
 #headerlogofloat {
@@ -122,10 +124,12 @@ th
 }
 
 
-#account {
+#account 
+{
    float: right;
-   }
-
+   margin-right: 20px;
+   margin-top: 10px;
+}
 
 #accountblock a {
 
@@ -143,69 +147,55 @@ th
    max-width: 800px;
 }
 
-.contents a:hover
-{
-   color: #ffffff;
-   background-color: #4444aa;
-}
-
-.contents a:active
-{
-   color: #000000;
-   background-color: #999999;
-}
-
 /* Start of Menu Content */
-p.navbar {
-
-	padding: 5px;
-	color:#4f4f4f;
-	font-size:13px;
-	font-weight:bold;
-	text-align:left;
-	margin: 0px;
-	line-height:9px;
-	
-	}
+p.navbar 
+{
+   padding: 5px;
+   font-size:13px;
+   font-weight:bold;
+   line-height:9px;
+}
 
 div.navbar
 {
-   background: #6666aa;
-	width: 155px;
-	border: 1px solid #979797;
-	text-align:left;
-	float: left;
+   width: 155px;
+   text-align:right;
+   float: left;
+   background-color: #fff;
+   padding-right: 5px;
 }
 
 .navbar a:link
 { 
-   color: #eeeeff;
-   background: #333377;
    text-decoration: none;
 }
 
 .navbar a:visited
 { 
-   color: #eeeeff;
-   background: #333377;
+   color: #5e728c;
    text-decoration: none;
 }
 
 .navbar a:hover
 { 
-   color: #ccccee;
-   background-color: #222233;
+   color: #ffffff;
+   background-color: #99c7fb;
    text-decoration: none;
 }
 
 .navbar a:active
 { 
-   background-color: #ccccee;
-   color: #222233;
+   color: #ffffff;
+   background-color: #000000;
    text-decoration: none;
 }
 
-
+.navbinarycloud
+{
+   text-align: left;
+   color: #99c7fb;
+   font-size: 0.6em;
+}
 
 
 
@@ -230,36 +220,6 @@ margin-bottom:5px;
 border: 0px;
 }
 
-/* Start of Right-Menu Content */
-
-#rightmenu {
-	
-	float: right;
-	width: 185px;
-	border: 1px solid #979797;
-	color: black;
-	font-size:12px;
-	font-weight:bold;
-	margin-top: 8px;
-	text-align:left;
-	
-	}
-	
-#rightmenu select {
-	width: 130px;
-	
-	
-	}
-	
-
-	
-#rightmenu p{
-
-	line-height: 20px;
-	margin: 0px;
-	padding: 10px;
-	
-	}
 	
 #updatebtn{
 	float: right;
@@ -281,15 +241,6 @@ hr {
 	
 	}
 	
-#rightmenu a{
-	color:#000;
-	text-decoration:none;
-	}
-	
-#rightmenu a:hover{
-	text-decoration:underline;
-	}
-	
 #sort {
 	
 	margin-bottom: 5px;
@@ -309,29 +260,16 @@ hr {
 	
 	/* Start of Footer Content */
 	
-div.footer{
-   background: #6666aa;
-	float: left;
-	margin-left: 120px;
-	color: #ffffff;
-	font-size:10px;
-	line-height:34px;
-	border: 1px solid #979797;
-	margin-top:20px;
-      	text-align:center;
-
-	}
+div.footer
+{
+   float: left;
+   font-size:10px;
+   line-height:34px;
+   margin-top:20px;
+   text-align:center;
+   width: 100%;
+}
 	
-a.footer {
-	color: #787878;	
-	
-	}	
-	
-a.footer:hover{
-	color: #535353;	
-	
-	}	
-
 table
 {
    color: #000000;

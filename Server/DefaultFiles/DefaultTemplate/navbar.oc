@@ -1,33 +1,51 @@
 <oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
-<oc:inserthead>
-   <oc:script src="/API/jquery.js" />
-</oc:inserthead>
 
-         <div class="navbar">
+   <div class="navbar">
 
+<pre class="navbinarycloud">
+   11
+ 00 11 00
+  111 00
+ 00 11111
+   1 000 1
+ 011 0 111
+   10000
+</pre>
+      <oc:if>
+         <oc:islocal>
             <oc:if>
-               <oc:islocal>
-                 <oc:if>
-                    <oc:isloggedin>
-                       <p><a href="/DefaultTemplate/particle.oc">Home</a></p>
-                       <p><a href="/Users/[_User.Name_]">Files</a></p>
-                       <p><a href="[_User.Identity_]">Profile</a></p>
-                       <p><a href="/DefaultTemplate/usermanager.oc?Target=/Users/[_User.Name_].user">Account</a></p>
-                    </oc:isloggedin>
-                 </oc:if>
-              </oc:islocal>
-           </oc:if>
+               <oc:isloggedin>
+                  <p><a href="/Users/[_User.Name_]">Files</a></p>
+                  <p><a href="[_User.Identity_]">Profile</a></p>
+                  <p><a href="/DefaultTemplate/usermanager.oc?Target=/Users/[_User.Name_].user">Account</a></p>
+               </oc:isloggedin>
+            </oc:if>
+         </oc:islocal>
+      </oc:if>
 
-           <oc:if>
-              <oc:can namedpermission="CreateUser" filename="/Users/UserDB">
-                 <p><a href="/DefaultTemplate/createaccount.oc">Create Account</a></p>
-              </oc:can>
-           </oc:if>
+      <oc:if>
+         <oc:isloggedin>
+            <p><a href="/Shell/UserManagers/GroupManager.wchtml">Groups</a></p>
+         </oc:isloggedin>
+      </oc:if>
 
-           <p><a href="/Shell/UserManagers/GroupManager.wchtml">Groups</a></p>
-           <p><a href="/Shell/Developer.oc">Developer Controls</a></p>
+      <p><a href="/Shell/Developer.oc">Developer Controls</a></p>
 
-         </div>
 
+<pre class="navbinarycloud">
+               00
+            11 000
+            000011 11
+          000 111 000
+            111 000
+             011 0
+    111  0  10101
+     0000 1111
+   111 00 111 111
+    0000 110 001
+    1  11111 0
+     00110
+</pre>
+   </div>
 
 </oc:componentdef>
