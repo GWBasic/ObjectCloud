@@ -233,14 +233,14 @@ namespace ObjectCloud.Common.Threading
             if (null != threads)
                 if (threads == Interlocked.CompareExchange<Thread[]>(ref Threads, null, threads))
                 {
-                    foreach (Thread thread in threads)
-                    {
-                        do
-                            lock (Pulser)
-                                Monitor.Pulse(Pulser);
+                   	lock (Pulser)
+                    	Monitor.PulseAll(Pulser);
 
-                        while (!thread.Join(250));
-                    }
+                    foreach (Thread thread in threads)
+                        while (!thread.Join(250))
+                            lock (Pulser)
+                                Monitor.PulseAll(Pulser);
+
 
                     GC.SuppressFinalize(this);
                 }
