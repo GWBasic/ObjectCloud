@@ -4,31 +4,39 @@
 </oc:inserthead>
 
    <div class="notification" src="[_objectUrl_]" senderIdentity="[_senderIdentity_]">
-      <a href="[_senderIdentity_]">
-         <img src="[_senderAvatarUrl_]&amp;maxWidth=100&amp;maxHeight=100" />
-      [_senderIdentity_]</a>: 
-      <div class="summaryView">
-         <oc:safeparse>[_summaryView_]</oc:safeparse>
+      <div class="notificationAvatar">
+         <a href="[_senderIdentity_]">
+            <img src="[_senderAvatarUrl_]&amp;width=100&amp;maxHeight=100" />
+         </a>
       </div>
-      (<span class="date_ago">[_timeStamp_]</span>) <a href="[_objectUrl_]" target="_blank">&#x21AA;</a>
-      <div class="notificationLinks">
-         <oc:if>
-            <oc:hasvalue value="[_link.linkUrl_]">
-               <div class="notificationLink">
-                  <div class="linkSummaryView">
-                     <a href="[_link.ownerIdentity_]">
-                        <img src="[_link.ownerAvatarUrl_]&amp;maxWidth=50&amp;maxHeight=50" />
-                     [_link.ownerIdentity_]</a>:
-                     <oc:safeparse>[_link.linkSummaryView_]</oc:safeparse>
+      <div class="notificationContents">
+         <a href="[_senderIdentity_]">[_senderIdentity_]</a>: 
+         <div class="summaryView">
+            <oc:safeparse>[_summaryView_]</oc:safeparse>
+         </div>
+         (<span class="date_ago">[_timeStamp_]</span>) <a href="[_objectUrl_]" target="_blank">&#x21AA;</a>
+         <div class="notificationLinks">
+            <oc:if>
+               <oc:hasvalue value="[_link.linkUrl_]">
+                  <div class="notificationLink">
+                     <div class="linkAvatar">
+                        <a href="[_link.ownerIdentity_]">
+                           <img src="[_link.ownerAvatarUrl_]&amp;width=50&amp;maxHeight=50" />
+                        </a>
+                     </div>
+                     <div class="linkSummaryView">
+                        <a href="[_link.ownerIdentity_]">[_link.ownerIdentity_]</a>:
+                        <oc:safeparse>[_link.linkSummaryView_]</oc:safeparse>
+                     </div>
+                     (<span class="date_ago">[_timeStamp_]</span>)
+                     <a href="[_link.URL_]" target="_blank">&#x21AA;</a>
                   </div>
-                  (<span class="date_ago">[_timeStamp_]</span>)
-                  <a href="[_link.URL_]" target="_blank">&#x21AA;</a>
-                  <hr />
-               </div>
-            </oc:hasvalue>
-         </oc:if>
+                  <div style="clear: both;" />
+               </oc:hasvalue>
+            </oc:if>
+         </div>
       </div>
-      <hr />
+      <hr style="clear: both" />
    </div>
 
 </oc:componentdef>

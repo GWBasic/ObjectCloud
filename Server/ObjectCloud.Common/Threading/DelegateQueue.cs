@@ -238,9 +238,12 @@ namespace ObjectCloud.Common.Threading
 
                     foreach (Thread thread in threads)
                         while (!thread.Join(250))
+						{
+							Console.WriteLine("Waiting for " + thread.Name);
+					
                             lock (Pulser)
                                 Monitor.PulseAll(Pulser);
-
+						}
 
                     GC.SuppressFinalize(this);
                 }
