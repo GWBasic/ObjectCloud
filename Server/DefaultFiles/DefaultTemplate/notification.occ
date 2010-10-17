@@ -6,7 +6,7 @@
    <div class="notification" src="[_objectUrl_]" senderIdentity="[_senderIdentity_]">
       <div class="notificationAvatar">
          <a href="[_senderIdentity_]">
-            <img src="[_senderAvatarUrl_]&amp;width=100&amp;maxHeight=100" />
+            <img src="[_senderAvatarUrl_]&amp;width=50&amp;maxHeight=75" />
          </a>
       </div>
       <div class="notificationContents">
@@ -21,7 +21,7 @@
                   <div class="notificationLink">
                      <div class="linkAvatar">
                         <a href="[_link.ownerIdentity_]">
-                           <img src="[_link.ownerAvatarUrl_]&amp;width=50&amp;maxHeight=50" />
+                           <img src="[_link.ownerAvatarUrl_]&amp;width=35&amp;maxHeight=35" />
                         </a>
                      </div>
                      <div class="linkSummaryView">

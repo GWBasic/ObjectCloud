@@ -1,17 +1,19 @@
 div.notification
 {
-   min-height: 105px;
+   min-height: 80px;
+   font-size: 0.75em;
+   max-width: 550px;
 }
 
 div.notificationContents
 {
-   margin-left: 110px;
+   margin-left: 60px;
 }
 
 div.notificationAvatar
 {
    float: left;
-   width: 105px;
+   width: 55px;
 }
 
 div.notificationLink
@@ -19,18 +21,20 @@ div.notificationLink
    margin-bottom: 5px;
    background: #99c7fb;
    padding: 5px;
-   min-height: 55px;
+   min-height: 35px;
+   max-width: 400px;
 }
 
 div.linkAvatar
 {
    float: left;
-   width: 55;
+   width: 40;
 }
 
 div.linkSummaryView
 {
-   margin-left: 60px;
+   margin-left: 45px;
+   font-size: 0.9em;
 }
 
 form.status
@@ -38,6 +42,7 @@ form.status
    margin-bottom:25px;
    background: #99c7fb;
    padding: 5px;
+   max-width: 550px;
 }
 
 form.status textarea
