@@ -48,10 +48,7 @@ namespace ObjectCloud.Disk.Implementation
                 userFactory.RootUser.Id,
                 true);
 			
-			IDirectoryHandler rootUserDirectoryHandler = usersDirectory.OpenFile("root").CastFileHandler<IDirectoryHandler>();
-			rootUserDirectoryHandler.RestoreFile("Root Avatar.jpg", "image", "Root Avatar.jpg", userFactory.RootUser.Id);
-			rootUser.UserHandler.Set(rootUser, "Avatar", "/Users/root/Root Avatar.jpg");
-			rootUserDirectoryHandler.SetPermission(null, "Root Avatar.jpg", new ID<IUserOrGroup, Guid>[] {userFactory.Everybody.Id}, FilePermissionEnum.Read, false, false);
+			rootUser.UserHandler.Set(rootUser, "Avatar", "/DefaultTemplate/root.jpg");
 
 			// Let the root user see information about the anonymous user
 			IFileContainer anonymousUserFileContainer = usersDirectory.OpenFile("anonymous.user");

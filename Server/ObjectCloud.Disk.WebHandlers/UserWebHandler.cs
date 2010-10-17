@@ -194,7 +194,7 @@ namespace ObjectCloud.Disk.WebHandlers
                     return avatar;
             }
 
-            return "/Shell/UserManagers/No Profile.jpg";
+            return "/DefaultTemplate/noprofile.jpg";
         }
 
         /// <summary>

@@ -5,3 +5,4 @@ Create Account.oc
 GroupPage.wchtml
 UserPage.wchtml
 UserManager.wchtml
+No Profile.jpg

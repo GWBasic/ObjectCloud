@@ -15,13 +15,13 @@
          <oc:isloggedin>
             <div class="navbarimage">
                <a href="[_User.Identity_]">
-                  <img src="[_User.Identity_]?Method=GetAvatar&amp;maxWidth=50" />
+                  <img src="[_User.Identity_]?Method=GetAvatar&amp;width=50" />
                </a>
             </div>
             <span class="navbaruserlinks">
                <a href="[_User.Identity_]">
                   [_User.Name_] (Profile)
-               </a>
+               </a><br />
                <a href="/DefaultTemplate/usermanager.oc?Target=/Users/[_User.Name_].user">Account</a>
             </span>
             <hr style="clear: both" />
