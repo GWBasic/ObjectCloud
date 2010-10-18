@@ -76,6 +76,10 @@
 			SendNotifications="False" />
 	</File>
 	<File
+		Name="change avatar.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
 		Name="change password.png"
 		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
@@ -90,6 +94,14 @@
 			Inherit="False"
 			SendNotifications="False" />
 	</File>
+	<File
+		Name="click on account.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="click on files.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 	<File
 		Name="create account.png"
 		TypeId="image"
@@ -200,20 +212,9 @@
 			SendNotifications="False" />
 	</File>
 	<File
-		Name="logged in.png"
+		Name="log in.png"
 		TypeId="image"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
-		<Permission
-			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
-			Level="Administer"
-			Inherit="False"
-			SendNotifications="False" />
-		<Permission
-			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
-			Level="Administer"
-			Inherit="False"
-			SendNotifications="False" />
-	</File>
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 	<File
 		Name="my files.png"
 		TypeId="image"
