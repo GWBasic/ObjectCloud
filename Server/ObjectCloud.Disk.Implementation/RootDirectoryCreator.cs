@@ -30,7 +30,6 @@ namespace ObjectCloud.Disk.Implementation
             IUserManagerHandler userManager = usersDirectory.CreateSystemFile<IUserManagerHandler>("UserDB", "usermanager", null);
             IUserFactory userFactory = FileHandlerFactoryLocator.UserFactory;
 
-            //IUser anonymousUser = 
             IUser anonymousUser = userManager.CreateUser(
                 "anonymous",
                 "",
