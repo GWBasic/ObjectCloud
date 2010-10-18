@@ -61,8 +61,8 @@ function reformatNotification(notification)
    {
       var me = $(this);
 
-      if (undefined == me.attr('target'))
-         juiauto_makeiFrameLink(me);
+      //if (undefined == me.attr('target'))
+      //   juiauto_makeiFrameLink(me);
 
       try
       {
