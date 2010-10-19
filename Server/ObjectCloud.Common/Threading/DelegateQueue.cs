@@ -63,7 +63,11 @@ namespace ObjectCloud.Common.Threading
                         DelegateQueue dq = (DelegateQueue)state;
 
                         if (null != dq)
+						{
+							Console.WriteLine("Stopping: " + dq.Name);
                             dq.Stop();
+							Console.WriteLine("Stopped: " + dq.Name);
+						}
                     }
                     // Swallow all exceptions for now
                     catch { }

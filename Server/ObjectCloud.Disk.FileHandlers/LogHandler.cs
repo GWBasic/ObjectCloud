@@ -268,7 +268,7 @@ namespace ObjectCloud.Disk.FileHandlers
 
                     TimeSpan deleteTime = DateTime.UtcNow - start;
 
-                    log.InfoFormat("Deleting log entries for {0} took {1}", level, deleteTime.ToString());
+                    log.TraceFormat("Deleting log entries for {0} took {1}", level, deleteTime.ToString());
                 }
 
                 NextTimeToDeleteOldLogEntries = DateTime.UtcNow.AddMinutes(5);
