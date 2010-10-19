@@ -2,6 +2,9 @@
 
 <!-- This code is released under the Simple Public License (SimPL) 2.0.  Some additional privelages are granted., See /Docs/license.wchtml -->
 
+<p>All files in ObjectCloud have a RESTful API. The specific methods supported vary depending on the
+base file type. Each of the supported file types are listed below.</p>
+
 <ul>
 <script>
 
