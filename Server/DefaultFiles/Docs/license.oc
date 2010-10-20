@@ -4,40 +4,35 @@
       <title>ObjectCloud License</title>
    </oc:inserthead>
 
+<div class="title">ObjectCloud License</div>
+
 <img src="/Pages/objectcloud logo.png?Method=GetScaled&amp;width=600" />
 
-<p>All original ObjectCloud source code is copyright (c) 2009, 2010 Andrew Rondeau.  ObjectCloud contains additional source code, programs, and libraries from additional authors.  These retain their original copyright, and are documented in this file.</p>
-
-<h1>Summary</h1>
 <p><em>The terms of the license are subject to change.  Assume that future releases will modify or replace this license.</em></p>
-<p>ObjectCloud is primarily released under the <a href="http://opensource.org/licenses/simpl-2.0.html">SimPL 2.0</a> license, <a href="/Docs/licenses/SimPL.txt">(local copy)</a> although some additional constraints apply:</p>
+
+<p>All original ObjectCloud source code is copyright (c) 2009, 2010 Andrew Rondeau and is released
+under the <a href="http://opensource.org/licenses/simpl-2.0.html">SimPL 2.0</a> license. ObjectCloud
+utilizes independently-developed open-source libraries and programs that have different licensing
+terms. Modifications to independently-developed open-source libraries and programs are released under
+their original licenses. Redistributions and derived works of ObjectCloud must comply with the SimPL
+license and all included libraries' and programs' licenses.</p>
+
+<p><a href="/Docs/licenses/SimPL.txt">Local copy of SimPL 2.0</a></p>
+
+<h1>Additional Exception to SimPL 2.0</h1>
+<p>According to the SimPL 2.0 license, using ObjectCloud's API from dlls or Javascript constitutes a
+deprived work, and must be released under the SimPL 2.0 license. The following exceptions are granted:</p>
 <ul>
-   <li>All original ObjectCloud code is <a href="http://opensource.org/licenses/simpl-2.0.html">SimPL 2.0</a>.</li>
-   <li>All re-used open-source libraries, dlls, and javascript files retain their original licenses.  These are listed at the end of this page.</li>
-   <li>Modifications to re-used open-source libraries, dlls, and javascript are released under the library's original license.</li>
+   <li>You may utilize dependency injection and/or the plugin API to include additional functionality from
+   independently-developed classes, modules, and/or dll that is released under a license of your
+   choice.</li>
+   <li>You may inherit from public classes, or implement public interfaces, in independently-developed modules
+   released under a license of your choice.</li>
+   <li>You may use Network, HTTP, RESTful, Javascript, and templating APIs, in independently-developed modules
+   released under a license of your choice.</li>
+   <li>You may modify any of the included independently-developed Javascript libraries, provided that the
+   original authors' license is not violated.</li>
 </ul>
-
-<h2>Redistribution</h2>
-
-<p>Re-distributions of ObjectCloud must comply with the <a href="http://opensource.org/licenses/simpl-2.0.html">SimPL 2.0</a> and all licenses of all included software.</p>
-
-<h2>Modification</h2>
-
-<p>Modifications to ObjectCloud must comply with and be released according to the terms in the <a href="http://opensource.org/licenses/simpl-2.0.html">SimPL 2.0</a>.  Modifications to libraries included with ObjectCloud must comply with and be released under the library's license.</p>
-
-<h2>Commercial Use</h2>
-
-<p>Commercial (Closed-Source) Use of ObjectCloud is allowed and encouraged.  Specifically, you may:</p>
-<ul>
-   <li>Develop non-SimPL software that utilizes ObjectCloud's AJAX API, Javascript API, server-side Javascript API, ObjectCloud's WebComponent system and WebComponents.</li>
-   <li>Modify any of the included Javascript libraries, provided that the license is not violated.</li>
-   <li>Modify any of the included Javascript server-side classes, provided the changes are also released according to the terms of the <a href="http://opensource.org/licenses/simpl-2.0.html">SimPL 2.0</a>.</li>
-   <li>Create and distribute proprietary libraries such as .dll files that inherit from classes in, implement interfaces from, or call APIs in any .dll that is included with ObjectCloud</li>
-   <li>Utilize dependency injection to replace any ObjectCloud class, module, and/or dll with an independently-developed class, module, or dll that is released under a licensee of your choice.</li>
-   <li>Utilize dependency injection to include additional functionality from independently-developed classes, modules, and/or dll that is released under a license of your choice.</li>
-</ul>
-
-<p>The <a href="http://opensource.org/licenses/simpl-2.0.html">SimPL 2.0</a> may grant you additional rights that are not documented here.</p>
 
 <h1>Included Open-Source Projects</h1>
 
