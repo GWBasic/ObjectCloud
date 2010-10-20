@@ -21,15 +21,14 @@ license and all included libraries' and programs' licenses.</p>
 
 <h1>Additional Exception to SimPL 2.0</h1>
 <p>According to the SimPL 2.0 license, using ObjectCloud's API from dlls or Javascript constitutes a
-deprived work, and must be released under the SimPL 2.0 license. The following exceptions are granted:</p>
+derived work, and must be released under the SimPL 2.0 license. The following exceptions are granted:</p>
 <ul>
    <li>You may utilize dependency injection and/or the plugin API to include additional functionality from
-   independently-developed classes, modules, and/or dll that is released under a license of your
-   choice.</li>
-   <li>You may inherit from public classes, or implement public interfaces, in independently-developed modules
-   released under a license of your choice.</li>
-   <li>You may use Network, HTTP, RESTful, Javascript, and templating APIs, in independently-developed modules
-   released under a license of your choice.</li>
+   independently-developed dlls that are released under a license of your choice.</li>
+   <li>You may inherit from public classes, or implement public interfaces, in independently-developed
+   modules released under a license of your choice.</li>
+   <li>You may use network, HTTP, RESTful, Javascript, and templating APIs, in independently-developed
+   modules released under a license of your choice.</li>
    <li>You may modify any of the included independently-developed Javascript libraries, provided that the
    original authors' license is not violated.</li>
 </ul>
