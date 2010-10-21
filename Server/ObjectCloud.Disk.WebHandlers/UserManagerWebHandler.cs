@@ -477,8 +477,9 @@ namespace ObjectCloud.Disk.WebHandlers
             if (webConnection.Session.User == FileHandlerFactoryLocator.UserFactory.AnonymousUser)
                 throw new WebResultsOverrideException(WebResults.From(Status._403_Forbidden, "You must be logged in to set an alias"));
 
-            if (0 == alias.Length)
-                alias = null;
+			if (null != alias)
+	            if (0 == alias.Length)
+    	            alias = null;
 
             try
             {

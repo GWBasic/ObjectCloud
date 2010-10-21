@@ -37,27 +37,37 @@ $(document).ready(function()
 
       return false;
    });
-});
 
-/*
-
-Uncomment when re-enabling group aliases
-
-function clearGroupAlias(groupId)
-{
-   $("Alias_" + groupId).value = "";
-   setGroupAlias(groupId);
-}
-
-function setGroupAlias(groupId)
-{
-   userDB.SetGroupAlias(
+   $('input.SetGroupAlias').change(function()
    {
-      groupId: groupId,
-      alias: $("Alias_" + groupId).value
-   },
-   function(transport)
-   {
-      window.location.reload(true);
+      var me = $(this);
+      var alias = me.val();
+
+      var groupId = me.attr('groupid');
+      var name = me.attr('groupname');
+
+      if ((alias == '') || (alias == name))
+      {
+         me.val(name);
+
+         userDB.SetGroupAlias(
+         {
+            groupId: groupId
+         },
+         function(transport)
+         {
+            window.location.reload(true);
+         });
+      }
+      else
+         userDB.SetGroupAlias(
+         {
+            groupId: groupId,
+            alias: alias
+         },
+         function(transport)
+         {
+            window.location.reload(true);
+         });
    });
-}*/
+});

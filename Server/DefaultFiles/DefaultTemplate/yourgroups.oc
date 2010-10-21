@@ -14,7 +14,14 @@
          <oc:jsontemplate oc:url="/Users/UserDB" Method="GetGroupsThatUserIsIn">
             <oc:if>
                <oc:isequal l="false" r="[_Automatic_]">
-                  <a href="/Users/[_Name_].group" >[_NameOrAlias_]</a><br />
+                  <a href="/Users/[_Name_].group" >[_NameOrAlias_]</a> ([_Name_]) 
+                  <input
+                     type="text"
+                     class="SetGroupAlias"
+                     value="[_NameOrAlias_]"
+                     groupid="[_Id_]"
+                     groupname="[_Name_]" />
+                  <br />
                </oc:isequal>
             </oc:if>
          </oc:jsontemplate>
@@ -32,7 +39,7 @@
                         <a href="/Users/[_Name_].group" >[_NameOrAlias_]</a>
                      </oc:else>
                   </oc:if>
-                  <a href="/Shell/UserManagers/GroupEditor.wchtml?groupId=[_Id_]">members</a>
+                   - <a href="/Shell/UserManagers/GroupEditor.wchtml?groupId=[_Id_]">members</a>
                   <oc:if>
                      <oc:isequal l="false" r="[_BuiltIn_]">
                         <input type="button" value="Delete" class="DeleteGroup" groupid="[_Id_]" />
