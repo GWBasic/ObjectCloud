@@ -185,6 +185,19 @@ namespace ObjectCloud
 
                                 break;
                             }
+					
+						case ("rootpassword"):
+							{
+								string newPassword = args[1];
+						
+                                fileHandlerFactoryLocator.FileSystemResolver.Start();
+
+								fileHandlerFactoryLocator.UserManagerHandler.SetPassword(
+									fileHandlerFactoryLocator.UserFactory.RootUser.Id,
+									newPassword);
+						
+								break;
+							}
                     }
             }
             catch (Exception e)
