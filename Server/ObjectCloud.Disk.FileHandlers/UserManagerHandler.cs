@@ -665,7 +665,23 @@ namespace ObjectCloud.Disk.FileHandlers
                     throw new CanNotDeleteBuiltInUserOrGroup();
 
                 IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
-                usersDirectory.DeleteFile(null, name + ".group");
+
+                try
+                {
+                    if (group.Type > GroupType.Personal)
+                        usersDirectory.DeleteFile(null, name + ".group");
+                    else if (null != group.OwnerID)
+                    {
+                        IUser owner = GetUser(group.OwnerID.Value);
+                        IGroupAliases_Readable alias = DatabaseConnection.GroupAliases.SelectSingle(GroupAliases_Table.GroupID == group.ID & GroupAliases_Table.UserID == owner.Id);
+                        IDirectoryHandler ownerDirectory = usersDirectory.OpenFile(owner.Name).CastFileHandler<IDirectoryHandler>();
+                        ownerDirectory.DeleteFile(null, alias.Alias + ".group");
+                    }
+                }
+                catch (Exception e)
+                {
+                    log.Warn("Exception deleting group's object", e);
+                }
 
                 DatabaseConnection.GroupAliases.Delete(GroupAliases_Table.GroupID == group.ID);
                 DatabaseConnection.UserInGroups.Delete(UserInGroups_Table.GroupID == group.ID);
