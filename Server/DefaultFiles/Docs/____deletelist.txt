@@ -2,3 +2,4 @@ license.wchtml
 why.page
 wanna help.page
 what_is_a_webOS.page
+history.page
