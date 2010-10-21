@@ -92,4 +92,8 @@
 		Name="usermanager.oc"
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="yourgroups.oc"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 </Directory>

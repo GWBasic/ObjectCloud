@@ -6,3 +6,4 @@ GroupPage.wchtml
 UserPage.wchtml
 UserManager.wchtml
 No Profile.jpg
+GroupManager.wchtml

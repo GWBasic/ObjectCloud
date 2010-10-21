@@ -1,0 +1,81 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" xmlns:af="appfeeds_templating">
+   <oc:inserthead>
+      <oc:script src="/Shell/UserManagers/GroupManager.js" />
+      <title>[_User.Name_]'s Groups</title>
+   </oc:inserthead>
+
+   <oc:if>
+      <oc:isloggedin>
+
+         <div class="title">[_User.Name_]'s Groups</div>
+
+         <h1>Groups that you are a member of</h1>
+
+         <oc:jsontemplate oc:url="/Users/UserDB" Method="GetGroupsThatUserIsIn">
+            <oc:if>
+               <oc:isequal l="false" r="[_Automatic_]">
+                  <a href="/Users/[_Name_].group" >[_NameOrAlias_]</a><br />
+               </oc:isequal>
+            </oc:if>
+         </oc:jsontemplate>
+
+         <h1>Groups that you can administer</h1>
+
+         <oc:jsontemplate oc:url="/Users/UserDB" Method="GetGroupsThatCanBeAdministered">
+            <oc:if>
+               <oc:isequal l="false" r="[_Automatic_]">
+                  <oc:if>
+                     <oc:isequal l="Personal" r="[_Type_]">
+                        <a href="/Users/[_User.Name_]/[_Name_].group" >[_NameOrAlias_]</a>
+                     </oc:isequal>
+                     <oc:else>
+                        <a href="/Users/[_Name_].group" >[_NameOrAlias_]</a>
+                     </oc:else>
+                  </oc:if>
+                  <a href="/Shell/UserManagers/GroupEditor.wchtml?groupId=[_Id_]">members</a>
+                  <oc:if>
+                     <oc:isequal l="false" r="[_BuiltIn_]">
+                        <input type="button" value="Delete" class="DeleteGroup" groupid="[_Id_]" />
+                     </oc:isequal>
+                  </oc:if>
+                  <br />
+               </oc:isequal>
+            </oc:if>
+         </oc:jsontemplate>
+
+         <h1>Create a group</h1>
+         <form class="CreateGroup" method="POST" action="/Users/UserDB?Method=CreateGroup">
+            Group Name: <input type="text" name="groupname" /><br />
+
+            <oc:if>
+               <oc:can filename="/Users/UserDB" namedpermission="CreateGroup">
+                  <select name="grouptype" size="3">
+                     <option selected="true" value="Personal">
+                        Personal (This group is only visible to you)
+                     </option>
+                     <option value="Private">
+                        Private (Other people can see the group, but only you can add/remove members)
+                     </option>
+                     <option value="Public">
+                        Public (Anyone can see and join the group)
+                     </option>
+                  </select><br />
+               </oc:can>
+               <oc:else>
+                  <input type="hidden" name="grouptype" value="Personal" />
+               </oc:else>
+            </oc:if>
+
+            <input type="submit" value="Create Group" />
+         </form>
+
+         <form action="UserSearch.wchtml">
+            <input type="textbox" name="query" />
+         </form>
+
+      </oc:isloggedin>
+      <oc:else>
+         Please log in to manage groups
+      </oc:else>
+   </oc:if>
+</oc:componentdef>

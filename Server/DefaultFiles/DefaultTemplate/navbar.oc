@@ -30,7 +30,7 @@
                   <p><a href="/Users/[_User.Name_]">Files</a></p>
                </oc:islocal>
             </oc:if>
-            <p><a href="/Shell/UserManagers/GroupManager.wchtml">Groups</a></p>
+            <p><a href="/DefaultTemplate/yourgroups.oc">Groups</a></p>
          </oc:isloggedin>
       </oc:if>
 
