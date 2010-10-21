@@ -38,6 +38,7 @@ var	rte_toolbar = {
 	<option value="&lt;h4&gt;">Header 4</option>\
 	<option value="&lt;h5&gt;">Header 5</option>\
 	<option value="&lt;h6&gt;">Header 6</option>\
+	<option value="&lt;pre&gt;">Pre-formatted</option>\
 </select>\
 	', tag_cmp: lwrte_block_compare, tags: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']},
 	font			: {command: 'fontname', select: '\
