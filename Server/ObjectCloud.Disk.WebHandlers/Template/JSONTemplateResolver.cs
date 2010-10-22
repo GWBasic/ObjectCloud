@@ -179,6 +179,40 @@ namespace ObjectCloud.Disk.WebHandlers.Template
                                 return;
                         }
 
+                        // Sort, if sorting is enabled
+                        if (templateInput is object[])
+                        {
+                            string sort = element.GetAttribute("sort", templateParsingState.TemplateHandlerLocator.TemplatingConstants.TemplateNamespace);
+
+                            if (null != sort)
+                                if (sort.Length > 0)
+                                {
+                                    try
+                                    {
+                                        List<object> toSort = new List<object>((IEnumerable<object>)templateInput);
+                                        toSort.Sort(delegate(object inA, object inB)
+                                        {
+                                            IDictionary<string, object> a = (IDictionary<string, object>)inA;
+                                            IDictionary<string, object> b = (IDictionary<string, object>)inB;
+
+                                            object aVal = null;
+                                            a.TryGetValue(sort, out aVal);
+
+                                            object bVal = null;
+                                            b.TryGetValue(sort, out bVal);
+
+                                            return Comparer.DefaultInvariant.Compare(aVal, bVal);
+                                        });
+
+                                        templateInput = toSort.ToArray();
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        log.Warn("Can not sort by \"" + sort + "\": " + JsonWriter.Serialize(templateInput), e);
+                                    }
+                                }
+                        }
+
                         templateParsingState.DoTemplate(
                             element,
                             templateInput);
