@@ -15,6 +15,13 @@
             <oc:safeparse>[_summaryView_]</oc:safeparse>
          </div>
          (<span class="date_ago">[_timeStamp_]</span>) <a href="[_objectUrl_]" target="_blank">&#x21AA;</a>
+
+         <oc:if>
+            <oc:isequal l="[_User.Identity_]" r="[_senderIdentity_]">
+                - <a href="" class="shareObject">Share</a>
+            </oc:isequal>
+         </oc:if>
+
          <div class="notificationLinks">
             <oc:if>
                <oc:hasvalue value="[_link.linkUrl_]">

@@ -1,4 +1,4 @@
-// Scripts: /API/jquery.js, /Users/[name].user?Method=GetJSW&assignToVariable=NotificationsProxy, /API/Comet/CometProtocol.js, /API/jquery-ui.auto.js, /API/Url.js
+// Scripts: /API/jquery.js, /Users/[name].user?Method=GetJSW&assignToVariable=NotificationsProxy, /API/Comet/CometProtocol.js, /API/jquery-ui.auto.js, /API/Url.js, /API/shareDialog.js
 
 // http://jasonwyatt.tumblr.com/post/206787093/javascript-escapehtml-string-function
 String.prototype.escapeHTML = function(){
@@ -57,6 +57,7 @@ function reformatNotification(notification)
    var objectUrl = notification.attr('src');
    var senderIdentity = notification.attr('senderIdentity');
 
+   // reformat links to automatically log in with OpenID
    $('a', notification).each(function()
    {
       var me = $(this);
@@ -75,6 +76,16 @@ function reformatNotification(notification)
                   escape(senderIdentity) + '&url=' + escape(objectUrl));
       }
       catch (exception) {}
+   });
+
+   // Set up share dialog
+   $('.shareObject', notification).click(function()
+   {
+      var parsedObjectUrl = Url.parse(objectUrl);
+
+      shareDialog_show(parsedObjectUrl.file);
+
+      return false;
    });
 
    if (notificationsOnScreen[objectUrl])
