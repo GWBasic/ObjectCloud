@@ -3,6 +3,6 @@
    "Minor":0,
    "State":"alpha",
    "Stable":true,
-   "Release":"4-2",
-   "Joke":"Give the garbage collector a pointer so it doesn't have to work so hard"
+   "Release":"5-0",
+   "Joke":"A mass migration of particles that come in waves"
 }

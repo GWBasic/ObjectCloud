@@ -1,14 +1,36 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Directory>
-  <File
+	<File
 		Name="MethodDetails.oc"
 		TypeId="text"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
-  <File
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
+	<File
 		Name="MethodList.oc"
 		TypeId="text"
-		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
-  <File
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
+	<File
 		Name="Overview.oc"
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
