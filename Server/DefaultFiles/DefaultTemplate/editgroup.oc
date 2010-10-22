@@ -1,0 +1,56 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" xmlns:af="appfeeds_templating">
+   <oc:inserthead>
+      <oc:script src="/Shell/UserManagers/GroupEditor.js" />
+
+      <oc:jsontemplate
+         oc:url="/Users/UserDB"
+         Method="GetGroupAndAlias"
+         groupid="[_groupId_]">
+         <title>Manage [_NameOrAlias_]</title>
+      </oc:jsontemplate>
+   </oc:inserthead>
+
+   <oc:jsontemplate
+      oc:url="/Users/UserDB"
+      Method="GetGroupAndAlias"
+      groupid="[_groupId_]">
+
+      <div class="title">Manage [_NameOrAlias_]</div>
+
+      <oc:if>
+         <oc:isequal l="true" r="[_Automatic_]">
+            Membership in [_NameOrAlias_] is automatically managed by ObjectCloud. No one can be added or removed.
+         </oc:isequal>
+         <oc:else>
+
+            <h1>Members:</h1>
+            <oc:jsontemplate
+               oc:url="/Users/UserDB"
+               Method="GetUsersInGroup"
+               groupid="[_Id_]">
+
+               <form
+                  class="RemoveUser"
+                  action="/Users/UserDB?Method=RemoveUserFromGroup"
+                  method="POST">
+                  [_Name_]
+                  <input type="hidden" name="groupid" value="[__UP.groupid_]" />
+                  <input type="hidden" name="userid" value="[_Id_]" />
+                  <input type="submit" value="Remove" />
+               </form>
+
+            </oc:jsontemplate>
+
+            <h2>Add a user:</h2>
+            <form class="AddUser" action="/Users/UserDB?Method=AddUserToGroup" method="post">
+               Username: <input name="username" type="text" />
+               <input name="groupid" type="hidden" value="[_Id_]" />
+               <input type="submit" value="add" />
+            </form>
+
+         </oc:else>
+      </oc:if>
+
+   </oc:jsontemplate>
+
+</oc:componentdef>

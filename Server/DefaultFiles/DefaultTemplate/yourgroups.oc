@@ -39,7 +39,7 @@
                         <a href="/Users/[_Name_].group" >[_NameOrAlias_]</a>
                      </oc:else>
                   </oc:if>
-                   - <a href="/Shell/UserManagers/GroupEditor.wchtml?groupId=[_Id_]">members</a>
+                   - <a href="/DefaultTemplate/editgroup.oc?groupId=[_Id_]">members</a>
                   <oc:if>
                      <oc:isequal l="false" r="[_BuiltIn_]">
                         <input type="button" value="Delete" class="DeleteGroup" groupid="[_Id_]" />
