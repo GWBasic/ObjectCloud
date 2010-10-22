@@ -1,0 +1,31 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
+
+   <oc:inserthead>
+      <title>Details for [_objectType_].[_methodName_]</title>
+   </oc:inserthead>
+
+   <div class="title">Details for [_objectType_].[_methodName_]</div>
+
+   <oc:jsontemplate
+      oc:url="/System/Documentation"
+      Method="GetMethodDetails"
+      objectType="[_objectType_]"
+      methodName="[_methodName_]">
+
+      <p>[_Summary_]</p>
+
+      <ul>
+         <oc:jsontemplate
+            oc:data="[_Arguments_]"
+            oc:sort="Name">
+
+            <li><em>[_Name_]</em>: [_Summary_]</li>
+         </oc:jsontemplate>
+      </ul>
+
+     Calling Convention:
+     <a href="/Docs/API.page#[_CallingConvention_]">[_CallingConvention_]</a>
+
+   </oc:jsontemplate>
+
+</oc:componentdef>

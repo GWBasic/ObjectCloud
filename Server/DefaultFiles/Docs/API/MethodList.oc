@@ -1,0 +1,29 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
+
+   <oc:inserthead>
+      <title>[_objectType_]</title>
+   </oc:inserthead>
+
+   <div class="title">[_objectType_]</div>
+
+   <oc:jsontemplate
+      oc:url="/System/Documentation"
+      Method="GetMethodsForObjectType"
+      objectType="[_objectType_]">
+
+      <p>[_Summary_]</p>
+
+      <ul>
+         <oc:jsontemplate
+            oc:data="[_Methods_]"
+            oc:sort="Method"
+            objectType="[__UP.objectType_]">
+
+            <li><em><a href="MethodDetails.oc?objectType=[__UP.objectType_]&amp;methodName=[_Method_]">[_Method_]</a></em>
+            : [_Summary_]</li>
+         </oc:jsontemplate>
+      </ul>
+
+   </oc:jsontemplate>
+
+</oc:componentdef>

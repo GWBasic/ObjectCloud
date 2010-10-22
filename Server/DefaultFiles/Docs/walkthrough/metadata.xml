@@ -1,6 +1,21 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Directory>
 	<File
+		Name="account created.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
+	<File
 		Name="add permission for everybody.png"
 		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
@@ -118,7 +133,37 @@
 			SendNotifications="False" />
 	</File>
 	<File
+		Name="document created.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
+	<File
 		Name="edit file.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
+	<File
+		Name="editor.png"
 		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
@@ -152,9 +197,69 @@
 		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 	<File
+		Name="include image.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
+	<File
 		Name="log in.png"
 		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="logged in.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
+	<File
+		Name="my files.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
+	<File
+		Name="open permissions.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
 	<File
 		Name="permission added.png"
 		TypeId="image"
@@ -171,7 +276,52 @@
 			SendNotifications="False" />
 	</File>
 	<File
+		Name="permission denied.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
+	<File
 		Name="server started.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
+	<File
+		Name="shared with everybody.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
+	<File
+		Name="shared with gwbasic.png"
 		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission
@@ -203,6 +353,21 @@
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 	<File
 		Name="upload image.png"
+		TypeId="image"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
+		<Permission
+			UserOrGroupId="dddddddd-dddd-dddd-dddd-dddddddddddd"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+		<Permission
+			UserOrGroupId="cccccccc-cccc-cccc-cccc-cccccccccccc"
+			Level="Administer"
+			Inherit="False"
+			SendNotifications="False" />
+	</File>
+	<File
+		Name="view new page.png"
 		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
 		<Permission

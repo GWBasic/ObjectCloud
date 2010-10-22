@@ -1,0 +1,25 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
+
+   <oc:inserthead>
+      <title>ObjectCloud API Details</title>
+   </oc:inserthead>
+
+   <div class="title">ObjectCloud API Details</div>
+
+   <p>All files in ObjectCloud have a RESTful API. The specific methods supported vary depending on the
+   base file type. Each of the supported file types are listed below.</p>
+
+   <ul>
+      <oc:jsontemplate
+         oc:url="/System/Documentation"
+         Method="GetObjectTypes"
+         oc:sort="ObjectType">
+
+         <li>
+            <em><a href="MethodList.oc?objectType=[_ObjectType_]">[_ObjectType_]</a></em>: [_Summary_]
+         </li>
+
+      </oc:jsontemplate>
+   </ul>
+
+</oc:componentdef>
