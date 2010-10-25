@@ -463,4 +463,8 @@
 			Inherit="False"
 			SendNotifications="False" />
 	</File>
+	<File
+		Name="zip"
+		TypeId="name-value"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 </Directory>
