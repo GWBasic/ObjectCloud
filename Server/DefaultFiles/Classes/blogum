@@ -122,13 +122,15 @@ function AddPostWithContent(title, contents)
          base.AddRelatedFile_Sync(
             {
                filename: replyFilename,
-               relationship: "post"
+               relationship: "post",
+               inheritPermission: true
             });
 
          base.AddRelatedFile_Sync(
             {
                filename: replyFilename,
-               relationship: "reply"
+               relationship: "reply",
+               inheritPermission: true
             });
       });
    });
