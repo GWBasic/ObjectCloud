@@ -1162,17 +1162,30 @@ namespace ObjectCloud.Disk.FileHandlers
 
             if (inspectPermissions & filesToInspect.Count > 0)
             {
-                IEnumerable<IPermission_Readable> permissions = DatabaseConnection.Permission.Select(
+                // This block of code didn't work because it doesn't handle inheritance from the parent directory
+                /*IEnumerable<IPermission_Readable> permissions = DatabaseConnection.Permission.Select(
                     Permission_Table.FileId.In(filesToInspect) & Permission_Table.UserOrGroupId.In(userOrGroupIds));
 
                 filesToInspect = new HashSet<FileId>();
 
                 foreach (IPermission_Readable permission in permissions)
-                    filesToInspect.Add(permission.FileId);
+                    filesToInspect.Add(permission.FileId);*/
+
+                // This approach is slow because it explicitly checks each file's permission
+                // Someday it can be optimized
+
+                HashSet<FileId> newFilesToInspect = new HashSet<FileId>();
+
+                foreach (IFile_Readable file in DatabaseConnection.File.Select(File_Table.FileId.In(filesToInspect)))
+                    if (null != LoadPermission(file.Name, userId))
+                        newFilesToInspect.Add(new FileId(file.FileId.Value));
+
+                filesToInspect = newFilesToInspect;
             }
 
             // Make sure to add files where there is an inherited permission
-            filesToInspect.UnionWith(inherited);
+            foreach (FileId fileId in inherited)
+                filesToInspect.Add(fileId);
 
             comparisonConditions = new List<ComparisonCondition>();
             comparisonConditions.Add(File_Table.FileId.In(filesToInspect));
