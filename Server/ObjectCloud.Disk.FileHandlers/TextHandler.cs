@@ -37,6 +37,10 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public string ReadAll()
         {
+            string cached = Cached;
+            if (null != cached)
+                return cached;
+
             using (TimedLock.Lock(this))
             {
                 if (null == Cached)
@@ -50,11 +54,14 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             using (TimedLock.Lock(this))
             {
-                System.IO.File.WriteAllText(Path, contents);
-
-                // In case the write mungs data, we never cache on write.  This way, the user will see munged data sooner
+                // Setting everything to null forces readers to block while writing occurs
                 Cached = null;
                 CachedEnumerable = null;
+
+                System.IO.File.WriteAllText(Path, contents);
+
+                // set cached to null to test round trip
+                Cached = contents;
             }
 
             if (null != FileContainer)
@@ -86,14 +93,22 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public IEnumerable<string> ReadLines()
         {
-            using (TimedLock.Lock(this))
-            {
-                if (null == CachedEnumerable)
-                    CachedEnumerable = File.ReadAllLines(Path);
+            IEnumerable<string> cachedEnumerable = CachedEnumerable;
 
-                foreach (string s in CachedEnumerable)
-                    yield return s;
-            }
+            if (null == cachedEnumerable)
+                using (TimedLock.Lock(this))
+                {
+                    cachedEnumerable = CachedEnumerable;
+
+                    if (null == cachedEnumerable)
+                    {
+                        cachedEnumerable = File.ReadAllLines(Path);
+                        CachedEnumerable = cachedEnumerable;
+                    }
+                }
+
+            foreach (string s in cachedEnumerable)
+                yield return s;
         }
 
         public override void SyncFromLocalDisk(string localDiskPath, bool force)
