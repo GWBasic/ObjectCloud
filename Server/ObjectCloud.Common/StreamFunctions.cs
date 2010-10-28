@@ -48,5 +48,17 @@ namespace ObjectCloud.Common
 
             return toReturn;
         }
+
+        public static void CopyStreams(byte[] buffer, Stream input, Stream output)
+        {
+            while (true)
+            {
+                int read = input.Read(buffer, 0, buffer.Length);
+                if (read <= 0)
+                    return;
+
+                output.Write(buffer, 0, read);
+            }
+        }
     }
 }

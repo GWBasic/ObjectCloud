@@ -81,6 +81,36 @@ namespace ObjectCloud.Disk.FileHandlers
             OnContentsChanged();
         }
 
+        /* unused version that uses streams
+                 public void WriteAll(Stream contents)
+        {
+            using (TimedLock.Lock(this))
+            {
+                // If the data is small enough to fit in RAM, just load it all into an array
+                if (contents.Length <= FileHandlerFactoryLocator.WebServer.MaxInMemoryContentSize)
+                {
+                    Cached = new byte[contents.Length];
+                    contents.Read(Cached, 0, Cached.Length);
+
+                    System.IO.File.WriteAllBytes(BinaryFile, Cached);
+                }
+                else
+                {
+                    FileStream fs = File.OpenWrite(BinaryFile);
+                    byte[] buffer = new byte[FileHandlerFactoryLocator.WebServer.MaxInMemoryContentSize];
+
+                    StreamFunctions.CopyStreams(buffer, contents, fs);
+
+                    fs.Flush();
+                    fs.Close();
+                }
+            }
+
+            OnContentsChanged();
+        }
+	
+         */
+
         public override void Dump(string path, ID<ObjectCloud.Interfaces.Security.IUserOrGroup, Guid> userId)
         {
             using (TimedLock.Lock(this))
