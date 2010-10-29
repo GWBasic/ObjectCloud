@@ -92,5 +92,14 @@ $(document).ready(function()
          Login_UpdateKeepAlive);
    });
 
+   $('input.Login_MaxAge').keyup(function()
+   {
+      SessionManager.SetMaxAge(
+         {
+            MaxAge: $(this).val()
+         },
+         Login_UpdateKeepAlive);
+   });
+
    Login_UpdateKeepAlive();
 });
