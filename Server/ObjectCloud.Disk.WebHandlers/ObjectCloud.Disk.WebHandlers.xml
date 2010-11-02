@@ -262,7 +262,7 @@
             Cleans up old and dead transports
             </summary>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.WebHandler`1.AddRelatedFile(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.Nullable{System.Boolean})">
+        <member name="M:ObjectCloud.Disk.WebHandlers.WebHandler`1.AddRelatedFile(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.Nullable{System.Boolean},System.String)">
             <summary>
             Adds a file as being related to this file
             </summary>
@@ -270,6 +270,7 @@
             <param name="filename"></param>
             <param name="relationship"></param>
             <param name="inheritPermission">Set to true if the related file should inherit READ permissions from the parent file.  That is, anyone who has at least READ permission to the parent file will be able to read the related file.  In order for this to work, the user must have administer permissions to the related file or an error will occur</param>
+            <param name="chownRelatedFileTo">Identity of user to chown the related file to</param>
             <returns>JSON object with two properties:  confirmLinkPage, the endpoint to POST the user to in order to confirm that the user posted the link.  args:  The arguments that must be URLencoded in the post request to confirmLinkPage.  Note, you must add redirectUrl based on the implemented workflow.</returns>
         </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.WebHandler`1.DeleteRelatedFile(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
