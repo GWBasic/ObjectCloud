@@ -1150,12 +1150,18 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="filename"></param>
         /// <param name="relationship"></param>
         /// <param name="inheritPermission">Set to true if the related file should inherit READ permissions from the parent file.  That is, anyone who has at least READ permission to the parent file will be able to read the related file.  In order for this to work, the user must have administer permissions to the related file or an error will occur</param>
+        /// <param name="chownRelatedFileTo">Identity of user to chown the related file to</param>
         /// <returns>JSON object with two properties:  confirmLinkPage, the endpoint to POST the user to in order to confirm that the user posted the link.  args:  The arguments that must be URLencoded in the post request to confirmLinkPage.  Note, you must add redirectUrl based on the implemented workflow.</returns>
         [WebCallable(
             WebCallingConvention.POST_application_x_www_form_urlencoded,
             WebReturnConvention.JSON,
             FilePermissionEnum.Administer)]
-        public IWebResults AddRelatedFile(IWebConnection webConnection, string filename, string relationship, bool? inheritPermission)
+        public IWebResults AddRelatedFile(
+			IWebConnection webConnection,
+		    string filename,
+		    string relationship,
+		    bool? inheritPermission,
+		    string chownRelatedFileTo)
         {
             if (null == FileContainer.ParentDirectoryHandler)
                 throw new WebResultsOverrideException(WebResults.From(Status._406_Not_Acceptable, "The root directory can not have relationships"));
@@ -1181,13 +1187,19 @@ namespace ObjectCloud.Disk.WebHandlers
             bool inheritPermissionValue = false;
             if (null != inheritPermission)
                 inheritPermissionValue = inheritPermission.Value;
-
-            if (inheritPermissionValue)
+			
+            if (inheritPermissionValue || (null != chownRelatedFileTo))
                 if (FilePermissionEnum.Administer > relatedContainer.LoadPermission(webConnection.Session.User.Id))
                     throw new WebResultsOverrideException(WebResults.From(
                         Status._401_Unauthorized,
                         "You must have administer permission to " + relatedContainer.FullPath + 
-                        " in order for it to inherit permissions from the parent file"));
+                        " in order for it to inherit permissions from the parent file or chown it"));
+			
+			if (null != chownRelatedFileTo)
+			{
+				IUser newOwner = FileHandlerFactoryLocator.UserManagerHandler.GetOpenIdUser(chownRelatedFileTo);
+				relatedContainer.ParentDirectoryHandler.Chown(webConnection.Session.User, relatedContainer.FileId, newOwner.Id);
+			}
 
             LinkNotificationInformation linkNotificationInformation = FileContainer.ParentDirectoryHandler.AddRelationship(
                 FileContainer, relatedContainer, relationship, inheritPermissionValue);

@@ -22,16 +22,12 @@ function Replier_AddReply(replyText)
 
          replyFile.WriteAll_Sync(sanitize(replyText));
 
-         replyFile.Chown_Sync(
-            {
-               newOwnerId: userMetadata.id
-            });
-
          toReturn = base.AddRelatedFile_Sync(
             {
                filename: replyFile.Filename,
                relationship: "reply",
-               inheritPermission: true
+               inheritPermission: true,
+               chownRelatedFileTo: userMetadata.identity
             });
       });
    });
