@@ -44,29 +44,33 @@ function rply_register(file)
          },
          function(linkConfirmationInformation)
          {
-            var args = linkConfirmationInformation.args;
-            args.redirectUrl = window.location.href;
+            if (linkConfirmationInformation.args)
+            {
+               var args = linkConfirmationInformation.args;
+               args.redirectUrl = window.location.href;
 
-            var form = $('<form method="POST" />');
-            form.attr('action', linkConfirmationInformation.confirmLinkPage);
-            form.addHiddenItems(args);
+               var form = $('<form method="POST" />');
+               form.attr('action', linkConfirmationInformation.confirmLinkPage);
+               form.addHiddenItems(args);
 
-            var body = $('body');
-            body.html('<div class="title">Redirecting to confirmation page</div>');
-            body.append(form);
+               var body = $('body');
+               body.html('<div class="title">Redirecting to confirmation page</div>');
+               body.append(form);
 
-            form.submit();
+               form.submit();
+            }
+            else
+            {
+               saveButton.unbind('click', saveFunction);
+               savingSpan.hide();
+               replyButton.show();
+               replierDiv.empty();
+               replierDiv.show();
 
-
-            /*saveButton.unbind('click', saveFunction);
-            savingSpan.hide();
-            replyButton.show();
-            replierDiv.empty();
-            replierDiv.show();
-
-            // TODO:  this should be replaced with something that loads new replies through comet
-            $('body').html('<div class="title">Loading...</div>');
-            window.location.href=window.location.href;*/
+               // TODO:  this should be replaced with something that loads new replies through comet
+               $('body').html('<div class="title">Loading...</div>');
+               window.location.href=window.location.href;
+            }
          },
          function()
          {

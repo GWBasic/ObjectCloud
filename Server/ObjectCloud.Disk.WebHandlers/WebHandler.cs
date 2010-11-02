@@ -1225,11 +1225,16 @@ namespace ObjectCloud.Disk.WebHandlers
                     relatedContainer.Owner.Identity,
                     delegate(IEndpoints endpoints)
                     {
-                        Dictionary<string, object> linkResults = new Dictionary<string, object>();
-                        linkResults["confirmLinkPage"] = endpoints[ParticleEndpoint.ConfirmLinkPage];
-                        linkResults["args"] = clpArgs;
+						if (null != endpoints)
+						{
+        	                Dictionary<string, object> linkResults = new Dictionary<string, object>();
+            	            linkResults["confirmLinkPage"] = endpoints[ParticleEndpoint.ConfirmLinkPage];
+                	        linkResults["args"] = clpArgs;
 
-                        toReturn = WebResults.ToJson(linkResults);
+                    	    toReturn = WebResults.ToJson(linkResults);
+						}
+						else
+							toReturn = WebResults.ToJson(null);
 
                         lock (key)
                             Monitor.Pulse(key);
