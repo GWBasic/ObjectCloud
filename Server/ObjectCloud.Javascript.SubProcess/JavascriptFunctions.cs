@@ -63,6 +63,20 @@ namespace ObjectCloud.Javascript.SubProcess
 
             throw new WebResultsOverrideException(webResults);
         }
+		
+		/// <summary>
+		/// Returns a WebResult that redirects the user to the given URL 
+		/// </summary>
+		/// <param name="url">
+		/// A <see cref="System.String"/>
+		/// </param>
+		/// <returns>
+		/// A <see cref="System.Object"/>
+		/// </returns>
+		public static object redirect(string url)
+		{
+			return WebResults.Redirect(url);
+		}
 
         /// <summary>
         /// Converts an IWebResults to something that can be passed back to Javascript
