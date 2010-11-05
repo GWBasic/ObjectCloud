@@ -112,6 +112,14 @@ Javascript AJAX wrappers.  Note:  I chose Prototype because it was very easy to 
       <td><a href="http://ejohn.org/blog/pure-javascript-html-parser/">Pure JavaScript HTML Parser</a></td><td><a href="http://ejohn.org/about/">John Resig</a>, <a href="http://erik.eae.net">Erik Arvidsson</a></td><td>Javascript-based HTML parser</td><td><a href="http://www.mozilla.org/MPL/MPL-1.1.html">Mozilla Public License</a></td><td>Converts HTML to xhtml in the web-based document editor</td><td><a href="/API/htmlparser.js">/API/htmlparser.js</a></td><td>Added ability to convert &amp;nbsp;, &amp;bull;, and &amp;dash;.</td>
    </tr>
 
+   <tr>
+      <td>excanvas</td><td>Google</td><td>Adds support for Canvas in IE</td><td><a href="http://www.apache.org/licenses/LICENSE-2.0">Apache</a></td><td>Part of jqplot</td><td><a href="/API/excanvas.js">/API/excanvas.js</a></td>
+   </tr>
+
+   <tr>
+      <td><a href="http://www.jqplot.com/">jqplot</a></td><td>Chris Leonello</td><td>Plotting library</td><td>jqPlot is currently available for use in all personal or commercial projects under both the MIT and GPL version 2.0 licenses.</td><td></td><td><a href="/API/jquery.jqplot.js">/API/jquery.jqplot.js</a></td>
+   </tr>
+
 </table>
 
 <p>

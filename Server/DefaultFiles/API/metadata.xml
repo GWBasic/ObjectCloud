@@ -144,6 +144,10 @@
 			SendNotifications="False" />
 	</File>
 	<File
+		Name="excanvas.js"
+		TypeId="binary"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
 		Name="File.js"
 		TypeId="text"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
@@ -200,6 +204,14 @@
 	<File
 		Name="jquery.form.js"
 		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="jquery.jqplot.css"
+		TypeId="binary"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="jquery.jqplot.js"
+		TypeId="binary"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
 	<File
 		Name="jquery.js"
