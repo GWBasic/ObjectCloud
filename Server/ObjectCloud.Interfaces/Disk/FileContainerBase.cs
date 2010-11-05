@@ -439,7 +439,8 @@ namespace ObjectCloud.Interfaces.Disk
                         userOrGroupIds.Add(filePermission.UserOrGroupId);
 
             // ... and the owner
-            userOrGroupIds.Add(OwnerId.Value);
+            if (null != OwnerId)
+                userOrGroupIds.Add(OwnerId.Value);
 
             IEnumerable<IUser> notificationRecipients = FileHandlerFactoryLocator.UserManagerHandler.GetUsersAndResolveGroupsToUsers(userOrGroupIds);
             return notificationRecipients;
