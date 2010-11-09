@@ -38,6 +38,15 @@ namespace ObjectCloud.Common
         static Random _Random = null;
 
         /// <summary>
+        /// Returns a random number between 0.0 and 1.0
+        /// </summary>
+        /// <returns></returns>
+        public static double NextDouble()
+        {
+            return Random.NextDouble();
+        }
+
+        /// <summary>
         /// Returns the next integer
         /// </summary>
         /// <returns></returns>
