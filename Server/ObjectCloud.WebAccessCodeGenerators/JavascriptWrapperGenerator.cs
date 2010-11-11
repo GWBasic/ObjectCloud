@@ -656,7 +656,9 @@ namespace ObjectCloud.WebAccessCodeGenerators
 @"   if (!onFailure)
       onFailure = function(transport)
       {
-         alert(transport.responseText);
+         if (transport)
+            if (transport.responseText)
+               alert(transport.responseText);
       };
 
    if (!urlPostfix)
