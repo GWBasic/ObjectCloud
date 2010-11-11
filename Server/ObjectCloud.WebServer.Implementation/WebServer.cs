@@ -42,27 +42,35 @@ namespace ObjectCloud.WebServer.Implementation
         /// </summary>
         public override void RunServer()
         {
-            log.Info("Starting: " + this.ServerType);
+            try
+            {
+                log.Info("Starting: " + this.ServerType);
 
-            RecieveBufferRecycler = new BufferRecycler(HeaderSize);
-            SendBufferRecycler = new BufferRecycler(SendBufferSize);
+                RecieveBufferRecycler = new BufferRecycler(HeaderSize);
+                SendBufferRecycler = new BufferRecycler(SendBufferSize);
 
-            FileHandlerFactoryLocator.FileSystemResolver.Start();
+                FileHandlerFactoryLocator.FileSystemResolver.Start();
 
-            _Running = true;
+                _Running = true;
 
-            _ServerThread = Thread.CurrentThread;
+                _ServerThread = Thread.CurrentThread;
 
-            TcpListener = new TcpListener(IPAddress.Any, Port);
-            TcpListener.Start(20);
+                TcpListener = new TcpListener(IPAddress.Any, Port);
+                TcpListener.Start(20);
 
-            log.Info("Server is waiting for a new connection at http://" + FileHandlerFactoryLocator.HostnameAndPort + "/");
+                log.Info("Server is waiting for a new connection at http://" + FileHandlerFactoryLocator.HostnameAndPort + "/");
 
-            AcceptingSockets = true;
-			
-            TcpListener.BeginAcceptSocket(AcceptSocket, null);
+                AcceptingSockets = true;
 
-			System.Runtime.GCSettings.LatencyMode = System.Runtime.GCLatencyMode.Batch;
+                TcpListener.BeginAcceptSocket(AcceptSocket, null);
+
+                System.Runtime.GCSettings.LatencyMode = System.Runtime.GCLatencyMode.Batch;
+            }
+            catch (Exception e)
+            {
+                log.Warn("Could not start server: ", e);
+                FileHandlerFactoryLocator.FileSystemResolver.Stop();
+            }
         }
 
         /// <summary>
