@@ -2,7 +2,9 @@ Replier_AddReply.webCallable = "POST_application_x_www_form_urlencoded";
 Replier_AddReply.minimumWebPermission = "Write";
 Replier_AddReply.namedPermissions = "reply";
 Replier_AddReply.webReturnConvention = "JSON";
-function Replier_AddReply(replyText)
+Replier_AddReply.parser_inheritPermission = "bool";
+Replier_AddReply.parser_additionalRecipients = "JSON";
+function Replier_AddReply(replyText, inheritPermission, additionalRecipients)
 {
    var userMetadata = getConnectionMetadata();
 
@@ -22,11 +24,18 @@ function Replier_AddReply(replyText)
 
          replyFile.WriteAll_Sync(sanitize(replyText));
 
+         if (additionalRecipients.length > 0)
+            replyFile.SetPermission_Sync(
+               {
+                  UserOrGroups: additionalRecipients,
+                  FilePermission: 'Read'
+               });
+
          toReturn = base.AddRelatedFile_Sync(
             {
                filename: replyFile.Filename,
                relationship: "reply",
-               inheritPermission: true,
+               inheritPermission: inheritPermission,
                chownRelatedFileTo: userMetadata.identity
             });
       });

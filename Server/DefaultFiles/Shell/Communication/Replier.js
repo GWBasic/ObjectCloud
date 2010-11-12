@@ -1,4 +1,4 @@
-// Scripts: /API/jquery.js, /API/jquery.rte.js, /API/jquery.rte.tb.js, /API/jquery.addhiddentoform.js
+// Scripts: /API/jquery.js, /API/jquery.rte.js, /API/jquery.rte.tb.js, /API/jquery.addhiddentoform.js, /API/UserSuggest.js
 
 var rpy_object = null;
 var rpy_oldHTML;
@@ -12,13 +12,53 @@ function rply_register(file)
    var savingSpan = $('.rply_saving');
    savingSpan.hide();
 
+   var uiDiv = $('.rply_ui');
+   uiDiv.hide();
+
    var replyButton = $('input.rply_reply');
    var replierDiv = $('#Replier_Replier');
+
+   $('.rply_recipient', uiDiv).each(function()
+   {
+      var statusRecipientSpan = $(this);
+      var statusRecipientSpanClone = statusRecipientSpan.clone();
+      statusRecipientSpan.hide();
+      statusRecipientSpan.addClass('removebeforesubmit');
+
+      var inputCtr = 0;
+
+      function addInput()
+      {
+         var newRecipientSpan = statusRecipientSpanClone.clone();
+         statusRecipientSpan.before(newRecipientSpan);
+
+         $('input', newRecipientSpan).each(function()
+         {
+            var me = $(this);
+
+            me.attr('name', me.attr('name') + inputCtr);
+
+            me.bind('keydown.addInput', function()
+            {
+               me.unbind('keydown.addInput');
+               addInput();
+            });
+
+            enableUserSuggest(me);
+         });
+
+         inputCtr++;
+      }
+
+      addInput();
+   });
+
 
    replyButton.click(function()
    {
       replyButton.hide();
       saveButton.show();
+      uiDiv.show();
 
       var editorTextarea = $('<textarea />');
       replierDiv.append(editorTextarea);
@@ -38,9 +78,19 @@ function rply_register(file)
          replierDiv.hide();
          saveButton.hide();
 
+         var additionalRecipients = [];
+         $('.rply_rname', uiDiv).each(function()
+         {
+            var additionalRecipient = $(this).val();
+            if (additionalRecipient.length > 0)
+               additionalRecipients.push(additionalRecipient);
+         });
+
          file.Replier_AddReply(
          {
-            replyText: rte.get_content()
+            replyText: rte.get_content(),
+            inheritPermission: $('.rply_inheritPermission', uiDiv).is(':checked'),
+            additionalRecipients: additionalRecipients
          },
          function(linkConfirmationInformation)
          {

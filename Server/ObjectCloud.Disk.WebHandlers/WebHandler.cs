@@ -1197,12 +1197,26 @@ namespace ObjectCloud.Disk.WebHandlers
 			
 			if (null != chownRelatedFileTo)
 			{
-				IUser newOwner = FileHandlerFactoryLocator.UserManagerHandler.GetOpenIdUser(chownRelatedFileTo);
-				relatedContainer.ParentDirectoryHandler.Chown(webConnection.Session.User, relatedContainer.FileId, newOwner.Id);
+				IUserOrGroup newOwner = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupOrOpenId(chownRelatedFileTo, true);
+				
+				if (newOwner is IUser)
+					relatedContainer.ParentDirectoryHandler.Chown(webConnection.Session.User, relatedContainer.FileId, newOwner.Id);
 			}
 
             LinkNotificationInformation linkNotificationInformation = FileContainer.ParentDirectoryHandler.AddRelationship(
                 FileContainer, relatedContainer, relationship, inheritPermissionValue);
+			
+			// Figure out who should get notifications
+			// If permission isn't inherited, then only send notifications to people who would get notifications for the
+			// linked object and this object
+			HashSet<string> notificationRecipientIdentities = new HashSet<string>(
+				FileContainer.GetNotificationRecipientIdentities());
+			
+			if (!inheritPermissionValue)
+			{
+				IEnumerable<string> relatedRecipients = relatedContainer.GetNotificationRecipientIdentities();
+				notificationRecipientIdentities.IntersectWith(relatedRecipients);
+			}
 
             Dictionary<string, object> clpArgs = new Dictionary<string, object>();
             clpArgs["objectUrl"] = FileContainer.ObjectUrl;
@@ -1210,8 +1224,7 @@ namespace ObjectCloud.Disk.WebHandlers
             clpArgs["linkSummaryView"] = linkNotificationInformation.linkSummaryView;
             clpArgs["linkUrl"] = relatedContainer.ObjectUrl;
             clpArgs["linkDocumentType"] = relatedContainer.DocumentType;
-            clpArgs["recipients"] = new List<object>(Enumerable<object>.Cast(
-                FileContainer.GetNotificationRecipientIdentities())).ToArray();
+            clpArgs["recipients"] = new List<object>(Enumerable<object>.Cast(notificationRecipientIdentities)).ToArray();
             clpArgs["linkID"] = linkNotificationInformation.linkID;
 
             // This is done because this function is called from server-side Javascript

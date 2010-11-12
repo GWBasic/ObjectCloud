@@ -1109,6 +1109,63 @@ namespace ObjectCloud.Disk.FileHandlers
             DateTime? newest,
             DateTime? oldest,
             uint? maxToReturn)
+		{
+			LinkedList<FileId> allFiles = new LinkedList<FileId>();
+			HashSet<FileId> inspectPermission = new HashSet<FileId>();
+			
+			LinkedList<ComparisonCondition> comparisonConditions = new LinkedList<ComparisonCondition>();
+
+            comparisonConditions.AddLast(Relationships_Table.FileId == parentFileId);
+
+            if (null != relationships)
+                comparisonConditions.AddLast(Relationships_Table.Relationship.In(relationships));
+
+            foreach (IRelationships_Readable relationshipInDb in Enumerable<IRelationships_Readable>.FastCopy(
+                DatabaseConnection.Relationships.Select(ComparisonCondition.Condense(comparisonConditions))))
+            {
+                if (!relationshipInDb.Inherit)
+                    inspectPermission.Add(relationshipInDb.ReferencedFileId);
+				
+				allFiles.AddLast(relationshipInDb.ReferencedFileId);
+            }
+  
+			comparisonConditions.Clear();
+            comparisonConditions.AddLast(File_Table.FileId.In(allFiles));
+
+            if (null != extensions)
+                comparisonConditions.AddLast(File_Table.Extension.In(extensions));
+
+            if (null != newest)
+                comparisonConditions.AddLast(File_Table.Created < newest.Value);
+
+            if (null != oldest)
+                comparisonConditions.AddLast(File_Table.Created > oldest.Value);
+
+			LinkedList<ID<IUserOrGroup, Guid>> userAndGroupIds = new LinkedList<ID<IUserOrGroup, Guid>>(
+				FileHandlerFactoryLocator.UserManagerHandler.GetGroupIdsThatUserIsIn(userId));
+			userAndGroupIds.AddLast(userId);
+			
+			foreach (IFile_Readable file in Enumerable<IFile_Readable>.FastCopy(DatabaseConnection.File.Select(
+                ComparisonCondition.Condense(comparisonConditions),
+                maxToReturn,
+                ObjectCloud.ORM.DataAccess.OrderBy.Desc,
+                File_Table.Created)))
+            {
+				// Slow, but simple
+				// TODO: Optimize
+				IFileContainer toYield = FileContainerCache[file.Name];
+				
+				if (inspectPermission.Contains(file.FileId))
+				{
+					if (null != toYield.LoadPermission(userId))
+						yield return toYield;
+				}
+				else
+					yield return toYield;
+			}
+		}
+		
+			/* Old version of GetRelatedFiles, doesn't work if owner of parent file doesn't have permission to see child file
         {
             HashSet<FileId> filesToInspect = new HashSet<FileId>();
             HashSet<FileId> inherited = new HashSet<FileId>();
@@ -1154,22 +1211,22 @@ namespace ObjectCloud.Disk.FileHandlers
             }
 
             // Check to see if the user has named permissions with the relationship name, if so, then permissions do not need to be inspected
-            /*if (inspectPermissions)
-            {
-                if (HasNamedPermissions(parentFileId, relationships, userId))
-                    inspectPermissions = false;
-            }*/
+            //if (inspectPermissions)
+            //{
+            //    if (HasNamedPermissions(parentFileId, relationships, userId))
+            //        inspectPermissions = false;
+            //}
 
             if (inspectPermissions & filesToInspect.Count > 0)
             {
                 // This block of code didn't work because it doesn't handle inheritance from the parent directory
-                /*IEnumerable<IPermission_Readable> permissions = DatabaseConnection.Permission.Select(
-                    Permission_Table.FileId.In(filesToInspect) & Permission_Table.UserOrGroupId.In(userOrGroupIds));
+                //IEnumerable<IPermission_Readable> permissions = DatabaseConnection.Permission.Select(
+                //    Permission_Table.FileId.In(filesToInspect) & Permission_Table.UserOrGroupId.In(userOrGroupIds));
 
-                filesToInspect = new HashSet<FileId>();
+                //filesToInspect = new HashSet<FileId>();
 
-                foreach (IPermission_Readable permission in permissions)
-                    filesToInspect.Add(permission.FileId);*/
+                //foreach (IPermission_Readable permission in permissions)
+                //    filesToInspect.Add(permission.FileId);
 
                 // This approach is slow because it explicitly checks each file's permission
                 // Someday it can be optimized
@@ -1209,7 +1266,7 @@ namespace ObjectCloud.Disk.FileHandlers
                 OwnerIdCache[toYield.FileId] = toYield.OwnerId;
                 yield return toYield;
             }
-        }
+        }*/
 
         public virtual LinkNotificationInformation AddRelationship(IFileContainer parentFile, IFileContainer relatedFile, string relationship, bool inheritPermission)
         {

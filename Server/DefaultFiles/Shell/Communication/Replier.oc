@@ -2,6 +2,7 @@
 <oc:inserthead>
    <oc:script src="/API/jquery.js" />
    <oc:css src="/API/jquery_rte/jquery.rte.css" />
+   <oc:css src="/API/autosuggest.css" />
    <oc:script src="/API/prettyPrintDates.js" />
    <oc:open filename="[_FileName_]" varname="object_target" />
 </oc:inserthead>
@@ -11,7 +12,15 @@
          <input type="button" value="Add a reply" class="rply_reply" />
          <input type="button" value="Save" class="rply_save" />
          <span class="rply_saving">Saving...</span>
-         <div id="Replier_Replier"></div>
+
+         <div class="rply_ui">
+            <form>
+               Public: <input type="checkbox" checked="true" class="rply_inheritPermission" /> (Your reply will be visible to everyone who can see this page)<br />
+               Additional Recipients:<br />
+               <span class="rply_recipient"><input type="text" class="rply_rname" name="recipient_" /></span><br />
+            </form>
+            <div id="Replier_Replier"></div>
+         </div>
 
          <oc:inserthead>
             <script>
