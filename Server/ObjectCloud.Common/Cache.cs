@@ -454,16 +454,16 @@ namespace ObjectCloud.Common
 
             int cacheHandlesCtr = Convert.ToInt32((Convert.ToInt64(Interlocked.Increment(ref CacheHandlesCtr)) - int.MinValue) % cachedObjects.Length);
 
-            object replaced = cachedObjects[cacheHandlesCtr];
+            object replaced;
 
+            // Keep trying until this is the thread that overwrites
+            do
+                replaced = cachedObjects[cacheHandlesCtr];
+            while (replaced != Interlocked.CompareExchange<object>(ref cachedObjects[cacheHandlesCtr], toCache, replaced));
+
+            // If replaced is aware of the cache, decrememnt its cache count
             if (replaced is IAware)
-            {
-                // Only de-reference replaced if this is the thread that overwrites it
-                if (replaced == Interlocked.CompareExchange<object>(ref cachedObjects[cacheHandlesCtr], toCache, replaced))
-                    ((IAware)replaced).DecrementCacheCount();
-            }
-            else
-                cachedObjects[cacheHandlesCtr] = toCache;
+                ((IAware)replaced).DecrementCacheCount();
 
             if (toCache is IAware)
                 ((IAware)toCache).IncrementCacheCount();
@@ -644,13 +644,24 @@ namespace ObjectCloud.Common
 
                     RecoveringMemory = true;
 
+                    // Reduse to 80% of target memory use so this thread isn't constantly being started
+                    long targetMemoryUse = Convert.ToInt64(Convert.ToDouble(MaximumMemoryToUse) * 0.80);
+
                     try
                     {
                         // Just write nulls into the cache until memory use falls within acceptable limits
                         int tries = 0;
-                        while ((MemoryInUse > _MaximumMemoryToUse) && (tries < CachedObjects.Length))
+                        while ((MemoryInUse > targetMemoryUse) && (tries < CachedObjects.Length))
                         {
-                            CacheObject(null);
+                            try
+                            {
+                                CacheObject(null);
+                            }
+                            catch (Exception e)
+                            {
+                                log.Warn("Exception while recovering old memory", e);
+                            }
+
                             tries++;
                         }
                     }
