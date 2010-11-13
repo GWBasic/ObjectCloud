@@ -398,7 +398,7 @@ namespace ObjectCloud.Common
         /// <summary>
         /// Counter that helps determine which element in the CacheHandles array is used for each cache hit
         /// </summary>
-        private static long CacheHandlesCtr = long.MinValue;
+        private static int CacheHandlesCtr = int.MinValue;
 
         /// <summary>
         /// The number of references that the cache should keep. 20,000 is reccomended because the cache will keep multiple references to the same object when it is used many times
@@ -452,7 +452,7 @@ namespace ObjectCloud.Common
             if (null == cachedObjects)
                 throw new Exception("CacheSize not set, reccomended size: 20,000");
 
-            long cacheHandlesCtr = Math.Abs(Interlocked.Increment(ref CacheHandlesCtr)) % cachedObjects.Length;
+            int cacheHandlesCtr = Convert.ToInt32((Convert.ToInt64(Interlocked.Increment(ref CacheHandlesCtr)) - int.MinValue) % cachedObjects.Length);
 
             object replaced = cachedObjects[cacheHandlesCtr];
 
