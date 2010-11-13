@@ -609,13 +609,60 @@ namespace ObjectCloud.Common
                 memoryInUse = MemoryInUse;
             } while (memoryInUse != Interlocked.CompareExchange(ref MemoryInUse, memoryInUse + delta, memoryInUse));
 
-            // Just write nulls into the cache until memory use falls within acceptable limits
-            int tries = 0;
-            while ((MemoryInUse > _MaximumMemoryToUse) && (tries < CachedObjects.Length))
-            {
-                CacheObject(null);
-                tries++;
-            }
+            if (MemoryInUse > _MaximumMemoryToUse)
+                if (!RecoveringMemory)
+                    lock (RecoverMemoryPulser)
+                        Monitor.Pulse(RecoverMemoryPulser);
+        }
+
+        static Cache()
+        {
+            Thread recoverOldMemoryThread = new Thread(RecoverOldMemory);
+            recoverOldMemoryThread.Name = "Scans cache to remove old items occupying lots of RAM";
+            recoverOldMemoryThread.IsBackground = true;
+
+            recoverOldMemoryThread.Start();
+        }
+
+        /// <summary>
+        /// Set to true when the cache is recovering memory
+        /// </summary>
+        private static bool RecoveringMemory = false;
+
+        /// <summary>
+        /// Used to signal to the recovering memory thread to start
+        /// </summary>
+        private static object RecoverMemoryPulser = new object();
+
+        private static void RecoverOldMemory()
+        {
+            while (true)
+                try
+                {
+                    lock (RecoverMemoryPulser)
+                        Monitor.Wait(RecoverMemoryPulser);
+
+                    RecoveringMemory = true;
+
+                    try
+                    {
+                        // Just write nulls into the cache until memory use falls within acceptable limits
+                        int tries = 0;
+                        while ((MemoryInUse > _MaximumMemoryToUse) && (tries < CachedObjects.Length))
+                        {
+                            CacheObject(null);
+                            tries++;
+                        }
+                    }
+                    finally
+                    {
+                        RecoveringMemory = false;
+                    }
+                }
+                catch (Exception e)
+                {
+                    log.Warn("Exception while recovering old memory", e);
+                }
         }
         
         /// <summary>
