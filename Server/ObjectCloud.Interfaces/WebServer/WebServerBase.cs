@@ -394,84 +394,13 @@ namespace ObjectCloud.Interfaces.WebServer
         }
         private double _MaxConnectionIdleSeconds = 300;
 
-        public string CacheRAMThreashold
+        /// <summary>
+        /// The number of references to keep in the cache
+        /// </summary>
+        public int? CacheSize
         {
-            get
-            {
-                IEnumerable<long> memorySizeLimits = Cache.MemorySizeLimits;
-                if (null == memorySizeLimits)
-                    return null;
-
-                return StringGenerator.GenerateCommaSeperatedList(memorySizeLimits);
-            }
-            set
-            {
-                if (null == value)
-                    Cache.MemorySizeLimits = null;
-                else
-                {
-                    IEnumerable<string> values = StringParser.ParseCommaSeperated(value);
-
-                    List<long> toSet = new List<long>();
-
-                    foreach (string toParse in values)
-                    {
-                        long parsed = default(long);
-                        if (long.TryParse(toParse, out parsed))
-                            toSet.Add(parsed);
-                    }
-
-                    Cache.MemorySizeLimits = toSet;
-                }
-            }
-        }
-
-        public long? CacheRAMMaxMemory
-        {
-            get
-            {
-                return Cache.MaxMemory;
-            }
-            set
-            {
-                Cache.MaxMemory = value;
-            }
-        }
-
-        public int CacheRAMMinReferences
-        {
-            get
-            {
-                return Cache.MinCacheReferences;
-            }
-            set
-            {
-                Cache.MinCacheReferences = value;
-            }
-        }
-
-        public long CacheRAMMaxReferences
-        {
-            get
-            {
-                return Cache.MaxCacheReferences;
-            }
-            set
-            {
-                Cache.MaxCacheReferences = value;
-            }
-        }
-
-        public double CachePercentOfMaxWorkingSet
-        {
-            get
-            {
-                return Cache.PercentOfMaxWorkingSet;
-            }
-            set
-            {
-                Cache.PercentOfMaxWorkingSet = value;
-            }
+            get { return Cache.CacheSize; }
+            set { Cache.CacheSize = value; }
         }
 
         public Exception TerminatingException

@@ -2,5 +2,8 @@
 <ObjectCloudConfig>
   <FileSystem ConnectionString="./SecondFileSystem" />
   <FileHandlerFactoryLocator Hostname="localhost"/>
-  <WebServer Port="1081" />
+  <WebServer
+    Port="1081"
+	  CacheSize="20000"
+    />
 </ObjectCloudConfig>

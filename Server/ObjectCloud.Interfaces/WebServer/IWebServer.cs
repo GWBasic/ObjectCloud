@@ -163,29 +163,9 @@ namespace ObjectCloud.Interfaces.WebServer
         double MaxConnectionIdleSeconds { get; set; }
 
         /// <summary>
-        /// The percentage of the working set that ObjectCloud should attempt to occupy
+        /// The number of references to keep in the cache
         /// </summary>
-        double CachePercentOfMaxWorkingSet { get; set; }
-
-        /// <summary>
-        /// Comma-seperated list of values that are passed to Cache.MemorySizeLimts
-        /// </summary>
-        string CacheRAMThreashold { get; set; }
-
-        /// <summary>
-        /// The maximum memory to hold in the cache
-        /// </summary>
-        long? CacheRAMMaxMemory { get; set; }
-
-        /// <summary>
-        /// The minimum number of references to hold in the cache
-        /// </summary>
-        int CacheRAMMinReferences { get; set; }
-
-        /// <summary>
-        /// The maximum number of references to hold in the cache
-        /// </summary>
-        long CacheRAMMaxReferences { get; set; }
+        int? CacheSize { get; set; }
 
         /// <summary>
         /// The exception that terminated the web server

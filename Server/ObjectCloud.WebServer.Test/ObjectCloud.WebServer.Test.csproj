@@ -88,7 +88,6 @@
     <Compile Include="PermissionsTests\TestBuiltInGroups.cs" />
     <Compile Include="TestSession.cs" />
     <Compile Include="TestUserAndPermissions.cs" />
-    <Compile Include="WebComponentTest.cs" />
     <Compile Include="WebServerTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WebServerTestBase.cs" />

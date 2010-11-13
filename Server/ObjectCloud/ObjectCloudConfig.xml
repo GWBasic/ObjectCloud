@@ -33,8 +33,7 @@ For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/licen
     CheckDeadConnectionsFrequencySeconds="15"
     MaxConnectionIdleSeconds="45"
     PreloadedObjects="/Shell,/Docs,/API,/DefaultTemplate"
-    CacheRAMMinReferences="0"
-    CacheRAMMaxReferences="500"
+    CacheSize="20000"
     />
 
   <!-- 

@@ -287,8 +287,8 @@ namespace ObjectCloud.WebServer.Implementation
 				    || (numRequestsSinceLastGC > WebServer.MaxRequestsBeforeGarbageCollection))
 				{
 					// Interlocked makes sure that we only schedule the GC if this is the thread that sets NumRequestsSinceLastGC
-					if (numRequestsSinceLastGC == Interlocked.CompareExchange(ref NumRequestsSinceLastGC, 0, numRequestsSinceLastGC))
-						Cache.QueueGC();
+                    if (numRequestsSinceLastGC == Interlocked.CompareExchange(ref NumRequestsSinceLastGC, 0, numRequestsSinceLastGC))
+                        GC.Collect();
 				}
 				else
 					Interlocked.Increment(ref NumRequestsSinceLastGC);

@@ -66,39 +66,21 @@ namespace ObjectCloud.Disk.Test
 
             Exception = null;
 
-            IEnumerable<long> oldMemorySizeLimits = ObjectCloud.Common.Cache.MemorySizeLimits;
-            long? oldMaxMemory = ObjectCloud.Common.Cache.MaxMemory;
-            int oldCacheHitsPerInspection = ObjectCloud.Common.Cache.CacheHitsPerInspection;
-
-            ObjectCloud.Common.Cache.MemorySizeLimits = new long[] { 210959812, 3000000000, 4000000000 };
-            ObjectCloud.Common.Cache.MaxMemory = 2 * 210959812;
-            ObjectCloud.Common.Cache.CacheHitsPerInspection = 100;
             CreatedObjects = new HashSet<long>();
 
-            try
+            List<Thread> threads = new List<Thread>();
+
+            for (int ctr = 0; ctr < Environment.ProcessorCount; ctr++)
             {
-                List<Thread> threads = new List<Thread>();
+                Thread thread = new Thread(RunTestThread);
+                thread.Name = "Cache test thread " + ctr.ToString();
+                thread.Start();
 
-                for (int ctr = 0; ctr < Environment.ProcessorCount; ctr++)
-                {
-                    Thread thread = new Thread(RunTestThread);
-                    thread.Name = "Cache test thread " + ctr.ToString();
-                    thread.Start();
-
-                    threads.Add(thread);
-                }
-
-                foreach (Thread thread in threads)
-                    thread.Join();
+                threads.Add(thread);
             }
-            finally
-            {
-                Cache = null;
-                ObjectCloud.Common.Cache.MemorySizeLimits = oldMemorySizeLimits;
-                ObjectCloud.Common.Cache.MaxMemory = oldMaxMemory;
-                ObjectCloud.Common.Cache.CacheHitsPerInspection = oldCacheHitsPerInspection;
-                CreatedObjects = null;
-            }
+
+            foreach (Thread thread in threads)
+                thread.Join();
 
             if (null != Exception)
                 throw Exception;

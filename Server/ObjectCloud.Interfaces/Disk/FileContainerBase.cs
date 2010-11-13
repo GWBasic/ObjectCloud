@@ -370,7 +370,11 @@ namespace ObjectCloud.Interfaces.Disk
             getParameters["HeaderFooterOverride"] = "/DefaultTemplate/summaryview.ochf";
 
             ISession session = FileHandlerFactoryLocator.SessionManagerHandler.CreateSession();
-            session.Login(Owner);
+
+            if (null != Owner)
+                session.Login(Owner);
+            else
+                session.Login(FileHandlerFactoryLocator.UserFactory.AnonymousUser);
 
             string summaryView;
             try
