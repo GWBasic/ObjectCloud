@@ -5,5 +5,7 @@
   <WebServer
     Port="1081"
 	  CacheSize="20000"
+    MaxKnownMemoryUse="104857600"
     />
+
 </ObjectCloudConfig>

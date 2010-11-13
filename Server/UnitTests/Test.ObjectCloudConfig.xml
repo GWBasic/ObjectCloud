@@ -7,6 +7,7 @@
   <WebServer
     Port="1082"
 	  CacheSize="20000"
+    MaxKnownMemoryUse="104857600"
     KeepAlive="true" />
 
   <!-- When running a real server, this line should be deleted.  Writing to the console really kills performance -->

@@ -34,6 +34,7 @@ For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/licen
     MaxConnectionIdleSeconds="45"
     PreloadedObjects="/Shell,/Docs,/API,/DefaultTemplate"
     CacheSize="20000"
+    MaxKnownMemoryUse="104857600"
     />
 
   <!-- 

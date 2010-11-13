@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Xml;
 
 using ObjectCloud.Common;
@@ -15,7 +16,7 @@ using ObjectCloud.Interfaces.Security;
 
 namespace ObjectCloud.Disk.FileHandlers
 {
-    public class TextHandler : LastModifiedFileHandler, ITextHandler
+    public class TextHandler : LastModifiedFileHandler, ITextHandler, Cache.IAware
     {
         string Path;
 
@@ -44,7 +45,10 @@ namespace ObjectCloud.Disk.FileHandlers
             using (TimedLock.Lock(this))
             {
                 if (null == Cached)
+                {
                     Cached = System.IO.File.ReadAllText(Path);
+                    Cache.ManageMemoryUse(Encoding.Default.GetByteCount(Cached));
+                }
 
                 return Cached;
             }
@@ -54,14 +58,13 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             using (TimedLock.Lock(this))
             {
-                // Setting everything to null forces readers to block while writing occurs
-                Cached = null;
-                CachedEnumerable = null;
+                ReleaseMemory();
 
                 System.IO.File.WriteAllText(Path, contents);
 
                 // set cached to null to test round trip
                 Cached = contents;
+                Cache.ManageMemoryUse(Encoding.Default.GetByteCount(Cached));
             }
 
             if (null != FileContainer)
@@ -104,6 +107,12 @@ namespace ObjectCloud.Disk.FileHandlers
                     {
                         cachedEnumerable = File.ReadAllLines(Path);
                         CachedEnumerable = cachedEnumerable;
+
+                        long size = 0;
+                        foreach (string s in CachedEnumerable)
+                            size += Encoding.Default.GetByteCount(s);
+
+                        Cache.ManageMemoryUse(size);
                     }
                 }
 
@@ -127,8 +136,7 @@ namespace ObjectCloud.Disk.FileHandlers
                     File.Copy(localDiskPath, Path);
                 }
 
-                CachedEnumerable = null;
-                Cached = null;
+                ReleaseMemory();
             }
         }
 
@@ -136,11 +144,17 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             using (TimedLock.Lock(this))
             {
-                // Again, we'll force a round-trip to disk so that we really know if something is getting munged
-                CachedEnumerable = null;
-                Cached = null;
+                string cached = Cached;
+
+                ReleaseMemory();
 
                 File.AppendAllText(Path, toAppend);
+
+                if (null != cached)
+                {
+                    Cached = cached + toAppend;
+                    Cache.ManageMemoryUse(Encoding.Default.GetByteCount(Cached));
+                }
             }
 
             // TODO:  diffing between the old and new text would be cool to include in the changedata
@@ -159,6 +173,47 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             if (null != ContentsChanged)
                 ContentsChanged(this, new EventArgs());
+        }
+
+        /// <summary>
+        /// Number of cache references
+        /// </summary>
+        private int CacheCount = 0;
+
+        public void IncrementCacheCount()
+        {
+            Interlocked.Increment(ref CacheCount);
+        }
+
+        public void DecrementCacheCount()
+        {
+            if (Interlocked.Decrement(ref CacheCount) <= 0)
+                ReleaseMemory();
+        }
+
+        ~TextHandler()
+        {
+            ReleaseMemory();
+        }
+
+        private void ReleaseMemory()
+        {
+            using (TimedLock.Lock(this))
+            {
+                long size = 0;
+
+                if (null != Cached)
+                    size += Encoding.Default.GetByteCount(Cached);
+
+                if (null != CachedEnumerable)
+                    foreach (string s in CachedEnumerable)
+                        size += Encoding.Default.GetByteCount(s);
+
+                Cached = null;
+                CachedEnumerable = null;
+
+                Cache.ManageMemoryUse(-1 * size);
+            }
         }
     }
 }

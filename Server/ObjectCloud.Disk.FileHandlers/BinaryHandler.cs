@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Data.Common;
 using System.Text;
+using System.Threading;
 
 using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
@@ -18,8 +19,8 @@ namespace ObjectCloud.Disk.FileHandlers
     /// <summary>
     /// Handles binary files
     /// </summary>
-	public class BinaryHandler : LastModifiedFileHandler, IBinaryHandler
-	{
+    public class BinaryHandler : LastModifiedFileHandler, IBinaryHandler, Cache.IAware
+    {
         /// <summary>
         /// Creates the text file name
         /// </summary>
@@ -64,7 +65,10 @@ namespace ObjectCloud.Disk.FileHandlers
             using (TimedLock.Lock(this))
             {
                 if (null == Cached)
+                {
                     Cached = System.IO.File.ReadAllBytes(BinaryFile);
+                    Cache.ManageMemoryUse(Cached.Length);
+                }
 
                 return Array<byte>.ShallowCopy(Cached);
             }
@@ -74,42 +78,16 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             using (TimedLock.Lock(this))
             {
+                ReleaseMemory();
+
                 System.IO.File.WriteAllBytes(BinaryFile, contents);
                 Cached = Array<byte>.ShallowCopy(contents);
+
+                Cache.ManageMemoryUse(Cached.Length);
             }
 
             OnContentsChanged();
         }
-
-        /* unused version that uses streams
-                 public void WriteAll(Stream contents)
-        {
-            using (TimedLock.Lock(this))
-            {
-                // If the data is small enough to fit in RAM, just load it all into an array
-                if (contents.Length <= FileHandlerFactoryLocator.WebServer.MaxInMemoryContentSize)
-                {
-                    Cached = new byte[contents.Length];
-                    contents.Read(Cached, 0, Cached.Length);
-
-                    System.IO.File.WriteAllBytes(BinaryFile, Cached);
-                }
-                else
-                {
-                    FileStream fs = File.OpenWrite(BinaryFile);
-                    byte[] buffer = new byte[FileHandlerFactoryLocator.WebServer.MaxInMemoryContentSize];
-
-                    StreamFunctions.CopyStreams(buffer, contents, fs);
-
-                    fs.Flush();
-                    fs.Close();
-                }
-            }
-
-            OnContentsChanged();
-        }
-	
-         */
 
         public override void Dump(string path, ID<ObjectCloud.Interfaces.Security.IUserOrGroup, Guid> userId)
         {
@@ -146,7 +124,8 @@ namespace ObjectCloud.Disk.FileHandlers
                 {
                     File.Delete(BinaryFile);
                     File.Copy(localDiskPath, BinaryFile);
-                    Cached = null;
+
+                    ReleaseMemory();
                 }
             }
         }
@@ -201,6 +180,38 @@ namespace ObjectCloud.Disk.FileHandlers
             {
                 view = null;
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Number of cache references
+        /// </summary>
+        private int CacheCount = 0;
+
+        public void IncrementCacheCount()
+        {
+            Interlocked.Increment(ref CacheCount);
+        }
+
+        public void DecrementCacheCount()
+        {
+            if (Interlocked.Decrement(ref CacheCount) <= 0)
+                ReleaseMemory();
+        }
+
+        ~BinaryHandler()
+        {
+            ReleaseMemory();
+        }
+
+        private void ReleaseMemory()
+        {
+            using (TimedLock.Lock(this))
+            {
+                if (null != Cached)
+                    Cache.ManageMemoryUse(-1 * Cached.Length);
+
+                Cached = null;
             }
         }
     }

@@ -168,6 +168,11 @@ namespace ObjectCloud.Interfaces.WebServer
         int? CacheSize { get; set; }
 
         /// <summary>
+        /// The maxiumum amount of data that ObjectCloud should keep in RAM for items that it knows their size
+        /// </summary>
+        long MaxKnownMemoryUse { get; set; }
+
+        /// <summary>
         /// The exception that terminated the web server
         /// </summary>
         Exception TerminatingException { get; }

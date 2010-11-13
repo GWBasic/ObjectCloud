@@ -579,6 +579,44 @@ namespace ObjectCloud.Common
                             }
                     });
         }
+
+        private static long MemoryInUse = 0;
+
+        /// <summary>
+        /// The maximum amount of memory that large objects will use; ObjectCloud will release memory when large objects occupy more then the specified memory
+        /// </summary>
+        public static long MaximumMemoryToUse
+        {
+            get { return _MaximumMemoryToUse; }
+            set
+            {
+                _MaximumMemoryToUse = value;
+                ManageMemoryUse(0);
+            }
+        }
+        private static long _MaximumMemoryToUse = long.MaxValue;
+
+        /// <summary>
+        /// Call to help ObjectCloud manually manage memory. For objects that hold large amounts of memory, they chould call this with the delta so ObjectCloud knows when to release memory. It is reccomended to call this prior to allocating and de-allocating memory so that there is free memory available
+        /// </summary>
+        /// <param name="delta"></param>
+        public static void ManageMemoryUse(long delta)
+        {
+            long memoryInUse;
+
+            do
+            {
+                memoryInUse = MemoryInUse;
+            } while (memoryInUse != Interlocked.CompareExchange(ref MemoryInUse, memoryInUse + delta, memoryInUse));
+
+            // Just write nulls into the cache until memory use falls within acceptable limits
+            int tries = 0;
+            while ((MemoryInUse > _MaximumMemoryToUse) && (tries < CachedObjects.Length))
+            {
+                CacheObject(null);
+                tries++;
+            }
+        }
         
         /// <summary>
 		/// Removes all of the collected cache handles from the cache 
