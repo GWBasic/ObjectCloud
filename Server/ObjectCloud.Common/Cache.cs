@@ -59,6 +59,9 @@ namespace ObjectCloud.Common
     public class Cache<TKey, TValue, TConstructorArg> : Cache
         where TValue : class
     {
+        /// <summary>
+        /// Holds all local references
+        /// </summary>
         private readonly Dictionary<TKey, WeakReference> Dictionary =
             new Dictionary<TKey, WeakReference>();
 
@@ -504,9 +507,9 @@ namespace ObjectCloud.Common
             if (null == setToRemove)
             {
                 if (objectsToRemove is IEnumerable<object>)
-                    setToRemove.UnionWith((IEnumerable<object>)objectsToRemove);
+                    setToRemove = new HashSet<object>((IEnumerable<object>)objectsToRemove);
                 else
-                    setToRemove.UnionWith(Enumerable<object>.Cast(objectsToRemove));
+                    setToRemove = new HashSet<object>(Enumerable<object>.Cast(objectsToRemove));
             }
 
             for (int ctr = 0; ctr < cachedObjects.Length; ctr++)
