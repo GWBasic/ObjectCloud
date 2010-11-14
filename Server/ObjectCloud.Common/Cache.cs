@@ -620,6 +620,7 @@ namespace ObjectCloud.Common
             Thread recoverOldMemoryThread = new Thread(RecoverOldMemory);
             recoverOldMemoryThread.Name = "Scans cache to remove old items occupying lots of RAM";
             recoverOldMemoryThread.IsBackground = true;
+			recoverOldMemoryThread.Priority = ThreadPriority.Highest;
 
             recoverOldMemoryThread.Start();
         }
