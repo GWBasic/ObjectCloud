@@ -374,6 +374,23 @@
             A <see cref="T:ObjectCloud.Interfaces.WebServer.IWebResults"/>
             </returns>
         </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.WebHandler`1.UnixEpoch">
+            <summary>
+            The unix epoch
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.WebHandler`1.VerifySecurityTimestamp(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Verifies that the incoming call has a proper securityTimestamp
+            </summary>
+            <param name="webConnection"></param>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.WebHandler`1.GenerateSecurityTimestamp">
+            <summary>
+            Returns a security timestamp
+            </summary>
+            <returns></returns>
+        </member>
         <member name="P:ObjectCloud.Disk.WebHandlers.WebHandler`1.FileHandler">
             <value>
             The FileHandler, pre-casted

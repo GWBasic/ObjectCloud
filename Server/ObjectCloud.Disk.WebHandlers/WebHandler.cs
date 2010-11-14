@@ -1702,6 +1702,45 @@ namespace ObjectCloud.Disk.WebHandlers
 			IFileContainer fileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(filename);
 			return WebResults.From(Status._200_OK, fileContainer.CastFileHandler<ITextHandler>().ReadAll());
 		}
+
+        /// <summary>
+        /// The unix epoch
+        /// </summary>
+        private static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        /// <summary>
+        /// Verifies that the incoming call has a proper securityTimestamp
+        /// </summary>
+        /// <param name="webConnection"></param>
+        public static void VerifySecurityTimestamp(IWebConnection webConnection)
+        {
+            string timestampString;
+
+            if (webConnection.PostParameters.TryGetValue("securityTimestamp", out timestampString))
+            {
+                double timestampDays;
+                if (double.TryParse(timestampString, out timestampDays))
+                {
+                    DateTime securityTimestamp = UnixEpoch + TimeSpan.FromDays(timestampDays);
+
+                    if (securityTimestamp >= DateTime.UtcNow.AddMinutes(-5))
+                        if (securityTimestamp <= DateTime.UtcNow.AddMinutes(5))
+                            return;
+                }
+            }
+
+            throw new WebResultsOverrideException(WebResults.From(Status._400_Bad_Request, "securityTimestamp"));
+        }
+
+        /// <summary>
+        /// Returns a security timestamp
+        /// </summary>
+        /// <returns></returns>
+        public static KeyValuePair<string, string> GenerateSecurityTimestamp()
+        {
+            string securityTimestamp = (DateTime.UtcNow - UnixEpoch).TotalDays.ToString("R");
+            return new KeyValuePair<string, string>("securityTimestamp", securityTimestamp);
+        }
     }
 
     /// <summary>

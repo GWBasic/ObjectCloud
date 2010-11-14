@@ -51,6 +51,8 @@ namespace ObjectCloud.Disk.WebHandlers
             string loginURLWebFinger,
             string loginURLRedirect)
         {
+            VerifySecurityTimestamp(webConnection);
+
             // Decode the avatar, verifying that it's legitimate base64 encoded
             byte[] avatarBytes;
             try
@@ -133,7 +135,8 @@ namespace ObjectCloud.Disk.WebHandlers
                         callback,
                         errorCallback,
                         new KeyValuePair<string, string>("token", token),
-                        new KeyValuePair<string, string>("senderToken", senderToken));
+                        new KeyValuePair<string, string>("senderToken", senderToken),
+                        GenerateSecurityTimestamp());
                 },
                 delegate(Exception e)
                 {
@@ -168,6 +171,8 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Read)]
         public IWebResults RespondTrust(IWebConnection webConnection, string token, string senderToken)
         {
+            VerifySecurityTimestamp(webConnection);
+
             try
             {
                 FileHandler.RespondTrust(token, senderToken);
@@ -203,6 +208,8 @@ namespace ObjectCloud.Disk.WebHandlers
             string verb,
             string changeData)
         {
+            VerifySecurityTimestamp(webConnection);
+
             string senderIdentity;
             if (!FileHandler.TryGetSenderIdentity(senderToken, out senderIdentity))
                 return WebResults.From(Status._412_Precondition_Failed, "senderToken");
@@ -707,7 +714,8 @@ namespace ObjectCloud.Disk.WebHandlers
                         new KeyValuePair<string, string>("linkUrl", linkUrl),
                         new KeyValuePair<string, string>("linkDocumentType", linkDocumentType),
                         new KeyValuePair<string, string>("linkID", linkID),
-                        new KeyValuePair<string, string>("recipients", JsonWriter.Serialize(endpointInfo.RecipientIdentities)));
+                        new KeyValuePair<string, string>("recipients", JsonWriter.Serialize(endpointInfo.RecipientIdentities)),
+                        GenerateSecurityTimestamp());
                 },
                 delegate(IEnumerable<string> recipientsInError)
                 {
@@ -745,6 +753,8 @@ namespace ObjectCloud.Disk.WebHandlers
             string[] recipients,
             string linkID)
         {
+            VerifySecurityTimestamp(webConnection);
+
             string senderIdentity;
             if (!FileHandler.TryGetSenderIdentity(senderToken, out senderIdentity))
                 return WebResults.From(Status._412_Precondition_Failed, "senderToken");

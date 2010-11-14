@@ -322,7 +322,8 @@ namespace ObjectCloud.Disk.FileHandlers
                 new KeyValuePair<string, string>("loginURL", string.Format("http://{0}/Users/UserDB?Method=OpenIDLogin", FileHandlerFactoryLocator.HostnameAndPort)),
                 new KeyValuePair<string, string>("loginURLOpenID", "openid_url"),
                 new KeyValuePair<string, string>("loginURLWebFinger", "openid_url"),
-                new KeyValuePair<string, string>("loginURLRedirect", "redirect"));
+                new KeyValuePair<string, string>("loginURLRedirect", "redirect"),
+                GenerateSecurityTimestamp());
         }
 
         /// <summary>
@@ -625,7 +626,8 @@ namespace ObjectCloud.Disk.FileHandlers
                 new KeyValuePair<string, string>("summaryView", summaryView),
                 new KeyValuePair<string, string>("documentType", documentType),
                 new KeyValuePair<string, string>("verb", verb),
-                new KeyValuePair<string, string>("changeData", changeData));
+                new KeyValuePair<string, string>("changeData", changeData),
+                GenerateSecurityTimestamp());
         }
 
         public RapidLoginInfo GetRapidLoginInfo(string senderIdentity)
@@ -647,6 +649,21 @@ namespace ObjectCloud.Disk.FileHandlers
         public void DeleteAllEstablishedTrust(IUserOrGroup userOrGroup)
         {
             DatabaseConnection.Recipient.Delete(Recipient_Table.userID == userOrGroup.Id);
+        }
+
+        /// <summary>
+        /// The unix epoch
+        /// </summary>
+        private static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        /// <summary>
+        /// Returns a security timestamp
+        /// </summary>
+        /// <returns></returns>
+        public static KeyValuePair<string, string> GenerateSecurityTimestamp()
+        {
+            string securityTimestamp = (DateTime.UtcNow - UnixEpoch).TotalDays.ToString("R");
+            return new KeyValuePair<string, string>("securityTimestamp", securityTimestamp);
         }
     }
 }
