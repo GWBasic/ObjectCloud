@@ -79,7 +79,6 @@ namespace ObjectCloud.Disk.FileHandlers
                         Timer = new Timer(DeleteConnectionIfNeeded, null, 5000, 5000);
                         _DatabaseConnection = DatabaseConnector.Connect();
                         _DatabaseConnection.DbConnection.StateChange += new System.Data.StateChangeEventHandler(DbConnection_StateChange);
-                        HaveOpenConnection.Add(this);
                     }
 
                     return _DatabaseConnection;
@@ -88,12 +87,6 @@ namespace ObjectCloud.Disk.FileHandlers
         }
         private TDatabaseConnection _DatabaseConnection = default(TDatabaseConnection);
 
-        /// <summary>
-        /// All of the objects with an open database connection, this prevents them from being garbage collected
-        /// </summary>
-        private static HashSet<HasDatabaseFileHandler<TDatabaseConnector, TDatabaseConnection, TDatabaseTransaction>> 
-            HaveOpenConnection = new HashSet<HasDatabaseFileHandler<TDatabaseConnector, TDatabaseConnection, TDatabaseTransaction>>();
-
         void DbConnection_StateChange(object sender, System.Data.StateChangeEventArgs e)
         {
             if ((System.Data.ConnectionState.Broken == e.CurrentState) || (System.Data.ConnectionState.Closed == e.CurrentState))
@@ -101,7 +94,6 @@ namespace ObjectCloud.Disk.FileHandlers
                 {
                     _DatabaseConnection.DbConnection.StateChange -= new System.Data.StateChangeEventHandler(DbConnection_StateChange);
                     _DatabaseConnection = default(TDatabaseConnection);
-                    HaveOpenConnection.Remove(this);
                 }
         }
 
@@ -116,7 +108,7 @@ namespace ObjectCloud.Disk.FileHandlers
                 using (TimedLock.Lock(ConnectionAccessLock))
                     if (null != _DatabaseConnection)
                     {
-                        if (ConnectionLastAccessed.AddSeconds(15) <= DateTime.UtcNow)
+                        if (ConnectionLastAccessed.AddSeconds(3) <= DateTime.UtcNow)
                         {
                             // Don't close the database on a long-running transaction
                             object toMonitor = _DatabaseConnection.DbConnection;

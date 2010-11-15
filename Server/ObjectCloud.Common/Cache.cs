@@ -645,6 +645,8 @@ namespace ObjectCloud.Common
                 {
                     lock (RecoverMemoryPulser)
                         Monitor.Wait(RecoverMemoryPulser);
+				
+					log.Info("Recovering memory");
 
                     RecoveringMemory = true;
 
@@ -668,6 +670,8 @@ namespace ObjectCloud.Common
 
                             tries++;
                         }
+				
+						log.Info("Recovering memory, total tries: " + tries.ToString());
                     }
                     finally
                     {

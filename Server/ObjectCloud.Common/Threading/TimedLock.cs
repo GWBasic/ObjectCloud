@@ -118,25 +118,27 @@ namespace ObjectCloud.Common.Threading
 
             toReturn.Thread = Thread.CurrentThread;
             toReturn.target = o;
+			
+			//string lockInformation = string.Format(
+			//		"\n\n\nThreadID: {0}\ntype of lock object:{2},Call stack: {2}\n\n\n",
+			//	    Thread.CurrentThread.ManagedThreadId,
+			//	    o.GetType().FullName,
+			//	    Environment.StackTrace);
 
             if (!Monitor.TryEnter(o, timeout))
             {
-/*#if DEBUG
-                Thread lockHolder = null; ;
-                lock (LockHolders)
-                    LockHolders.TryGetValue(o, out lockHolder);
+                //string lockHolderInformation;
+                //lock (LockHolders)
+                //    if (!LockHolders.TryGetValue(o, out lockHolderInformation))
+				//		lockHolderInformation = "not available";
 
-                throw new LockTimeoutException(o, lockHolder);
-#else*/
+                //throw new LockTimeoutException(o, lockHolderInformation);
                 throw new LockTimeoutException(o);
-//#endif
             }
 
-/*#if DEBUG
-            lock (LockHolders)
-                LockHolders[o] = Thread.CurrentThread;
-#endif*/
-
+            //lock (LockHolders)
+            //    LockHolders[o] = lockInformation;
+			
             toReturn.myLockingThreadTimeoutDelegate = lockingThreadTimeoutDelegate;
 
             if (null != aquiredLockTimeout)
@@ -152,9 +154,7 @@ namespace ObjectCloud.Common.Threading
             return toReturn;
         }
 
-/*#if DEBUG
-        static Dictionary<object, Thread> LockHolders = new Dictionary<object, Thread>();
-#endif*/
+        //static Dictionary<object, string> LockHolders = new Dictionary<object, string>();
 
         /// <summary>
         /// This is the target of the lock
@@ -167,10 +167,8 @@ namespace ObjectCloud.Common.Threading
 
         public void Dispose()
         {
-/*#if DEBUG
-            lock (LockHolders)
-                LockHolders.Remove(Target);
-#endif*/
+            //lock (LockHolders)
+            //    LockHolders.Remove(Target);
 
             Monitor.Exit(target);
 
@@ -281,16 +279,11 @@ namespace ObjectCloud.Common.Threading
         }
         private readonly object _AttemptedToLock;
 
-/*#if DEBUG
-
-        public Thread LockHolder;
-
-        public LockTimeoutException(object attemptedToLock, Thread lockHolder)
-            : this(attemptedToLock)
+        /*public LockTimeoutException(object attemptedToLock, string lockHolderInformation)
+            : base("Timeout waiting for lock, lock information:\n" + lockHolderInformation)
         {
-            LockHolder = lockHolder;
-        }
-#endif*/
+            _AttemptedToLock = attemptedToLock;
+        }*/
 
         public LockTimeoutException(object attemptedToLock)
             : base("Timeout waiting for lock")

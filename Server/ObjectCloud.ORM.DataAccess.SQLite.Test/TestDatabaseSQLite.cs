@@ -226,10 +226,19 @@ PRAGMA user_version = 2;
 		
 		public void Dispose()
 		{
-			using (TimedLock.Lock(sqlConnection)){
-				sqlConnection.Close();
-				sqlConnection.Dispose();
-			}
+			if (null != sqlConnection)
+				using (TimedLock.Lock(sqlConnection))
+				{
+					sqlConnection.Close();
+					sqlConnection.Dispose();
+					sqlConnection = null;
+					GC.SuppressFinalize(this);
+				}
+		}
+		
+		~DatabaseConnection()
+		{
+			Dispose();
 		}
 		
 		public T CallOnTransaction<T>(GenericArgumentReturn<ObjectCloud.ORM.DataAccess.Test.IDatabaseTransaction, T> del)
