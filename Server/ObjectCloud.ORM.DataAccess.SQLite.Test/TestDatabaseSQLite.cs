@@ -226,12 +226,12 @@ PRAGMA user_version = 2;
 		
 		public void Dispose()
 		{
-			if (null != sqlConnection)
-				using (TimedLock.Lock(sqlConnection))
+			DbConnection connection = sqlConnection;
+			if (null != connection)
+				if (connection == Interlocked.CompareExchange<DbConnection>(ref sqlConnection, null, connection))
 				{
-					sqlConnection.Close();
-					sqlConnection.Dispose();
-					sqlConnection = null;
+					connection.Close();
+					connection.Dispose();
 					GC.SuppressFinalize(this);
 				}
 		}

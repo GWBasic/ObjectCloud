@@ -251,12 +251,12 @@ namespace ObjectCloud.ORM.DataAccess.Generator.SqLite
             yield return "\t\t\n";
             yield return "\t\tpublic void Dispose()\n";
             yield return "\t\t{\n";
-            yield return "\t\t\tif (null != sqlConnection)\n";
-            yield return "\t\t\t\tusing (TimedLock.Lock(sqlConnection))\n";
+            yield return "\t\t\tDbConnection connection = sqlConnection;\n";
+            yield return "\t\t\tif (null != connection)\n";
+            yield return "\t\t\t\tif (connection == Interlocked.CompareExchange<DbConnection>(ref sqlConnection, null, connection))\n";
             yield return "\t\t\t\t{\n";
-            yield return "\t\t\t\t\tsqlConnection.Close();\n";
-            yield return "\t\t\t\t\tsqlConnection.Dispose();\n";
-            yield return "\t\t\t\t\tsqlConnection = null;\n";
+            yield return "\t\t\t\t\tconnection.Close();\n";
+            yield return "\t\t\t\t\tconnection.Dispose();\n";
             yield return "\t\t\t\t\tGC.SuppressFinalize(this);\n";
             yield return "\t\t\t\t}\n";
             yield return "\t\t}\n";

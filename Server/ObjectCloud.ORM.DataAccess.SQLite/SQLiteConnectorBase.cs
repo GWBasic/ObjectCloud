@@ -59,20 +59,23 @@ namespace ObjectCloud.ORM.DataAccess.SQLite
 #if DEBUG
 			volatile string BlockingCallerStacktrace = null;
             volatile string BlockingCallerThreadName = null;
-			
-            // https://bugzilla.novell.com/show_bug.cgi?id=545873
-			private bool IsMono
-			{
-				get
-				{
-					if (null == _IsMono)
-						_IsMono = null != Type.GetType("Mono.Runtime");
-					
-					return _IsMono.Value;
-				}
-			}
-			private bool? _IsMono = null;
 #endif
+			/*DbConnection toReturn = null;
+			
+			/// <summary>
+            /// Opens a connection.  There's a problem here, a Thread currently cannot recusively open a connection.
+            /// </summary>
+            /// <returns></returns>
+            public DbConnection Open()
+            {
+				lock (this)
+					if (null == toReturn)
+                		toReturn = DatabaseConnector.OpenInt(ConnectionString);
+
+				Console.WriteLine(toReturn.State.ToString());
+				
+                return toReturn;
+			}*/
 			
             /// <summary>
             /// Opens a connection.  There's a problem here, a Thread currently cannot recusively open a connection.
@@ -86,11 +89,7 @@ namespace ObjectCloud.ORM.DataAccess.SQLite
                     toReturn.Disposed += new EventHandler(toReturn_Disposed);
 
 #if DEBUG
-		            // https://bugzilla.novell.com/show_bug.cgi?id=545873
-					if (!IsMono)
-                    	BlockingCallerStacktrace = Environment.StackTrace;
-					else
-						BlockingCallerStacktrace = "https://bugzilla.novell.com/show_bug.cgi?id=545873";
+                   	BlockingCallerStacktrace = Environment.StackTrace;
                     BlockingCallerThreadName = Thread.CurrentThread.Name;
 #endif
 

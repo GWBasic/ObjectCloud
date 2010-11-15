@@ -28,6 +28,10 @@ namespace ObjectCloud.Disk.Implementation
             IDirectoryHandler usersDirectory = (IDirectoryHandler)rootDirectoryHandler.CreateFile("Users", "directory", null);
 
             IUserManagerHandler userManager = usersDirectory.CreateSystemFile<IUserManagerHandler>("UserDB", "usermanager", null);
+			
+			userManager.Dispose();
+			userManager = FileHandlerFactoryLocator.UserManagerHandler;
+			
             IUserFactory userFactory = FileHandlerFactoryLocator.UserFactory;
 
             IUser anonymousUser = userManager.CreateUser(

@@ -138,7 +138,7 @@ namespace ObjectCloud.Disk.FileHandlers
             GroupType groupType)
         {
             name = name.ToLowerInvariant();
-
+			
             if (GroupType.Personal == groupType && null == ownerId)
                 throw new ArgumentException("Personal groups must have a declared owner");
 
@@ -162,7 +162,7 @@ namespace ObjectCloud.Disk.FileHandlers
                     group.Automatic = automatic;
                     group.Type = groupType;
                 });
-
+				
                 if (GroupType.Personal == groupType)
                     DatabaseConnection.GroupAliases.Insert(delegate(IGroupAliases_Writable groupAlias)
                     {
@@ -182,14 +182,14 @@ namespace ObjectCloud.Disk.FileHandlers
                     transaction.Rollback();
                     throw;
                 }
-
+				
                 IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
                 string groupFileName = name + ".group";
-
+				
                 IUser owner = null;
                 if (null != ownerId)
                     owner = GetUser(ownerId.Value);
-
+				
                 if (!automatic)
                 {
                     // Decide where the object goes, for personal groups in the user's directory, for system groups in the users directory
@@ -230,8 +230,10 @@ namespace ObjectCloud.Disk.FileHandlers
                     groupDB.Set(owner, "GroupId", groupId.Value.ToString());
                 }
 
-                transaction.Commit();
+				transaction.Commit();
             });
+
+			log.Info("Created group: " + name);
 
             return groupObj;
         }

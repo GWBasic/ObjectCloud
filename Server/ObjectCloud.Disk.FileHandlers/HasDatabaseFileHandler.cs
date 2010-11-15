@@ -79,6 +79,8 @@ namespace ObjectCloud.Disk.FileHandlers
                         Timer = new Timer(DeleteConnectionIfNeeded, null, 5000, 5000);
                         _DatabaseConnection = DatabaseConnector.Connect();
                         _DatabaseConnection.DbConnection.StateChange += new System.Data.StateChangeEventHandler(DbConnection_StateChange);
+						
+						GC.ReRegisterForFinalize(this);
                     }
 
                     return _DatabaseConnection;
@@ -92,7 +94,8 @@ namespace ObjectCloud.Disk.FileHandlers
             if ((System.Data.ConnectionState.Broken == e.CurrentState) || (System.Data.ConnectionState.Closed == e.CurrentState))
                 using (TimedLock.Lock(ConnectionAccessLock))
                 {
-                    _DatabaseConnection.DbConnection.StateChange -= new System.Data.StateChangeEventHandler(DbConnection_StateChange);
+					((DbConnection)sender).StateChange -= new System.Data.StateChangeEventHandler(DbConnection_StateChange);
+                    _DatabaseConnection.Dispose();
                     _DatabaseConnection = default(TDatabaseConnection);
                 }
         }
@@ -103,46 +106,58 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <param name="state"></param>
         public void DeleteConnectionIfNeeded(object state)
         {
-            try
-            {
-                using (TimedLock.Lock(ConnectionAccessLock))
-                    if (null != _DatabaseConnection)
-                    {
-                        if (ConnectionLastAccessed.AddSeconds(3) <= DateTime.UtcNow)
-                        {
-                            // Don't close the database on a long-running transaction
-                            object toMonitor = _DatabaseConnection.DbConnection;
-                            if (!Monitor.TryEnter(toMonitor))
-                                return;
-
-                            try
-                            {
-                                _DatabaseConnection.Dispose();
-                                _DatabaseConnection = default(TDatabaseConnection);
-
-                                if (null != Timer)
-                                {
-                                    Timer.Dispose();
-                                    Timer = null;
-                                }
-                            }
-                            finally
-                            {
-                                Monitor.Exit(toMonitor);
-                            }
-                        }
-                    }
-                    else
+            if (null == _DatabaseConnection)
+				return;
+			
+			if (Monitor.TryEnter(ConnectionAccessLock))
+	          	try
+	            {
+                    if (null == _DatabaseConnection)
+					{
                         if (null != Timer)
                         {
                             Timer.Dispose();
                             Timer = null;
                         }
-            }
-            catch (Exception e)
-            {
-                log.Warn("Exception while trying to see if the database needs to be closed", e);
-            }
+					
+						return;
+					}
+				
+                    if (ConnectionLastAccessed.AddSeconds(3) <= DateTime.UtcNow)
+                    {
+                        // Don't close the database on a long-running transaction
+                        object toMonitor = _DatabaseConnection.DbConnection;
+                        if (!Monitor.TryEnter(toMonitor))
+                            return;
+
+                        try
+                        {
+                            _DatabaseConnection.Dispose();
+                            _DatabaseConnection = default(TDatabaseConnection);
+						
+							if (null != _DatabaseConnection)
+								log.Warn("Database connection not closed!!!");
+
+                            if (null != Timer)
+                            {
+                                Timer.Dispose();
+                                Timer = null;
+                            }
+                        }
+                        finally
+                        {
+                            Monitor.Exit(toMonitor);
+                        }
+                    }
+	            }
+	            catch (Exception e)
+	            {
+	                log.Warn("Exception while trying to see if the database needs to be closed", e);
+	            }
+				finally
+				{
+					Monitor.Exit(ConnectionAccessLock);
+				}
         }
 
         /// <summary>
@@ -160,7 +175,6 @@ namespace ObjectCloud.Disk.FileHandlers
                 using (TimedLock.Lock(ConnectionAccessLock))
                     if (null != _DatabaseConnection)
                     {
-                        //_DatabaseConnection.DbConnection.Close();
                         _DatabaseConnection.Dispose();
                         _DatabaseConnection = default(TDatabaseConnection);
                     }
