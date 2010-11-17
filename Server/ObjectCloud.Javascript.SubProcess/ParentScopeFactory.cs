@@ -280,6 +280,8 @@ namespace ObjectCloud.Javascript.SubProcess
             javascriptToReturn = javascriptToReturn.Replace("{1}", "' + fileMetadata.filename + '");
 
             javascriptToReturn = javascriptToReturn.Replace("{4}", "true");
+            javascriptToReturn = javascriptToReturn.Replace("{5}", "' + fileMetadata.owner + '");
+
 
             // Enclose the functions with { .... }
             javascriptToReturn = "{\n" + javascriptToReturn + "\n}";

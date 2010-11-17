@@ -189,6 +189,11 @@ namespace ObjectCloud.Disk.WebHandlers
                 javascriptWrapper = javascriptWrapper.Replace("{1}", FileContainer.Filename);
                 javascriptWrapper = javascriptWrapper.Replace("{2}", FileContainer.TypeId);
 
+                if (null != FileContainer.Owner)
+                    javascriptWrapper = javascriptWrapper.Replace("{5}", JsonWriter.Serialize(FileContainer.Owner.Name));
+                else
+                    javascriptWrapper = javascriptWrapper.Replace("{5}", JsonWriter.Serialize(null));
+
                 CachedInBrowserJSWrapper = javascriptWrapper;
             }
 
@@ -462,6 +467,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 toReturn["OwnerId"] = owner.Id.ToString();
                 toReturn["Owner"] = owner.Name;
                 toReturn["OwnerIdentity"] = owner.Identity;
+                toReturn["HasOwner"] = true;
             }
             else
             {
@@ -1430,21 +1436,36 @@ namespace ObjectCloud.Disk.WebHandlers
         /// </summary>
         /// <param name="webConnection"></param>
         /// <param name="newOwnerId">The new owner's user ID</param>
+        /// <param name="newOwner">The new owner's name</param>
         /// <returns></returns>
         [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Administer)]
-        public IWebResults Chown(IWebConnection webConnection, Guid? newOwnerId)
+        public IWebResults Chown(IWebConnection webConnection, Guid? newOwnerId, string newOwner)
         {
             if (null == FileContainer.ParentDirectoryHandler)
                 throw new WebResultsOverrideException(WebResults.From(Status._406_Not_Acceptable, "The root directory can not have ownership"));
 
             ID<IUserOrGroup, Guid>? ownerId = null;
+            IUser newOwnerUser = null;
+
             if (null != newOwnerId)
+            {
                 ownerId = new ID<IUserOrGroup, Guid>(newOwnerId.Value);
+                newOwnerUser = FileHandlerFactoryLocator.UserManagerHandler.GetUser(ownerId.Value);
+            }
+            else if (null != newOwner)
+                if (newOwner.Length > 0)
+                {
+                    newOwnerUser = FileHandlerFactoryLocator.UserManagerHandler.GetUser(newOwner);
+                    ownerId = newOwnerUser.Id;
+                }
 
             FileContainer.ParentDirectoryHandler.Chown(
                 webConnection.Session.User, FileContainer.FileId, ownerId);
 
-            return WebResults.From(Status._202_Accepted);
+            if (null == newOwnerUser)
+                return WebResults.From(Status._202_Accepted, "Owner removed");
+            else
+                return WebResults.From(Status._202_Accepted, "Owner changed to " + newOwnerUser.Name);
         }
 
         /// <summary>

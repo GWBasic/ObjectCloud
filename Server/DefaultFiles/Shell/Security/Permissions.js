@@ -1,3 +1,6 @@
+// Scripts: /API/jquery.js, /API/UserSuggest.js
+
+
 var DefaultNamedPermissions_JustNames = [];
 var Permissions;
 var defaultNamedPermissions;
@@ -129,11 +132,14 @@ function doPermissions(inPermissions, inDefaultNamedPermissions)
    {
       displayPermissions();
 
-      enableUserSuggest($('input.UserOrGroupInput')[0]);
+      $('input.UserOrGroupInput').each(function()
+      {
+         enableUserSuggest(this);
+      });
 
       $('form.addForm').submit(function()
       {
-         var userOrGroupInput = $("[name=UserOrGroup]", this);
+         var userOrGroupInput = $("input:text[name=UserOrGroup]", this);
          var userOrGroup = userOrGroupInput.val();
          var filePermission = $("[name=FilePermission]", this).val();
 
@@ -166,6 +172,41 @@ function doPermissions(inPermissions, inDefaultNamedPermissions)
             {
                alert(transport.responseText);
                me.removeAttr('disabled');
+            });
+
+         return false;
+      });
+
+      $('form.chown').submit(function()
+      {
+         var ownerHasPermission = false;
+
+         // Warn if the owner isn't an administrator
+         if (null != File.Owner)
+         {
+            for (var i = 0; i < Permissions.length; i++)
+               if (Permissions.Name == File.Owner)
+                  if (Permissions.Permission == "Administer")
+                     ownerHasPermission = true;
+
+            if (!ownerHasPermission)
+               if (!confirm(File.Owner + 
+                  ' doesn\'t have Administer permission to this object! Changing Ownership means that ' +
+                  File.Owner + ' will not be able to do as many things with this object. Are you sure you want to do this?'))
+               {
+                  return false;
+               }
+         }
+
+         var newOwner = $("input:text[name=newOwner]", this).val();
+         File.Chown(
+            {
+               newOwner: newOwner
+            },
+            function(result)
+            {
+               alert(result);
+               window.location.href = window.location.href;
             });
 
          return false;
