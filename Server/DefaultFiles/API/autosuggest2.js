@@ -48,7 +48,13 @@ AutoSuggestControl.prototype.autosuggest = function (aSuggestions /*:Array*/,
     //make sure there's at least one suggestion
     if (aSuggestions.length > 0) {
         if (bTypeAhead) {
-           this.typeAhead(aSuggestions[0]);
+           var ctr = 0;
+
+           while (0 != aSuggestions[ctr].indexOf(this.textbox.value) && ctr < aSuggestions.length)
+              ctr++;
+
+           if (ctr < aSuggestions.length)
+              this.typeAhead(aSuggestions[0]);
         }
         
         this.showSuggestions(aSuggestions);
