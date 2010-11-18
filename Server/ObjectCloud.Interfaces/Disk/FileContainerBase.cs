@@ -363,42 +363,50 @@ namespace ObjectCloud.Interfaces.Disk
                 filename = string.Format(
                     "/Shell/SummaryViews/ByType/{0}.oc",
                     TypeId.ToLowerInvariant());
-
-            Dictionary<string, object> getParameters = new Dictionary<string, object>();
-            getParameters["filename"] = FullPath;
-            getParameters["objectUrl"] = ObjectUrl;
-            getParameters["HeaderFooterOverride"] = "/DefaultTemplate/summaryview.ochf";
-
-            ISession session = FileHandlerFactoryLocator.SessionManagerHandler.CreateSession();
-
-            if (null != Owner)
-                session.Login(Owner);
-            else
-                session.Login(FileHandlerFactoryLocator.UserFactory.AnonymousUser);
-
+			
             string summaryView;
-            try
+			if (FileHandlerFactoryLocator.FileSystemResolver.IsFilePresent(filename))
+			{
+	            Dictionary<string, object> getParameters = new Dictionary<string, object>();
+	            getParameters["filename"] = FullPath;
+	            getParameters["objectUrl"] = ObjectUrl;
+	            getParameters["HeaderFooterOverride"] = "/DefaultTemplate/summaryview.ochf";
+	
+	            ISession session = FileHandlerFactoryLocator.SessionManagerHandler.CreateSession();
+	
+	            if (null != Owner)
+	                session.Login(Owner);
+	            else
+	                session.Login(FileHandlerFactoryLocator.UserFactory.AnonymousUser);
+	
+	            try
+	            {
+	                IWebConnection webConnection = new BlockingShellWebConnection(
+	                    FileHandlerFactoryLocator.WebServer,
+	                    session,
+	                    FullPath,
+	                    null,
+	                    null,
+	                    new CookiesFromBrowser(),
+	                    CallingFrom.Web,
+	                    WebMethod.GET);
+	
+	                summaryView = TemplateEngine.EvaluateComponentString(webConnection, filename, getParameters);
+	            }
+	            catch (Exception e)
+	            {
+	                log.Error("Exception when generating a summary view to send in a notification for " + FullPath, e);
+	                summaryView = string.Format("<a href=\"{0}\">{0}</a>", ObjectUrl);
+	            }
+	            finally
+	            {
+	                FileHandlerFactoryLocator.SessionManagerHandler.EndSession(session.SessionId);
+	            }
+			}
+			else
             {
-                IWebConnection webConnection = new BlockingShellWebConnection(
-                    FileHandlerFactoryLocator.WebServer,
-                    session,
-                    FullPath,
-                    null,
-                    null,
-                    new CookiesFromBrowser(),
-                    CallingFrom.Web,
-                    WebMethod.GET);
-
-                summaryView = TemplateEngine.EvaluateComponentString(webConnection, filename, getParameters);
-            }
-            catch (Exception e)
-            {
-                log.Error("Exception when generating a summary view to send in a notification for " + FullPath, e);
+                log.WarnFormat("Could not generate summary view for {0}, missing {1}", ObjectUrl, filename);
                 summaryView = string.Format("<a href=\"{0}\">{0}</a>", ObjectUrl);
-            }
-            finally
-            {
-                FileHandlerFactoryLocator.SessionManagerHandler.EndSession(session.SessionId);
             }
 
             return summaryView;

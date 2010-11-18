@@ -216,6 +216,11 @@ namespace ObjectCloud.Javascript.SubProcess
             fileMetadata["fullpath"] = fileContainer.FullPath;
             fileMetadata["url"] = fileContainer.ObjectUrl;
 
+            if (null != fileContainer.Owner)
+                fileMetadata["owner"] = fileContainer.Owner.Name;
+            else
+                fileMetadata["owner"] = null;
+
             if (null != fileContainer.OwnerId)
             {
                 fileMetadata["ownerId"] = fileContainer.OwnerId.Value;

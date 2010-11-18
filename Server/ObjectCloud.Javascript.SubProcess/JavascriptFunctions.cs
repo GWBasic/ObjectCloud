@@ -457,6 +457,31 @@ namespace ObjectCloud.Javascript.SubProcess
         }
 
         /// <summary>
+        /// Ugly hack that hacks around permission issues by changing the current user to root
+        /// </summary>
+        /// <param name="function"></param>
+        /// <returns></returns>
+        public static object sudo(SubProcess.Callback callback)
+        {
+            FunctionCallContext functionCallContext = FunctionCallContext.GetCurrentContext();
+
+            // When calling as the owner, a shell web connection is pushed that impersonates the owner
+            IWebConnection shellConnection = functionCallContext.WebConnection.CreateShellConnection(
+				functionCallContext.WebConnection.WebServer.FileHandlerFactoryLocator.UserFactory.RootUser);
+
+			FunctionCaller.WebConnectionStack.Push(shellConnection);
+
+            try
+            {
+                return callback.Call(new object[0]);
+            }
+            finally
+            {
+                FunctionCaller.WebConnectionStack.Pop();
+            }
+        }
+
+        /// <summary>
         /// Removes malicious HTML
         /// </summary>
         /// <param name="toSanitize"></param>

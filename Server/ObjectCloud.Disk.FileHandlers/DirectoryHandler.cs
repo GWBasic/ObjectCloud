@@ -1335,6 +1335,12 @@ namespace ObjectCloud.Disk.FileHandlers
                 OwnerIdCache[fileId] = newOwnerId;
             }
 
+            FileContainerCache.Remove(oldFile.Name);
+            IFileContainer newFileContainer = FileContainerCache[oldFile.Name];
+            newFileContainer.WebHandler.FileContainer = newFileContainer;
+            newFileContainer.WebHandler.ResetExecutionEnvironment();
+
+
             OnDirectoryChanged();
         }
 

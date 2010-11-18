@@ -310,12 +310,13 @@
             <param name="file"></param>
             <returns></returns>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.WebHandler`1.Chown(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Nullable{System.Guid})">
+        <member name="M:ObjectCloud.Disk.WebHandlers.WebHandler`1.Chown(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Nullable{System.Guid},System.String)">
             <summary>
             Changes this file's owner
             </summary>
             <param name="webConnection"></param>
             <param name="newOwnerId">The new owner's user ID</param>
+            <param name="newOwner">The new owner's name</param>
             <returns></returns>
         </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.WebHandler`1.SendRelationship(ObjectCloud.Interfaces.WebServer.IQueuingReliableCometTransport,ObjectCloud.Interfaces.Disk.RelationshipEventArgs)">

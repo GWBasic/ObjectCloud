@@ -1,9 +1,7 @@
 <oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" headerfooter="/DefaultTemplate/empty.ochf">
 <oc:inserthead>
-   <oc:script src="/API/jquery.js" />
    <oc:open filename="[_FileName_]" varname="File" />
-   <oc:script src="/API/UserSuggest.js" />
-   <oc:script src="Permissions.js" />
+   <oc:script src="/Shell/Security/Permissions.js" />
 </oc:inserthead>
 
    <script>
@@ -35,5 +33,22 @@
       <li><em>administrators</em>: Grants access only to administrators.</li>
    </ul>
    </p>
+
+   <h1>Change Owner</h1>
+   <form class="chown" action="[_FileName_]?Method=Chown" method="POST">
+      New Owner (blank for no owner): <input type="text" class="UserOrGroupInput" name="newOwner" /> <input type="submit" />
+   </form>
+   <br />
+   <br />
+   <br />
+   <br />
+   <br />
+   <br />
+   <br />
+   <br />
+   <br />
+   <br />
+   <br />
+   <br />
 
 </oc:componentdef>
