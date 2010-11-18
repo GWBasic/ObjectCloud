@@ -134,6 +134,14 @@ namespace ObjectCloud.Interfaces.Disk
             IUser sender,
             IFileContainer linkedFileContainer)
         {
+			// TODO: Need a better approach to handle when the linked file doesn't have an owner
+			// For now, just sending as root
+			IUser owner;
+			if (null != linkedFileContainer.Owner)
+				owner = linkedFileContainer.Owner;
+			else
+				owner = FileHandlerFactoryLocator.UserFactory.RootUser;
+			
             string linkSummaryView = linkedFileContainer.GenerateSummaryView();
             string linkID = Interlocked.Increment(ref NextLinkID).ToString();
 
@@ -141,7 +149,7 @@ namespace ObjectCloud.Interfaces.Disk
             changeData["linkUrl"] = linkedFileContainer.ObjectUrl;
             changeData["linkSummaryView"] = linkSummaryView;
             changeData["linkDocumentType"] = linkedFileContainer.DocumentType;
-            changeData["ownerIdentity"] = linkedFileContainer.Owner.Identity;
+            changeData["ownerIdentity"] = owner.Identity;
             changeData["linkID"] = linkID;
 
             SendNotification(sender, "link", changeData);

@@ -1224,9 +1224,17 @@ namespace ObjectCloud.Disk.WebHandlers
 				notificationRecipientIdentities.IntersectWith(relatedRecipients);
 			}
 
-            Dictionary<string, object> clpArgs = new Dictionary<string, object>();
+			// TODO: Need a better approach to handle when the linked file doesn't have an owner
+			// For now, just sending as root
+			IUser relatedOwner;
+			if (null != relatedContainer.Owner)
+				relatedOwner = relatedContainer.Owner;
+			else
+				relatedOwner = FileHandlerFactoryLocator.UserFactory.RootUser;
+
+			Dictionary<string, object> clpArgs = new Dictionary<string, object>();
             clpArgs["objectUrl"] = FileContainer.ObjectUrl;
-            clpArgs["ownerIdentity"] = relatedContainer.Owner.Identity;
+            clpArgs["ownerIdentity"] = relatedOwner.Identity;
             clpArgs["linkSummaryView"] = linkNotificationInformation.linkSummaryView;
             clpArgs["linkUrl"] = relatedContainer.ObjectUrl;
             clpArgs["linkDocumentType"] = relatedContainer.DocumentType;
@@ -1241,7 +1249,7 @@ namespace ObjectCloud.Disk.WebHandlers
             lock (key)
             {
                 FileHandlerFactoryLocator.UserManagerHandler.GetEndpoints(
-                    relatedContainer.Owner.Identity,
+                    relatedOwner.Identity,
                     delegate(IEndpoints endpoints)
                     {
 						if (null != endpoints)
