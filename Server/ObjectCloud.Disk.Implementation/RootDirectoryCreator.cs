@@ -566,6 +566,27 @@ insert into Metadata (Name, Value) values ('GroupId', @groupId);
                     true, 
                     false);
             }
+
+            // Make sure every user has a friends group
+            // TODO: At some point this needs to go away
+            foreach (ID<IUserOrGroup, Guid> userId in FileHandlerFactoryLocator.UserManagerHandler.GetAllLocalUserIds())
+            {
+                IUser user = FileHandlerFactoryLocator.UserManagerHandler.GetUser(userId);
+
+                if (!user.BuiltIn)
+                {
+                    bool hasFriendsGroup = false;
+
+                    foreach (IGroupAndAlias group in FileHandlerFactoryLocator.UserManagerHandler.GetGroupsThatUserOwns(userId))
+                    {
+                        if (group.Alias == "friends")
+                            hasFriendsGroup = true;
+                    }
+
+                    if (!hasFriendsGroup)
+                        FileHandlerFactoryLocator.UserManagerHandler.CreateGroup("friends", user.Id, GroupType.Personal);
+                }
+            }
 		}
 
         /// <summary>

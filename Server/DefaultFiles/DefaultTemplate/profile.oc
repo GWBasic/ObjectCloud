@@ -1,7 +1,18 @@
 <oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
    <oc:inserthead>
       <title>ObjectCloud: http://[_Host_][_Target_]</title>
+      <oc:script src="/API/jquery.js" />
    </oc:inserthead>
+
+   <div class="title">[_User.Identity_]</div>
+
+   <div class="76rdfi7jeny">76rdfi7jeny</div>
+   <script>
+      $(document).ready(function()
+      {
+         $('.76rdfi7jeny').hide();
+      });
+   </script>
 
    User profiles aren't supported in this release
 

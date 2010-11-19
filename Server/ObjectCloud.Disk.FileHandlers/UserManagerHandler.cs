@@ -118,6 +118,9 @@ namespace ObjectCloud.Disk.FileHandlers
                 throw;
             }
 
+            if (!builtIn)
+                CreateGroup("friends", userObj.Id, GroupType.Personal);
+
             return userObj;
         }
 
@@ -979,8 +982,9 @@ namespace ObjectCloud.Disk.FileHandlers
             List<IGroups_Readable> groupsFromDB = new List<IGroups_Readable>();
             Dictionary<ID<IUserOrGroup, Guid>, IGroupAliases_Readable> groupAliasesFromDB = new Dictionary<ID<IUserOrGroup, Guid>, IGroupAliases_Readable>();
 
-            DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
-            {
+            // Not sure why, but closing the transaction is timing out
+            //DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
+            //{
                 groupsFromDB.AddRange(DatabaseConnection.Groups.Select(Groups_Table.OwnerID == userId));
 
                 List<ID<IUserOrGroup, Guid>> groupIds = new List<ID<IUserOrGroup, Guid>>();
@@ -992,7 +996,7 @@ namespace ObjectCloud.Disk.FileHandlers
                 {
                     groupAliasesFromDB[groupAliasFromDB.GroupID] = groupAliasFromDB;
                 }
-            });
+            //});
 
             foreach (IGroups_Readable groupfromDB in groupsFromDB)
             {
