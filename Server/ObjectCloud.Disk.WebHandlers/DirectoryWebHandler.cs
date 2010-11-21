@@ -300,10 +300,10 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="maxToReturn"></param>
         /// <returns></returns>
         [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JSON, FilePermissionEnum.Read)]
-        public IWebResults ListNewestFiles(IWebConnection webConnection, long? maxToReturn)
+        public IWebResults ListNewestFiles(IWebConnection webConnection, int? maxToReturn)
         {
             if (null == maxToReturn)
-                maxToReturn = long.MaxValue;
+                maxToReturn = int.MaxValue;
 
             return ReturnFilesAsJSON(
                 webConnection,

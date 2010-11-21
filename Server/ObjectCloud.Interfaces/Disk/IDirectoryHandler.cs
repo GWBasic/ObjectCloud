@@ -65,7 +65,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="userId"></param>
         /// <param name="maxToReturn"></param>
         /// <returns></returns>
-        IEnumerable<IFileContainer> GetNewestFiles(ID<IUserOrGroup, Guid> userId, long maxToReturn);
+        IEnumerable<IFileContainer> GetNewestFiles(ID<IUserOrGroup, Guid> userId, int maxToReturn);
 
         /// <summary>
         /// Returns all files that match the given relationships, set a parameter to null to match all.  Only files that the user can read are returned

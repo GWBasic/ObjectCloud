@@ -266,7 +266,7 @@ namespace ObjectCloud.Disk.FileHandlers
             }
         }
 
-        public IEnumerable<IFileContainer> GetNewestFiles(ID<IUserOrGroup, Guid> userId, long maxToReturn)
+        public IEnumerable<IFileContainer> GetNewestFiles(ID<IUserOrGroup, Guid> userId, int maxToReturn)
         {
             List<ID<IUserOrGroup, Guid>> ids = new List<ID<IUserOrGroup, Guid>>();
             ids.Add(userId);

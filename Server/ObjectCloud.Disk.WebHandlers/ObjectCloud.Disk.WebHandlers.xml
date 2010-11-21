@@ -2340,7 +2340,7 @@
             <param name="webConnection"></param>
             <returns></returns>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.ListNewestFiles(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Nullable{System.Int64})">
+        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.ListNewestFiles(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Nullable{System.Int32})">
             <summary>
             Lists the newest files that the user has access to in descending order of creation
             </summary>
