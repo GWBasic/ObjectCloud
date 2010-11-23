@@ -9,6 +9,8 @@ using System.IO;
 using System.Text;
 using System.Xml;
 
+using Common.Logging;
+
 using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
@@ -17,6 +19,8 @@ namespace ObjectCloud.Disk.Implementation
 {
     public class RootDirectoryCreator : IRootDirectoryCreator
     {
+        private static ILog log = LogManager.GetLogger<RootDirectoryCreator>();
+
         public virtual void CreateRootDirectoryHandler(IFileContainer rootDirectoryContainer)
         {
             // Construct the root directory on disk
@@ -584,7 +588,14 @@ insert into Metadata (Name, Value) values ('GroupId', @groupId);
                     }
 
                     if (!hasFriendsGroup)
-                        FileHandlerFactoryLocator.UserManagerHandler.CreateGroup("friends", user.Id, GroupType.Personal);
+                        try
+                        {
+                            FileHandlerFactoryLocator.UserManagerHandler.CreateGroup("friends", user.Id, GroupType.Personal);
+                        }
+                        catch (Exception e)
+                        {
+                            log.Warn("Exception creating friends group for user " + user.Name, e);
+                        }
                 }
             }
 		}

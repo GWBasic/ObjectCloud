@@ -1427,8 +1427,11 @@ namespace ObjectCloud.Disk.FileHandlers
                 if (HasNamedPermissionThroughRelationship(fileIds, namedPermissions, userOrGroupIds, numCalls))
                     return true;
 
-            if (checkInherit && null != FileContainer.ParentDirectoryHandler)
-                return FileContainer.ParentDirectoryHandler.HasNamedPermissions(fileIds, namedPermissions, userOrGroupIds, checkInherit);
+            // As written, this won't work and is illogical
+            // It passes FileIDs that are invalid in the parent directory, and there is no way to communicate to only return true
+            // if the permission is inherited
+            //if (checkInherit && null != FileContainer.ParentDirectoryHandler)
+            //    return FileContainer.ParentDirectoryHandler.HasNamedPermissions(fileIds, namedPermissions, userOrGroupIds, checkInherit);
 
             return false;
         }
