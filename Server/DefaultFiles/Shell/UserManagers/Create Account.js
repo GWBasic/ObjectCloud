@@ -1,9 +1,30 @@
 // Scripts: /API/jquery.js, /API/Url.js
 
-function setupCreateAccount(assignSession, welcomePage)
+function setupCreateAccount(assignSession, welcomePage, userNumbers)
 {
    $(document).ready(function()
    {
+      var totalusers = $('.totalusers');
+      totalusers.html(totalusers.html() + userNumbers.TotalLocalUsers);
+
+      var maxusers = $('.maxusers');
+      var usersfull = $('.usersfull');
+
+      if (!userNumbers.MaxLocalUsers)
+      {
+         maxusers.remove();
+         usersfull.remove();         
+      }
+      else
+      {
+         maxusers.html(maxusers.html() + userNumbers.MaxLocalUsers);
+
+         if (userNumbers.TotalLocalUsers >= userNumbers.MaxLocalUsers)
+            $('.createAccount').remove();
+         else
+            usersfull.remove();
+      }
+
       $('form.createAccount').submit(function()
       {
          var me = $(this);

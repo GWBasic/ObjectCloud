@@ -98,6 +98,7 @@
     <Compile Include="Disk\ISystemFileHandlerFactory.cs" />
     <Compile Include="Disk\ITextHandler.cs" />
     <Compile Include="Disk\LoggingEvent.cs" />
+    <Compile Include="Disk\MaximumUsersExceeded.cs" />
     <Compile Include="Disk\NotificationColumn.cs" />
     <Compile Include="Disk\NotificationState.cs" />
     <Compile Include="Disk\ParticleException.cs" />

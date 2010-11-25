@@ -28,11 +28,14 @@ namespace ObjectCloud.Disk.FileHandlers
     {
         private static ILog log = LogManager.GetLogger<UserManagerHandler>();
 
-        public UserManagerHandler(IDatabaseConnector databaseConnector, FileHandlerFactoryLocator fileHandlerFactoryLocator)
+        public UserManagerHandler(IDatabaseConnector databaseConnector, FileHandlerFactoryLocator fileHandlerFactoryLocator, int? maxLocalUsers)
             : base(databaseConnector, fileHandlerFactoryLocator) 
         {
+            MaxLocalUsers = maxLocalUsers;
             GroupIdsThatUserIsInCache = new Cache<ID<IUserOrGroup, Guid>, ICollection<ID<IUserOrGroup, Guid>>>(GetGroupIdsThatUserIsInForCache);
         }
+
+        public int? MaxLocalUsers { get; set; }
 
         public IUser CreateUser(string name, string password)
         {
@@ -41,6 +44,10 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public IUser CreateUser(string name, string password, ID<IUserOrGroup, Guid> userId, bool builtIn)
         {
+            if (null != MaxLocalUsers)
+                if (GetTotalLocalUsers() >= MaxLocalUsers.Value)
+                    throw new MaximumUsersExceeded("The maximum number of users allowed on this server is met: " + MaxLocalUsers.Value.ToString());
+
             name = name.ToLowerInvariant();
 
             IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
@@ -1132,6 +1139,12 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             foreach (IUsers_Readable user in DatabaseConnection.Users.Select(Users_Table.PasswordMD5 != "openid" & Users_Table.BuiltIn == false))
                 yield return user.ID;
+        }
+
+        public long GetTotalLocalUsers()
+        {
+            LinkedList<ID<IUserOrGroup, Guid>> localUserIds = new LinkedList<ID<IUserOrGroup, Guid>>(GetAllLocalUserIds());
+            return localUserIds.Count;
         }
     }
 }

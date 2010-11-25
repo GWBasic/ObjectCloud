@@ -20,12 +20,15 @@
 
          setupCreateAccount(
             assignSession,
-            welcomePage);
+            welcomePage,
+            <oc:component oc:url="/Users/UserDB?Method=GetTotalLocalUsers" />);
 
       </script>
 
    </oc:inserthead>
 
+   <div class="totalusers">Total users: </div>
+   <div class="maxusers">Max users: </div>
    <oc:if>
       <oc:can filename="/Users/UserDB" namedpermission="CreateUser">
          <form class="createAccount">
@@ -33,6 +36,7 @@
             Password: <input type="password" name="password" id="passwordInput" /><br />
             <input type="submit" value="create account" />
          </form>
+         <div class="usersfull">The maximum number of users is reached.</div>
       </oc:can>
       <oc:else>
          You do not have permission to create an account.  Please contact the system administrator to get access.

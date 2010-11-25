@@ -42,7 +42,7 @@ namespace ObjectCloud.Disk.Factories
         {
             string databaseFilename = CreateDatabaseFilename(path);
 
-            return new UserManagerHandler(CreateDatabaseConnector(databaseFilename), FileHandlerFactoryLocator);
+            return new UserManagerHandler(CreateDatabaseConnector(databaseFilename), FileHandlerFactoryLocator, MaxLocalUsers);
         }
 
         /// <summary>
@@ -84,5 +84,10 @@ namespace ObjectCloud.Disk.Factories
 
             return toReturn;*/
         }
+
+        /// <summary>
+        /// The maximum number of local users allowed in the database
+        /// </summary>
+        public int? MaxLocalUsers { get; set; }
     }
 }

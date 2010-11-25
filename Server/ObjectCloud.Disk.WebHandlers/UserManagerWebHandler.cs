@@ -85,16 +85,37 @@ namespace ObjectCloud.Disk.WebHandlers
             try
             {
                 IUser user = FileHandler.CreateUser(username, password);
-				
-				if (assignSession)
-                	webConnection.Session.Login(user);
+
+                if (assignSession)
+                    webConnection.Session.Login(user);
 
                 return WebResults.From(Status._201_Created, user.Name + " created");
             }
             catch (UserAlreadyExistsException)
             {
-                return WebResults.From(Status._409_Conflict, "Duplicate user");
+                throw new WebResultsOverrideException(WebResults.From(Status._409_Conflict, "Duplicate user"));
             }
+            catch (MaximumUsersExceeded)
+            {
+                throw new WebResultsOverrideException(WebResults.From(Status._403_Forbidden, "Maximum number of users reached"));
+            }
+        }
+
+        /// <summary>
+        /// Returns a JSON object that has TotalLocalUsers, and MaxLocalUsers if it is set
+        /// </summary>
+        /// <returns></returns>
+        [WebCallable(WebCallingConvention.GET, WebReturnConvention.JSON, FilePermissionEnum.Read)]
+        public IWebResults GetTotalLocalUsers(IWebConnection webConnection)
+        {
+            Dictionary<string, object> toReturn = new Dictionary<string, object>();
+            toReturn["TotalLocalUsers"] = FileHandler.GetTotalLocalUsers();
+
+            int? maxLocalUsers = FileHandler.MaxLocalUsers;
+            if (null != maxLocalUsers)
+                toReturn["MaxLocalUsers"] = maxLocalUsers.Value;
+
+            return WebResults.ToJson(toReturn);
         }
 
         /// <summary>

@@ -22,6 +22,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="password">The password</param>
         /// <returns></returns>
         /// <exception cref="UserAlreadyExistsException">Thrown if the user already exists</exception>
+        /// <exception cref="MaximumUsersExceeded">Thrown when the maximum number of users will be exceeded if the user is created</exception>
         IUser CreateUser(string name, string password);
 
 		/// <summary>
@@ -33,6 +34,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="builtIn">Implies that the user is managed by the system and can not be deleted</param>
         /// <returns></returns>
         /// <exception cref="UserAlreadyExistsException">Thrown if the user already exists</exception>
+        /// <exception cref="MaximumUsersExceeded">Thrown when the maximum number of users will be exceeded if the user is created</exception>
         IUser CreateUser(string name, string password, ID<IUserOrGroup, Guid> userId, bool builtIn);
 
         /// <summary>
@@ -447,6 +449,17 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="senderIdentity"></param>
         /// <returns></returns>
         RapidLoginInfo GetRapidLoginInfo(string senderIdentity);
+
+        /// <summary>
+        /// Returns the total number of local users
+        /// </summary>
+        /// <returns></returns>
+        long GetTotalLocalUsers();
+
+        /// <summary>
+        /// The maximum number of local users allowed
+        /// </summary>
+        int? MaxLocalUsers { get; set; }
     }
 
     /// <summary>

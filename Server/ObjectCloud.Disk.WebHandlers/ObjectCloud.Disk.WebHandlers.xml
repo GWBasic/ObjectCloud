@@ -833,6 +833,12 @@
             <param name="password"></param>
             <returns></returns>
         </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetTotalLocalUsers(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Returns a JSON object that has TotalLocalUsers, and MaxLocalUsers if it is set
+            </summary>
+            <returns></returns>
+        </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.CreateGroup(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String)">
             <summary>
             Creates the group
