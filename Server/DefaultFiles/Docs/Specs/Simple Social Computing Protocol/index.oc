@@ -1,0 +1,16 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" xmlns:af="appfeeds_templating">
+
+   <div class="title">Simple Social Computing Protocol</div>
+
+   <div class="nav"><a href="about.page">About / Overview</a> - <a href="signatures.page">Signed BSON</a> - <a href="messages.page">Server-to-server messages</a> - <a href="friending.page">Friending UI recommendations</a></div>
+
+   <p>The Simple Social Computing Protocol is an open protocol for distributed social computing. Its use cases are derived from
+   Social Networking web sites, although its aim is to enable use cases for any kind of web-accessible media that benefits from
+   being social. It addresses use cases where items are shared in a private manner, that is, items shared with the Simple Social
+   Computing Protocol are shared with individuals or a small group of people.</p>
+
+   <p>An important design goal of the Simple Social Computing Protocol is to keep the specification that implementations must
+   follow short. The Simple Social Computing Protocol builds upon HTTP, BSON, XRD, and WebFinger. It does not require
+   implementations to support many other protocols; thus keeping comprehension of the entire protocol simple.</p>
+
+</oc:componentdef>
