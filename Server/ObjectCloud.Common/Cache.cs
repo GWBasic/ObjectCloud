@@ -557,30 +557,52 @@ namespace ObjectCloud.Common
 
             if (priorGCCollectionCount != myGCCount)
                 if (priorGCCollectionCount == Interlocked.CompareExchange(ref PriorGCCollectionCount, myGCCount, priorGCCollectionCount))
-                    ThreadPool.QueueUserWorkItem(delegate(object state)
-                    {
-                        LockFreeQueue<WeakReference> allCaches = AllCaches;
-                        AllCaches = new LockFreeQueue<WeakReference>();
-
-                        WeakReference weakReference;
-                        while (allCaches.Dequeue(out weakReference))
-                            try
-                            {
-                                {
-                                    Cache cache = weakReference.Target as Cache;
-
-                                    if (null != cache)
-                                    {
-                                        cache.RemoveCollectedCacheHandles();
-                                        AllCaches.Enqueue(weakReference);
-                                    }
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                log.Warn("Exception while cleaning out old WeakReferences after a garbage collection", e);
-                            }
-                    });
+                    ThreadPool.QueueUserWorkItem(CleanCaches);
+        }
+		
+		/// <summary>
+		/// Synchronizes CleanCaches so that there aren't duplicate runnning threads in case there are multiple GCs 
+		/// </summary>
+		private static object CleanCachesKey = new object();
+		
+		private static void CleanCaches(object state)
+        {
+			// Prevent duplicate threads from cleaning the caches
+			if (!Monitor.TryEnter(CleanCachesKey))
+				return;
+			
+			try
+			{
+	            LockFreeQueue<WeakReference> allCaches = AllCaches;
+	            AllCaches = new LockFreeQueue<WeakReference>();
+	
+	            WeakReference weakReference;
+	            while (allCaches.Dequeue(out weakReference))
+	                try
+	                {
+	                    {
+	                        Cache cache = weakReference.Target as Cache;
+	
+	                        if (null != cache)
+	                        {
+	                            cache.RemoveCollectedCacheHandles();
+	                            AllCaches.Enqueue(weakReference);
+	                        }
+	                    }
+	                }
+	                catch (Exception e)
+	                {
+	                    log.Warn("Exception while cleaning out old WeakReferences after a garbage collection", e);
+	                }
+            }
+            catch (Exception e)
+            {
+                log.Warn("Exception while cleaning out old WeakReferences after a garbage collection", e);
+            }
+			finally
+			{
+				Monitor.Exit(CleanCachesKey);
+			}
         }
 
         private static long MemoryInUse = 0;
