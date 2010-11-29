@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Directory>
+	<File
+		Name="about.page"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="friending.page"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="index.oc"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="messages.page"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
+		Name="signatures.page"
+		TypeId="text"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+</Directory>
