@@ -29,11 +29,13 @@ function setupCreateAccount(assignSession, welcomePage, userNumbers)
       {
          var me = $(this);
          var usernameInput = me.find("input[name$='username']");
+         var displayNameInput = me.find("input[name$='displayName']");
          var passwordInput = me.find("input[name$='password']");
 
          UserDB.CreateUser(
             {
                username: usernameInput.val(),
+               displayName: displayNameInput.val(),
                password: passwordInput.val(),
                assignSession: assignSession
             },

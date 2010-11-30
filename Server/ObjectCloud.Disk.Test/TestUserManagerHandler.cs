@@ -23,7 +23,7 @@ namespace ObjectCloud.Disk.Test
         {
             IUserManagerHandler userManager = FileHandlerFactoryLocator.UserManagerHandler;
 
-            IUser testUser = userManager.CreateUser("TestSetPassword" + SRandom.Next<long>().ToString(), "password");
+            IUser testUser = userManager.CreateUser("TestSetPassword" + SRandom.Next<long>().ToString(), "password", "test user");
 
             userManager.SetPassword(testUser.Id, "newpassword");
 
@@ -38,13 +38,13 @@ namespace ObjectCloud.Disk.Test
         {
             IUserManagerHandler userManager = FileHandlerFactoryLocator.UserManagerHandler;
 
-            IUser testUser = userManager.CreateUser("TestGroupAliases" + SRandom.Next<long>().ToString(), "password");
+            IUser testUser = userManager.CreateUser("TestGroupAliases" + SRandom.Next<long>().ToString(), "password", "test user");
 
-            IGroup groupA = userManager.CreateGroup("TestGroupAliases_A_" + SRandom.Next<long>().ToString(), testUser.Id, GroupType.Public);
+            IGroup groupA = userManager.CreateGroup("TestGroupAliases_A_" + SRandom.Next<long>().ToString(), "test user", testUser.Id, GroupType.Public);
             userManager.AddUserToGroup(testUser.Id, groupA.Id);
-            IGroup groupB = userManager.CreateGroup("TestGroupAliases_B_" + SRandom.Next<long>().ToString(), testUser.Id, GroupType.Public);
+            IGroup groupB = userManager.CreateGroup("TestGroupAliases_B_" + SRandom.Next<long>().ToString(), "test user", testUser.Id, GroupType.Public);
             userManager.AddUserToGroup(testUser.Id, groupB.Id);
-            IGroup groupC = userManager.CreateGroup("TestGroupAliases_C_" + SRandom.Next<long>().ToString(), testUser.Id, GroupType.Public);
+            IGroup groupC = userManager.CreateGroup("TestGroupAliases_C_" + SRandom.Next<long>().ToString(), "test user", testUser.Id, GroupType.Public);
             userManager.AddUserToGroup(testUser.Id, groupC.Id);
 
             userManager.SetGroupAlias(testUser.Id, groupB.Id, "TheAlias");

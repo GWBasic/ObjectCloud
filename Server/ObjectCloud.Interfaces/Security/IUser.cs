@@ -26,5 +26,10 @@ namespace ObjectCloud.Interfaces.Security
         /// True if the user is local, false if the user is logged in through OpenID
         /// </summary>
         bool Local { get; }
+
+        /// <summary>
+        /// The user's identity provider
+        /// </summary>
+        IIdentityProvider IdentityProvider { get; }
     }
 }

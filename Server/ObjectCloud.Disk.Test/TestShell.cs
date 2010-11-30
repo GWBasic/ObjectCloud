@@ -16,13 +16,14 @@ namespace ObjectCloud.Disk.Test
     [TestFixture]
     public class TestShell : TestBase
 	{
-        protected override void  DoAdditionalSetup()
+        protected override void DoAdditionalSetup()
         {
          	 base.DoAdditionalSetup();
 
              TestUser = FileHandlerFactoryLocator.UserManagerHandler.CreateUser(
                 "testUser" + SRandom.Next<ulong>().ToString(),
-                "gerwfaewfaew");
+                "gerwfaewfaew",
+                "test user");
         }
 
         protected override void DoAdditionalTearDown()

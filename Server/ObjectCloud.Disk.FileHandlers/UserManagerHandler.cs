@@ -37,12 +37,12 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public int? MaxLocalUsers { get; set; }
 
-        public IUser CreateUser(string name, string password)
+        public IUser CreateUser(string name, string password, string displayName)
         {
-            return CreateUser(name, password, new ID<IUserOrGroup, Guid>(Guid.NewGuid()), false);
+            return CreateUser(name, password, displayName, new ID<IUserOrGroup, Guid>(Guid.NewGuid()), false);
         }
 
-        public IUser CreateUser(string name, string password, ID<IUserOrGroup, Guid> userId, bool builtIn)
+        public IUser CreateUser(string name, string password, string displayName, ID<IUserOrGroup, Guid> userId, bool builtIn)
         {
             if (null != MaxLocalUsers)
                 if (GetTotalLocalUsers() >= MaxLocalUsers.Value)
@@ -74,6 +74,7 @@ namespace ObjectCloud.Disk.FileHandlers
                     user.PasswordMD5 = passwordMD5;
                     user.ID = userId;
                     user.BuiltIn = builtIn;
+                    user.DisplayName = displayName;
                 });
 
                 // Reload the user
@@ -126,21 +127,23 @@ namespace ObjectCloud.Disk.FileHandlers
             }
 
             if (!builtIn)
-                CreateGroup("friends", userObj.Id, GroupType.Personal);
+                CreateGroup("friends", displayName + "'s friends", userObj.Id, GroupType.Personal);
 
             return userObj;
         }
 
         public IGroup CreateGroup(
             string name,
+            string displayName,
             ID<IUserOrGroup, Guid>? ownerId,
             GroupType groupType)
         {
-            return CreateGroup(name, ownerId, new ID<IUserOrGroup, Guid>(Guid.NewGuid()), false, false, groupType);
+            return CreateGroup(name, displayName, ownerId, new ID<IUserOrGroup, Guid>(Guid.NewGuid()), false, false, groupType);
         }
 
         public IGroup CreateGroup(
             string name,
+            string displayName,
             ID<IUserOrGroup, Guid>? ownerId,
             ID<IUserOrGroup, Guid> groupId,
             bool builtIn,
@@ -171,6 +174,7 @@ namespace ObjectCloud.Disk.FileHandlers
                     group.BuiltIn = builtIn;
                     group.Automatic = automatic;
                     group.Type = groupType;
+                    group.DisplayName = displayName;
                 });
 				
                 if (GroupType.Personal == groupType)
@@ -595,7 +599,14 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <returns></returns>
         private IUser CreateUserObject(IUsers_Readable userFromDB)
         {
-            IUser toReturn = new User(userFromDB.ID, userFromDB.Name, userFromDB.BuiltIn, !("openid".Equals(userFromDB.PasswordMD5)), FileHandlerFactoryLocator);
+            IUser toReturn = new User(
+                userFromDB.ID,
+                userFromDB.Name,
+                userFromDB.BuiltIn,
+                !("openid".Equals(userFromDB.PasswordMD5)),
+                FileHandlerFactoryLocator,
+                userFromDB.DisplayName,
+                LocalIdentityProvider.Instance);
 
             return toReturn;
         }
@@ -614,7 +625,8 @@ namespace ObjectCloud.Disk.FileHandlers
                 groupFromDB.BuiltIn,
                 groupFromDB.Automatic,
                 groupFromDB.Type,
-                FileHandlerFactoryLocator);
+                FileHandlerFactoryLocator,
+                groupFromDB.DisplayName);
         }
 
         /// <summary>
@@ -632,7 +644,8 @@ namespace ObjectCloud.Disk.FileHandlers
                 groupFromDB.Automatic,
                 groupFromDB.Type,
                 groupAliasFromDB != null ? groupAliasFromDB.Alias : null,
-                FileHandlerFactoryLocator);
+                FileHandlerFactoryLocator,
+                groupFromDB.DisplayName);
         }
 
         public void DeleteUser(string name)
@@ -797,7 +810,14 @@ namespace ObjectCloud.Disk.FileHandlers
 
                     transaction.Commit();
 
-                    IUser toReturn = new User(userId, openIdIdentity, false, false, FileHandlerFactoryLocator);
+                    IUser toReturn = new User(
+                        userId,
+                        openIdIdentity,
+                        false,
+                        false,
+                        FileHandlerFactoryLocator,
+                        openIdIdentity,
+                        LocalIdentityProvider.Instance);
 
                     return toReturn;
                 }

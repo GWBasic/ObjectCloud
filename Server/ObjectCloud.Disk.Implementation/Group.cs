@@ -22,8 +22,9 @@ namespace ObjectCloud.Disk.Implementation
 		    bool builtIn,
             bool automatic,
             GroupType type,
-            FileHandlerFactoryLocator fileHandlerFactoryLocator)
-            : base(id, name, builtIn, fileHandlerFactoryLocator)
+            FileHandlerFactoryLocator fileHandlerFactoryLocator,
+            string displayName)
+            : base(id, name, builtIn, fileHandlerFactoryLocator, displayName)
 		{
 			_OwnerId = ownerId;
 			_Id = id;
@@ -37,8 +38,9 @@ namespace ObjectCloud.Disk.Implementation
 		    bool builtIn,
             bool automatic,
             GroupType type,
-            FileHandlerFactoryLocator fileHandlerFactoryLocator)
-            : base(id, name, builtIn, fileHandlerFactoryLocator)
+            FileHandlerFactoryLocator fileHandlerFactoryLocator,
+            string displayName)
+            : base(id, name, builtIn, fileHandlerFactoryLocator, displayName)
 		{
 			_Id = id;
 			_Name = name;
@@ -60,7 +62,7 @@ namespace ObjectCloud.Disk.Implementation
 		/// </returns>
         public static Group SpringContructor(string id, string name, bool automatic, FileHandlerFactoryLocator fileHandlerFactoryLocator)
 		{
-			return new Group(new ID<IUserOrGroup, Guid>(new Guid(id)), name, true, automatic, GroupType.Private, fileHandlerFactoryLocator);
+			return new Group(new ID<IUserOrGroup, Guid>(new Guid(id)), name, true, automatic, GroupType.Private, fileHandlerFactoryLocator, name);
 		}
 
 		public ID<IUserOrGroup, Guid>? OwnerId 
@@ -81,7 +83,7 @@ namespace ObjectCloud.Disk.Implementation
         }
         private readonly GroupType _Type;
 
-        public override string Identity
+        public override string Url
         {
             get
             {
@@ -90,6 +92,16 @@ namespace ObjectCloud.Disk.Implementation
                     FileHandlerFactoryLocator.HostnameAndPort,
                     Name);
             }
+        }
+
+        public override string Identity
+        {
+            get { return Url; }
+        }
+
+        public override string AvatarUrl
+        {
+            get { return Url + "?Method=GetAvatar"; }
         }
     }
 
@@ -105,8 +117,9 @@ namespace ObjectCloud.Disk.Implementation
             bool automatic,
             GroupType type,
             string alias,
-            FileHandlerFactoryLocator fileHandlerFactoryLocator)
-            : base(ownerId, id, name, builtIn, automatic, type, fileHandlerFactoryLocator)
+            FileHandlerFactoryLocator fileHandlerFactoryLocator,
+            string displayName)
+            : base(ownerId, id, name, builtIn, automatic, type, fileHandlerFactoryLocator, displayName)
         {
             _Alias = alias;
         }

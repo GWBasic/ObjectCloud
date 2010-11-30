@@ -73,10 +73,11 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="webConnection"></param>
         /// <param name="username"></param>
         /// <param name="password"></param>
+        /// <param name="displayName"></param>
         /// <returns></returns>
         [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Primitive, FilePermissionEnum.Write)]
         [NamedPermission("CreateUser")]
-        public IWebResults CreateUser(IWebConnection webConnection, string username, string password)
+        public IWebResults CreateUser(IWebConnection webConnection, string username, string displayName, string password)
         {
 			bool assignSession = false;
 			if (webConnection.PostParameters.ContainsKey("assignSession"))
@@ -84,7 +85,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             try
             {
-                IUser user = FileHandler.CreateUser(username, password);
+                IUser user = FileHandler.CreateUser(username, password, displayName);
 
                 if (assignSession)
                     webConnection.Session.Login(user);
@@ -125,9 +126,10 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="groupname"></param>
         /// <param name="username">The group's owner, or null if the current user is the owner</param>
         /// <param name="grouptype"></param>
+        /// <param name="displayName"></param>
         /// <returns></returns>
         [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Read)]
-        public IWebResults CreateGroup(IWebConnection webConnection, string groupname, string username, string grouptype)
+        public IWebResults CreateGroup(IWebConnection webConnection, string groupname, string displayName, string username, string grouptype)
         {
             // TODO:  If it's a personal group, uniqueify the name.  Personal groups shouldn't have global names
 
@@ -164,8 +166,8 @@ namespace ObjectCloud.Disk.WebHandlers
                         else
                             return WebResults.From(Status._401_Unauthorized, "You do not have permission to create groups owned by other people");
                     }
-				
-				IGroup group = FileHandler.CreateGroup(groupname, user.Id, groupType);
+
+                IGroup group = FileHandler.CreateGroup(groupname, displayName, user.Id, groupType);
 
                 return WebResults.From(Status._201_Created, group.Name + " created");
             }
@@ -549,6 +551,9 @@ namespace ObjectCloud.Disk.WebHandlers
             toReturn["Name"] = userOrGroup.Name;
             toReturn["Id"] = userOrGroup.Id.Value;
             toReturn["BuiltIn"] = userOrGroup.BuiltIn;
+            toReturn["Identity"] = userOrGroup.Identity;
+            toReturn["Url"] = userOrGroup.Url;
+            toReturn["AvatarUrl"] = userOrGroup.AvatarUrl;
 
             return toReturn;
         }
@@ -557,7 +562,6 @@ namespace ObjectCloud.Disk.WebHandlers
         {
             IDictionary<string, object> toReturn = CreateJSONDictionary(user as IUserOrGroup);
 
-            toReturn["Identity"] = user.Identity;
             toReturn["UserOrGroup"] = "User";
 
             return toReturn;

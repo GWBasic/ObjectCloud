@@ -90,6 +90,20 @@ PRAGMA user_version = 6;";
 
                 command.ExecuteNonQuery();
             }
+
+            if (version < 7)
+            {
+                command = connection.CreateCommand();
+                command.CommandText =
+@"alter table Users add column DisplayName string not null default Name;
+alter table Users add column IdentityProvider integer not null default 0;
+alter table Groups add column DisplayName string not null default Name;
+
+PRAGMA user_version = 7;
+vacuum;";
+
+                command.ExecuteNonQuery();
+            }
         }
     }
 }

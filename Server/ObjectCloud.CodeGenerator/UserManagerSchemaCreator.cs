@@ -26,7 +26,9 @@ namespace ObjectCloud.CodeGenerator
                     {
                         new Column("PasswordMD5", NotNull.String),
                         userIdColumn,
-                        new Column("BuiltIn", NotNull.Bool)
+                        new Column("BuiltIn", NotNull.Bool),
+                        new Column("IdentityProvider", NotNull.Int),
+                        new Column("DisplayName", NotNull.String)
                     });
 
             database.Tables.Add(userTable);
@@ -42,7 +44,8 @@ namespace ObjectCloud.CodeGenerator
                         new Column("OwnerID", IDColumn<IUserOrGroup, Guid>.NullColumnType, ColumnOption.Indexed, userTable, userIdColumn),
                         new Column("BuiltIn", NotNull.Bool),
                         new Column("Automatic", NotNull.Bool),
-                        new Column("Type", EnumColumn<GroupType>.NotNullColumnType)
+                        new Column("Type", EnumColumn<GroupType>.NotNullColumnType),
+                        new Column("DisplayName", NotNull.String)
                     });
 
             database.Tables.Add(groupsTable);
@@ -121,7 +124,7 @@ namespace ObjectCloud.CodeGenerator
 
             database.Tables.Add(recipient);
 
-            database.Version = 6;
+            database.Version = 7;
 
             return database;
         }

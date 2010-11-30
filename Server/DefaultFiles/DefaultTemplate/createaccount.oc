@@ -32,7 +32,8 @@
    <oc:if>
       <oc:can filename="/Users/UserDB" namedpermission="CreateUser">
          <form class="createAccount">
-            Username: <input type="text" name="username" id="usernameInput" /><br />
+            Username: (Used for logging in) <input type="text" name="username" id="usernameInput" /><br />
+            Full Name: (First and last name) <input type="text" name="displayName" id="displayNameInput" /><br />
             Password: <input type="password" name="password" id="passwordInput" /><br />
             <input type="submit" value="create account" />
          </form>

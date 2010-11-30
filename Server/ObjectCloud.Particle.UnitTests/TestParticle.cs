@@ -46,8 +46,8 @@ namespace ObjectCloud.Particle.UnitTests
             string username = "user" + SRandom.Next(0, int.MaxValue).ToString();
             string secondUsername = "user" + SRandom.Next(0, int.MaxValue).ToString();
 
-            IUser user = FileHandlerFactoryLocator.UserManagerHandler.CreateUser(username, "pw");
-            IUser target = SecondFileHandlerFactoryLocator.UserManagerHandler.CreateUser(secondUsername, "pw");
+            IUser user = FileHandlerFactoryLocator.UserManagerHandler.CreateUser(username, "pw", "test user");
+            IUser target = SecondFileHandlerFactoryLocator.UserManagerHandler.CreateUser(secondUsername, "pw", "test user");
 
             object pulser = new object();
 
@@ -108,7 +108,7 @@ namespace ObjectCloud.Particle.UnitTests
         public void TestSendLocalNotification()
         {
             string username = "user" + SRandom.Next(0, int.MaxValue).ToString();
-            IUser user = FileHandlerFactoryLocator.UserManagerHandler.CreateUser(username, "pw");
+            IUser user = FileHandlerFactoryLocator.UserManagerHandler.CreateUser(username, "pw", "test user");
 
             VerifyNotificationRecieved(user, user);
         }
@@ -117,7 +117,7 @@ namespace ObjectCloud.Particle.UnitTests
         public void TestSendRemoteNotification()
         {
             string username = "user" + SRandom.Next(0, int.MaxValue).ToString();
-            IUser user = SecondFileHandlerFactoryLocator.UserManagerHandler.CreateUser(username, "pw");
+            IUser user = SecondFileHandlerFactoryLocator.UserManagerHandler.CreateUser(username, "pw", "test user");
 
             VerifyNotificationRecieved(user, FileHandlerFactoryLocator.UserManagerHandler.GetOpenIdUser(user.Identity));
         }
@@ -125,7 +125,7 @@ namespace ObjectCloud.Particle.UnitTests
         private void VerifyNotificationRecieved(IUser recipient, IUser localRecipient)
         {
             string username = "user" + SRandom.Next(0, int.MaxValue).ToString();
-            IUser sender = FileHandlerFactoryLocator.UserManagerHandler.CreateUser(username, "pw");
+            IUser sender = FileHandlerFactoryLocator.UserManagerHandler.CreateUser(username, "pw", "test user");
 
             IFileHandler file = TestDirectory.CreateFile("test" + SRandom.Next().ToString(), "text", sender.Id);
 
@@ -190,9 +190,9 @@ namespace ObjectCloud.Particle.UnitTests
             string identityUsername = "user" + SRandom.Next(0, int.MaxValue).ToString();
             string recipientUsername = "user" + SRandom.Next(0, int.MaxValue).ToString();
 
-            IUser hostUser = FileHandlerFactoryLocator.UserManagerHandler.CreateUser(hostUsername, "pw");
-            IUser identityUser = SecondFileHandlerFactoryLocator.UserManagerHandler.CreateUser(identityUsername, "pw");
-            IUser recipientUser = ThirdFileHandlerFactoryLocator.UserManagerHandler.CreateUser(recipientUsername, "pw");
+            IUser hostUser = FileHandlerFactoryLocator.UserManagerHandler.CreateUser(hostUsername, "pw", "test user");
+            IUser identityUser = SecondFileHandlerFactoryLocator.UserManagerHandler.CreateUser(identityUsername, "pw", "test user");
+            IUser recipientUser = ThirdFileHandlerFactoryLocator.UserManagerHandler.CreateUser(recipientUsername, "pw", "test user");
 
             List<Dictionary<NotificationColumn, object>> incomingNotifications = new List<Dictionary<NotificationColumn, object>>();
             EventHandler<IUserHandler,EventArgs<Dictionary<NotificationColumn,object>>> nreh = 

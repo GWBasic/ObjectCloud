@@ -41,6 +41,7 @@ namespace ObjectCloud.Disk.Implementation
             IUser anonymousUser = userManager.CreateUser(
                 "anonymous",
                 "",
+                "anonymous",
                 userFactory.AnonymousUser.Id,
                 true);
 
@@ -52,6 +53,7 @@ namespace ObjectCloud.Disk.Implementation
             IUser rootUser = userManager.CreateUser(
                 "root",
                 DefaultRootPassword,
+                "root",
                 userFactory.RootUser.Id,
                 true);
 			
@@ -63,10 +65,10 @@ namespace ObjectCloud.Disk.Implementation
 			usersDirectory.RemovePermission("anonymous.user", new ID<IUserOrGroup, Guid>[] { anonymousUser.Id });
 			
             // Create groups
-            IGroup everybody = userManager.CreateGroup(userFactory.Everybody.Name, null, userFactory.Everybody.Id, true, true, GroupType.Private);
-            userManager.CreateGroup(userFactory.AuthenticatedUsers.Name, null, userFactory.AuthenticatedUsers.Id, true, true, GroupType.Private);
-            userManager.CreateGroup(userFactory.LocalUsers.Name, null, userFactory.LocalUsers.Id, true, true, GroupType.Private);
-            IGroup administrators = userManager.CreateGroup(userFactory.Administrators.Name, rootUser.Id, userFactory.Administrators.Id, true, false, GroupType.Private);
+            IGroup everybody = userManager.CreateGroup(userFactory.Everybody.Name, userFactory.Everybody.Name, null, userFactory.Everybody.Id, true, true, GroupType.Private);
+            userManager.CreateGroup(userFactory.AuthenticatedUsers.Name, userFactory.AuthenticatedUsers.Name, null, userFactory.AuthenticatedUsers.Id, true, true, GroupType.Private);
+            userManager.CreateGroup(userFactory.LocalUsers.Name, userFactory.LocalUsers.Name, null, userFactory.LocalUsers.Id, true, true, GroupType.Private);
+            IGroup administrators = userManager.CreateGroup(userFactory.Administrators.Name, userFactory.Administrators.Name, rootUser.Id, userFactory.Administrators.Id, true, false, GroupType.Private);
 
             // Add root user to administrators
             userManager.AddUserToGroup(rootUser.Id, administrators.Id);
@@ -590,7 +592,7 @@ insert into Metadata (Name, Value) values ('GroupId', @groupId);
                     if (!hasFriendsGroup)
                         try
                         {
-                            FileHandlerFactoryLocator.UserManagerHandler.CreateGroup("friends", user.Id, GroupType.Personal);
+                            FileHandlerFactoryLocator.UserManagerHandler.CreateGroup("friends", user.DisplayName + "'s friends", user.Id, GroupType.Personal);
                         }
                         catch (Exception e)
                         {

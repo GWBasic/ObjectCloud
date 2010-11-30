@@ -824,13 +824,14 @@
             <param name="webConnection"></param>
             <returns></returns>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.CreateUser(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.CreateUser(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String)">
             <summary>
             Creates the user
             </summary>
             <param name="webConnection"></param>
             <param name="username"></param>
             <param name="password"></param>
+            <param name="displayName"></param>
             <returns></returns>
         </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetTotalLocalUsers(ObjectCloud.Interfaces.WebServer.IWebConnection)">
@@ -839,7 +840,7 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.CreateGroup(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String)">
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.CreateGroup(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String,System.String)">
             <summary>
             Creates the group
             </summary>
@@ -847,6 +848,7 @@
             <param name="groupname"></param>
             <param name="username">The group's owner, or null if the current user is the owner</param>
             <param name="grouptype"></param>
+            <param name="displayName"></param>
             <returns></returns>
         </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.DeleteGroup(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.Nullable{System.Guid})">

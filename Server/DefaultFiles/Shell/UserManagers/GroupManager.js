@@ -6,12 +6,14 @@ $(document).ready(function()
    {
       var me = $(this);
       var groupname = me.find("[name$='groupname']").val();
+      var displayName = me.find("[name$='displayName']").val();
       var grouptype = me.find("[name$='grouptype']").val();
 
       userDB.CreateGroup(
       {
          groupname: groupname,
-         grouptype: grouptype
+         grouptype: grouptype,
+         displayName: displayName
       },
       function(transport)
       {

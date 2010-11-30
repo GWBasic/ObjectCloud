@@ -110,6 +110,7 @@
     <Compile Include="Security\CallingFrom.cs" />
     <Compile Include="Security\FilePermissionEnum.cs" />
     <Compile Include="Security\GroupType.cs" />
+    <Compile Include="Security\IIdentityProvider.cs" />
     <Compile Include="Security\ISession.cs" />
     <Compile Include="Security\IUserFactory.cs" />
     <Compile Include="Disk\IUserHandler.cs" />
@@ -124,6 +125,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Security\IUser.cs" />
     <Compile Include="Security\IUserOrGroup.cs" />
+    <Compile Include="Security\LocalIdentityProvider.cs" />
     <Compile Include="Security\ShellSession.cs" />
     <Compile Include="Templating\ITemplateConditionHandler.cs" />
     <Compile Include="Templating\ITemplateEngine.cs" />

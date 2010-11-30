@@ -20,10 +20,13 @@ namespace ObjectCloud.Disk.Implementation
             string name,
             bool builtIn,
             bool local,
-            FileHandlerFactoryLocator fileHandlerFactoryLocator)
-            : base(id, name, builtIn, fileHandlerFactoryLocator) 
+            FileHandlerFactoryLocator fileHandlerFactoryLocator,
+            string displayName,
+            IIdentityProvider identityProvider)
+            : base(id, name, builtIn, fileHandlerFactoryLocator, displayName) 
         {
             _Local = local;
+            _IdentityProvider = identityProvider;
         }
 
 		/// <summary>
@@ -40,10 +43,15 @@ namespace ObjectCloud.Disk.Implementation
 		/// </returns>
         public static User SpringContructor(string id, string name, FileHandlerFactoryLocator fileHandlerFactoryLocator)
 		{
-			return new User(new ID<IUserOrGroup, Guid>(new Guid(id)), name, true, true, fileHandlerFactoryLocator);
+			return new User(new ID<IUserOrGroup, Guid>(new Guid(id)), name, true, true, fileHandlerFactoryLocator, name, LocalIdentityProvider.Instance);
 		}
 
         public override string Identity
+        {
+            get { return Url; }
+        }
+
+        public override string Url
         {
             get
             {
@@ -55,6 +63,11 @@ namespace ObjectCloud.Disk.Implementation
                     FileHandlerFactoryLocator.HostnameAndPort,
                     Name);
             }
+        }
+
+        public override string AvatarUrl
+        {
+            get { return Url + "?Method=GetAvatar"; }
         }
 
 		public IUserHandler UserHandler 
@@ -91,5 +104,11 @@ namespace ObjectCloud.Disk.Implementation
         {
             return Id.GetHashCode();
         }
+
+        public IIdentityProvider IdentityProvider
+        {
+            get { return _IdentityProvider; }
+        }
+        private IIdentityProvider _IdentityProvider;
     }
 }

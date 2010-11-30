@@ -23,7 +23,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <returns></returns>
         /// <exception cref="UserAlreadyExistsException">Thrown if the user already exists</exception>
         /// <exception cref="MaximumUsersExceeded">Thrown when the maximum number of users will be exceeded if the user is created</exception>
-        IUser CreateUser(string name, string password);
+        IUser CreateUser(string name, string password, string displayName);
 
 		/// <summary>
         /// Creates a user with the given name
@@ -35,7 +35,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <returns></returns>
         /// <exception cref="UserAlreadyExistsException">Thrown if the user already exists</exception>
         /// <exception cref="MaximumUsersExceeded">Thrown when the maximum number of users will be exceeded if the user is created</exception>
-        IUser CreateUser(string name, string password, ID<IUserOrGroup, Guid> userId, bool builtIn);
+        IUser CreateUser(string name, string password, string displayName, ID<IUserOrGroup, Guid> userId, bool builtIn);
 
         /// <summary>
         /// Creates a group with the given name
@@ -44,7 +44,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="ownerId">The user that owns the group</param>
         /// <returns></returns>
         /// <exception cref="UserAlreadyExistsException">Thrown if the group already exists</exception>
-        IGroup CreateGroup(string name, ID<IUserOrGroup, Guid>? ownerId, GroupType groupType);
+        IGroup CreateGroup(string name, string displayName, ID<IUserOrGroup, Guid>? ownerId, GroupType groupType);
 
 		/// <summary>
         /// Creates a group with the given name
@@ -56,7 +56,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="automatic">Implies that membership in the group is automatically determined at runtime and can not be modified.</param>
         /// <returns></returns>
         /// <exception cref="UserAlreadyExistsException">Thrown if the group already exists</exception>
-        IGroup CreateGroup(string name, ID<IUserOrGroup, Guid>? ownerId, ID<IUserOrGroup, Guid> groupId, bool builtIn, bool automatic, GroupType groupType);
+        IGroup CreateGroup(string name, string displayName, ID<IUserOrGroup, Guid>? ownerId, ID<IUserOrGroup, Guid> groupId, bool builtIn, bool automatic, GroupType groupType);
 
         /// <summary>
         /// Gets the user with the given name

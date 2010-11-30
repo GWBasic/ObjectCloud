@@ -631,11 +631,17 @@ namespace ObjectCloud.Disk.WebHandlers.Template
             if (WebConnection.Session.User.Id != FileHandlerFactoryLocator.UserFactory.AnonymousUser.Id)
             {
                 // Add some default user information
+                if (!getParameters.ContainsKey("User.DisplayName"))
+                    getParameters["User.DisplayName"] = WebConnection.Session.User.DisplayName;
+
+                if (!getParameters.ContainsKey("User.Url"))
+                    getParameters["User.Url"] = WebConnection.Session.User.Url;
+
                 if (!getParameters.ContainsKey("User.Identity"))
                     getParameters["User.Identity"] = WebConnection.Session.User.Identity;
 
-                if (!getParameters.ContainsKey("User.Name"))
-                    getParameters["User.Name"] = WebConnection.Session.User.Name;
+                if (!getParameters.ContainsKey("User.AvatarUrl"))
+                    getParameters["User.AvatarUrl"] = WebConnection.Session.User.AvatarUrl;
             }
         }
 

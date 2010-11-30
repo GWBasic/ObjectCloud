@@ -16,9 +16,19 @@ namespace ObjectCloud.Interfaces.Security
     public interface IUserOrGroup
     {
         /// <value>
-        /// Returns the OpenID Identity if this is a user, or the group's URL if this is a group
+        /// Returns the user or group's identity. This can be a URL or a WebFinger
         /// </value>
         string Identity { get; }
+
+        /// <summary>
+        /// The user or group's URL
+        /// </summary>
+        string Url { get; }
+
+        /// <summary>
+        /// The user or group's URL of an avatar
+        /// </summary>
+        string AvatarUrl { get; }
 
         /// <summary>
         /// The user's ID
@@ -29,6 +39,11 @@ namespace ObjectCloud.Interfaces.Security
         /// The user or group's name
         /// </summary>
         string Name { get;}
+
+        /// <summary>
+        /// The user or group's display name
+        /// </summary>
+        string DisplayName { get; }
         
         /// <value>
         /// True if the user or group is hardcoded into the system.  This means that it can not be deleted; and implies other special handling rules. 

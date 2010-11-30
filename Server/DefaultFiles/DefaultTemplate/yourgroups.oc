@@ -53,6 +53,7 @@
          <h1>Create a group</h1>
          <form class="CreateGroup" method="POST" action="/Users/UserDB?Method=CreateGroup">
             Group Name: <input type="text" name="groupname" /><br />
+            Display Name: <input type="text" name="displayName" /><br />
 
             <oc:if>
                <oc:can filename="/Users/UserDB" namedpermission="CreateGroup">

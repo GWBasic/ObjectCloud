@@ -16,12 +16,14 @@ namespace ObjectCloud.Disk.Implementation
             ID<IUserOrGroup, Guid> id,
             string name,
             bool builtIn,
-            FileHandlerFactoryLocator fileHandlerFactoryLocator)
+            FileHandlerFactoryLocator fileHandlerFactoryLocator,
+            string displayName)
         {
             _Id = id;
             _Name = name;
             _BuiltIn = builtIn;
             FileHandlerFactoryLocator = fileHandlerFactoryLocator;
+            _DisplayName = displayName;
         }
 
         public FileHandlerFactoryLocator FileHandlerFactoryLocator
@@ -50,5 +52,15 @@ namespace ObjectCloud.Disk.Implementation
         protected bool _BuiltIn;
 
         public abstract string Identity { get; }
-	}
+
+        public abstract string Url { get; }
+
+        public abstract string AvatarUrl { get; }
+
+        public string DisplayName
+        {
+            get { return _DisplayName; }
+        }
+        private string _DisplayName;
+    }
 }
