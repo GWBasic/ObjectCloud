@@ -19,18 +19,28 @@ namespace ObjectCloud.CodeGenerator
 
             Column userIdColumn = new Column("ID", IDColumn<IUserOrGroup, Guid>.NotNullColumnType, ColumnOption.Indexed | ColumnOption.Unique);
 
+            Column nameColumn = new Column("Name", NotNull.String);
+            Column identityProviderColumn = new Column("IdentityProviderCode", NotNull.Int);
+
             Table userTable = new Table(
                     "Users",
-                    new Column("Name", NotNull.String),
+                    nameColumn,
                     new Column[]
                     {
                         new Column("PasswordMD5", NotNull.String),
                         userIdColumn,
                         new Column("BuiltIn", NotNull.Bool),
-                        new Column("IdentityProvider", NotNull.Int),
+                        identityProviderColumn,
                         new Column("DisplayName", NotNull.String),
                         new Column("IdentityProviderArgs", Null.String)
                     });
+
+            /*userTable.CompoundIndexes.Add(new Index(
+                new Column[]
+                {
+                    nameColumn,
+                    identityProviderColumn
+                }, true));*/
 
             database.Tables.Add(userTable);
 
@@ -125,7 +135,7 @@ namespace ObjectCloud.CodeGenerator
 
             database.Tables.Add(recipient);
 
-            database.Version = 8;
+            database.Version = 9;
 
             return database;
         }

@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Text;
 
@@ -102,8 +103,7 @@ alter table Groups add column DisplayName string not null default Name;
 update Users set DisplayName = Name;
 update Groups set DisplayName = Name;
 
-PRAGMA user_version = 7;
-vacuum;";
+PRAGMA user_version = 7;";
 
                 command.ExecuteNonQuery();
             }
@@ -116,11 +116,97 @@ vacuum;";
 
 update Users set IdentityProvider = 1 where PasswordMD5 = 'openid';
 
-PRAGMA user_version = 8;
-vacuum;";
+PRAGMA user_version = 8;";
 
                 command.ExecuteNonQuery();
             }
+
+            /*if (version < 9)
+            {
+                command = connection.CreateCommand();
+                command.CommandText =
+@"
+drop index Users_ID;
+alter table Users rename to OldUsers;
+create table Users 
+(
+	PasswordMD5			string not null,
+	ID			guid not null unique,
+	BuiltIn			boolean not null,
+	IdentityProviderCode			integer not null,
+	DisplayName			string not null,
+	IdentityProviderArgs			string,
+	Name			string not null
+);Create index Users_ID on Users (ID);
+Create unique index Users_Name_IdentityProviderCode on Users (Name, IdentityProviderCode);
+select Name, PasswordMD5, ID, BuiltIn, IdentityProvider, DisplayName, IdentityProviderArgs from OldUsers;";
+
+                LinkedList<object[]> results = new LinkedList<object[]>();
+
+                using (IDataReader reader = command.ExecuteReader())
+                    while (reader.Read())
+                    {
+                        object[] values = new object[7];
+                        results.AddLast(values);
+                        reader.GetValues(values);
+                    }
+
+                foreach (object[] values in results)
+                {
+                    command = connection.CreateCommand();
+                    command.CommandText =
+@"insert into Users (Name, PasswordMD5, ID, BuiltIn, IdentityProviderCode, DisplayName, IdentityProviderArgs)
+values (@Name, @PasswordMD5, @ID, @BuiltIn, @IdentityProviderCode, @DisplayName, @IdentityProviderArgs);";
+
+                    DbParameter parameter;
+
+                    parameter = command.CreateParameter();
+                    command.Parameters.Add(parameter);
+                    parameter.ParameterName = "@Name";
+                    parameter.Value = values[0];
+
+                    parameter = command.CreateParameter();
+                    command.Parameters.Add(parameter);
+                    parameter.ParameterName = "@PasswordMD5";
+                    parameter.Value = values[1];
+
+                    parameter = command.CreateParameter();
+                    command.Parameters.Add(parameter);
+                    parameter.ParameterName = "@ID";
+                    parameter.Value = values[2];
+
+                    parameter = command.CreateParameter();
+                    command.Parameters.Add(parameter);
+                    parameter.ParameterName = "@BuiltIn";
+                    parameter.Value = values[3];
+
+                    parameter = command.CreateParameter();
+                    command.Parameters.Add(parameter);
+                    parameter.ParameterName = "@IdentityProviderCode";
+                    parameter.Value = values[4];
+
+                    parameter = command.CreateParameter();
+                    command.Parameters.Add(parameter);
+                    parameter.ParameterName = "@DisplayName";
+                    parameter.Value = values[5];
+
+                    parameter = command.CreateParameter();
+                    command.Parameters.Add(parameter);
+                    parameter.ParameterName = "@IdentityProviderArgs";
+                    parameter.Value = values[6];
+
+                    command.ExecuteNonQuery();
+                }
+
+                command = connection.CreateCommand();
+                command.CommandText =
+@"
+drop table OldUsers;
+PRAGMA user_version = 9;
+vacuum;";
+
+                command.ExecuteNonQuery();
+            }*/
         }
     }
 }

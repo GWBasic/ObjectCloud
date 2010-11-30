@@ -75,7 +75,7 @@ namespace ObjectCloud.Disk.FileHandlers
                     user.ID = userId;
                     user.BuiltIn = builtIn;
                     user.DisplayName = displayName;
-                    user.IdentityProvider = FileHandlerFactoryLocator.LocalIdentityProvider.IdentityProviderCode;
+                    user.IdentityProviderCode = FileHandlerFactoryLocator.LocalIdentityProvider.IdentityProviderCode;
                 });
 
                 // Reload the user
@@ -295,7 +295,8 @@ namespace ObjectCloud.Disk.FileHandlers
 
             name = name.ToLowerInvariant();
 
-            IUsers_Readable user = DatabaseConnection.Users.SelectSingle(Users_Table.Name == name);
+            IUsers_Readable user = DatabaseConnection.Users.SelectSingle(
+                Users_Table.Name == name & Users_Table.IdentityProviderCode == FileHandlerFactoryLocator.LocalIdentityProvider.IdentityProviderCode);
 
             if (null == user)
                 throw new UnknownUser("Unknown user");
@@ -310,21 +311,6 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public IUser GetUser(ID<IUserOrGroup, Guid> userId)
         {
-            /*IUser toReturn = null;
-
-            UsersCache.TryGetValue(userId, out toReturn);
-            if (null != toReturn)
-                return toReturn;
-
-            IUsers_Readable user = DatabaseConnection.Users.SelectSingle(Users_Table.ID == userId.Value);
-
-            if (null == user)
-                throw new UnknownUser("Unknown user");
-
-            toReturn = CreateUserObject(user);
-            UsersCache[userId] = toReturn;
-            return toReturn;*/
-
             IUser toReturn = GetUserNoException(userId);
             if (null != toReturn)
                 return toReturn;
@@ -595,7 +581,7 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <returns></returns>
         private IUser CreateUserObject(IUsers_Readable userFromDB)
         {
-            IIdentityProvider identityProvider = FileHandlerFactoryLocator.IdentityProviders[userFromDB.IdentityProvider];
+            IIdentityProvider identityProvider = FileHandlerFactoryLocator.IdentityProviders[userFromDB.IdentityProviderCode];
 
             IUser toReturn = identityProvider.CreateUserObject(
                 FileHandlerFactoryLocator,
@@ -804,7 +790,7 @@ namespace ObjectCloud.Disk.FileHandlers
                         newUser.ID = userId;
                         newUser.BuiltIn = false;
                         newUser.DisplayName = openIdIdentity;
-                        newUser.IdentityProvider = 1; // hardcoded for now, will eventually move out
+                        newUser.IdentityProviderCode = 1; // hardcoded for now, will eventually move out
                     });
 
                     user = DatabaseConnection.Users.SelectSingle(Users_Table.Name == openIdIdentity);
