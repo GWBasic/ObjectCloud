@@ -65,6 +65,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="LocalIdentityProvider.cs" />
     <Compile Include="MethodFinder\DelegateWrapper.cs" />
     <Compile Include="MethodFinder\MethodInfoCache.cs" />
     <Compile Include="MethodFinder\WebCallableMethod.cs" />
@@ -81,6 +82,7 @@
     <Compile Include="MethodFinder\WebCallableMethod\POST_UrlEncoded.cs" />
     <Compile Include="MethodFinder\WebCallableMethod\UrlEncoded.cs" />
     <Compile Include="MethodFinder\WebMethodCache.cs" />
+    <Compile Include="OpenIDIdentityProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="FileSystemResolver.cs" />
     <Compile Include="RootDirectoryCreator.cs" />

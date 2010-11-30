@@ -125,7 +125,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Security\IUser.cs" />
     <Compile Include="Security\IUserOrGroup.cs" />
-    <Compile Include="Security\LocalIdentityProvider.cs" />
     <Compile Include="Security\ShellSession.cs" />
     <Compile Include="Templating\ITemplateConditionHandler.cs" />
     <Compile Include="Templating\ITemplateEngine.cs" />

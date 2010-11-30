@@ -41,9 +41,9 @@ namespace ObjectCloud.Disk.Implementation
 		/// <returns>
 		/// A <see cref="User"/>
 		/// </returns>
-        public static User SpringContructor(string id, string name, FileHandlerFactoryLocator fileHandlerFactoryLocator)
+        public static User SpringContructor(string id, string name, FileHandlerFactoryLocator fileHandlerFactoryLocator, IIdentityProvider identityProvider)
 		{
-			return new User(new ID<IUserOrGroup, Guid>(new Guid(id)), name, true, true, fileHandlerFactoryLocator, name, LocalIdentityProvider.Instance);
+            return new User(new ID<IUserOrGroup, Guid>(new Guid(id)), name, true, true, fileHandlerFactoryLocator, name, identityProvider);
 		}
 
         public override string Identity

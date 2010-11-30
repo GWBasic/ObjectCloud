@@ -256,5 +256,15 @@ namespace ObjectCloud.Interfaces.Disk
         /// The server to use when calling home
         /// </summary>
         public string CallHomeEndpoint {get; set; }
+
+        /// <summary>
+        /// Identity providers indexed by their IdentityProviderCode
+        /// </summary>
+        public Dictionary<int, IIdentityProvider> IdentityProviders { get; set; }
+
+        /// <summary>
+        /// The local identity provider
+        /// </summary>
+        public IIdentityProvider LocalIdentityProvider { get; set; }
     }
 }

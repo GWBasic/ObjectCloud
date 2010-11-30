@@ -28,7 +28,8 @@ namespace ObjectCloud.CodeGenerator
                         userIdColumn,
                         new Column("BuiltIn", NotNull.Bool),
                         new Column("IdentityProvider", NotNull.Int),
-                        new Column("DisplayName", NotNull.String)
+                        new Column("DisplayName", NotNull.String),
+                        new Column("IdentityProviderArgs", Null.String)
                     });
 
             database.Tables.Add(userTable);
@@ -124,7 +125,7 @@ namespace ObjectCloud.CodeGenerator
 
             database.Tables.Add(recipient);
 
-            database.Version = 7;
+            database.Version = 8;
 
             return database;
         }

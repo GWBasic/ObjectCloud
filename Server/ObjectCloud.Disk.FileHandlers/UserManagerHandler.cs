@@ -75,6 +75,7 @@ namespace ObjectCloud.Disk.FileHandlers
                     user.ID = userId;
                     user.BuiltIn = builtIn;
                     user.DisplayName = displayName;
+                    user.IdentityProvider = FileHandlerFactoryLocator.LocalIdentityProvider.IdentityProviderCode;
                 });
 
                 // Reload the user
@@ -577,7 +578,7 @@ namespace ObjectCloud.Disk.FileHandlers
             string saltedPassword = string.Format(PasswordSalt, password);
             byte[] passwordBytes = System.Text.Encoding.UTF8.GetBytes(saltedPassword);
 
-            byte[] passwordHash = HashAlgorithm.ComputeHash(passwordBytes);
+            byte[] passwordHash = (new System.Security.Cryptography.MD5CryptoServiceProvider()).ComputeHash(passwordBytes);
 
             return Convert.ToBase64String(passwordHash);
         }
@@ -588,25 +589,21 @@ namespace ObjectCloud.Disk.FileHandlers
         private static string PasswordSalt = "{0} objectCloud!!!!salt {0}xyzbhjkbk {0} {0} {0} !!!!!!!!!";
 
         /// <summary>
-        /// The object that calculates the MD5
-        /// </summary>
-        private static HashAlgorithm HashAlgorithm = new System.Security.Cryptography.MD5CryptoServiceProvider();
-
-        /// <summary>
         /// Creates the user object
         /// </summary>
         /// <param name="userFromDB"></param>
         /// <returns></returns>
         private IUser CreateUserObject(IUsers_Readable userFromDB)
         {
-            IUser toReturn = new User(
+            IIdentityProvider identityProvider = FileHandlerFactoryLocator.IdentityProviders[userFromDB.IdentityProvider];
+
+            IUser toReturn = identityProvider.CreateUserObject(
+                FileHandlerFactoryLocator,
                 userFromDB.ID,
                 userFromDB.Name,
                 userFromDB.BuiltIn,
-                !("openid".Equals(userFromDB.PasswordMD5)),
-                FileHandlerFactoryLocator,
                 userFromDB.DisplayName,
-                LocalIdentityProvider.Instance);
+                userFromDB.IdentityProviderArgs);
 
             return toReturn;
         }
@@ -806,20 +803,13 @@ namespace ObjectCloud.Disk.FileHandlers
                         newUser.PasswordMD5 = "openid";
                         newUser.ID = userId;
                         newUser.BuiltIn = false;
+                        newUser.DisplayName = openIdIdentity;
+                        newUser.IdentityProvider = 1; // hardcoded for now, will eventually move out
                     });
 
+                    user = DatabaseConnection.Users.SelectSingle(Users_Table.Name == openIdIdentity);
+
                     transaction.Commit();
-
-                    IUser toReturn = new User(
-                        userId,
-                        openIdIdentity,
-                        false,
-                        false,
-                        FileHandlerFactoryLocator,
-                        openIdIdentity,
-                        LocalIdentityProvider.Instance);
-
-                    return toReturn;
                 }
 
                 return CreateUserObject(user);

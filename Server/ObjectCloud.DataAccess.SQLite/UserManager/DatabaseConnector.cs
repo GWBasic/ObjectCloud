@@ -107,6 +107,20 @@ vacuum;";
 
                 command.ExecuteNonQuery();
             }
+
+            if (version < 8)
+            {
+                command = connection.CreateCommand();
+                command.CommandText =
+@"alter table Users add column IdentityProviderArgs string;
+
+update Users set IdentityProvider = 1 where PasswordMD5 = 'openid';
+
+PRAGMA user_version = 8;
+vacuum;";
+
+                command.ExecuteNonQuery();
+            }
         }
     }
 }
