@@ -549,6 +549,7 @@ namespace ObjectCloud.Disk.WebHandlers
             IDictionary<string, object> toReturn = new Dictionary<string, object>();
 
             toReturn["Name"] = userOrGroup.Name;
+            toReturn["DisplayName"] = userOrGroup.DisplayName;
             toReturn["Id"] = userOrGroup.Id.Value;
             toReturn["BuiltIn"] = userOrGroup.BuiltIn;
             toReturn["Identity"] = userOrGroup.Identity;

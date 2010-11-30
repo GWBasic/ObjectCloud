@@ -13,7 +13,7 @@
    <div>
       <oc:if>
          <oc:isloggedin>
-            <img src="[_User.Identity_]?Method=GetAvatar&amp;width=350" /><br />
+            <img src="[_User.AvatarUrl_]&amp;width=350" /><br />
          </oc:isloggedin>
       </oc:if>
       You do not have permission to access 

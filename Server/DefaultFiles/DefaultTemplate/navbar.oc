@@ -14,13 +14,13 @@
       <oc:if>
          <oc:isloggedin>
             <div class="navbarimage">
-               <a href="[_User.Identity_]">
-                  <img src="[_User.Identity_]?Method=GetAvatar&amp;width=50" />
+               <a href="[_User.Url_]">
+                  <img src="[_User.AvatarUrl_]&amp;width=50" />
                </a>
             </div>
             <span class="navbaruserlinks">
-               <a href="[_User.Identity_]">
-                  [_User.Name_] (Profile)
+               <a href="[_User.Url_]">
+                  [_User.DisplayName_] (Profile)
                </a><br />
                <a href="/DefaultTemplate/usermanager.oc?Target=/Users/[_User.Name_].user">Account</a>
             </span>

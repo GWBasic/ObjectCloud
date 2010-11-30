@@ -99,6 +99,9 @@ PRAGMA user_version = 6;";
 alter table Users add column IdentityProvider integer not null default 0;
 alter table Groups add column DisplayName string not null default Name;
 
+update Users set DisplayName = Name;
+update Groups set DisplayName = Name;
+
 PRAGMA user_version = 7;
 vacuum;";
 

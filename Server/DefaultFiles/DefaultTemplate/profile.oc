@@ -4,7 +4,7 @@
       <oc:script src="/API/jquery.js" />
    </oc:inserthead>
 
-   <div class="title">[_User.Identity_]</div>
+   <div class="title">[_User.DisplayName_]</div>
 
    <div class="76rdfi7jeny">76rdfi7jeny</div>
    <script>

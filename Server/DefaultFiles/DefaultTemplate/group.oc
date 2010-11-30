@@ -25,7 +25,7 @@
    <h1>Members:</h1>
    <p>
       <oc:jsontemplate oc:url="[_FileName_]" Method="getMembers">
-         <a href="[_Identity_]">[_Name_]</a><br />
+         <a href="[_Url_]">[_DisplayName_]</a><br />
       </oc:jsontemplate>
    </p>
 
