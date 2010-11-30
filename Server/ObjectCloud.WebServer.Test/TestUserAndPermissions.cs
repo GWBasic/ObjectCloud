@@ -34,6 +34,7 @@ namespace ObjectCloud.WebServer.Test
 
             webResponse = httpWebClient.Post("http://localhost:" + WebServer.Port + "/Users/UserDB?Method=CreateUser",
                 new KeyValuePair<string, string>("username", username),
+                new KeyValuePair<string, string>("displayName", username),
                 new KeyValuePair<string, string>("password", "password"),
 			    new KeyValuePair<string, string>("assignSession", true.ToString()));
             Assert.AreEqual(HttpStatusCode.Created, webResponse.StatusCode, "Bad status code");
@@ -57,6 +58,7 @@ namespace ObjectCloud.WebServer.Test
 
             webResponse = httpWebClient.Post("http://localhost:" + WebServer.Port + "/Users/UserDB?Method=CreateUser",
                 new KeyValuePair<string, string>("username", username),
+                new KeyValuePair<string, string>("displayName", username),
                 new KeyValuePair<string, string>("password", "password"),
 			    new KeyValuePair<string, string>("assignSession", true.ToString()));
             Assert.AreEqual(HttpStatusCode.Created, webResponse.StatusCode, "Bad status code");
@@ -145,6 +147,7 @@ namespace ObjectCloud.WebServer.Test
 
             webResponse = httpWebClient.Post("http://localhost:" + WebServer.Port + "/Users/UserDB?Method=CreateUser",
                 new KeyValuePair<string, string>("username", username),
+                new KeyValuePair<string, string>("displayName", username),
                 new KeyValuePair<string, string>("password", "password"),
 			    new KeyValuePair<string, string>("assignSession", false.ToString()));
             Assert.AreEqual(HttpStatusCode.Created, webResponse.StatusCode, "Bad status code");
@@ -192,6 +195,7 @@ namespace ObjectCloud.WebServer.Test
 
             webResponse = httpWebClient.Post("http://localhost:" + WebServer.Port + "/Users/UserDB?Method=CreateUser",
                 new KeyValuePair<string, string>("username", username),
+                new KeyValuePair<string, string>("displayName", username),
                 new KeyValuePair<string, string>("password", "password"),
 			    new KeyValuePair<string, string>("assignSession", false.ToString()));
             Assert.AreEqual(HttpStatusCode.Created, webResponse.StatusCode, "Bad status code");
@@ -248,6 +252,7 @@ namespace ObjectCloud.WebServer.Test
 
             webResponse = httpWebClient.Post("http://localhost:" + WebServer.Port + "/Users/UserDB?Method=CreateUser",
                 new KeyValuePair<string, string>("username", username),
+                new KeyValuePair<string, string>("displayName", username),
                 new KeyValuePair<string, string>("password", "password"),
                 new KeyValuePair<string, string>("assignSession", true.ToString()));
             Assert.AreEqual(HttpStatusCode.Created, webResponse.StatusCode, "Bad status code");

@@ -138,7 +138,8 @@ namespace ObjectCloud.Common
 
             HttpWebRequest webRequest = (HttpWebRequest)HttpWebRequest.Create(urlBuilder.ToString());
             webRequest.CookieContainer = CookieContainer;
-            webRequest.KeepAlive = false;
+            webRequest.KeepAlive = true;
+            //webRequest.Headers.Set("Connection", "keep-alive");
             webRequest.UnsafeAuthenticatedConnectionSharing = true;
 
             if (null != Timeout)
@@ -238,7 +239,8 @@ namespace ObjectCloud.Common
             webRequest.Method = "POST";
             webRequest.ContentType = "application/x-www-form-urlencoded";
             webRequest.CookieContainer = CookieContainer;
-            webRequest.KeepAlive = false;
+            webRequest.KeepAlive = true;
+            //webRequest.Headers.Set("Connection", "keep-alive");
             webRequest.UnsafeAuthenticatedConnectionSharing = true;
 
             if (null != Timeout)

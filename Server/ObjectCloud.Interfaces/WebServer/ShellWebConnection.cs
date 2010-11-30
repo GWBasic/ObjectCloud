@@ -145,7 +145,7 @@ namespace ObjectCloud.Interfaces.WebServer
             _Method = method;
             _CookiesFromBrowser = cookiesFromBrowser;
             _CookiesToSet = new List<CookieToSet>();
-            _HttpVersion = null;
+            _HttpVersion = 1;
             _RequestedHost = null;
             _Headers = new Dictionary<string, string>();
 

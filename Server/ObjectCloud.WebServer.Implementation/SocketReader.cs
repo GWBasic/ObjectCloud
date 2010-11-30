@@ -487,11 +487,11 @@ namespace ObjectCloud.WebServer.Implementation
         /// <param name="socketReader"></param>
         protected void PerformRequest()
         {
-            if (!WebServer.KeepAlive || !Socket.Connected || !WebServer.Running)
+            if (!WebServer.KeepAlive || !Socket.Connected || !WebServer.Running || WebConnection.HttpVersion < 1.1)
                 KeepAlive = false;
             else if (!WebConnection.Headers.ContainsKey("CONNECTION"))
-                KeepAlive = false;
-            else if ("keep-alive" != WebConnection.Headers["CONNECTION"].ToLower())
+                KeepAlive = true;
+            else if ("close" == WebConnection.Headers["CONNECTION"].ToLower())
                 KeepAlive = false;
             else
                 KeepAlive = true;
@@ -687,6 +687,12 @@ namespace ObjectCloud.WebServer.Implementation
             try
             {
                 Socket.Shutdown(SocketShutdown.Both);
+            }
+            catch { }
+
+            try
+            {
+                Socket.LingerState = new LingerOption(true, 0);
                 Socket.Close();
             }
             catch { }

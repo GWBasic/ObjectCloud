@@ -37,7 +37,8 @@ namespace ObjectCloud.WebServer.Test.PermissionsTests
 
             webResponse = httpWebClient.Post("http://localhost:" + WebServer.Port + "/Users/UserDB?Method=CreateUser",
                 new KeyValuePair<string, string>("username", name),
-                new KeyValuePair<string, string>("password", password));
+                new KeyValuePair<string, string>("password", password),
+                new KeyValuePair<string, string>("displayName", name));
             Assert.AreEqual(HttpStatusCode.Created, webResponse.StatusCode, "Bad status code");
         }
 

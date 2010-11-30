@@ -200,7 +200,7 @@ namespace ObjectCloud.Interfaces.WebServer
         /// <summary>
         /// The HTTP version sent from the browser
         /// </summary>
-        string HttpVersion { get; }
+        double HttpVersion { get; }
 
         /// <summary>
         /// The number of times this web connection has been shelled.  If this number is excessively high, it indicates a potential stack overflow problem

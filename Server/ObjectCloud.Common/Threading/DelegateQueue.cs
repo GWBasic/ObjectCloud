@@ -88,7 +88,7 @@ namespace ObjectCloud.Common.Threading
                     else
                         thread.Name = Name + ' ' + ctr.ToString();
 
-                    thread.Start();
+                    thread.Start(Threads);
 
                     Threads[ctr] = thread;
                 }
@@ -184,11 +184,12 @@ namespace ObjectCloud.Common.Threading
         /// <summary>
         /// Runs on the Thread to keep printing on the console
         /// </summary>
-        void Work()
+        void Work(object threadsObject)
         {
+            Thread[] threads = (Thread[])threadsObject;
+
             // Local instances used in case the delegate queue is stopped
             LockFreeQueue_WithCount<QueuedDelegate> queuedDelegates = QueuedDelegates;
-            Thread[] threads = Threads;
 
             while (threads == Threads)
             {
@@ -221,7 +222,7 @@ namespace ObjectCloud.Common.Threading
                     {
                         Busy.ExitBusy();
 
-                        foreach (Thread thread in Threads)
+                        foreach (Thread thread in threads)
                             thread.Priority = ThreadPriority.Normal;
                     }
             }

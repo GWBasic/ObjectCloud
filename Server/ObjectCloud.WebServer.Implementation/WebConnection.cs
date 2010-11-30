@@ -83,7 +83,9 @@ namespace ObjectCloud.WebServer.Implementation
             int HTTP_Pos = requestTypeAndName.IndexOf("HTTP", 1);
 
             // Get the HTTP text and version e.g. it will return "HTTP/1.1"
-            _HttpVersion = requestTypeAndName.Substring(HTTP_Pos, 8);
+            string httpVersion = requestTypeAndName.Substring(HTTP_Pos, 8);
+            _HttpVersion = 1;
+            double.TryParse(httpVersion.Substring(5), out _HttpVersion);
 
             // Extract the Requested Type and Requested file/directory
             string requestString = requestTypeAndName.Substring(0, HTTP_Pos - 1);

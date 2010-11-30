@@ -374,11 +374,11 @@ namespace ObjectCloud.Interfaces.WebServer
         /// <summary>
         /// The HTTP version sent from the client
         /// </summary>
-        public string HttpVersion
+        public double HttpVersion
         {
             get { return _HttpVersion; }
         }
-        protected string _HttpVersion;
+        protected double _HttpVersion;
 
         /// <summary>
         /// The requested file
