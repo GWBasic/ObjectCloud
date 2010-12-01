@@ -792,7 +792,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             try
             {
-                IUser user = FileHandler.GetOpenIdUser(identity);
+                IUser user = FileHandlerFactoryLocator.IdentityProviders[1].GetOrCreateUser(identity);
                 webConnection.Session.Login(user);
 
                 // success

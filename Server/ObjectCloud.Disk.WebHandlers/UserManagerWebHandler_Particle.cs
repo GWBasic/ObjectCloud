@@ -100,7 +100,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
                     webConnection.SendResults(WebResults.From(Status._201_Created, "created"));
 
-                    IUser senderUser = FileHandlerFactoryLocator.UserManagerHandler.GetOpenIdUser(senderIdentity);
+                    IUser senderUser = FileHandlerFactoryLocator.IdentityProviders[1].GetOrCreateUser(senderIdentity);
 
                     string avatarFilename = senderUser.Id.ToString() + ".jpg";
 

@@ -34,5 +34,26 @@ namespace ObjectCloud.Interfaces.Security
             bool builtIn,
             string displayName,
             string identityProviderArgs);
+
+        /// <summary>
+        /// If the name is an identity that points to a local user, returns the local user. For example, if the host is objectcloud.com, when using WebFinger, changes gwbasic@objectcloud.com to gwbasic
+        /// </summary>
+        /// <param name="nameOrGroupOrIdentity"></param>
+        /// <returns>Either nameOrGroupOrIdentity unmodified, or the local name if the identity points to a local user</returns>
+        string FilterIdentityToLocalNameIfNeeded(string nameOrGroupOrIdentity);
+
+        /// <summary>
+        /// Gets the user with the OpenID identity. If the user isn't present in the database, adds the user. Note that the identity must be fully-resolved
+        /// </summary>
+        /// <param name="identity"></param>
+        /// <returns></returns>
+        IUser GetOrCreateUser(string identity);
+
+        /// <summary>
+        /// Gets or creates a user with the appropriate identity if the identity matches the form needed for this identity provider. Returns null if the identity is a form not applicable to this identity provider
+        /// </summary>
+        /// <param name="identity"></param>
+        /// <returns></returns>
+        IUser GetOrCreateUserIfCorrectFormOfIdentity(string identity);
     }
 }

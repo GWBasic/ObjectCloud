@@ -121,7 +121,7 @@ PRAGMA user_version = 8;";
                 command.ExecuteNonQuery();
             }
 
-            /*if (version < 9)
+            if (version < 9)
             {
                 command = connection.CreateCommand();
                 command.CommandText =
@@ -136,9 +136,8 @@ create table Users
 	IdentityProviderCode			integer not null,
 	DisplayName			string not null,
 	IdentityProviderArgs			string,
-	Name			string not null
+	Name			string not null	primary key
 );Create index Users_ID on Users (ID);
-Create unique index Users_Name_IdentityProviderCode on Users (Name, IdentityProviderCode);
 select Name, PasswordMD5, ID, BuiltIn, IdentityProvider, DisplayName, IdentityProviderArgs from OldUsers;";
 
                 LinkedList<object[]> results = new LinkedList<object[]>();
@@ -206,7 +205,7 @@ PRAGMA user_version = 9;
 vacuum;";
 
                 command.ExecuteNonQuery();
-            }*/
+            }
         }
     }
 }

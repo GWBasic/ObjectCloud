@@ -273,7 +273,9 @@
       <dictionary key-type="Integer" value-type="ObjectCloud.Interfaces.Security.IIdentityProvider, ObjectCloud.Interfaces">
         <entry key="0" value-ref="LocalIdentityProvider" />
         <entry key="1">
-          <object type="ObjectCloud.Disk.Implementation.OpenIDIdentityProvider, ObjectCloud.Disk.Implementation" />
+          <object type="ObjectCloud.Disk.Implementation.OpenIDIdentityProvider, ObjectCloud.Disk.Implementation">
+            <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+          </object>
         </entry>
       </dictionary>
     </property>
@@ -281,5 +283,8 @@
     <property name="LocalIdentityProvider" ref="LocalIdentityProvider" />
   </object>
 
-  <object id="LocalIdentityProvider" type="ObjectCloud.Disk.Implementation.LocalIdentityProvider, ObjectCloud.Disk.Implementation" />
-</objects>
+  <object id="LocalIdentityProvider" type="ObjectCloud.Disk.Implementation.LocalIdentityProvider, ObjectCloud.Disk.Implementation">
+    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+  </object>
+  
+  </objects>

@@ -25,7 +25,17 @@ namespace ObjectCloud.Interfaces.Disk
         /// <exception cref="MaximumUsersExceeded">Thrown when the maximum number of users will be exceeded if the user is created</exception>
         IUser CreateUser(string name, string password, string displayName);
 
-		/// <summary>
+        /// <summary>
+        /// Creates a user with the given name
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="password">The password</param>
+        /// <returns></returns>
+        /// <exception cref="UserAlreadyExistsException">Thrown if the user already exists</exception>
+        /// <exception cref="MaximumUsersExceeded">Thrown when the maximum number of users will be exceeded if the user is created</exception>
+        IUser CreateUser(string name, string displayName, string identityProviderArgs, IIdentityProvider identityProvider);
+
+        /// <summary>
         /// Creates a user with the given name
         /// </summary>
         /// <param name="name"></param>
@@ -120,6 +130,11 @@ namespace ObjectCloud.Interfaces.Disk
         IUser GetUserNoException(ID<IUserOrGroup, Guid> userId);
 
         /// <summary>
+        /// Gets the user with the corresponding name or identity, returns null if the user isn't found
+        /// </summary>
+        IUser GetUserNoException(string nameOrIdentity);
+
+        /// <summary>
         /// Gets the group with the given name
         /// </summary>
         /// <param name="name"></param>
@@ -199,17 +214,6 @@ namespace ObjectCloud.Interfaces.Disk
 		/// A <see cref="ID"/>
 		/// </param>
 		void Restore(XmlReader xmlReader, ID<IUserOrGroup, Guid> userId);
-		
-		/// <summary>
-		/// Returns a user that corresponds with the OpenId Identity; does not verify that the identity is valid
-		/// </summary>
-		/// <param name="openIdIdentity">
-		/// A <see cref="System.String"/>
-		/// </param>
-		/// <returns>
-		/// A <see cref="IUser"/>
-		/// </returns>
-		IUser GetOpenIdUser(string openIdIdentity);
 		
 		/// <summary>
 		/// Creates an association handle to return to as part of OpenID authentication

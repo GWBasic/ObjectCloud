@@ -119,7 +119,7 @@ namespace ObjectCloud.Particle.UnitTests
             string username = "user" + SRandom.Next(0, int.MaxValue).ToString();
             IUser user = SecondFileHandlerFactoryLocator.UserManagerHandler.CreateUser(username, "pw", "test user");
 
-            VerifyNotificationRecieved(user, FileHandlerFactoryLocator.UserManagerHandler.GetOpenIdUser(user.Identity));
+            VerifyNotificationRecieved(user, FileHandlerFactoryLocator.IdentityProviders[1].GetOrCreateUser(user.Identity));
         }
 
         private void VerifyNotificationRecieved(IUser recipient, IUser localRecipient)
@@ -152,7 +152,7 @@ namespace ObjectCloud.Particle.UnitTests
             VerifyNotificiationRecieved(recipient, sender, file, notification);
 
             List<Dictionary<NotificationColumn, object>> notifications = new List<Dictionary<NotificationColumn,object>>(
-                recipient.UserHandler.GetNotifications(null, null, null, null, null, new HashSet<NotificationColumn>(Enum<NotificationColumn>.Values)));
+                recipient.UserHandler.GetNotifications(null, null, null, null, new string[] {sender.Identity }, new HashSet<NotificationColumn>(Enum<NotificationColumn>.Values)));
 
             Assert.AreEqual(1, notifications.Count);
             VerifyNotificiationRecieved(recipient, sender, file, notifications[0]);
@@ -209,8 +209,8 @@ namespace ObjectCloud.Particle.UnitTests
             identityUser.UserHandler.NotificationRecieved += nreh;
             recipientUser.UserHandler.NotificationRecieved += nreh;
 
-            IUser identityUserOnHost = FileHandlerFactoryLocator.UserManagerHandler.GetOpenIdUser(identityUser.Identity);
-            IUser recipientUserOnHost = FileHandlerFactoryLocator.UserManagerHandler.GetOpenIdUser(recipientUser.Identity);
+            IUser identityUserOnHost = FileHandlerFactoryLocator.IdentityProviders[1].GetOrCreateUser(identityUser.Identity);
+            IUser recipientUserOnHost = FileHandlerFactoryLocator.IdentityProviders[1].GetOrCreateUser(recipientUser.Identity);
 
             IFileHandler file = TestDirectory.CreateFile("test" + SRandom.Next().ToString(), "text", hostUser.Id);
             TestDirectory.SetPermission(

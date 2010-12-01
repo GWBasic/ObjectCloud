@@ -12,7 +12,7 @@ using ObjectCloud.Interfaces.Security;
 
 namespace ObjectCloud.Disk.Implementation
 {
-    public class LocalIdentityProvider : IIdentityProvider
+    public class LocalIdentityProvider : HasFileHandlerFactoryLocator, IIdentityProvider
     {
         public int IdentityProviderCode
         {
@@ -37,6 +37,31 @@ namespace ObjectCloud.Disk.Implementation
                 this);
 
             return toReturn;
+        }
+
+
+        public string FilterIdentityToLocalNameIfNeeded(string nameOrGroupOrIdentity)
+        {
+            // Allow /Users/[username].user
+            if (nameOrGroupOrIdentity.StartsWith("/Users/") && nameOrGroupOrIdentity.EndsWith(".user"))
+            {
+                nameOrGroupOrIdentity = nameOrGroupOrIdentity.Substring(7);
+                nameOrGroupOrIdentity = nameOrGroupOrIdentity.Substring(0, nameOrGroupOrIdentity.Length - 5);
+            }
+
+            return nameOrGroupOrIdentity;
+        }
+
+
+        public IUser GetOrCreateUserIfCorrectFormOfIdentity(string identity)
+        {
+            return null;
+        }
+
+
+        public IUser GetOrCreateUser(string identity)
+        {
+            return null;
         }
     }
 }

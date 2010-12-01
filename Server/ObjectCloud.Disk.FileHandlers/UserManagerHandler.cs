@@ -42,17 +42,49 @@ namespace ObjectCloud.Disk.FileHandlers
             return CreateUser(name, password, displayName, new ID<IUserOrGroup, Guid>(Guid.NewGuid()), false);
         }
 
+        public IUser CreateUser(string name, string displayName, string identityProviderArgs, IIdentityProvider identityProvider)
+        {
+            return CreateUser(
+                name,
+                null,
+                displayName,
+                new ID<IUserOrGroup, Guid>(Guid.NewGuid()),
+                false,
+                identityProviderArgs,
+                identityProvider);
+        }
+
         public IUser CreateUser(string name, string password, string displayName, ID<IUserOrGroup, Guid> userId, bool builtIn)
+        {
+            return CreateUser(
+                name.ToLowerInvariant(),
+                password,
+                displayName,
+                userId,
+                builtIn,
+                null,
+                FileHandlerFactoryLocator.LocalIdentityProvider);
+        }
+
+        public IUser CreateUser(string name,
+            string password,
+            string displayName,
+            ID<IUserOrGroup, Guid> userId,
+            bool builtIn,
+            string identityProviderArgs,
+            IIdentityProvider identityProvider)
         {
             if (null != MaxLocalUsers)
                 if (GetTotalLocalUsers() >= MaxLocalUsers.Value)
                     throw new MaximumUsersExceeded("The maximum number of users allowed on this server is met: " + MaxLocalUsers.Value.ToString());
 
-            name = name.ToLowerInvariant();
-
             IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
 
-            string passwordMD5 = CreateMD5(password);
+            string passwordMD5;
+            if (null != password)
+                passwordMD5 = CreateMD5(password);
+            else
+                passwordMD5 = identityProvider.GetType().Name;
 
             IUserHandler newUser;
             IUser userObj = null;
@@ -62,11 +94,14 @@ namespace ObjectCloud.Disk.FileHandlers
                 // Make sure there isn't a duplicate user/group
                 ThrowExceptionIfDuplicate(transaction, name);
 
-                if (usersDirectory.IsFilePresent(name))
-                    throw new UserAlreadyExistsException("There is a pre-existing directory for " + name);
+                if (identityProvider == FileHandlerFactoryLocator.LocalIdentityProvider)
+                {
+                    if (usersDirectory.IsFilePresent(name))
+                        throw new UserAlreadyExistsException("There is a pre-existing directory for " + name);
 
-                if (usersDirectory.IsFilePresent(name + " .user"))
-                    throw new UserAlreadyExistsException("There is a pre-existing " + name + ".user");
+                    if (usersDirectory.IsFilePresent(name + " .user"))
+                        throw new UserAlreadyExistsException("There is a pre-existing " + name + ".user");
+                }
 
                 DatabaseConnection.Users.Insert(delegate(IUsers_Writable user)
                 {
@@ -75,7 +110,8 @@ namespace ObjectCloud.Disk.FileHandlers
                     user.ID = userId;
                     user.BuiltIn = builtIn;
                     user.DisplayName = displayName;
-                    user.IdentityProviderCode = FileHandlerFactoryLocator.LocalIdentityProvider.IdentityProviderCode;
+                    user.IdentityProviderCode = identityProvider.IdentityProviderCode;
+                    user.IdentityProviderArgs = identityProviderArgs;
                 });
 
                 // Reload the user
@@ -85,50 +121,53 @@ namespace ObjectCloud.Disk.FileHandlers
                 transaction.Commit();
             });
 
-            try
+            if (identityProvider == FileHandlerFactoryLocator.LocalIdentityProvider)
             {
-                // Careful here!!!  When calling the constructor of the user's .user object or the user's directory, a transaction will
-                // be created against the user database!  That can cause a deadlock!
-                usersDirectory.CreateFile(name, "directory", userObj.Id);
-
-                string userFileName = name + ".user";
-                newUser = usersDirectory.CreateSystemFile<IUserHandler>(userFileName, "user", userObj.Id);
-                newUser.Name = name;
-                usersDirectory.SetPermission(
-                    null,
-                    userFileName,
-                    new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Everybody.Id },
-                    FilePermissionEnum.Read,
-                    false,
-                    false);
-            }
-            catch
-            {
-                if (null != usersDirectory)
+                try
                 {
-                    if (usersDirectory.IsFilePresent(name))
-                        try
-                        {
-                            usersDirectory.DeleteFile(null, name);
-                        }
-                        catch { }
+                    // Careful here!!!  When calling the constructor of the user's .user object or the user's directory, a transaction will
+                    // be created against the user database!  That can cause a deadlock!
+                    usersDirectory.CreateFile(name, "directory", userObj.Id);
 
-                    if (usersDirectory.IsFilePresent(name + ".user"))
-                        try
-                        {
-                            usersDirectory.DeleteFile(null, name + ".user");
-                        }
-                        catch { }
+                    string userFileName = name + ".user";
+                    newUser = usersDirectory.CreateSystemFile<IUserHandler>(userFileName, "user", userObj.Id);
+                    newUser.Name = name;
+                    usersDirectory.SetPermission(
+                        null,
+                        userFileName,
+                        new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Everybody.Id },
+                        FilePermissionEnum.Read,
+                        false,
+                        false);
+                }
+                catch
+                {
+                    if (null != usersDirectory)
+                    {
+                        if (usersDirectory.IsFilePresent(name))
+                            try
+                            {
+                                usersDirectory.DeleteFile(null, name);
+                            }
+                            catch { }
+
+                        if (usersDirectory.IsFilePresent(name + ".user"))
+                            try
+                            {
+                                usersDirectory.DeleteFile(null, name + ".user");
+                            }
+                            catch { }
+                    }
+
+                    // If there is an error creating the user's .user object or directory, try to delete the user
+                    DatabaseConnection.Users.Delete(Users_Table.ID == userId);
+
+                    throw;
                 }
 
-                // If there is an error creating the user's .user object or directory, try to delete the user
-                DatabaseConnection.Users.Delete(Users_Table.ID == userId);
-
-                throw;
+                if (!builtIn)
+                    CreateGroup("friends", displayName + "'s friends", userObj.Id, GroupType.Personal);
             }
-
-            if (!builtIn)
-                CreateGroup("friends", displayName + "'s friends", userObj.Id, GroupType.Personal);
 
             return userObj;
         }
@@ -263,7 +302,7 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             IEnumerator enumerator;
 
-            enumerator = DatabaseConnection.Users.Select(Users_Table.Name == name).GetEnumerator();
+            enumerator = DatabaseConnection.Users.Select(Users_Table.Name.In(name.ToLowerInvariant(), name)).GetEnumerator();
 
             if (enumerator.MoveNext())
             {
@@ -273,7 +312,7 @@ namespace ObjectCloud.Disk.FileHandlers
                 throw new UserAlreadyExistsException("Duplicate user: " + name);
             }
 
-            enumerator = DatabaseConnection.Groups.Select(Groups_Table.Name == name).GetEnumerator();
+            enumerator = DatabaseConnection.Groups.Select(Groups_Table.Name.In(name.ToLowerInvariant(), name)).GetEnumerator();
 
             if (enumerator.MoveNext())
             {
@@ -284,24 +323,43 @@ namespace ObjectCloud.Disk.FileHandlers
             }
         }
 
-        private IUsers_Readable GetUserInt(string name)
+        public IUser GetUserNoException(string nameOrGroupOrIdentity)
         {
-            // Allow /Users/[username].user
-            if (name.StartsWith("/Users/") && name.EndsWith(".user"))
-            {
-                name = name.Substring(7);
-                name = name.Substring(0, name.Length - 5);
-            }
-
-            name = name.ToLowerInvariant();
+            nameOrGroupOrIdentity = FilterIdentityToLocalNameIfNeeded(nameOrGroupOrIdentity);
 
             IUsers_Readable user = DatabaseConnection.Users.SelectSingle(
-                Users_Table.Name == name & Users_Table.IdentityProviderCode == FileHandlerFactoryLocator.LocalIdentityProvider.IdentityProviderCode);
+                Users_Table.Name.In(nameOrGroupOrIdentity.ToLowerInvariant(), nameOrGroupOrIdentity));
+
+            if (null == user)
+                return null;
+
+            return CreateUserObject(user);
+        }
+
+        private IUsers_Readable GetUserInt(string nameOrGroupOrIdentity)
+        {
+            nameOrGroupOrIdentity = FilterIdentityToLocalNameIfNeeded(nameOrGroupOrIdentity);
+
+            IUsers_Readable user = DatabaseConnection.Users.SelectSingle(
+                Users_Table.Name.In(nameOrGroupOrIdentity.ToLowerInvariant(), nameOrGroupOrIdentity));
 
             if (null == user)
                 throw new UnknownUser("Unknown user");
 
             return user;
+        }
+
+        /// <summary>
+        /// Filter formatting that a local user would use for various identity federation schemes
+        /// </summary>
+        /// <param name="nameOrGroupOrIdentity"></param>
+        /// <returns></returns>
+        private string FilterIdentityToLocalNameIfNeeded(string nameOrGroupOrIdentity)
+        {
+            foreach (IIdentityProvider identityProvider in FileHandlerFactoryLocator.IdentityProviders.Values)
+                nameOrGroupOrIdentity = identityProvider.FilterIdentityToLocalNameIfNeeded(nameOrGroupOrIdentity);
+
+            return nameOrGroupOrIdentity;
         }
 
         /// <summary>
@@ -426,22 +484,11 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public IUserOrGroup GetUserOrGroupOrOpenId(string nameOrGroupOrIdentity, bool onlyInLocalDB)
         {
-            string localIdentityPrefix = string.Format("http://{0}/Users/", FileHandlerFactoryLocator.HostnameAndPort);
-            if (
-                nameOrGroupOrIdentity.StartsWith(localIdentityPrefix)
-                && nameOrGroupOrIdentity.EndsWith(".user"))
-            {
-                nameOrGroupOrIdentity = nameOrGroupOrIdentity.Substring(
-                    localIdentityPrefix.Length,
-                    nameOrGroupOrIdentity.Length - localIdentityPrefix.Length - 5);
-            }
+            nameOrGroupOrIdentity = FilterIdentityToLocalNameIfNeeded(nameOrGroupOrIdentity);
 
             // This will find local users but not openID users
-            IUsers_Readable user = DatabaseConnection.Users.SelectSingle(Users_Table.Name == nameOrGroupOrIdentity.ToLowerInvariant());
-
-            // This will find local openID users
-            if (null == user)
-                user = DatabaseConnection.Users.SelectSingle(Users_Table.Name == nameOrGroupOrIdentity);
+            IUsers_Readable user = DatabaseConnection.Users.SelectSingle(
+                Users_Table.Name.In(nameOrGroupOrIdentity.ToLowerInvariant(), nameOrGroupOrIdentity));
 
             // If there is a matching user, return it
             if (null != user)
@@ -454,29 +501,14 @@ namespace ObjectCloud.Disk.FileHandlers
                 return CreateGroupObject(group);
 
             if (!onlyInLocalDB)
-            {
-                NameValueCollection openIdClientArgs = new NameValueCollection();
+                foreach (IIdentityProvider identityProvider in FileHandlerFactoryLocator.IdentityProviders.Values)
+                {
+                    IUser createdUser = identityProvider.GetOrCreateUserIfCorrectFormOfIdentity(nameOrGroupOrIdentity);
+                    if (null != createdUser)
+                        return createdUser;
+                }
 
-                OpenIdClient openIdClient = new OpenIdClient(openIdClientArgs);
-                openIdClient.Identity = nameOrGroupOrIdentity;
-                openIdClient.TrustRoot = null;
-
-                openIdClient.ReturnUrl = new Uri(string.Format("http://{0}", FileHandlerFactoryLocator.HostnameAndPort));
-
-                // The proper identity is encoded in the URL
-                Uri requestUri = openIdClient.CreateRequest(false, false);
-
-                if (openIdClient.ErrorState == ErrorCondition.NoErrors)
-                    if (openIdClient.IsValidIdentity())
-                    {
-                        RequestParameters openIdRequestParameters = new RequestParameters(requestUri.Query.Substring(1));
-                        string identity = openIdRequestParameters["openid.identity"];
-
-                        return GetOpenIdUser(identity);
-                    }
-            }
-
-            throw new UnknownUser(nameOrGroupOrIdentity + " is not a known user, group, or OpenId");
+            throw new UnknownUser(nameOrGroupOrIdentity + " is not a known user, group, or identity");
         }
 
         public IUser GetUser(string name, string password)
@@ -768,38 +800,6 @@ namespace ObjectCloud.Disk.FileHandlers
                 }
 
             } while (xmlReader.Depth >= depth);*/
-        }
-
-        public IUser GetOpenIdUser(string openIdIdentity)
-        {
-            Uri openIdUri = new Uri(openIdIdentity);
-            openIdIdentity = openIdUri.AbsoluteUri;
-
-            return DatabaseConnection.CallOnTransaction<IUser>(delegate(IDatabaseTransaction transaction)
-            {
-                IUsers_Readable user = DatabaseConnection.Users.SelectSingle(Users_Table.Name == openIdIdentity);
-
-                if (null == user)
-                {
-                    ID<IUserOrGroup, Guid> userId = new ID<IUserOrGroup, Guid>(Guid.NewGuid());
-
-                    DatabaseConnection.Users.Insert(delegate(IUsers_Writable newUser)
-                    {
-                        newUser.Name = openIdIdentity;
-                        newUser.PasswordMD5 = "openid";
-                        newUser.ID = userId;
-                        newUser.BuiltIn = false;
-                        newUser.DisplayName = openIdIdentity;
-                        newUser.IdentityProviderCode = 1; // hardcoded for now, will eventually move out
-                    });
-
-                    user = DatabaseConnection.Users.SelectSingle(Users_Table.Name == openIdIdentity);
-
-                    transaction.Commit();
-                }
-
-                return CreateUserObject(user);
-            });
         }
 
         public string CreateAssociationHandle(ID<IUserOrGroup, Guid> userId)

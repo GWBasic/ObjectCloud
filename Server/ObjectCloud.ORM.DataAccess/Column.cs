@@ -52,34 +52,62 @@ namespace ObjectCloud.ORM.DataAccess
             WriteDelegate(writer, value);
         }
         private GenericArgument<object, object> WriteDelegate;
-		
-		/// <summary>
-		/// Specifies that a query includes values from this column in the given values 
-		/// </summary>
-		/// <param name="inContents">
-		/// A <see cref="IEnumerable"/>
-		/// </param>
-		/// <returns>
-		/// A <see cref="ComparisonCondition"/>
-		/// </returns>
-		public ComparisonCondition In(IEnumerable inContents)
-		{
-			return new ComparisonCondition(false, this, inContents);
-		}
-		
-		/// <summary>
-		/// Specifies that a query includes values from this column not in the given values 
-		/// </summary>
-		/// <param name="inContents">
-		/// A <see cref="IEnumerable"/>
-		/// </param>
-		/// <returns>
-		/// A <see cref="ComparisonCondition"/>
-		/// </returns>
-		public ComparisonCondition NotIn(IEnumerable inContents)
-		{
-			return new ComparisonCondition(true, this, inContents);
-		}
+
+        /// <summary>
+        /// Specifies that a query includes values from this column in the given values 
+        /// </summary>
+        /// <param name="inContents">
+        /// A <see cref="IEnumerable"/>
+        /// </param>
+        /// <returns>
+        /// A <see cref="ComparisonCondition"/>
+        /// </returns>
+        public ComparisonCondition In(IEnumerable inContents)
+        {
+            return new ComparisonCondition(false, this, inContents);
+        }
+
+        /// <summary>
+        /// Specifies that a query includes values from this column in the given values 
+        /// </summary>
+        /// <param name="inContents">
+        /// A <see cref="IEnumerable"/>
+        /// </param>
+        /// <returns>
+        /// A <see cref="ComparisonCondition"/>
+        /// </returns>
+        public ComparisonCondition In(params object[] inContents)
+        {
+            return new ComparisonCondition(false, this, inContents);
+        }
+
+        /// <summary>
+        /// Specifies that a query includes values from this column not in the given values 
+        /// </summary>
+        /// <param name="inContents">
+        /// A <see cref="IEnumerable"/>
+        /// </param>
+        /// <returns>
+        /// A <see cref="ComparisonCondition"/>
+        /// </returns>
+        public ComparisonCondition NotIn(IEnumerable inContents)
+        {
+            return new ComparisonCondition(true, this, inContents);
+        }
+
+        /// <summary>
+        /// Specifies that a query includes values from this column not in the given values 
+        /// </summary>
+        /// <param name="inContents">
+        /// A <see cref="IEnumerable"/>
+        /// </param>
+        /// <returns>
+        /// A <see cref="ComparisonCondition"/>
+        /// </returns>
+        public ComparisonCondition NotIn(params object[] inContents)
+        {
+            return new ComparisonCondition(true, this, inContents);
+        }
 
         /// <summary>
         /// Specifies that a query includes values from this column that match the given like syntax

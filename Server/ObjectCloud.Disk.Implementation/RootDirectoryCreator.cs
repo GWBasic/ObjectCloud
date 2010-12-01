@@ -580,25 +580,26 @@ insert into Metadata (Name, Value) values ('GroupId', @groupId);
                 IUser user = FileHandlerFactoryLocator.UserManagerHandler.GetUser(userId);
 
                 if (!user.BuiltIn)
-                {
-                    bool hasFriendsGroup = false;
-
-                    foreach (IGroupAndAlias group in FileHandlerFactoryLocator.UserManagerHandler.GetGroupsThatUserOwns(userId))
+                    if (FileHandlerFactoryLocator.LocalIdentityProvider == user.IdentityProvider)
                     {
-                        if (group.Alias == "friends")
-                            hasFriendsGroup = true;
-                    }
+                        bool hasFriendsGroup = false;
 
-                    if (!hasFriendsGroup)
-                        try
+                        foreach (IGroupAndAlias group in FileHandlerFactoryLocator.UserManagerHandler.GetGroupsThatUserOwns(userId))
                         {
-                            FileHandlerFactoryLocator.UserManagerHandler.CreateGroup("friends", user.DisplayName + "'s friends", user.Id, GroupType.Personal);
+                            if (group.Alias == "friends")
+                                hasFriendsGroup = true;
                         }
-                        catch (Exception e)
-                        {
-                            log.Warn("Exception creating friends group for user " + user.Name, e);
-                        }
-                }
+
+                        if (!hasFriendsGroup)
+                            try
+                            {
+                                FileHandlerFactoryLocator.UserManagerHandler.CreateGroup("friends", user.DisplayName + "'s friends", user.Id, GroupType.Personal);
+                            }
+                            catch (Exception e)
+                            {
+                                log.Warn("Exception creating friends group for user " + user.Name, e);
+                            }
+                    }
             }
 		}
 
