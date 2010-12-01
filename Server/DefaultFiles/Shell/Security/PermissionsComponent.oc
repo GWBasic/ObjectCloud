@@ -24,6 +24,8 @@
       <input type="submit" value="add"/>
    </form>
 
+   <oc:component src="/DefaultTemplate/permissionsplugins.oc" />
+
    <p>
    Note:  The following built-in groups are supported:
    <ul>
