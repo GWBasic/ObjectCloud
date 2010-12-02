@@ -127,14 +127,38 @@ function doPermissions(inPermissions, inDefaultNamedPermissions)
       $("div.PermissionsDiv").html(htmlBuilder);
    }
 
-
    $(document).ready(function()
    {
       displayPermissions();
 
       $('input.UserOrGroupInput').each(function()
       {
-         enableUserSuggest(this);
+         var userOrGroupInput = $(this);
+
+         enableUserSuggest(
+            this,
+            function(selectedUser)
+            {
+               var selectedUserSpan = $('<span style="border: solid" />');
+               var removeLink = $('<a href="">X</a>');
+               selectedUserSpan.append(removeLink);
+               selectedUserSpan.append('<img src="' + selectedUser.AvatarUrl.replace(/&/, '&amp;')
+                  + '&amp;maxHeight=100" />' + selectedUser.DisplayName);
+
+               selectedUserSpan.insertAfter(userOrGroupInput);
+               selectedUserSpan.addClass('removeAfterAdd');
+               userOrGroupInput.hide();
+
+               removeLink.click(function()
+               {
+                  userOrGroupInput.val('');
+                  userOrGroupInput.show();
+
+                  selectedUserSpan.remove();
+
+                  return false;
+               });
+            });
       });
 
       $('form.addForm').submit(function()
@@ -164,7 +188,9 @@ function doPermissions(inPermissions, inDefaultNamedPermissions)
                      displayPermissions();
                   });
 
-               UserOrGroupInput.val("");
+               userOrGroupInput.val("");
+               userOrGroupInput.show();
+               $('.removeAfterAdd').remove();
 
                me.removeAttr('disabled');
             },

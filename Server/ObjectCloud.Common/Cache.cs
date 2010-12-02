@@ -726,6 +726,52 @@ namespace ObjectCloud.Common
             /// </summary>
             void DecrementCacheCount();
         }
+
+        /// <summary>
+        /// Helper base class for making an object able to manually manage its memory
+        /// </summary>
+        public abstract class Aware : IAware
+        {
+            private int NumReferences = 0;
+
+            public void IncrementCacheCount()
+            {
+                Interlocked.Increment(ref NumReferences);
+            }
+
+            /// <summary>
+            /// Implement this function to manually release memory when the object is no longer alive in the cache
+            /// </summary>
+            protected abstract void ReleaseMemory();
+
+            public void DecrementCacheCount()
+            {
+                if (0 == Interlocked.Decrement(ref NumReferences))
+                {
+                    try
+                    {
+                        ReleaseMemory();
+                        GC.SuppressFinalize(this);
+                    }
+                    catch (Exception e)
+                    {
+                        log.Warn("Exception when releasing memory", e);
+                    }
+                }
+            }
+
+            ~Aware()
+            {
+                try
+                {
+                    ReleaseMemory();
+                }
+                catch (Exception e)
+                {
+                    log.Warn("Exception when releasing memory", e);
+                }
+            }
+        }
     }
 
     /// <summary>
