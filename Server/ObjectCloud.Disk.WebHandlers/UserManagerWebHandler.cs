@@ -641,9 +641,12 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="webConnection"></param>
         /// <param name="max"></param>
         /// <param name="query"></param>
+        /// <param name="excludeLocalUsers">true to exclude local users and only search plugins</param>
+        /// <param name="pluginArgs">Plugin arguments; if an identity plugin detects that these are valid arguments, it will seach for matching users</param>
         /// <returns></returns>
         [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JSON)]
-        public IWebResults SearchUsersAndGroups(IWebConnection webConnection, string query, uint? max)
+        public IWebResults SearchUsersAndGroups(
+            IWebConnection webConnection, string query, uint? max, bool? excludeLocalUsers, string[] pluginArgs)
         {
             List<object> toReturn = new List<object>();
 
@@ -654,11 +657,29 @@ namespace ObjectCloud.Disk.WebHandlers
             else if (max.Value < 50)
                 fixMax = true;
 
+            bool noLocal = false;
+            if (null != excludeLocalUsers)
+                noLocal = excludeLocalUsers.Value;
+
             if (fixMax)
                 if (FilePermissionEnum.Administer != FileContainer.LoadPermission(webConnection.Session.User.Id))
                     max = 50;
 
-            foreach (IUserOrGroup userOrGroup in FileHandler.SearchUsersAndGroups(query, max))
+            LinkedList<IUserOrGroup> usersToReturn;
+            if (!noLocal)
+                usersToReturn = new LinkedList<IUserOrGroup>(FileHandler.SearchUsersAndGroups(query, max));
+            else
+                usersToReturn = new LinkedList<IUserOrGroup>();
+
+            foreach (IIdentityProvider identityProvider in FileHandlerFactoryLocator.IdentityProviders.Values)
+                foreach (IUserOrGroup userOrGroup in identityProvider.Search(query, max, pluginArgs))
+                    usersToReturn.AddLast(userOrGroup);
+
+            if (null != max)
+                while (usersToReturn.Count > max.Value)
+                    usersToReturn.RemoveLast();
+
+            foreach (IUserOrGroup userOrGroup in usersToReturn)
             {
                 if (userOrGroup is IUser)
                     toReturn.Add(CreateJSONDictionary(userOrGroup as IUser));

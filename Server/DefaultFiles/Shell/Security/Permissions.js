@@ -81,8 +81,8 @@ function doPermissions(inPermissions, inDefaultNamedPermissions)
       {
          var permission = Permissions[pi];
 
-         htmlBuilder = htmlBuilder + '<tr id="' + permission.Id + '"><td><img src="' + permission.Identity
-            + '?Method=GetAvatar&amp;maxWidth=100" /> ' + permission.Name + '</td><td>' 
+         htmlBuilder = htmlBuilder + '<tr id="' + permission.Id + '"><td><img src="' + permission.AvatarUrl.replace(/&/, '&amp;')
+            + '&amp;width=100&amp;maxHeight=100" /> ' + permission.DisplayName + '</td><td>' 
             + '<select id="FilePermission_' + permission.Id + '" ';
          htmlBuilder = htmlBuilder + 'onchange="UpdatePermission(' + "'" + permission.Id + "'" + ')" >';
                

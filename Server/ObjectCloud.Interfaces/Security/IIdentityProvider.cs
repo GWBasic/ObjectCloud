@@ -55,5 +55,12 @@ namespace ObjectCloud.Interfaces.Security
         /// <param name="identity"></param>
         /// <returns></returns>
         IUser GetOrCreateUserIfCorrectFormOfIdentity(string identity);
+
+        /// <summary>
+        /// Searches for users that match the query if an appropriate plugin argument is found
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        IEnumerable<IUserOrGroup> Search(string query, uint? max, IEnumerable<string> pluginArgs);
     }
 }

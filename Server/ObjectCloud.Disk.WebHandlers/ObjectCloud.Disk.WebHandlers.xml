@@ -981,13 +981,15 @@
             <param name="webConnection"></param>
             <returns></returns>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.SearchUsersAndGroups(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.Nullable{System.UInt32})">
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.SearchUsersAndGroups(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.Nullable{System.UInt32},System.Nullable{System.Boolean},System.String[])">
             <summary>
             Returns all public groups.  On systems with large amounts of groups; this should be somehow disabled, or 
             </summary>
             <param name="webConnection"></param>
             <param name="max"></param>
             <param name="query"></param>
+            <param name="excludeLocalUsers">true to exclude local users and only search plugins</param>
+            <param name="pluginArgs">Plugin arguments; if an identity plugin detects that these are valid arguments, it will seach for matching users</param>
             <returns></returns>
         </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler.GetGroupsThatUserIsIn(ObjectCloud.Interfaces.WebServer.IWebConnection)">

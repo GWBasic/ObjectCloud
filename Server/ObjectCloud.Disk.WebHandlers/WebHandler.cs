@@ -508,7 +508,10 @@ namespace ObjectCloud.Disk.WebHandlers
                 permission["Id"] = userOrGroup.Id.Value;
                 permission["Permission"] = filePermission.FilePermissionEnum;
                 permission["Name"] = userOrGroup.Name;
+                permission["DisplayName"] = userOrGroup.DisplayName;
                 permission["Identity"] = userOrGroup.Identity;
+                permission["Url"] = userOrGroup.Url;
+                permission["AvatarUrl"] = userOrGroup.AvatarUrl;
                 permission["Inherit"] = filePermission.Inherit;
                 permission["SendNotifications"] = filePermission.SendNotifications;
 				

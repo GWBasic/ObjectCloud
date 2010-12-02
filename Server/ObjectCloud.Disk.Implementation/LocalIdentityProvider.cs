@@ -63,5 +63,10 @@ namespace ObjectCloud.Disk.Implementation
         {
             return null;
         }
+
+        public IEnumerable<IUserOrGroup> Search(string query, uint? max, IEnumerable<string> pluginArgs)
+        {
+            return new IUserOrGroup[0];
+        }
     }
 }

@@ -18,8 +18,15 @@ function enableUserSuggest(textBox)
     
                if (sTextboxValue.length > 0)
                {
+                  var pluginArgs = [];
+                  for (var i = 0; i < userSuggestIdentityPluginArgumentsFunctions.length; i++)
+                     pluginArgs.push(userSuggestIdentityPluginArgumentsFunctions[i]());
+
                   UserDB.SearchUsersAndGroups(
-                     { query: sTextboxValue },
+                     {
+                        query: sTextboxValue,
+                        pluginArgs: pluginArgs
+                     },
                      function(matchingUsers)
                      {
                         var usersArray = [];
@@ -33,3 +40,6 @@ function enableUserSuggest(textBox)
             }
          });
 }
+
+// If this variable is set, push functions into here to return arguments when trying to do autosuggest
+var userSuggestIdentityPluginArgumentsFunctions = [];
