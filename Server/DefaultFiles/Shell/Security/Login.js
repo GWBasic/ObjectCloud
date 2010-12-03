@@ -36,7 +36,8 @@ $(document).ready(function()
                   {},
                   function(responseText)
                   {
-                     window.location.reload();
+                     $('body').html('<div class="title">Logging out...</div>');
+                     window.location.reload(true);
                   });
             },
             Cancel: function()
@@ -77,7 +78,8 @@ $(document).ready(function()
          },
          function(responseText)
          {
-            top.location.href = top.location.href;
+            $('body').html('<div class="title">Logging in...</div>');
+            window.location.reload(true);
          });
 
       return false;
