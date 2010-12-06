@@ -36,7 +36,7 @@ namespace ObjectCloud.Javascript.SubProcess
         /// </summary>
         static HashSet<Process> SubProcesses = new HashSet<Process>();
 
-        static SubProcess()
+        /*static SubProcess()
         {
             StartProcessKiller();
         }
@@ -87,7 +87,7 @@ namespace ObjectCloud.Javascript.SubProcess
         {
             ((Process)sender).Exited -= new EventHandler(pkp_Exited);
             StartProcessKiller();
-        }
+        }*/
 
         public SubProcess(FileHandlerFactoryLocator fileHandlerFactoryLocator)
         {
