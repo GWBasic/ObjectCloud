@@ -13,7 +13,6 @@ using NUnit.Framework;
 using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Disk.Factories;
-using ObjectCloud.Disk.FileHandlers;
 using ObjectCloud.Disk.Implementation;
 using ObjectCloud.Disk.WebHandlers;
 using ObjectCloud.ORM.DataAccess.SQLite;

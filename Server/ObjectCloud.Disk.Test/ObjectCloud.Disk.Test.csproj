@@ -132,10 +132,6 @@
       <Project>{34B1F8C9-E830-4BD6-8854-9FB7DEDA5EE5}</Project>
       <Name>ObjectCloud.WebServer.Implementation</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ObjectCloud.Disk.FileHandlers\ObjectCloud.Disk.FileHandlers.csproj">
-      <Project>{07BDCD3D-668B-47E6-8BC2-F803F7B1CBE6}</Project>
-      <Name>ObjectCloud.Disk.FileHandlers</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ObjectCloud.Disk.Factories\ObjectCloud.Disk.Factories.csproj">
       <Project>{18937C9C-642E-4E6E-9917-306DAE0DA288}</Project>
       <Name>ObjectCloud.Disk.Factories</Name>
