@@ -90,13 +90,14 @@ namespace ProcessKiller
 			}
 			finally
 			{
-                foreach(Process p in new List<Process>(SubProcesses))
-                    try
-                    {
-						//Console.WriteLine("Killing: " + p.ToString());
-                        p.Kill();
-                    }
-                    catch { }
+				lock (SubProcesses)
+                	foreach(Process p in new List<Process>(SubProcesses))
+                    	try
+	                    {
+							//Console.WriteLine("Killing: " + p.ToString());
+        	                p.Kill();
+            	        }
+                	    catch { }
             }
 			
 			Process.GetCurrentProcess().Kill();
@@ -122,7 +123,9 @@ namespace ProcessKiller
 					
 						newProcess.EnableRaisingEvents = true;
 	                    newProcess.Exited += new EventHandler(newProcess_Exited);
-	                    SubProcesses.Add(newProcess);
+						
+						lock (SubProcesses)
+	                    	SubProcesses.Add(newProcess);
 					}
 				}
 				else
@@ -165,7 +168,8 @@ namespace ProcessKiller
         {
             try
             {
-                SubProcesses.Remove((Process)sender);
+				lock (SubProcesses)
+                	SubProcesses.Remove((Process)sender);
             }
             catch { }
         }
