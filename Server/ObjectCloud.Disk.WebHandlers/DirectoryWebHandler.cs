@@ -42,7 +42,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="FileType">The file type</param>
         /// <param name="ErrorIfExists">True to return an error if the file already exists</param>
         /// <param name="fileNameSuggestion">A suggestion for creating a file name.  ObjectCloud will attempt to generate a real file name from this suggestion</param>
-        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Write)]
+        [WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Write, FilePermissionEnum.Read)]
         public IWebResults CreateFile(
             IWebConnection webConnection,
             string FileName,

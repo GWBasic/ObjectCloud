@@ -467,15 +467,21 @@ namespace ObjectCloud.Disk.WebHandlers
                 toReturn["OwnerId"] = owner.Id.ToString();
                 toReturn["Owner"] = owner.Name;
                 toReturn["OwnerIdentity"] = owner.Identity;
-                toReturn["HasOwner"] = true;
+				toReturn["OwnerUrl"] = owner.Url;
+				toReturn["OwnerAvatarUrl"] = owner.AvatarUrl;
+				toReturn["OwnerDisplayName"] = owner.DisplayName;
+				toReturn["HasOwner"] = true;
             }
             else
             {
                 toReturn["OwnerId"] = null;
                 toReturn["Owner"] = null;
                 toReturn["OwnerIdentity"] = null;
-            }
-
+				toReturn["OwnerUrl"] = null;
+				toReturn["OwnerAvatarUrl"] = null;
+				toReturn["OwnerDisplayName"] = null;
+			}
+			
             return WebResults.ToJson(toReturn);
         }
 
