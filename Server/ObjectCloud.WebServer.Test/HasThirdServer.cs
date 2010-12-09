@@ -46,6 +46,7 @@ namespace ObjectCloud.WebServer.Test
         protected override void DoAdditionalTearDown()
         {
             ThirdWebServer.Dispose();
+            ThirdWebServer.Port = ThirdWebServer.Port + 5;
 
             base.DoAdditionalTearDown();
         }

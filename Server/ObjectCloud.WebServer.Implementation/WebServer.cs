@@ -53,16 +53,15 @@ namespace ObjectCloud.WebServer.Implementation
 
                 _Running = true;
 
-                _ServerThread = Thread.CurrentThread;
-
                 TcpListener = new TcpListener(IPAddress.Any, Port);
+                TcpListener.Server.NoDelay = true;
+                TcpListener.Server.LingerState = new LingerOption(true, 0);
+
                 TcpListener.Start(20);
 
                 log.Info("Server is waiting for a new connection at http://" + FileHandlerFactoryLocator.HostnameAndPort + "/");
 
-                AcceptingSockets = true;
-
-                TcpListener.BeginAcceptSocket(AcceptSocket, null);
+                TcpListener.BeginAcceptTcpClient(AcceptTcpClient, null);
 
                 System.Runtime.GCSettings.LatencyMode = System.Runtime.GCLatencyMode.Batch;
             }
@@ -70,6 +69,10 @@ namespace ObjectCloud.WebServer.Implementation
             {
                 log.Warn("Could not start server: ", e);
                 FileHandlerFactoryLocator.FileSystemResolver.Stop();
+
+                _Running = false;
+
+                throw;
             }
         }
 
@@ -83,22 +86,45 @@ namespace ObjectCloud.WebServer.Implementation
         /// </summary>
         internal Recycler<byte[]> SendBufferRecycler;
 
-        private void AcceptSocket(IAsyncResult ar)
+        /// <summary>
+        /// Open sockets that need to be closed when the server shuts down
+        /// </summary>
+        /// <summary>
+        /// Handles an incoming socket
+        /// </summary>
+        /// <param name="ar"></param>
+        private void AcceptTcpClient(IAsyncResult ar)
         {
             try
             {
-                Socket socket = TcpListener.EndAcceptSocket(ar);
-
-                Busy.BlockWhileBusy("Socket accepter on incoming socket");
-
-                log.Info("Accepted connection form: " + socket.RemoteEndPoint);
-
-                SocketReader socketReader = new SocketReader(this, socket);
-
-                socketReader.Start();
+                //Socket socket = TcpListener.EndAcceptSocket(ar);
+                TcpClient tcpClient = TcpListener.EndAcceptTcpClient(ar);
 
                 if (Running)
-                    TcpListener.BeginAcceptSocket(AcceptSocket, null);
+                {
+                    tcpClient.LingerState = new LingerOption(true, 0);
+                    tcpClient.NoDelay = true;
+
+                    Socket socket = tcpClient.Client;
+
+                    Busy.BlockWhileBusy("Socket accepter on incoming socket");
+
+                    log.Info("Accepted connection form: " + socket.RemoteEndPoint);
+
+                    SocketReader socketReader = new SocketReader(this, socket);
+
+                    Interlocked.Increment(ref NumActiveSockets);
+
+                    socketReader.Start();
+
+                    if (Running)
+                        TcpListener.BeginAcceptTcpClient(AcceptTcpClient, null);
+                }
+                else
+                {
+                    tcpClient.Client.Shutdown(SocketShutdown.Both);
+                    tcpClient.Client.Close();
+                }
             }
             // This is in case the listener is disposed
             catch (ObjectDisposedException) { }
@@ -107,6 +133,11 @@ namespace ObjectCloud.WebServer.Implementation
                 log.Error("Exception accepting a socket", e);
             }
         }
+
+        /// <summary>
+        /// The number of active sockets
+        /// </summary>
+        internal long NumActiveSockets = 0;
 
         /// <summary>
         /// Stops the server and releases all resources
@@ -125,14 +156,14 @@ namespace ObjectCloud.WebServer.Implementation
 
             TcpListener.Stop();
 
-            ServerThread.Join();
-            _ServerThread = null;
-
             try
             {
                 OnWebServerTerminated(new EventArgs());
             }
             catch { }
+
+            if (0 != NumActiveSockets)
+                log.WarnFormat("There are currently {0} active sockets running", NumActiveSockets);
 
             FileHandlerFactoryLocator.FileSystemResolver.Stop();
         }

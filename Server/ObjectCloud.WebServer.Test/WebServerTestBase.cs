@@ -65,6 +65,10 @@ namespace ObjectCloud.WebServer.Test
         {
             WebServer.Dispose();
 
+            // Not sure why, but the tests that use additional web servers leave the system in a bad state where it can't re-listen on old ports
+
+            WebServer.Port = WebServer.Port + 5;
+
             GC.Collect();
 
             DoAdditionalTearDown();

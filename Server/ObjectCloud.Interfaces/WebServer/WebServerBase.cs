@@ -32,87 +32,40 @@ namespace ObjectCloud.Interfaces.WebServer
             if (Running)
                 return;
 
-            AcceptingSockets = false;
-
 			// Register an event handler to preload default ObjectCloud objects
 			EventHandler<IFileSystemResolver, EventArgs> preloadObjects = delegate(IFileSystemResolver sender, EventArgs e)
 			{
 				StartExecutionEnvironments();
 			};
 			FileHandlerFactoryLocator.FileSystemResolver.Started += preloadObjects;
-			
-			EventHandler<IFileSystemResolver, EventArgs> abortInError = delegate(IFileSystemResolver sender, EventArgs e)
-			{
-                using (TimedLock.Lock(AcceptingSocketsSignal))
-				    Monitor.PulseAll(AcceptingSocketsSignal);
-			};
 
             _RequestDelegateQueue = new DelegateQueue("Request handler", NumConcurrentRequests);
 			RequestDelegateQueue.BusyThreshold = BusyThreshold;
-			
-			try
-			{
-	            Thread thread = new Thread(new ThreadStart(RunServer));
-	
-	            thread.IsBackground = true;
-	            thread.Name = GetType().FullName;
-	
-				FileHandlerFactoryLocator.FileSystemResolver.Stopped += abortInError;
-				
-				try
-				{
-		            thread.Start();
 
-					// Wait for the web server to start
-					Thread.BeginCriticalRegion();
-					try
-					{
-			            if (!AcceptingSockets && (null == TerminatingException))
-							using (TimedLock.Lock(AcceptingSocketsSignal))
-				                Monitor.Wait(AcceptingSocketsSignal);
-					}
-					finally
-					{
-						Thread.EndCriticalRegion();
-					}
-				}
-				finally
-				{
-					FileHandlerFactoryLocator.FileSystemResolver.Stopped -= abortInError;
-				}
-			}
+            try
+            {
+                RunServer();
+            }
+            catch
+            {
+                try
+                {
+                    _RequestDelegateQueue.Stop();
+                }
+                catch { }
+
+                throw;
+            }
 			finally
 			{
 				FileHandlerFactoryLocator.FileSystemResolver.Started -= preloadObjects;
 			}
-	
-            // If the web server couldn't start due to an exception, then re-throw the exception
-            if (null != TerminatingException)
-                throw TerminatingException;
         }
 
         public virtual void Dispose()
         {
             Stop();
         }
-
-        /// <summary>
-        /// Flag to indicate that StartServer() can return.  It should not return until sockets can be accepted 
-        /// </summary>
-        protected bool AcceptingSockets
-		{
-			get { return _AcceptingSockets; }
-			set
-			{
-				_AcceptingSockets = value;
-				
-				if (value)
-					using (TimedLock.Lock(AcceptingSocketsSignal))
-						Monitor.PulseAll(AcceptingSocketsSignal);
-			}
-		}
-        private volatile bool _AcceptingSockets = false;
-		private object AcceptingSocketsSignal = new object();
 
         /// <summary>
         /// The port to accept connections on
@@ -140,23 +93,14 @@ namespace ObjectCloud.Interfaces.WebServer
         protected volatile bool _Running = false;
 
         /// <summary>
-        /// The server's thread
-        /// </summary>
-        public Thread ServerThread
-        {
-            get { return _ServerThread; }
-        }
-        protected Thread _ServerThread;
-
-        /// <summary>
         /// The file system resolver used with this particular web server
         /// </summary>
         public IFileSystemResolver FileSystemResolver
         {
-            get { return fileSystemResolver; }
-            set { fileSystemResolver = value; }
+            get { return _FileSystemResolver; }
+            set { _FileSystemResolver = value; }
         }
-        private IFileSystemResolver fileSystemResolver;
+        private IFileSystemResolver _FileSystemResolver;
 
         /// <summary>
         /// The type of web server that this is
@@ -167,16 +111,6 @@ namespace ObjectCloud.Interfaces.WebServer
             set { _ServerType = value; }
         }
         private string _ServerType;
-
-        /// <summary>
-        /// The amount of time that the server waits before aborting the thread that handles incoming sockets
-        /// </summary>
-        public TimeSpan TimeToWaitForServerThreadToComplete
-        {
-            get { return _TimeToWaitForServerThreadToComplete; }
-            set { _TimeToWaitForServerThreadToComplete = value; }
-        }
-        private TimeSpan _TimeToWaitForServerThreadToComplete = TimeSpan.FromSeconds(5);
 
         /// <summary>
         /// The service locator.  This should be set in Spring so that these assemblies aren't dependant on Spring
@@ -353,19 +287,14 @@ namespace ObjectCloud.Interfaces.WebServer
             }
             finally
             {
-                ThreadPool.QueueUserWorkItem(
-                    delegate(object state)
-                    {
-                        try
-                        {
-                            ((DelegateQueue)state).Stop();
-                        }
-                        catch (Exception e)
-                        {
-                            log.Error("Exception shutting down request handling threads", e);
-                        }
-                    },
-                    RequestDelegateQueue);
+                try
+                {
+                    _RequestDelegateQueue.Stop();
+                }
+                catch (Exception e)
+                {
+                    log.Error("Exception shutting down request handling threads", e);
+                }
 
                 _RequestDelegateQueue = null;
             }
@@ -412,18 +341,6 @@ namespace ObjectCloud.Interfaces.WebServer
             set { Cache.MaximumMemoryToUse = value; }
         }
 
-        public Exception TerminatingException
-        {
-            get { return _TerminatingException; }
-            set 
-            {
-                _TerminatingException = value;
-                using (TimedLock.Lock(AcceptingSocketsSignal))
-                    Monitor.PulseAll(AcceptingSocketsSignal);
-            }
-        }
-        private Exception _TerminatingException = null;
-		
 		/// <summary>
 		/// Comma-seperated list of all of the objects to pre-load.  Directories will be traversed 
 		/// </summary>

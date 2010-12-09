@@ -32,6 +32,8 @@ namespace ObjectCloud.WebServer.Implementation
         /// <param name="webServer"></param>
         public SocketReader(WebServer webServer, Socket socket)
         {
+            webServer.WebServerTerminated += new EventHandler<EventArgs>(WebServer_WebServerTerminated);
+
             WebServer = webServer;
             Socket = socket;
             RemoteEndPoint = socket.RemoteEndPoint;
@@ -39,11 +41,9 @@ namespace ObjectCloud.WebServer.Implementation
             BufferBytesRead = 0;
 
             log.Trace("New socket");
-
-            WebServer.WebServerTerminating += new EventHandler<EventArgs>(WebServer_WebServerTerminating);
         }
 
-        void WebServer_WebServerTerminating(object sender, EventArgs e)
+        void WebServer_WebServerTerminated(object sender, EventArgs e)
         {
             Close();
         }
@@ -674,10 +674,25 @@ namespace ObjectCloud.WebServer.Implementation
         }
 
         /// <summary>
+        /// Thread-safe of determining if the socket is closed
+        /// </summary>
+        private int SocketClosed = 0;
+
+        /// <summary>
         /// Closes the socket reader, for all intents and purposes
         /// </summary>
         internal void Close()
         {
+            // Make sure that two threads aren't trying to close at the same time
+            int socketClosed = SocketClosed;
+            if (0 != socketClosed)
+                return;
+
+            if (0 != Interlocked.CompareExchange(ref SocketClosed, 1, 0))
+                return;
+
+            WebServer.WebServerTerminated -= new EventHandler<EventArgs>(WebServer_WebServerTerminated);
+
             if (null != Buffer)
             {
                 WebServer.RecieveBufferRecycler.Recycle(Buffer);
@@ -688,18 +703,24 @@ namespace ObjectCloud.WebServer.Implementation
             {
                 Socket.Shutdown(SocketShutdown.Both);
             }
-            catch { }
+            catch (Exception e)
+            {
+                log.Warn("Exception shutting down socket", e);
+            }
 
             try
             {
                 Socket.LingerState = new LingerOption(true, 0);
                 Socket.Close();
             }
-            catch { }
+            catch (Exception e)
+            {
+                log.Warn("Exception closing socket", e);
+            }
+
+            Interlocked.Decrement(ref WebServer.NumActiveSockets);
 
             WebConnectionIOState = WebConnectionIOState.Disconnected;
-
-            WebServer.WebServerTerminating -= new EventHandler<EventArgs>(WebServer_WebServerTerminating);
 
             if (null != Closed)
                 Closed(this, new EventArgs());

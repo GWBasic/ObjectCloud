@@ -47,6 +47,8 @@ namespace ObjectCloud.WebServer.Test
         {
             SecondWebServer.Dispose();
 
+            SecondWebServer.Port = SecondWebServer.Port + 5;
+
             base.DoAdditionalTearDown();
         }
     }

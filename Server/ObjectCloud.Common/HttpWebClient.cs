@@ -5,7 +5,9 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 
 using Common.Logging;
 
@@ -70,7 +72,7 @@ namespace ObjectCloud.Common
         /// <returns></returns>
         public HttpResponseHandler Get(string url, ICollection<KeyValuePair<string, string>> arguments)
         {
-            HttpWebRequest webRequest = CreateWebRequest(url, arguments);
+            HttpWebRequest webRequest = CreateGetWebRequest(url, arguments);
 
             try
             {
@@ -118,7 +120,7 @@ namespace ObjectCloud.Common
             GenericArgument<HttpResponseHandler> callback,
             GenericArgument<Exception> errorCallback)
         {
-            HttpWebRequest webRequest = CreateWebRequest(url, arguments);
+            HttpWebRequest webRequest = CreateGetWebRequest(url, arguments);
 
             RequestState state = new RequestState();
             state.HttpWebRequest = webRequest;
@@ -128,7 +130,7 @@ namespace ObjectCloud.Common
             webRequest.BeginGetResponse(WebRequestCallback, state);
         }
 
-        private HttpWebRequest CreateWebRequest(string url, ICollection<KeyValuePair<string, string>> arguments)
+        private HttpWebRequest CreateGetWebRequest(string url, ICollection<KeyValuePair<string, string>> arguments)
         {
             StringBuilder urlBuilder = new StringBuilder(url);
 
@@ -141,11 +143,35 @@ namespace ObjectCloud.Common
             webRequest.KeepAlive = true;
             //webRequest.Headers.Set("Connection", "keep-alive");
             webRequest.UnsafeAuthenticatedConnectionSharing = true;
+            webRequest.ServicePoint.BindIPEndPointDelegate += BindIPEndPointCallback;
 
             if (null != Timeout)
                 webRequest.Timeout = Convert.ToInt32(Timeout.Value.TotalMilliseconds);
 
             return webRequest;
+        }
+
+        static int LastBindPortUsed = 5001;
+
+        /// <summary>
+        /// http://blogs.msdn.com/b/dgorti/archive/2005/09/18/470766.aspx
+        /// </summary>
+        /// <param name="servicePoint"></param>
+        /// <param name="remoteEndPoint"></param>
+        /// <param name="retryCount"></param>
+        /// <returns></returns>
+        public static IPEndPoint BindIPEndPointCallback(
+            ServicePoint servicePoint,
+            IPEndPoint remoteEndPoint,
+            int retryCount)
+        {
+            int port = Interlocked.Increment(ref LastBindPortUsed); //increment
+            Interlocked.CompareExchange(ref LastBindPortUsed, 5001, 65534);
+
+            if (remoteEndPoint.AddressFamily == AddressFamily.InterNetwork)
+                return new IPEndPoint(IPAddress.Any, port);
+            else
+                return new IPEndPoint(IPAddress.IPv6Any, port);
         }
 
         /// <summary>
@@ -242,6 +268,7 @@ namespace ObjectCloud.Common
             webRequest.KeepAlive = true;
             //webRequest.Headers.Set("Connection", "keep-alive");
             webRequest.UnsafeAuthenticatedConnectionSharing = true;
+            webRequest.ServicePoint.BindIPEndPointDelegate += BindIPEndPointCallback;
 
             if (null != Timeout)
                 webRequest.Timeout = Convert.ToInt32(Timeout.Value.TotalMilliseconds);

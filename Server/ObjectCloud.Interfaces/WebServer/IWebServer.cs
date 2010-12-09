@@ -31,11 +31,6 @@ namespace ObjectCloud.Interfaces.WebServer
         void StartServer();
 
         /// <summary>
-        /// The server's thread
-        /// </summary>
-        Thread ServerThread { get; }
-
-        /// <summary>
         /// The FileSystemResolver that the web server works with
         /// </summary>
         IFileSystemResolver FileSystemResolver { get; set; }
@@ -171,11 +166,6 @@ namespace ObjectCloud.Interfaces.WebServer
         /// The maxiumum amount of data that ObjectCloud should keep in RAM for items that it knows their size
         /// </summary>
         long MaxKnownMemoryUse { get; set; }
-
-        /// <summary>
-        /// The exception that terminated the web server
-        /// </summary>
-        Exception TerminatingException { get; }
 
         /// <summary>
         /// The number of concurrent requests that the web server will handle.  Defaults to 2 per core 
