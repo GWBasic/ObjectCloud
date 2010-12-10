@@ -61,6 +61,8 @@ namespace ObjectCloud.WebServer.Test
             {
                 Thread thread = new Thread(DoGets);
                 thread.Start();
+
+                threads.Add(thread);
             }
 
             DoGets();
