@@ -135,11 +135,13 @@ namespace ObjectCloud.Disk.FileHandlers
 			Thread callingThread = Thread.CurrentThread;
 			DateTime timestamp = DateTime.UtcNow;
 
-			// Always write to the log on the threadpool so it doesn't block the caller
-			DelegateQueue.QueueUserWorkItem(delegate(object state)
-			{
-				WriteLog(timestamp, callingThread, className, logLevel, session, remoteEndPoint, message, exception);
-			});
+			// Always write to the log on a separate thread so it doesn't block the caller
+            // But drop logging items if it's going to impede performance
+            if (DelegateQueue.QueuedDelegatesCount < DelegateQueue.BusyThreshold - 5)
+    			DelegateQueue.QueueUserWorkItem(delegate(object state)
+	    		{
+		    		WriteLog(timestamp, callingThread, className, logLevel, session, remoteEndPoint, message, exception);
+			    });
         }
 
 		/// <summary>

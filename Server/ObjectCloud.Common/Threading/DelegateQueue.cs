@@ -123,6 +123,14 @@ namespace ObjectCloud.Common.Threading
         private int _BusyThreshold = 1000;
 
         /// <summary>
+        /// The number of queued delegates
+        /// </summary>
+        public long QueuedDelegatesCount
+        {
+            get { return QueuedDelegates.Count; }
+        }
+
+        /// <summary>
         /// Set to 1 if BeginBusy was ever called
         /// </summary>
         private int BeganBusy = 0;

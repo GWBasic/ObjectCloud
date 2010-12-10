@@ -86,6 +86,7 @@
     <Compile Include="PermissionsTests\OpenIDOwnThroughObjectCloud.cs" />
     <Compile Include="PermissionsTests\PermissionTest.cs" />
     <Compile Include="PermissionsTests\TestBuiltInGroups.cs" />
+    <Compile Include="SimulateLoad.cs" />
     <Compile Include="TestSession.cs" />
     <Compile Include="TestUserAndPermissions.cs" />
     <Compile Include="WebServerTest.cs" />

@@ -16,6 +16,11 @@ namespace ObjectCloud.Common.Threading
         /// </summary>
         private static DelegateQueue DelegateQueue = new DelegateQueue("Console Writer");
 
+        static NonBlockingConsoleWriter()
+        {
+            DelegateQueue.BusyThreshold = int.MaxValue;
+        }
+
         /// <summary>
         /// Stops the thread used to print to the console.
         /// </summary>

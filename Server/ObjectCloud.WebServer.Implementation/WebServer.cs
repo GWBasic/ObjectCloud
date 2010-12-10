@@ -97,7 +97,6 @@ namespace ObjectCloud.WebServer.Implementation
         {
             try
             {
-                //Socket socket = TcpListener.EndAcceptSocket(ar);
                 TcpClient tcpClient = TcpListener.EndAcceptTcpClient(ar);
 
                 if (Running)
@@ -106,8 +105,6 @@ namespace ObjectCloud.WebServer.Implementation
                     tcpClient.NoDelay = true;
 
                     Socket socket = tcpClient.Client;
-
-                    Busy.BlockWhileBusy("Socket accepter on incoming socket");
 
                     log.Info("Accepted connection form: " + socket.RemoteEndPoint);
 
