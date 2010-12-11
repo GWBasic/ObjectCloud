@@ -15,6 +15,7 @@ using NUnit.Framework;
 using JsonFx.Json;
 
 using ObjectCloud.Common;
+using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.WebServer;
 using ObjectCloud.WebServer.Implementation;
@@ -46,6 +47,7 @@ namespace ObjectCloud.WebServer.Test
             }
             catch (Exception e)
             {
+                Assert.IsFalse(Busy.IsBusy, "Server is busy and thus blocking requests");
                 ExceptionContainer.Value = e;
             }
         }
@@ -92,6 +94,34 @@ namespace ObjectCloud.WebServer.Test
         public void Test30000Eight()
         {
             DoMultithreadedGets(8, 30000);
+        }
+
+        [Test]
+        public void TestBlockWhileBusy()
+        {
+            object busyBlocker = new object();
+            DelegateQueue dq = new DelegateQueue("Test busy blocker");
+
+            Thread blocked = new Thread(delegate()
+            {
+                Busy.BlockWhileBusy("Busy Blocker Unit Test");
+            });
+
+            lock (busyBlocker)
+            {
+                for (int ctr = 0; ctr < dq.BusyThreshold + 5; ctr++)
+                    dq.QueueUserWorkItem(delegate(object state)
+                    {
+                        lock (busyBlocker)
+                        { }
+                    });
+
+                blocked.Start();
+
+                Thread.Sleep(1500);
+            }
+
+            Assert.IsTrue(blocked.Join(250), "Busy thread did not un-suspend");
         }
     }
 }

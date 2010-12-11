@@ -245,7 +245,6 @@ namespace ObjectCloud.WebServer.Implementation
                 Buffer = WebServer.RecieveBufferRecycler.Get();
 
                 Array.Copy(oldBuffer, headerEnd + HeaderEndMarker.Length, Buffer, 0, BufferBytesRead - headerEnd - HeaderEndMarker.Length);
-                //System.Buffer.BlockCopy(Buffer, headerEnd + HeaderEndMarker.Length, Buffer, 0, BufferBytesRead - headerEnd - HeaderEndMarker.Length);
 
                 WebServer.RecieveBufferRecycler.Recycle(oldBuffer);
             }
@@ -347,7 +346,6 @@ namespace ObjectCloud.WebServer.Implementation
                     Buffer = WebServer.RecieveBufferRecycler.Get();
 
                     Array.Copy(oldBuffer, ContentLength, Buffer, 0, BufferBytesRead - ContentLength);
-                    //System.Buffer.BlockCopy(Buffer, Convert.ToInt32(ContentLength), Buffer, 0, Convert.ToInt32(BufferBytesRead - ContentLength));
 
                     WebServer.RecieveBufferRecycler.Recycle(oldBuffer);
 
@@ -420,7 +418,6 @@ namespace ObjectCloud.WebServer.Implementation
                         byte[] oldBuffer = Buffer;
                         Buffer = WebServer.RecieveBufferRecycler.Get();
                         Array.Copy(oldBuffer, localBuffer.Length, Buffer, 0, BufferBytesRead - localBuffer.Length);
-                        //System.Buffer.BlockCopy(Buffer, localBuffer.Length, Buffer, 0, BufferBytesRead - localBuffer.Length);
 
                         WebServer.RecieveBufferRecycler.Recycle(oldBuffer);
 

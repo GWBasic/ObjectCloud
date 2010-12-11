@@ -21,40 +21,20 @@ namespace ObjectCloud.Common.Threading
         /// <summary>
         /// When the next wite lock is allowed
         /// </summary>
-        private long NextWritelock = DateTime.MinValue.Ticks;
+        private DateTime NextWritelock = DateTime.MinValue;
 		
 		/// <summary>
 		/// Blocks while there is a lock.  After calling this function, the resource will be read-safe for 25 miliseconds, or whatever is set in LockDelay
 		/// </summary>
         public void PeekRead()
         {
-            PeekRead(LockDelay);
-        }
-
-        /// <summary>
-        /// Blocks while there is a lock, After calling this function, the resource will be read-safe for the specified time
-        /// </summary>
-        /// <param name="lockDelay"></param>
-        public void PeekRead(TimeSpan lockDelay)
-		{
             // Block while there is a writer active
 			while (WriteLockRequests > 0)
                 lock (Key)
                 { }
 
             // Set the next delay
-
-            long nextWritelock;
-            long oldNextWritelock;
-            long prevSet;
-
-            do
-            {
-                oldNextWritelock = NextWritelock;
-                nextWritelock = (DateTime.UtcNow + LockDelay).Ticks;
-                prevSet = Interlocked.CompareExchange(ref NextWritelock, nextWritelock, oldNextWritelock);
-            }
-            while ((prevSet != oldNextWritelock) && (prevSet < nextWritelock));
+            NextWritelock = DateTime.UtcNow + LockDelay;
 		}
 		
         /// <summary>
@@ -93,7 +73,7 @@ namespace ObjectCloud.Common.Threading
 			get { return _LockDelay; }
 			set { _LockDelay = value; }
 		}
-		private TimeSpan _LockDelay = TimeSpan.FromMilliseconds(25);
+		private TimeSpan _LockDelay = TimeSpan.FromMilliseconds(100);
 
         /// <summary>
         /// Locks, but delays returning if PeekRead was called recently
@@ -106,15 +86,10 @@ namespace ObjectCloud.Common.Threading
             if (!Monitor.TryEnter(Key, timeout))
                 throw new TimeoutException("Timeout establishing a lock");
 
-            // Sleep until any required delay from readers passes
-            DateTime nextWritelock = new DateTime(NextWritelock);
-            DateTime now = DateTime.UtcNow;
-            while (nextWritelock < now)
-            {
-                Thread.Sleep(now - nextWritelock);
-                nextWritelock = new DateTime(NextWritelock);
-                now = DateTime.UtcNow;
-            }
+            // Sleep if needed
+            TimeSpan sleepTimespan = NextWritelock - DateTime.UtcNow;
+            if (sleepTimespan > TimeSpan.Zero)
+                Thread.Sleep(sleepTimespan);
 			
             return new WriteLockCompleter(this);
         }

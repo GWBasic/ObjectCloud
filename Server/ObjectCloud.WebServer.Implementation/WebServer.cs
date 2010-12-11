@@ -37,6 +37,9 @@ namespace ObjectCloud.WebServer.Implementation
         /// </summary>
         TcpListener TcpListener;
 
+        private object StartLock = new object();
+        private Exception StartException = null;
+
         /// <summary>
         /// Actually runs the server 
         /// </summary>
@@ -51,17 +54,24 @@ namespace ObjectCloud.WebServer.Implementation
 
                 FileHandlerFactoryLocator.FileSystemResolver.Start();
 
-                _Running = true;
-
                 TcpListener = new TcpListener(IPAddress.Any, Port);
                 TcpListener.Server.NoDelay = true;
                 TcpListener.Server.LingerState = new LingerOption(true, 0);
 
-                TcpListener.Start(20);
+                Thread serverThread = new Thread(RunServerThread);
+                serverThread.Name = "Socket Acceptor";
+                serverThread.IsBackground = true;
+                serverThread.Priority = ThreadPriority.Highest;
 
-                log.Info("Server is waiting for a new connection at http://" + FileHandlerFactoryLocator.HostnameAndPort + "/");
+                lock (StartLock)
+                {
+                    serverThread.Start();
 
-                TcpListener.BeginAcceptTcpClient(AcceptTcpClient, null);
+                    Monitor.Wait(StartLock);
+                }
+
+                if (null != StartException)
+                    throw StartException;
 
                 System.Runtime.GCSettings.LatencyMode = System.Runtime.GCLatencyMode.Batch;
             }
@@ -77,6 +87,72 @@ namespace ObjectCloud.WebServer.Implementation
         }
 
         /// <summary>
+        /// Actually runs the server 
+        /// </summary>
+        private void RunServerThread()
+        {
+            try
+            {
+                TcpListener.Start(20);
+                _Running = true;
+
+                log.Info("Server is waiting for a new connection at http://" + FileHandlerFactoryLocator.HostnameAndPort + "/");
+
+                lock (StartLock)
+                    Monitor.Pulse(StartLock);
+
+                do
+                {
+                    try
+                    {
+                        TcpClient tcpClient = TcpListener.AcceptTcpClient();
+
+                        if (Running)
+                        {
+                            tcpClient.LingerState = new LingerOption(true, 0);
+                            tcpClient.NoDelay = true;
+
+                            Socket socket = tcpClient.Client;
+
+                            if (log.IsDebugEnabled)
+                                log.Debug("Accepted connection form: " + socket.RemoteEndPoint);
+
+                            SocketReader socketReader = new SocketReader(this, socket);
+
+                            Interlocked.Increment(ref NumActiveSockets);
+
+                            socketReader.Start();
+                        }
+                        else
+                        {
+                            tcpClient.Client.Shutdown(SocketShutdown.Both);
+                            tcpClient.Client.Close();
+                        }
+                    }
+                    // This is in case the listener is disposed
+                    catch (ObjectDisposedException) { }
+                    catch (Exception e)
+                    {
+                        log.Error("Exception accepting a socket", e);
+                    }
+                }
+                while (_Running);
+            }
+            catch (Exception e)
+            {
+                log.Warn("Exception accepting sockets: ", e);
+                FileHandlerFactoryLocator.FileSystemResolver.Stop();
+
+                _Running = false;
+
+                StartException = e;
+
+                lock (StartLock)
+                    Monitor.Pulse(StartLock);
+            }
+        }
+
+        /// <summary>
         /// Allows re-using buffers for recieving data from clients
         /// </summary>
         internal Recycler<byte[]> RecieveBufferRecycler;
@@ -85,51 +161,6 @@ namespace ObjectCloud.WebServer.Implementation
         /// Allows re-using buffers for sending data to clients
         /// </summary>
         internal Recycler<byte[]> SendBufferRecycler;
-
-        /// <summary>
-        /// Open sockets that need to be closed when the server shuts down
-        /// </summary>
-        /// <summary>
-        /// Handles an incoming socket
-        /// </summary>
-        /// <param name="ar"></param>
-        private void AcceptTcpClient(IAsyncResult ar)
-        {
-            try
-            {
-                TcpClient tcpClient = TcpListener.EndAcceptTcpClient(ar);
-
-                if (Running)
-                {
-                    tcpClient.LingerState = new LingerOption(true, 0);
-                    tcpClient.NoDelay = true;
-
-                    Socket socket = tcpClient.Client;
-
-                    log.Info("Accepted connection form: " + socket.RemoteEndPoint);
-
-                    SocketReader socketReader = new SocketReader(this, socket);
-
-                    Interlocked.Increment(ref NumActiveSockets);
-
-                    socketReader.Start();
-
-                    if (Running)
-                        TcpListener.BeginAcceptTcpClient(AcceptTcpClient, null);
-                }
-                else
-                {
-                    tcpClient.Client.Shutdown(SocketShutdown.Both);
-                    tcpClient.Client.Close();
-                }
-            }
-            // This is in case the listener is disposed
-            catch (ObjectDisposedException) { }
-            catch (Exception e)
-            {
-                log.Error("Exception accepting a socket", e);
-            }
-        }
 
         /// <summary>
         /// The number of active sockets

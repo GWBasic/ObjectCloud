@@ -141,7 +141,8 @@ namespace ObjectCloud.WebServer.Implementation
             {
                 try
                 {
-                    log.Info("File Requested : " + _RequestedFile + "\n===================\n");
+                    if (log.IsDebugEnabled)
+                        log.Debug("File Requested : " + _RequestedFile + "\n===================\n");
 
                     // Load the session object or create a new one
                     LoadSession();

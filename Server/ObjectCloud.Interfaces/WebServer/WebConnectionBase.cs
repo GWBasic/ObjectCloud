@@ -89,8 +89,8 @@ namespace ObjectCloud.Interfaces.WebServer
                     _Session = WebServer.FileHandlerFactoryLocator.SessionManagerHandler[sessionId];
 
                     if (null != _Session)
-                        if (log.IsInfoEnabled)
-                            log.InfoFormat("Retrieved session: {0}", CookiesFromBrowser["SESSION"]);
+                        if (log.IsDebugEnabled)
+                            log.DebugFormat("Retrieved session: {0}", CookiesFromBrowser["SESSION"]);
                 }
                 else
                     _Session = null;

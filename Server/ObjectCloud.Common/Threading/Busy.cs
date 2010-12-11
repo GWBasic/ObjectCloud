@@ -52,7 +52,7 @@ namespace ObjectCloud.Common.Threading
         }
 
         /// <summary>
-        /// Syncronizes starting / stopping of busy
+        /// Syncronizes starting / stopping of busy. Not sure if it's needed
         /// </summary>
         private static object BeginEndKey = new object();
 
@@ -63,7 +63,7 @@ namespace ObjectCloud.Common.Threading
         {
             lock (BeginEndKey)
             {
-                if (0 == BusyCount)
+                if (1 == Interlocked.Increment(ref BusyCount))
                     // start busy thread
                     lock (BusyThreadStartedPulser)
                     {
@@ -74,8 +74,6 @@ namespace ObjectCloud.Common.Threading
 
                         Monitor.Wait(BusyThreadStartedPulser);
                     }
-
-                BusyCount++;
             }
         }
 
@@ -86,9 +84,7 @@ namespace ObjectCloud.Common.Threading
         {
             lock (BeginEndKey)
             {
-                BusyCount--;
-
-                if (0 == BusyCount)
+                if (0 == Interlocked.Decrement(ref BusyCount))
                     // If no more threads are busy, end the busy thread
                     lock (EndBusyThreadPulser)
                         Monitor.Pulse(EndBusyThreadPulser);
