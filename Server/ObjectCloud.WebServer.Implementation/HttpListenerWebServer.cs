@@ -46,34 +46,57 @@ namespace ObjectCloud.WebServer.Implementation
 
                 FileHandlerFactoryLocator.FileSystemResolver.Start();
 
-                _ServerThread = Thread.CurrentThread;
-
                 HttpListener = new HttpListener();
-
                 HttpListener.Prefixes.Add("http://*:" + Port.ToString() + "/");
-
                 HttpListener.Start();
 
                 log.Info("Server is waiting for a new connection at http://" + FileHandlerFactoryLocator.HostnameAndPort + "/");
 
                 _Running = true;
-                AcceptingSockets = true;
 
                 HttpListener.BeginGetContext(HttpListenerCallback, null);
             }
             catch (Exception e)
             {
                 log.Fatal("Error starting server", e);
-                TerminatingException = e;
+                throw;
             }
         }
 
         private void HttpListenerCallback(IAsyncResult ar)
         {
-            HttpListenerContext context = (HttpListenerContext)HttpListener.EndGetContext(ar);
-            HttpListener.BeginGetContext(HttpListenerCallback, null);
+            try
+            {
+                HttpListenerContext context = (HttpListenerContext)HttpListener.EndGetContext(ar);
+                RequestDelegateQueue.QueueUserWorkItem(HandleHttpListenerContext, context);
+            }
+            catch (Exception e)
+            {
+                if (!Running)
+                    return;
+                else
+                    log.Error("Exception accepting an incoming HTTP request", e);
+            }
 
-            RequestDelegateQueue.QueueUserWorkItem(HandleHttpListenerContext, context);
+            if (Running)
+                try
+                {
+                    HttpListener.BeginGetContext(HttpListenerCallback, null);
+                }
+                catch (Exception e)
+                {
+                    log.Error("Exception waiting for another incoming HTTP request", e);
+
+                    if (Running)
+                        try
+                        {
+                            Stop();
+                        }
+                        catch (Exception e2)
+                        {
+                            log.Error("Exception stopping", e2);
+                        }
+                }
         }
 
         private void HandleHttpListenerContext(object state)

@@ -103,6 +103,12 @@ namespace ObjectCloud.WebServer.Test
             DoMultithreadedGets(1, 200);
         }
 
+        [Test]
+        public void Test50Four()
+        {
+            DoMultithreadedGets(4, 50);
+        }
+
         /*[Test]
         public void Test3000Single()
         {

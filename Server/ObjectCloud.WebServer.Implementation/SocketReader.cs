@@ -690,37 +690,74 @@ namespace ObjectCloud.WebServer.Implementation
 
             WebServer.WebServerTerminated -= new EventHandler<EventArgs>(WebServer_WebServerTerminated);
 
-            if (null != Buffer)
-            {
-                WebServer.RecieveBufferRecycler.Recycle(Buffer);
-                Buffer = null;
-            }
-
             try
             {
-                Socket.Shutdown(SocketShutdown.Both);
+                Socket.Shutdown(SocketShutdown.Send);
             }
             catch (Exception e)
             {
                 log.Warn("Exception shutting down socket", e);
             }
 
+            // Keep reading until no data recieved on the socket
+            Socket.BeginReceive(Buffer, 0, Buffer.Length, SocketFlags.None, CloseCallback, null);
+        }
+
+        private void CloseCallback(IAsyncResult ar)
+        {
             try
             {
-                Socket.LingerState = new LingerOption(true, 0);
-                Socket.Close();
+                SocketError socketError;
+                int bytesRead = Socket.EndReceive(ar, out socketError);
+
+                if ((SocketError.Success == socketError) && (bytesRead > 0))
+                {
+                    log.Warn("Data recieved on socket after it was expected to be closed");
+
+                    Socket.BeginReceive(Buffer, 0, Buffer.Length, SocketFlags.None, CloseCallback, null);
+                    return;
+                }
+
+                if (null != Buffer)
+                {
+                    WebServer.RecieveBufferRecycler.Recycle(Buffer);
+                    Buffer = null;
+                }
+
+                try
+                {
+                    Socket.Close();
+                }
+                catch (Exception e)
+                {
+                    log.Warn("Exception closing socket", e);
+                }
+
+                Interlocked.Decrement(ref WebServer.NumActiveSockets);
+
+                WebConnectionIOState = WebConnectionIOState.Disconnected;
+
+                if (null != Closed)
+                    Closed(this, new EventArgs());
+
+            }
+            catch (ObjectDisposedException)
+            {
+                WebConnectionIOState = WebConnectionIOState.Disconnected;
+                Close();
+            }
+            catch (SocketException)
+            {
+                WebConnectionIOState = WebConnectionIOState.Disconnected;
+                Close();
             }
             catch (Exception e)
             {
-                log.Warn("Exception closing socket", e);
+                log.ErrorFormat("Fatal error when performing IO for a connection from {0}", e, RemoteEndPoint);
+
+                WebConnectionIOState = WebConnectionIOState.Disconnected;
+                Close();
             }
-
-            Interlocked.Decrement(ref WebServer.NumActiveSockets);
-
-            WebConnectionIOState = WebConnectionIOState.Disconnected;
-
-            if (null != Closed)
-                Closed(this, new EventArgs());
         }
 
         /// <summary>

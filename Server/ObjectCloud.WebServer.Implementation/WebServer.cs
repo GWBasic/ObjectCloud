@@ -109,7 +109,7 @@ namespace ObjectCloud.WebServer.Implementation
 
                         if (Running)
                         {
-                            tcpClient.LingerState = new LingerOption(true, 0);
+                            //tcpClient.LingerState = new LingerOption(true, 0);
                             tcpClient.NoDelay = true;
 
                             Socket socket = tcpClient.Client;

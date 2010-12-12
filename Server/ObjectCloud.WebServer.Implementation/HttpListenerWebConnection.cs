@@ -58,7 +58,8 @@ namespace ObjectCloud.WebServer.Implementation
             if (loggerFactoryAdapter is IObjectCloudLoggingFactoryAdapter)
                 ((IObjectCloudLoggingFactoryAdapter)loggerFactoryAdapter).RemoteEndPoint = RemoteEndPoint;
 
-            log.Info("File Requested : " + _RequestedFile + "\n===================\n");
+            if (log.IsTraceEnabled)
+                log.Trace("File Requested : " + _RequestedFile + "\n===================\n");
 
             try
             {
@@ -76,9 +77,12 @@ namespace ObjectCloud.WebServer.Implementation
 
                 try
                 {
-                    _HttpVersion = null;
+                    _HttpVersion = double.Parse(string.Format(
+                        "{0}.{1}",
+                        Request.ProtocolVersion.Major,
+                        Request.ProtocolVersion.Minor));
 
-                    StringBuilder headers = new StringBuilder("Headers:\n");
+                    StringBuilder headers = new StringBuilder("File Requested : " + _RequestedFile + "\n===================\nHeaders:\n");
 
                     NameValueCollection Headers = Request.Headers;
                     foreach (string headerName in Headers.AllKeys)
@@ -138,20 +142,12 @@ namespace ObjectCloud.WebServer.Implementation
             }
             finally
             {
-                try
-                {
-                    Response.Close();
-                }
-                catch { }
-
                 if (loggerFactoryAdapter is IObjectCloudLoggingFactoryAdapter)
                 {
                     IObjectCloudLoggingFactoryAdapter loggerFactoryAdapterOC = (IObjectCloudLoggingFactoryAdapter)loggerFactoryAdapter;
                     loggerFactoryAdapterOC.RemoteEndPoint = null;
                     loggerFactoryAdapterOC.Session = null;
                 }
-
-                _Connected = false;
             }
         }
 
@@ -159,7 +155,6 @@ namespace ObjectCloud.WebServer.Implementation
         {
             Response.KeepAlive = WebServer.KeepAlive;
             Response.StatusCode = (int)webResults.Status;
-            Response.ContentLength64 = webResults.ResultsAsStream.Length;
 
             foreach (KeyValuePair<string, string> header in webResults.Headers)
                 Response.Headers[header.Key] = header.Value;
@@ -206,11 +201,17 @@ namespace ObjectCloud.WebServer.Implementation
 
             Response.Headers["Server"] = WebServer.ServerType;
 
+            Response.ContentType = webResults.ContentType;
+            Response.ContentLength64 = webResults.ResultsAsStream.Length;
+
             // TODO:  Move these to some kind of a writer thread
             byte[] buffer = new byte[webResults.ResultsAsStream.Length];
             webResults.ResultsAsStream.Read(buffer, 0, buffer.Length);
             Response.OutputStream.Write(buffer, 0, buffer.Length);
             Response.OutputStream.Flush();
+            Response.Close();
+
+            _Connected = false;
         }
 
         public override EndPoint RemoteEndPoint
@@ -218,10 +219,10 @@ namespace ObjectCloud.WebServer.Implementation
             get { return Request.RemoteEndPoint; }
         }
 
-        public override Set<IFileContainer> TouchedFiles
+        public override HashSet<IFileContainer> TouchedFiles
         {
             get { return _TouchedFiles; }
         }
-        private readonly Set<IFileContainer> _TouchedFiles = new Set<IFileContainer>();
+        private readonly HashSet<IFileContainer> _TouchedFiles = new HashSet<IFileContainer>();
     }
 }
