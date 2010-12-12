@@ -129,10 +129,7 @@ namespace ObjectCloud.WebServer.Implementation
             // Signal that this was the abort to catch
             bool abortedHere = false;
 
-#if DEBUG
-            #pragma warning disable
             bool completed = false;
-#endif
 
             TimerCallback timerCallback = delegate(object state)
             {
@@ -159,9 +156,7 @@ namespace ObjectCloud.WebServer.Implementation
                 using (var timer = new Timer(timerCallback, null, 10000, System.Threading.Timeout.Infinite))
                     HandleConnectionInt(content);
 
-#if DEBUG
                 completed = true;
-#endif
             }
             catch (ThreadAbortException tae)
             {
