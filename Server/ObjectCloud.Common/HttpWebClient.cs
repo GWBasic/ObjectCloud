@@ -141,9 +141,8 @@ namespace ObjectCloud.Common
             HttpWebRequest webRequest = (HttpWebRequest)HttpWebRequest.Create(urlBuilder.ToString());
             webRequest.CookieContainer = CookieContainer;
             webRequest.KeepAlive = true;
-            //webRequest.Headers.Set("Connection", "keep-alive");
             webRequest.UnsafeAuthenticatedConnectionSharing = true;
-            webRequest.ServicePoint.BindIPEndPointDelegate += BindIPEndPointCallback;
+            //webRequest.ServicePoint.BindIPEndPointDelegate += BindIPEndPointCallback;
 
             if (null != Timeout)
                 webRequest.Timeout = Convert.ToInt32(Timeout.Value.TotalMilliseconds);
@@ -151,7 +150,7 @@ namespace ObjectCloud.Common
             return webRequest;
         }
 
-        static int LastBindPortUsed = 5001;
+        /*static int LastBindPortUsed = 5001;
 
         /// <summary>
         /// http://blogs.msdn.com/b/dgorti/archive/2005/09/18/470766.aspx
@@ -172,7 +171,7 @@ namespace ObjectCloud.Common
                 return new IPEndPoint(IPAddress.Any, port);
             else
                 return new IPEndPoint(IPAddress.IPv6Any, port);
-        }
+        }*/
 
         /// <summary>
         /// Callback for BeginGet
@@ -266,9 +265,8 @@ namespace ObjectCloud.Common
             webRequest.ContentType = "application/x-www-form-urlencoded";
             webRequest.CookieContainer = CookieContainer;
             webRequest.KeepAlive = true;
-            //webRequest.Headers.Set("Connection", "keep-alive");
             webRequest.UnsafeAuthenticatedConnectionSharing = true;
-            webRequest.ServicePoint.BindIPEndPointDelegate += BindIPEndPointCallback;
+            //webRequest.ServicePoint.BindIPEndPointDelegate += BindIPEndPointCallback;
 
             if (null != Timeout)
                 webRequest.Timeout = Convert.ToInt32(Timeout.Value.TotalMilliseconds);

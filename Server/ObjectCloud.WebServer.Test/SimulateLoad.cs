@@ -28,21 +28,37 @@ namespace ObjectCloud.WebServer.Test
         int NumRequests;
         Wrapped<Exception> ExceptionContainer;
         int CompletedRequests;
+        int NumTimeouts;
 
         private void DoGets()
         {
+            int threadId = Thread.CurrentThread.ManagedThreadId;
+
             try
             {
                 HttpWebClient httpWebClient = new HttpWebClient();
 
-                for (int ctr = 0; ctr < NumRequests; ctr++)
+                for (int ctr = 0; ctr < NumRequests && null == ExceptionContainer.Value; ctr++)
                 {
-                    var webResponse = httpWebClient.Get("http://localhost:" + WebServer.Port + "/API/jquery.js");
+                    try
+                    {
+                        var webResponse = httpWebClient.Get("http://localhost:" + WebServer.Port + "/API/jquery.js?threadID=" + threadId.ToString() + "&ctr=" + ctr.ToString());
 
-                    if (webResponse.StatusCode == HttpStatusCode.OK)
-                        Interlocked.Increment(ref CompletedRequests);
-                    else
-                        return;
+                        if (webResponse.StatusCode == HttpStatusCode.OK)
+                            Interlocked.Increment(ref CompletedRequests);
+                        else
+                            return;
+                    }
+                    catch (Exception e)
+                    {
+                        if (e.Message == "The operation has timed out")
+                            Interlocked.Increment(ref NumTimeouts);
+                        else
+                            throw;
+                    }
+
+                    //if (0 == ctr % 50)
+                    //    Thread.Sleep(1500);
                 }
             }
             catch (Exception e)
@@ -57,17 +73,19 @@ namespace ObjectCloud.WebServer.Test
             NumRequests = numRequests;
             ExceptionContainer = new Wrapped<Exception>(null);
             CompletedRequests = 0;
+            NumTimeouts = 0;
 
             List<Thread> threads = new List<Thread>();
-            for (int ctr = 1; ctr < numThreads; ctr++)
+            for (int ctr = 0; ctr < numThreads; ctr++)
             {
                 Thread thread = new Thread(DoGets);
-                thread.Start();
-
+                thread.Name = "GETTER " + ctr.ToString();
+                thread.Priority = ThreadPriority.Lowest;
                 threads.Add(thread);
             }
 
-            DoGets();
+            foreach (Thread thread in threads)
+                thread.Start();
 
             foreach (Thread thread in threads)
                 thread.Join();
@@ -75,10 +93,17 @@ namespace ObjectCloud.WebServer.Test
             if (null != ExceptionContainer.Value)
                 throw ExceptionContainer.Value;
 
+            Assert.AreEqual(0, NumTimeouts, "Timeouts occured");
             Assert.AreEqual(numRequests * numThreads, CompletedRequests, "Unexpected number of successes");
         }
 
         [Test]
+        public void Test200Single()
+        {
+            DoMultithreadedGets(1, 200);
+        }
+
+        /*[Test]
         public void Test3000Single()
         {
             DoMultithreadedGets(1, 3000);
@@ -94,7 +119,7 @@ namespace ObjectCloud.WebServer.Test
         public void Test30000Eight()
         {
             DoMultithreadedGets(8, 30000);
-        }
+        }*/
 
         [Test]
         public void TestBlockWhileBusy()

@@ -117,12 +117,68 @@ namespace ObjectCloud.WebServer.Implementation
 		/// The number of requests since a full GC was run 
 		/// </summary>
 		private static int NumRequestsSinceLastGC = 0;
-		
+
         /// <summary>
         /// Entry-point to handle the connection that's established on the socket
         /// </summary>
         /// <param name="state"></param>
         public virtual void HandleConnection(IWebConnectionContent content)
+        {
+            Thread thread = Thread.CurrentThread;
+
+            // Signal that this was the abort to catch
+            bool abortedHere = false;
+
+#if DEBUG
+            #pragma warning disable
+            bool completed = false;
+#endif
+
+            TimerCallback timerCallback = delegate(object state)
+            {
+                if (completed)
+                    return;
+
+                if (System.Diagnostics.Debugger.IsAttached)
+                    System.Diagnostics.Debugger.Break();
+                else
+                {
+                    log.Warn(thread.Name + " is blocked, aborting, ThreadID: " + thread.ManagedThreadId.ToString());
+
+                    try
+                    {
+                        abortedHere = true;
+                        thread.Abort();
+                    }
+                    catch { }
+                }
+            };
+
+            try
+            {
+                using (var timer = new Timer(timerCallback, null, 10000, System.Threading.Timeout.Infinite))
+                    HandleConnectionInt(content);
+
+#if DEBUG
+                completed = true;
+#endif
+            }
+            catch (ThreadAbortException tae)
+            {
+                if (abortedHere)
+                {
+                    log.Warn("Thread was aborted", tae);
+                    Thread.ResetAbort();
+                }
+            }
+        }
+        
+
+        /// <summary>
+        /// Entry-point to handle the connection that's established on the socket
+        /// </summary>
+        /// <param name="state"></param>
+        private void HandleConnectionInt(IWebConnectionContent content)
         {
             _Content = content;
 
