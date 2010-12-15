@@ -84,6 +84,10 @@
 			SendNotifications="False" />
 	</File>
 	<File
+		Name="Crypto"
+		TypeId="directory"
+		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd" />
+	<File
 		Name="date.js"
 		TypeId="image"
 		OwnerId="dddddddd-dddd-dddd-dddd-dddddddddddd">
