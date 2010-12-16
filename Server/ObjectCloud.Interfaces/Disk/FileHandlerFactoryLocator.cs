@@ -266,5 +266,10 @@ namespace ObjectCloud.Interfaces.Disk
         /// The local identity provider
         /// </summary>
         public IIdentityProvider LocalIdentityProvider { get; set; }
+
+        /// <summary>
+        /// Finds the appropriate FileConfigurationManager for a file
+        /// </summary>
+        public FileConfigurationFinder FileConfigurationFinder { get; set; }
     }
 }

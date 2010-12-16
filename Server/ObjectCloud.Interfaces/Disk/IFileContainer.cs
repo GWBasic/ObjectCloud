@@ -149,5 +149,10 @@ namespace ObjectCloud.Interfaces.Disk
         /// </summary>
         /// <returns></returns>
         IEnumerable<string> GetNotificationRecipientIdentities();
+
+        /// <summary>
+        /// Configuration information for the file
+        /// </summary>
+        FileConfigurationManager FileConfigurationManager { get; }
     }
 }

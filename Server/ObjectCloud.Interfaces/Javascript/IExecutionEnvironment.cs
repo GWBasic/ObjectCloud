@@ -39,12 +39,5 @@ namespace ObjectCloud.Interfaces.Javascript
         /// Any syntax errors in the javascript execution environment
         /// </summary>
         string ExecutionEnvironmentErrors { get; }
-
-        /// <summary>
-        /// Returns true if access to the underlying web methods should be disabled
-        /// </summary>
-        /// <param name="webConnection"></param>
-        /// <returns></returns>
-        bool IsBlockWebMethodsEnabled(IWebConnection webConnection);
     }
 }

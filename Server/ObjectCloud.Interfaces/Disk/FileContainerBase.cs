@@ -457,5 +457,21 @@ namespace ObjectCloud.Interfaces.Disk
             IEnumerable<IUser> notificationRecipients = FileHandlerFactoryLocator.UserManagerHandler.GetUsersAndResolveGroupsToUsers(userOrGroupIds);
             return notificationRecipients;
         }
+
+        /// <summary>
+        /// Configuration information for the file
+        /// </summary>
+        public FileConfigurationManager FileConfigurationManager
+        {
+            get
+            {
+                if (null == _FileConfigurationManager)
+                    _FileConfigurationManager =
+                        FileHandlerFactoryLocator.FileConfigurationFinder.GetFileConfigurationManager(this);
+
+                return _FileConfigurationManager;
+            }
+        }
+        private FileConfigurationManager _FileConfigurationManager = null;
     }
 }

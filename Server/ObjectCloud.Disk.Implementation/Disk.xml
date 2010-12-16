@@ -281,6 +281,11 @@
     </property>
 
     <property name="LocalIdentityProvider" ref="LocalIdentityProvider" />
+    <property name="FileConfigurationFinder">
+      <object id="FileConfigurationFinder" type="ObjectCloud.Interfaces.Disk.FileConfigurationFinder, ObjectCloud.Interfaces">
+        <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
+      </object>
+    </property>
   </object>
 
   <object id="LocalIdentityProvider" type="ObjectCloud.Disk.Implementation.LocalIdentityProvider, ObjectCloud.Disk.Implementation">

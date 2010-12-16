@@ -346,14 +346,6 @@
             Creates an execution environment if no other thread is creating one
             </summary>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.WebHandler`1.FindJavascriptContainer(System.String,ObjectCloud.Interfaces.Disk.IDirectoryHandler)">
-            <summary>
-            Finds the Javascript containing file for the given extension and its parent directory handler
-            </summary>
-            <param name="extension"></param>
-            <param name="parentDirectoryHandler"></param>
-            <returns></returns>
-        </member>
         <member name="F:ObjectCloud.Disk.WebHandlers.WebHandler`1._ExecutionEnvironment">
             <summary>
             The cached ExecutionEnvironment.  Call GetOrCreateExecutionEnvironment to ensure that the value is fresh
@@ -2309,13 +2301,6 @@
             <param name="fileNameSuggestion">Suggestion for a filename.  This can be any string, when specified, extension must also be specified.</param>
             <param name="FileType"></param>
             <param name="ErrorIfExists">True to throw an error if there already is an existing file with the same filename.  False if ObjectCloud should silently return a wrapper if the file already exists.  If fileNameSuggestion is used instead of FileName, then if there is an existing filename with the first generated filename, then it will be returned instead of created.</param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.DetermineFileType(System.String)">
-            <summary>
-            Assists in determining the file type given the extension
-            </summary>
-            <param name="extension"></param>
             <returns></returns>
         </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.GenerateFilename(System.String,System.String,System.Boolean)">

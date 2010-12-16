@@ -111,7 +111,8 @@ namespace ObjectCloud.Disk.WebHandlers
                 // If the file type is not specified, try to load it from a server-side class
                 if (null == FileType)
                 {
-                    FileType = DetermineFileType(extension);
+                    FileType = FileHandlerFactoryLocator.FileConfigurationFinder[extension].FileType;
+
                     if (null == FileType)
                         throw new WebResultsOverrideException(WebResults.From(Status._400_Bad_Request, "FileType must be specified for files with extension ." + extension));
                 }
@@ -129,25 +130,6 @@ namespace ObjectCloud.Disk.WebHandlers
                     throw new WebResultsOverrideException(WebResults.From(Status._409_Conflict, FileName + " is an invalid file name"));
                 }
             }
-        }
-
-        /// <summary>
-        /// Assists in determining the file type given the extension
-        /// </summary>
-        /// <param name="extension"></param>
-        /// <returns></returns>
-        protected string DetermineFileType(string extension)
-        {
-            IFileContainer javascriptClass = FindJavascriptContainer(extension, FileHandler);
-
-            // If there is server-side Javascript, try to infer the file type
-            if (null != javascriptClass)
-                if (javascriptClass.FileHandler is ITextHandler)
-                    foreach (string line in javascriptClass.CastFileHandler<ITextHandler>().ReadLines())
-                        if (line.Trim().StartsWith("// FileType:"))
-                            return line.Substring(12).Trim();
-
-            return null;
         }
 
         /// <summary>
@@ -583,7 +565,7 @@ namespace ObjectCloud.Disk.WebHandlers
                 return extensionHandler[extension];
             else
             {
-                string fileFactoryType = DetermineFileType(extension);
+                string fileFactoryType = FileHandlerFactoryLocator.FileConfigurationFinder[extension].FileType;
 
                 if (null != fileFactoryType)
                     return fileFactoryType;

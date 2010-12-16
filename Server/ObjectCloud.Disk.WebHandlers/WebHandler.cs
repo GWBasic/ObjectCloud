@@ -40,20 +40,21 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <returns></returns>
         public virtual WebDelegate GetMethod(IWebConnection webConnection)
         {
-            IExecutionEnvironment executionEnvironment = GetOrCreateExecutionEnvironment();
-
-            bool allowLocalMethods = true;
-
             if (!webConnection.BypassJavascript)
+            {
+                IExecutionEnvironment executionEnvironment = GetOrCreateExecutionEnvironment();
                 if (null != executionEnvironment)
                 {
                     WebDelegate toReturn = executionEnvironment.GetMethod(webConnection);
 
                     if (null != toReturn)
                         return toReturn;
-                    else
-                        allowLocalMethods = !executionEnvironment.IsBlockWebMethodsEnabled(webConnection);
                 }
+            }
+
+            bool allowLocalMethods = true;
+            if (!webConnection.BypassJavascript)
+                allowLocalMethods = !FileContainer.FileConfigurationManager.BlockWebMethods;
 
             string method = webConnection.GetArgumentOrException("Method");
 
@@ -1589,53 +1590,49 @@ namespace ObjectCloud.Disk.WebHandlers
         /// </summary>
         public IExecutionEnvironment GetOrCreateExecutionEnvironment()
         {
-            // Files without an extension can not have a local execution environment
-            string extension = FileContainer.Extension;
-            if (null == extension)
-                return null;
-
             IExecutionEnvironment executionEnvironment = _ExecutionEnvironment;
             if (null != executionEnvironment)
                 return executionEnvironment;
 
+            string javascriptFile = FileContainer.FileConfigurationManager.JavascriptFile;
+            if (null == javascriptFile)
+                return null;
+
             // Try to find the javascript file
-            IFileContainer javascriptContainer = FindJavascriptContainer(extension, FileContainer.ParentDirectoryHandler);
-            if (null != javascriptContainer)
+            IFileContainer javascriptContainer =
+                FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(javascriptFile);
+
+            // Note: a large timeout is used in case a thread is constructing the scope.  Constructing the scope can be time consuming
+            // TODO:  Try to do a lot of checking without a lock, or using a read/write lock
+            using (TimedLock.Lock(ExecutionEnvironmentLock, TimeSpan.FromSeconds(15)))
             {
-                // Note: a large timeout is used in case a thread is constructing the scope.  Constructing the scope can be time consuming
-                // TODO:  Try to do a lot of checking without a lock, or using a read/write lock
-                using (TimedLock.Lock(ExecutionEnvironmentLock, TimeSpan.FromSeconds(15)))
+                if (null != _ExecutionEnvironment)
+                    return _ExecutionEnvironment;
+
+                if (CreatingExecutionEnvironment)
                 {
-                    if (null != _ExecutionEnvironment)
-                        return _ExecutionEnvironment;
+                    log.Error("An attempt was made to call GetOrCreateExecutionEnvironment() while it's being created.  " +
+                        "This usually occurs when server-side javascript, while creating a scope calls a function that depends on " +
+                        "GetOrCreateExecutionEnvironment() being complete.  As GetOrCreateExecutionEnvrionment() isn't complete, it " +
+                        "would attempt to create a new one which will result in a stack overflow and server crash.  " +
+                        "To resolve this problem, do not use operations while creating a Javascript scope that depend on the completed " +
+                        "scope, such as calling open() against yourself.  " + FileContainer.ObjectUrl);
+                    throw new WebResultsOverrideException(WebResults.From(Status._500_Internal_Server_Error));
+                }
 
-                    if (CreatingExecutionEnvironment)
-                    {
-                        log.Error("An attempt was made to call GetOrCreateExecutionEnvironment() while it's being created.  " +
-                            "This usually occurs when server-side javascript, while creating a scope calls a function that depends on " +
-                            "GetOrCreateExecutionEnvironment() being complete.  As GetOrCreateExecutionEnvrionment() isn't complete, it " +
-                            "would attempt to create a new one which will result in a stack overflow and server crash.  " +
-                            "To resolve this problem, do not use operations while creating a Javascript scope that depend on the completed " +
-                            "scope, such as calling open() against yourself.  " + FileContainer.ObjectUrl);
-                        throw new WebResultsOverrideException(WebResults.From(Status._500_Internal_Server_Error));
-                    }
+                CreatingExecutionEnvironment = true;
 
-                    CreatingExecutionEnvironment = true;
-
-                    try
-                    {
-                        IExecutionEnvironmentFactory factory = FileHandlerFactoryLocator.ExecutionEnvironmentFactory;
-                        _ExecutionEnvironment = factory.Create(FileContainer, javascriptContainer);
-                        return _ExecutionEnvironment;
-                    }
-                    finally
-                    {
-                        CreatingExecutionEnvironment = false;
-                    }
+                try
+                {
+                    IExecutionEnvironmentFactory factory = FileHandlerFactoryLocator.ExecutionEnvironmentFactory;
+                    _ExecutionEnvironment = factory.Create(FileContainer, javascriptContainer);
+                    return _ExecutionEnvironment;
+                }
+                finally
+                {
+                    CreatingExecutionEnvironment = false;
                 }
             }
-            else
-                return _ExecutionEnvironment;
         }
 
         /// <summary>
@@ -1653,59 +1650,6 @@ namespace ObjectCloud.Disk.WebHandlers
                     {
                         Monitor.Exit(ExecutionEnvironmentLock);
                     }
-        }
-
-        /// <summary>
-        /// Finds the Javascript containing file for the given extension and its parent directory handler
-        /// </summary>
-        /// <param name="extension"></param>
-        /// <param name="parentDirectoryHandler"></param>
-        /// <returns></returns>
-        protected IFileContainer FindJavascriptContainer(string extension, IDirectoryHandler parentDirectoryHandler)
-        {
-            IDirectoryHandler directoryHandler = parentDirectoryHandler;
-            IFileContainer javascriptContainer = null;
-
-            // Keep looking up the directory tree for a Classes folder...
-            while (null != directoryHandler && null == javascriptContainer)
-            {
-                if (directoryHandler.IsFilePresent("Classes"))
-                {
-                    IFileContainer classesDirectoryContainer = directoryHandler.OpenFile("Classes");
-
-                    // ...if a parent folder has a directory named Classes
-                    if (classesDirectoryContainer.FileHandler is IDirectoryHandler)
-                    {
-                        IDirectoryHandler classesDirectoryHandler = classesDirectoryContainer.CastFileHandler<IDirectoryHandler>();
-
-                        if (classesDirectoryHandler.IsFilePresent(extension))
-                        {
-                            IFileContainer potentialClassFileContainer = classesDirectoryHandler.OpenFile(extension);
-
-                            // Files with no owner are considered owned by an administrator
-                            bool ownedByAdministrator;
-                            if (null != potentialClassFileContainer.OwnerId)
-                                ownedByAdministrator = FileHandlerFactoryLocator.UserManagerHandler.IsUserInGroup(
-                                potentialClassFileContainer.OwnerId.Value,
-                                FileHandlerFactoryLocator.UserFactory.Administrators.Id);
-                            else
-                                ownedByAdministrator = true;
-
-                            // And it has a text file with the same name as the extention, then it means that the javascript handler is found!
-                            if (ownedByAdministrator)
-                                if (potentialClassFileContainer.FileHandler is ITextHandler)
-                                    javascriptContainer = potentialClassFileContainer;
-                        }
-                    }
-                }
-
-                // move to the parent directory
-                if (null != directoryHandler.FileContainer)
-                    directoryHandler = directoryHandler.FileContainer.ParentDirectoryHandler;
-                else
-                    directoryHandler = null;
-            }
-            return javascriptContainer;
         }
 
         /// <summary>

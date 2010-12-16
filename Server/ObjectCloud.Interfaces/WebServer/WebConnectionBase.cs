@@ -672,37 +672,12 @@ namespace ObjectCloud.Interfaces.WebServer
                 hasExtension = lastIndexOfDot > requestedFile.LastIndexOf('/');
             }
 
-            // The shell file has the URLs that implement the actions
-            string shellFile;
-            string extension;
+            // Atomically use actions
+            Dictionary<string, string> actions = fileContainer.FileConfigurationManager.Actions;
 
-            if (hasExtension)
-            {
-                extension = requestedFile.Substring(lastIndexOfDot + 1);
-                shellFile = "/Actions/ByExtension/" + extension;
-            }
-            else
-            {
-                shellFile = "/Actions/ByType/" + fileContainer.TypeId;
-                extension = fileContainer.TypeId;
-            }
-
-            IFileContainer shellFileContainer;
-            try
-            {
-                shellFileContainer = WebServer.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(shellFile);
-            }
-            catch (FileDoesNotExist)
-            {
-                return WebResults.From(Status._500_Internal_Server_Error, "ObjectCloud is not configured to handle files of type " + extension);
-            }
-
-            INameValuePairsHandler shellFileHandler = shellFileContainer.CastFileHandler<INameValuePairsHandler>();
-
-            if (!shellFileHandler.Contains(action))
-                return WebResults.From(Status._500_Internal_Server_Error, "ObjectCloud does not support the action \"" + action + "\" for files of type \"" + extension + "\"");
-
-            string actionInstructions = shellFileHandler[action];
+            string actionInstructions;
+            if (!actions.TryGetValue(action, out actionInstructions))
+                return WebResults.From(Status._500_Internal_Server_Error, "ObjectCloud does not support the action \"" + action + "\" for files of type \"" + fileContainer.Extension + "\"");
 
             // The action can be /r/t/e.wchtml?File=[target], text/html
             string[] actionURLAndMime = actionInstructions.Split(new char[] { ',' }, 2, StringSplitOptions.RemoveEmptyEntries);

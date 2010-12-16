@@ -1,0 +1,11 @@
+{
+   "ViewComponents":[],
+
+   "Actions":
+   {
+       "View":"/Shell/Viewers/ReplyViewer.oc?FileName=[Target]",
+       "Preview":"/Shell/Viewers/ReplyPreviewer.occ?FileName=[Target]&MimeOverride=text/xml"
+   },
+
+   "FileType": "text"
+}

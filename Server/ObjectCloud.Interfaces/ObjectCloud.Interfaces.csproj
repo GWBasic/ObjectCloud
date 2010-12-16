@@ -72,6 +72,8 @@
     <Compile Include="Disk\CanNotOpenFile.cs" />
     <Compile Include="Disk\DiskException.cs" />
     <Compile Include="Disk\DuplicateFile.cs" />
+    <Compile Include="Disk\FileConfigurationFinder.cs" />
+    <Compile Include="Disk\FileConfigurationManager.cs" />
     <Compile Include="Disk\FileContainerBase.cs" />
     <Compile Include="Disk\FileContainerUtils.cs" />
     <Compile Include="Disk\FileDoesNotExist.cs" />

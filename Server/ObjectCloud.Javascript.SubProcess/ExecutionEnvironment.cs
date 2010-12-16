@@ -149,13 +149,5 @@ namespace ObjectCloud.Javascript.SubProcess
             get { return _ExecutionEnvironmentErrors; }
         }
         private string _ExecutionEnvironmentErrors = null;
-
-        public bool IsBlockWebMethodsEnabled(IWebConnection webConnection)
-        {
-            if (null != ScopeWrapper)
-                return ScopeWrapper.BlockWebMethods;
-            else
-                return false;
-        }
     }
 }

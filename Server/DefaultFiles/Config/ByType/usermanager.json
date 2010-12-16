@@ -1,0 +1,1 @@
+{"ViewComponents":[{"NamedPermission":"CreateUser","Label":"Create Users","Default":false},{"NamedPermission":"CreateGroup","Label":"Create Groups","Default":false}],"Actions":{"View":"/Shell/UserManagers/UserDB.wchtml"}}

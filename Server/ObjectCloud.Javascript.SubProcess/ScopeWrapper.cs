@@ -163,11 +163,6 @@ namespace ObjectCloud.Javascript.SubProcess
                 }
             }
 
-            // Get options
-            object result = data.Results[data.Results.Length - 1];
-            if (result is Dictionary<string, object>)
-                ParseOptions((Dictionary<string, object>)result);
-
             return data.Results[data.Results.Length - 2];
         }
 
@@ -371,32 +366,6 @@ namespace ObjectCloud.Javascript.SubProcess
                 throw tie.InnerException;
             }
         }
-
-        /// <summary>
-        /// Loads options from the javascript
-        /// </summary>
-        private void ParseOptions(Dictionary<string, object> options)
-        {
-            object blockWebMethods = null;
-            if (options.TryGetValue("BlockWebMethods", out blockWebMethods))
-                try
-                {
-                    _BlockWebMethods = Convert.ToBoolean(blockWebMethods);
-                }
-                catch (Exception e)
-                {
-                    log.Error("Error when parsing options.BlockWebMethods", e);
-                }
-        }
-
-        /// <summary>
-        /// Returns true if underlying web methods are blocked, false otherwise
-        /// </summary>
-        public bool BlockWebMethods
-        {
-            get { return _BlockWebMethods; }
-        }
-        private bool _BlockWebMethods = true;
 
         /// <summary>
         /// When the loaded libraries were last modified

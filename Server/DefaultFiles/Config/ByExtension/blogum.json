@@ -1,0 +1,20 @@
+{
+   "ViewComponents":
+   [
+      {"NamedPermission":"post","Label":"Post","Default":false}
+   ],
+
+   "Actions":
+   {
+      "View":"/Shell/Viewers/BlogumViewer.oc?FileName=[Target]&[Arguments]",
+      "Edit":"/Shell/Editors/BlogumEditor.wchtml?FileName=[Target]/, text/html"
+   },
+
+   "FileType": "text",
+
+   "Javascript":
+   {
+      "File": "/Classes/blogum",
+      "BlockWebMethods": true
+   }
+}

@@ -10,6 +10,7 @@ using System.Text;
 using System.Xml;
 
 using Common.Logging;
+using JsonFx.Json;
 
 using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Disk;
@@ -96,6 +97,13 @@ namespace ObjectCloud.Disk.Implementation
                 "Shell",
                 "directory",
                 "." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Shell",
+                rootUser.Id);
+
+            // Create shell directory
+            rootDirectoryHandler.RestoreFile(
+                "Config",
+                "directory",
+                "." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Config",
                 rootUser.Id);
 
             rootDirectoryHandler.SetPermission(
@@ -324,6 +332,9 @@ namespace ObjectCloud.Disk.Implementation
 
             dir = rootDirectoryHandler.OpenFile("Classes").FileHandler;
             dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Classes", false);
+
+            dir = rootDirectoryHandler.OpenFile("Config").FileHandler;
+            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Config", false);
 
             if (!rootDirectoryHandler.IsFilePresent("DefaultTemplate"))
             {
@@ -601,7 +612,67 @@ insert into Metadata (Name, Value) values ('GroupId', @groupId);
                             }
                     }
             }
+
+            if (!rootDirectoryHandler.IsFilePresent("Config"))
+            {
+                IDirectoryHandler configDirectory = (IDirectoryHandler)rootDirectoryHandler.CreateFile(
+                    "Config", "directory", FileHandlerFactoryLocator.UserFactory.RootUser.Id);
+
+                CreateConfigDirectory(configDirectory, "ByExtension");
+                CreateConfigDirectory(configDirectory, "ByType");
+            }
 		}
+
+        private void CreateConfigDirectory(IDirectoryHandler configDirectory, string fileType)
+        {
+            configDirectory = (IDirectoryHandler)configDirectory.CreateFile(
+                fileType, "directory", FileHandlerFactoryLocator.UserFactory.RootUser.Id);
+
+            Dictionary<string, Dictionary<string, object>> configObjectsByType = new Dictionary<string, Dictionary<string, object>>();
+
+            IDirectoryHandler securityDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(
+                "/Actions/Security/" + fileType).CastFileHandler<IDirectoryHandler>();
+
+            foreach (IFileContainer securityFile in securityDirectory.Files)
+            {
+                string typeName = securityFile.Filename.Split('.')[0];
+                string contents = securityFile.CastFileHandler<ITextHandler>().ReadAll();
+
+                Dictionary<string, object> configObject = new Dictionary<string, object>();
+                configObject["ViewComponents"] = JsonReader.Deserialize(contents);
+
+                configObjectsByType[typeName] = configObject;
+            }
+
+            IDirectoryHandler actionsDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(
+                "/Actions/" + fileType).CastFileHandler<IDirectoryHandler>();
+
+            foreach (IFileContainer actionsFile in actionsDirectory.Files)
+            {
+                string typeName = actionsFile.Filename;
+
+                Dictionary<string, object> configObject;
+                if (!configObjectsByType.TryGetValue(typeName, out configObject))
+                {
+                    configObject = new Dictionary<string, object>();
+                    configObjectsByType[typeName] = configObject;
+                }
+
+                Dictionary<string, object> actions = new Dictionary<string, object>();
+                configObject["Actions"] = actions;
+
+                foreach (KeyValuePair<string, string> action in actionsFile.CastFileHandler<INameValuePairsHandler>())
+                    actions[action.Key] = action.Value;
+            }
+
+            foreach (KeyValuePair<string, Dictionary<string, object>> configObject in configObjectsByType)
+            {
+                ITextHandler configObjectHandler = (ITextHandler)configDirectory.CreateFile(
+                    configObject.Key + ".json", "text", FileHandlerFactoryLocator.UserFactory.RootUser.Id);
+
+                configObjectHandler.WriteAll(null, JsonWriter.Serialize(configObject.Value));
+            }
+        }
 
         /// <summary>
         /// The default root password

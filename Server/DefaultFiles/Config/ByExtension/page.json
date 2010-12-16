@@ -1,0 +1,21 @@
+{
+   "ViewComponents":
+   [
+      {"NamedPermission":"reply","Label":"Respond","Default":true,"FooterComponent":"/Shell/Communication/Replier.oc"}
+   ],
+
+   "Actions":
+   {
+      "View":"/Shell/Viewers/PageViewer.oc?FileName=[Target]",
+      "Preview":" /Shell/Viewers/PagePreviewer.occ?FileName=[Target]",
+      "Edit":"/Shell/Editors/Ecrit.oc?FileName=[Target]"
+   },
+
+   "FileType": "text",
+
+   "Javascript":
+   {
+      "File": "/Classes/page",
+      "BlockWebMethods": false
+   }
+}

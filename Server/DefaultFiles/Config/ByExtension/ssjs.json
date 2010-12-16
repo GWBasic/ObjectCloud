@@ -1,0 +1,15 @@
+{
+   "Actions":
+   {
+      "View":"[Target]?Method=Run&[Arguments], text/html",
+      "Edit":"/Shell/Editors/Weco.wchtml?FileName=[Target]"
+   },
+
+   "FileType": "text",
+
+   "Javascript":
+   {
+      "File": "/Classes/ssjs",
+      "BlockWebMethods": false
+   }
+}

@@ -1,0 +1,22 @@
+{
+
+   "ViewComponents":
+   [
+      {
+   "NamedPermission":"reply","Label":"Respond","Default":true,"FooterComponent":"/Shell/Communication/Replier.oc"
+      }
+   ],
+
+   "Actions":
+   {
+      "View":"/Shell/Viewers/StatusViewer.oc?FileName=[Target]"
+   },
+
+   "FileType": "text",
+
+   "Javascript":
+   {
+      "File": "/Classes/status",
+      "BlockWebMethods": false
+   }
+}

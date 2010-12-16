@@ -1,0 +1,15 @@
+{
+   "Actions":
+   {
+      "View":"/Shell/Viewers/Goreal.wchtml?FileName=[Target]",
+      "Edit":"/Shell/Editors/Narl.wchtml?FileName=[Target]"
+   },
+
+   "FileType": "database",
+
+   "Javascript":
+   {
+      "File": "/Classes/vote",
+      "BlockWebMethods": true
+   }
+}

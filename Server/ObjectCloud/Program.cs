@@ -127,6 +127,9 @@ namespace ObjectCloud
                                 fileContainer = fileHandlerFactoryLocator.FileSystemResolver.ResolveFile("DefaultTemplate");
                                 fileContainer.FileHandler.Dump(fileSystemDestination + Path.DirectorySeparatorChar + "DefaultTemplate", fileHandlerFactoryLocator.UserManagerHandler.Root.Id);
 
+                                fileContainer = fileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Config");
+                                fileContainer.FileHandler.Dump(fileSystemDestination + Path.DirectorySeparatorChar + "Config", fileHandlerFactoryLocator.UserManagerHandler.Root.Id);
+
                                 // This shouldn't be backed up
                                 //fileContainer = fileHandlerFactoryLocator.FileSystemResolver.ResolveFile("index.page");
                                 //fileContainer.FileHandler.Dump(fileSystemDestination + Path.DirectorySeparatorChar + "index.page", fileHandlerFactoryLocator.UserManagerHandler.Root.Id);
@@ -164,7 +167,7 @@ namespace ObjectCloud
                                 IFileSystemResolver fileSystemResolver = fileHandlerFactoryLocator.FileSystemResolver;
                                 fileSystemResolver.Start();
 
-                                foreach (string dirNameToClean in new string[] { "Shell", "API", "Templates", "Tests", "Pages", "Docs", "Classes", "DefaultTemplate" })
+                                foreach (string dirNameToClean in new string[] { "Shell", "API", "Templates", "Tests", "Pages", "Docs", "Classes", "DefaultTemplate", "Config" })
                                 {
                                     IDirectoryHandler dirToClean = fileSystemResolver.ResolveFile(dirNameToClean).CastFileHandler<IDirectoryHandler>();
 
