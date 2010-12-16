@@ -3,11 +3,14 @@
 // For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
 using JsonFx.Json;
+
+using ObjectCloud.Common;
 
 namespace ObjectCloud.Interfaces.Disk
 {
@@ -31,6 +34,7 @@ namespace ObjectCloud.Interfaces.Disk
             _Deserialized = null;
             _Actions = null;
             _Javascript = null;
+            _ViewComponents = null;
         }
 
         /// <summary>
@@ -59,7 +63,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// </summary>
         public Dictionary<string, string> Actions
         {
-            get 
+            get
             {
                 Dictionary<string, string> actions = _Actions;
 
@@ -75,10 +79,36 @@ namespace ObjectCloud.Interfaces.Disk
 
                     } while (null == Interlocked.CompareExchange<Dictionary<string, string>>(ref _Actions, actions, null));
 
-                return actions; 
+                return actions;
             }
         }
         private Dictionary<string, string> _Actions = null;
+
+        /// <summary>
+        /// The view components
+        /// </summary>
+        public Dictionary<string, object>[] ViewComponents
+        {
+            get
+            {
+                Dictionary<string, object>[] viewComponents = _ViewComponents;
+
+                if (null == viewComponents)
+                    do
+                    {
+                        object viewComponentsObj;
+                        if (Deserialized.TryGetValue("ViewComponents", out viewComponentsObj))
+                            viewComponents = Enumerable<Dictionary<string, object>>.ToArray(
+                                Enumerable<Dictionary<string, object>>.Cast((IEnumerable)viewComponentsObj));
+                        else
+                            viewComponents = new Dictionary<string, object>[0];
+
+                    } while (null == Interlocked.CompareExchange<Dictionary<string, object>[]>(ref _ViewComponents, viewComponents, null));
+
+                return viewComponents;
+            }
+        }
+        private Dictionary<string, object>[] _ViewComponents = null;
 
         /// <summary>
         /// The file type

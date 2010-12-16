@@ -32,7 +32,7 @@ namespace ObjectCloud.Disk.WebHandlers.TemplateConditions
         /// <returns></returns>
         protected override bool DetermineCondition(ITemplateParsingState templateParsingState, IFileContainer fileContainer, string namedPermission)
         {
-            foreach (Dictionary<string, object> supportedNamedPermission in fileContainer.GetNamedPermissionsConfiguration())
+            foreach (Dictionary<string, object> supportedNamedPermission in fileContainer.FileConfigurationManager.ViewComponents)
                 if (supportedNamedPermission["NamedPermission"].ToString() == namedPermission)
                     return true;
 

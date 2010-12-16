@@ -1,13 +1,15 @@
 <oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating">
 
    <oc:jsontemplate oc:url="[_FileName_]" Method="GetInfoAndPermission" fn="[_FileName_]">
-      <oc:jsontemplate oc:datafile="/Actions/Security/ByExtension/[_Extension_].json" fn="[__UP.fn_]">
-         <oc:if>
-            <oc:hasvalue value="[_FooterComponent_]">
-               <hr />
-               <oc:component oc:src="[_FooterComponent_]" FileName="[__UP.fn_]" />
-            </oc:hasvalue>
-         </oc:if>
+      <oc:jsontemplate oc:datafile="/Config/ByExtension/[_Extension_].json" fn="[__UP.fn_]">
+         <oc:jsontemplate fn="[__UP.fn_]" oc:data="[_ViewComponents_]">
+            <oc:if>
+               <oc:hasvalue value="[_FooterComponent_]">
+                  <hr />
+                  <oc:component oc:src="[_FooterComponent_]" FileName="[__UP.fn_]" />
+               </oc:hasvalue>
+            </oc:if>
+         </oc:jsontemplate>
       </oc:jsontemplate>
    </oc:jsontemplate>
 
