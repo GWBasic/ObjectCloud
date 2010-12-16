@@ -1,6 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<NameValuePairs>
-	<NameValuePair Name="View" Value="/Shell/Viewers/PageViewer.oc?FileName=[Target]" />
-	<NameValuePair Name="Preview" Value=" /Shell/Viewers/PagePreviewer.occ?FileName=[Target]" />
-	<NameValuePair Name="Edit" Value="/Shell/Editors/Ecrit.oc?FileName=[Target]" />
-</NameValuePairs>

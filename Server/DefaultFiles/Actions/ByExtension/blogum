@@ -1,5 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<NameValuePairs>
-	<NameValuePair Name="View" Value="/Shell/Viewers/BlogumViewer.oc?FileName=[Target]&amp;[Arguments]" />
-	<NameValuePair Name="Edit" Value="/Shell/Editors/BlogumEditor.wchtml?FileName=[Target]/, text/html" />
-</NameValuePairs>

@@ -108,6 +108,22 @@ namespace ObjectCloud.Disk.Implementation
 
             rootDirectoryHandler.SetPermission(
                 null,
+                "Config",
+                new ID<IUserOrGroup, Guid>[] { everybody.Id },
+                ObjectCloud.Interfaces.Security.FilePermissionEnum.Read,
+                false,
+                false);
+
+            rootDirectoryHandler.SetPermission(
+                null,
+                "Config",
+                new ID<IUserOrGroup, Guid>[] { administrators.Id },
+                ObjectCloud.Interfaces.Security.FilePermissionEnum.Administer,
+                false,
+                false);
+
+            rootDirectoryHandler.SetPermission(
+                null,
                 "Shell",
                 new ID<IUserOrGroup, Guid>[] {everybody.Id},
                 FilePermissionEnum.Read,
@@ -333,7 +349,30 @@ namespace ObjectCloud.Disk.Implementation
             dir = rootDirectoryHandler.OpenFile("Classes").FileHandler;
             dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Classes", false);
 
-            dir = rootDirectoryHandler.OpenFile("Config").FileHandler;
+            if (!rootDirectoryHandler.IsFilePresent("Config"))
+            {
+                dir = (IDirectoryHandler)rootDirectoryHandler.CreateFile(
+                    "Config", "directory", FileHandlerFactoryLocator.UserFactory.RootUser.Id);
+
+                rootDirectoryHandler.SetPermission(
+                    null,
+                    "Config",
+                    new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Everybody.Id },
+                    ObjectCloud.Interfaces.Security.FilePermissionEnum.Read,
+                    false,
+                    false);
+
+                rootDirectoryHandler.SetPermission(
+                    null,
+                    "Config",
+                    new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Administrators.Id },
+                    ObjectCloud.Interfaces.Security.FilePermissionEnum.Administer,
+                    false,
+                    false);
+            }
+            else
+                dir = rootDirectoryHandler.OpenFile("Config").FileHandler;
+
             dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Config", false);
 
             if (!rootDirectoryHandler.IsFilePresent("DefaultTemplate"))
@@ -613,17 +652,17 @@ insert into Metadata (Name, Value) values ('GroupId', @groupId);
                     }
             }
 
-            if (!rootDirectoryHandler.IsFilePresent("Config"))
+            /*if (!rootDirectoryHandler.IsFilePresent("Config"))
             {
                 IDirectoryHandler configDirectory = (IDirectoryHandler)rootDirectoryHandler.CreateFile(
                     "Config", "directory", FileHandlerFactoryLocator.UserFactory.RootUser.Id);
 
                 CreateConfigDirectory(configDirectory, "ByExtension");
                 CreateConfigDirectory(configDirectory, "ByType");
-            }
+            }*/
 		}
 
-        private void CreateConfigDirectory(IDirectoryHandler configDirectory, string fileType)
+        /*private void CreateConfigDirectory(IDirectoryHandler configDirectory, string fileType)
         {
             configDirectory = (IDirectoryHandler)configDirectory.CreateFile(
                 fileType, "directory", FileHandlerFactoryLocator.UserFactory.RootUser.Id);
@@ -672,7 +711,7 @@ insert into Metadata (Name, Value) values ('GroupId', @groupId);
 
                 configObjectHandler.WriteAll(null, JsonWriter.Serialize(configObject.Value));
             }
-        }
+        }*/
 
         /// <summary>
         /// The default root password

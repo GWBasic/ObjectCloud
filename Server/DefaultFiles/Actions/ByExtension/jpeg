@@ -1,5 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<NameValuePairs>
-	<NameValuePair Name="Edit" Value="/Shell/Editors/CanvasPaint.oc?FileName=[Target]&amp;Format=image/jpeg" />
-	<NameValuePair Name="View" Value="[Target]?Method=ReadAll&amp;[Arguments], image/jpeg" />
-</NameValuePairs>

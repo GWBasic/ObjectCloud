@@ -1,4 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<NameValuePairs>
-	<NameValuePair Name="View" Value="[Target]?Method=ReadAll&amp;[Arguments], application/zip" />
-</NameValuePairs>

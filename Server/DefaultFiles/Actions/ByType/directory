@@ -1,5 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<NameValuePairs>
-	<NameValuePair Name="ShellToIndexFile" Value="[Target]?Method=ShellToIndexFile&amp;[Arguments]" />
-	<NameValuePair Name="View" Value="/Shell/Navigation/Directory.oc?FileName=[Target]" />
-</NameValuePairs>
