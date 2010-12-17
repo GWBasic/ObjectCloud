@@ -75,7 +75,7 @@ namespace ObjectCloud.ORM.DataAccess.Generator
                 yield return "\t{\n";
 
                 foreach (Column column in table.Columns)
-                    yield return "\t\t" + StringGenerator.GenerateTypeName(column.Type.ResolvedType) + " " + column.Name + " { get; }\n";
+                    yield return "\t\t" + column.Type.TypeName + " " + column.Name + " { get; }\n";
 
                 yield return "\t}\n";
                 yield return "\n";
@@ -84,7 +84,7 @@ namespace ObjectCloud.ORM.DataAccess.Generator
 
                 foreach (Column column in table.Columns)
                 {
-                    yield return "\t\tnew " + StringGenerator.GenerateTypeName(column.Type.ResolvedType) + " " + column.Name + " { set; }\n";
+                    yield return "\t\tnew " + column.Type.TypeName + " " + column.Name + " { set; }\n";
                     yield return "\t\tbool " + column.Name + "_Changed { get; }\n";
                 }
 
@@ -112,7 +112,7 @@ namespace ObjectCloud.ORM.DataAccess.Generator
 
                 foreach (Column column in table.Columns)
                 {
-                    yield return "\t\t\tpublic " + StringGenerator.GenerateTypeName(column.Type.ResolvedType) + " " + column.Name + "\n";
+                    yield return "\t\t\tpublic " + column.Type.TypeName + " " + column.Name + "\n";
                     yield return "\t\t\t{\n";
                     yield return "\t\t\t\tget { return _" + column.Name + "; }\n";
                     yield return "\t\t\t\tset\n";
@@ -121,7 +121,7 @@ namespace ObjectCloud.ORM.DataAccess.Generator
                     yield return "\t\t\t\t\t_" + column.Name + "_Changed = true;\n";
                     yield return "\t\t\t\t}\n";
                     yield return "\t\t\t}\n";
-                    yield return "\t\t\tpublic " + StringGenerator.GenerateTypeName(column.Type.ResolvedType) + " _" + column.Name + ";\n";
+                    yield return "\t\t\tpublic " + column.Type.TypeName + " _" + column.Name + ";\n";
                     yield return "\t\t\tpublic bool " + column.Name + "_Changed\n";
                     yield return "\t\t\t{\n";
                     yield return "\t\t\t\tget { return _" + column.Name + "_Changed; }\n";

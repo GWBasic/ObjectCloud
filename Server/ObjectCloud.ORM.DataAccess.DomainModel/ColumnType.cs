@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+using ObjectCloud.Common;
+
 namespace ObjectCloud.ORM.DataAccess.DomainModel
 {
     public class ColumnType
@@ -16,7 +18,7 @@ namespace ObjectCloud.ORM.DataAccess.DomainModel
         {
             _SqlType = sqlType;
             _Nulls = nulls;
-            _ResolvedType = resolvedType;
+            TypeName = StringGenerator.GenerateTypeName(resolvedType);
             _SetConverter = setConverter;
             _GetConverter = getConverter;
         }
@@ -25,6 +27,7 @@ namespace ObjectCloud.ORM.DataAccess.DomainModel
         {
             _SqlType = sqlType;
             _Nulls = nulls;
+            TypeName = StringGenerator.GenerateTypeName(DotNetType);
         }
 
         /// <summary>
@@ -151,7 +154,7 @@ namespace ObjectCloud.ORM.DataAccess.DomainModel
             }
         }
 
-        /// <summary>
+        /*// <summary>
         /// The type that this column will resolve to in a corresponding object.  This can be different then DotNetType, if it is different, SetConverter and GetConverter must be set.  Set this to null to use DotNetType;
         /// </summary>
         public Type ResolvedType
@@ -165,7 +168,12 @@ namespace ObjectCloud.ORM.DataAccess.DomainModel
             }
             set { _ResolvedType = value; }
         }
-        private Type _ResolvedType = null;
+        private Type _ResolvedType = null;*/
+
+        /// <summary>
+        /// The type name for C#
+        /// </summary>
+        public string TypeName { get; set; }
 
         /// <summary>
         /// Converts from a value of DotNetType to ResolvedType; used when populating objects as a result of a query.  Use {0} where the value of DotNetType is expected.

@@ -30,7 +30,8 @@ namespace ObjectCloud.CodeGenerator
                         
                         new Column("TypeId", NotNull.String),
                         new Column("OwnerId", IDColumn<IUserOrGroup, Guid>.NullColumnType),
-                        new Column("Created", NotNull.TimeStamp)
+                        new Column("Created", NotNull.TimeStamp),
+                        new BsonColumn("Info", "ObjectCloud.DataAccess.Directory.FileData")
                     });
 
             fileTable.RunPriorToInsertOrUpdate =
@@ -44,7 +45,7 @@ namespace ObjectCloud.CodeGenerator
 
             database.Tables.Add(fileTable);
 
-            database.Tables.Add(
+            /*database.Tables.Add(
                 new Table(
                     "Permission",
                     new Column[]
@@ -54,7 +55,7 @@ namespace ObjectCloud.CodeGenerator
                         new Column("Level", EnumColumn<FilePermissionEnum>.NotNullColumnType),
                         new Column("Inherit", NotNull.Bool),
                         new Column("SendNotifications", NotNull.Bool)
-                    }));
+                    }));*/
 
             // TODO:  Maintain foriegn key constraint between permissions and file
 
@@ -88,7 +89,7 @@ namespace ObjectCloud.CodeGenerator
 
             database.Tables.Add(relationshipTable);
 
-            Column namedPermissionFileId = fileTable.CreateForiegnKeyColumn();
+            /*Column namedPermissionFileId = fileTable.CreateForiegnKeyColumn();
             namedPermissionFileId.Indexed = true;
 
             Column namedPermissionName = new Column("NamedPermission", NotNull.String);
@@ -110,9 +111,9 @@ namespace ObjectCloud.CodeGenerator
             namedPermissionTable.CompoundIndexes.Add(
                 new Index(new Column[] { namedPermissionFileId, namedPermissionName, namedPermissionUserOrGroup}, true));
 
-            database.Tables.Add(namedPermissionTable);
+            database.Tables.Add(namedPermissionTable);*/
 
-            database.Version = 6;
+            database.Version = 7;
 
             return database;
         }

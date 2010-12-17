@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BsonColumn.cs" />
     <Compile Include="Column.cs" />
     <Compile Include="ColumnOption.cs" />
     <Compile Include="ColumnType.cs" />

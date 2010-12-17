@@ -35,8 +35,8 @@ namespace ObjectCloud.Disk.FileHandlers
             FileContainerCache = new Cache<string, IFileContainer>(CreateForCache);
             OwnerIdCache = new Cache<IFileId, Wrapped<ID<IUserOrGroup, Guid>?>>(LoadOwnerIdForCache);
             FileIDCacheByName = new Cache<string, Wrapped<FileId>>(GetFileIdForCache);
-            PermissionsCacheWithInherit = new Cache<string, Wrapped<FilePermissionEnum?>, LoadPermissionArgs>(LoadPermissionForCache);
-            PermissionsCacheWithoutInherit = new Cache<string, Wrapped<FilePermissionEnum?>, LoadPermissionArgs>(LoadPermissionForCache);
+            FileDataByIdCache = new Cache<FileId, IFile_Readable>(LoadFileData);
+            FileDataByNameCache = new Cache<string, IFile_Readable>(LoadFileData);
 
             // TODO:  This can eventually go away, it's just to support old schemas
             foreach (IFile_Readable groupFile in new List<IFile_Readable>(
@@ -322,27 +322,27 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public void SetPermission(ID<IUserOrGroup, Guid>? assigningPermission, string filename, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, FilePermissionEnum level, bool inherit, bool sendNotifications)
         {
-            FileId fileId = FileIDCacheByName[filename].Value;
+            var file = FileDataByNameCache[filename];
 
-            DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
+            using (TimedLock.Lock(file))
             {
                 foreach (ID<IUserOrGroup, Guid> userOrGroupId in userOrGroupIds)
-                    DatabaseConnection.Permission.Upsert(
-                        Permission_Table.FileId == (ID<IFileContainer, long>)fileId & Permission_Table.UserOrGroupId == userOrGroupId,
-                        delegate(IPermission_Writable newPermission)
-                        {
-                            newPermission.FileId = fileId;
-                            newPermission.Level = level;
-                            newPermission.UserOrGroupId = userOrGroupId;
-                            newPermission.Inherit = inherit;
-                            newPermission.SendNotifications = sendNotifications;
-                        });
+                {
+                    Permission permission = new Permission();
+                    permission.Level = level;
+                    permission.Inherit = inherit;
+                    permission.SendNotifications = sendNotifications;
 
-                PermissionsCacheWithInherit.Clear();
-                PermissionsCacheWithoutInherit.Clear();
+                    file.Info.Permissions[userOrGroupId.Value] = permission;
+                }
 
-                transaction.Commit();
-            });
+                DatabaseConnection.File.Update(
+                    File_Table.Name == filename,
+                    delegate(IFile_Writable fileW)
+                    {
+                        fileW.Info = file.Info;
+                    });
+            }
 
             // If notifications are enabled, then send a notification informing the user of the change
             IFileContainer targetFile = OpenFile(filename);
@@ -356,44 +356,47 @@ namespace ObjectCloud.Disk.FileHandlers
             OnDirectoryChanged();
         }
 
-        public void RemovePermission(string filename, IEnumerable<ID<IUserOrGroup, Guid>> userOrIdGroupIds)
+        public void RemovePermission(string filename, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds)
         {
-            DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
+            var file = FileDataByNameCache[filename];
+
+            using (TimedLock.Lock(file))
             {
-                IFileId fileId = FileIDCacheByName[filename].Value;
+                foreach (ID<IUserOrGroup, Guid> userOrGroupId in userOrGroupIds)
+                    file.Info.Permissions.Remove(userOrGroupId.Value);
 
-                DatabaseConnection.Permission.Delete(Permission_Table.FileId == fileId & Permission_Table.UserOrGroupId.In(userOrIdGroupIds));
-
-                transaction.Commit();
-            });
-
-            PermissionsCacheWithInherit.Clear();
-            PermissionsCacheWithoutInherit.Clear();
+                DatabaseConnection.File.Update(
+                    File_Table.Name == filename,
+                    delegate(IFile_Writable fileW)
+                    {
+                        fileW.Info = file.Info;
+                    });
+            }
 
             OnDirectoryChanged();
         }
 
         public IEnumerable<FilePermission> GetPermissions(string filename)
         {
-            IFileId fileId = FileIDCacheByName[filename].Value;
+            var file = FileDataByNameCache[filename];
 
-            foreach (IPermission_Readable permission in
-                new List<IPermission_Readable>(DatabaseConnection.Permission.Select(Permission_Table.FileId == fileId)))
-            {
-                FilePermission toYield = new FilePermission();
-                toYield.UserOrGroupId = permission.UserOrGroupId;
-                toYield.FilePermissionEnum = permission.Level;
-                toYield.Inherit = permission.Inherit;
-                toYield.SendNotifications = permission.SendNotifications;
-				
-				Dictionary<string, bool> namedPermissions = new Dictionary<string, bool>();
-				foreach(INamedPermission_Readable namedPermission in DatabaseConnection.NamedPermission.Select(NamedPermission_Table.FileId == fileId & NamedPermission_Table.UserOrGroup == permission.UserOrGroupId))
-					namedPermissions[namedPermission.NamedPermission] = namedPermission.Inherit;
-				
-				toYield.NamedPermissions = namedPermissions;
+            using (TimedLock.Lock(file))
+                foreach (KeyValuePair<Guid, Permission> permissionKVP in file.Info.Permissions)
+                {
+                    FilePermission toYield = new FilePermission();
+                    toYield.UserOrGroupId = new ID<IUserOrGroup, Guid>(permissionKVP.Key);
+                    toYield.FilePermissionEnum = permissionKVP.Value.Level;
+                    toYield.Inherit = permissionKVP.Value.Inherit;
+                    toYield.SendNotifications = permissionKVP.Value.SendNotifications;
 
-                yield return toYield;
-            }
+                    Dictionary<string, bool> namedPermissions;
+                    if (file.Info.NamedPermissions.TryGetValue(permissionKVP.Key, out namedPermissions))
+                        toYield.NamedPermissions = DictionaryFunctions.Create<string, bool>(namedPermissions);
+                    else
+                        toYield.NamedPermissions = new Dictionary<string,bool>();
+
+                    yield return toYield;
+                }
         }
 
         public void DeleteFile(IUser changer, string filename)
@@ -419,9 +422,10 @@ namespace ObjectCloud.Disk.FileHandlers
                 log.Error("Error occured while " + fileContainer.FullPath + " that it's being deleted", e);
             }
 
+            IFile_Readable toDelete = null;
             DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
             {
-                IFile_Readable toDelete = DatabaseConnection.File.SelectSingle(File_Table.Name == filename);
+                toDelete = DatabaseConnection.File.SelectSingle(File_Table.Name == filename);
 
                 if (null == toDelete)
                     throw new FileDoesNotExist(FileContainer.FullPath + "/" + filename);
@@ -429,7 +433,6 @@ namespace ObjectCloud.Disk.FileHandlers
                 DatabaseConnection.Relationships.Delete(
                     Relationships_Table.FileId == toDelete.FileId | Relationships_Table.ReferencedFileId == toDelete.FileId);
 
-                DatabaseConnection.Permission.Delete(Permission_Table.FileId == toDelete.FileId);
                 DatabaseConnection.File.Delete(File_Table.FileId == toDelete.FileId);
 
                 FileId fileId = toDelete.FileId;
@@ -442,8 +445,8 @@ namespace ObjectCloud.Disk.FileHandlers
             });
 
             FileIDCacheByName.Remove(filename);
-            PermissionsCacheWithInherit.Clear();
-            PermissionsCacheWithoutInherit.Clear();
+            FileDataByNameCache.Remove(filename);
+            FileDataByIdCache.Remove(toDelete.FileId);
 
             OnDirectoryChanged();
         }
@@ -512,77 +515,41 @@ namespace ObjectCloud.Disk.FileHandlers
         }
 
         /// <summary>
-        /// Cache of permissions where inherit is allowed
+        /// Cache of file information by name
         /// </summary>
-        private Cache<string, Wrapped<FilePermissionEnum?>, LoadPermissionArgs> PermissionsCacheWithInherit;
+        private Cache<string, IFile_Readable> FileDataByNameCache;
 
         /// <summary>
-        /// Cache of permissions where inherit is forbidden
+        /// Cache of file information by name
         /// </summary>
-        private Cache<string, Wrapped<FilePermissionEnum?>, LoadPermissionArgs> PermissionsCacheWithoutInherit;
+        private Cache<FileId, IFile_Readable> FileDataByIdCache;
 
         /// <summary>
-        /// Args for determining what a user's permission for a file is
+        /// Loads file data for the cache
         /// </summary>
-        private struct LoadPermissionArgs
+        /// <param name="name"></param>
+        /// <returns></returns>
+        private IFile_Readable LoadFileData(string name)
         {
-            internal IFileId FileId;
-            internal IEnumerable<ID<IUserOrGroup, Guid>> UserAndGroupIds;
-            internal bool OnlyReturnInheritedPermissions;
-            internal uint Recurse;
+            IFile_Readable file = DatabaseConnection.File.SelectSingle(File_Table.Name == name);
+
+            if (null == file)
+                throw new FileDoesNotExist(name);
+
+            FileDataByIdCache[file.FileId] = file;
+            return file;
         }
 
         /// <summary>
-        /// Loads a permission for use in a permissions cache
+        /// Loads file data for the cache
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="args"></param>
+        /// <param name="name"></param>
         /// <returns></returns>
-        private Wrapped<FilePermissionEnum?> LoadPermissionForCache(string key, LoadPermissionArgs args)
+        private IFile_Readable LoadFileData(FileId fileId)
         {
-            FilePermissionEnum? highestPermission = null;
-            foreach (IPermission_Readable permission in DatabaseConnection.Permission.Select(
-                Permission_Table.FileId == args.FileId & Permission_Table.UserOrGroupId.In(args.UserAndGroupIds)))
-            {
-                if (!args.OnlyReturnInheritedPermissions | permission.Inherit)
-                {
-                    if (null == highestPermission)
-                        highestPermission = permission.Level;
-                    else if (permission.Level > highestPermission.Value)
-                        highestPermission = permission.Level;
-                }
-            }
-
-            if (null != highestPermission)
-                return new Wrapped<FilePermissionEnum?>(highestPermission);
-            else if (FileContainer == FileHandlerFactoryLocator.FileSystemResolver.RootDirectoryHandler.FileContainer)
-                // No permission found
-                return new Wrapped<FilePermissionEnum?>(null);
-            else
-                return new Wrapped<FilePermissionEnum?>(
-                    LoadPermissionFromRelated(new IFileId[] { args.FileId }, args.UserAndGroupIds, new HashSet<IFileId>(), args.Recurse));
-        }
-
-        /// <summary>
-        /// Returns a string that uniquely identifies the user and group IDs with the fileId.  Used for caching
-        /// </summary>
-        /// <param name="userAndGroupIds"></param>
-        /// <returns></returns>
-        private string ConvertUserOrGroupIdsToString(IFileId fileId, IEnumerable<ID<IUserOrGroup, Guid>> userAndGroupIds)
-        {
-            List<string> idsAsString = new List<string>();
-
-            foreach (ID<IUserOrGroup, Guid> userOrGroupId in userAndGroupIds)
-                idsAsString.Add(userOrGroupId.ToString());
-
-            idsAsString.Sort();
-
-            StringBuilder toReturn = new StringBuilder(fileId.ToString());
-            toReturn.Append("_");
-            foreach (string idAsString in idsAsString)
-                toReturn.Append(idAsString);
-
-            return toReturn.ToString();
+            IFile_Readable file = DatabaseConnection.File.SelectSingle(File_Table.FileId == fileId);
+            FileDataByNameCache[file.Name] = file;
+            return file;
         }
 
         public FilePermissionEnum? LoadPermission(string filename, IEnumerable<ID<IUserOrGroup, Guid>> userAndGroupIds, bool onlyReturnInheritedPermissions)
@@ -592,28 +559,33 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public FilePermissionEnum? LoadPermission(string filename, IEnumerable<ID<IUserOrGroup, Guid>> userAndGroupIds, bool onlyReturnInheritedPermissions, uint recurse)
         {
-            IFileId fileId = FileIDCacheByName[filename].Value;
-            string cacheKey = ConvertUserOrGroupIdsToString(fileId, userAndGroupIds);
+            var file = FileDataByNameCache[filename];
 
-            LoadPermissionArgs args = new LoadPermissionArgs();
-            args.FileId = fileId;
-            args.UserAndGroupIds = userAndGroupIds;
-            args.OnlyReturnInheritedPermissions = onlyReturnInheritedPermissions;
-            args.Recurse = recurse;
+            Permission permission;
+            FilePermissionEnum? highestPermission = null;
+            foreach (ID<IUserOrGroup, Guid> userAndGroupId in userAndGroupIds)
+                if (file.Info.Permissions.TryGetValue(userAndGroupId.Value, out permission))
+                    if (!onlyReturnInheritedPermissions | permission.Inherit)
+                    {
+                        if (null == highestPermission)
+                            highestPermission = permission.Level;
+                        else if (permission.Level > highestPermission.Value)
+                            highestPermission = permission.Level;
+                    }
 
-            FilePermissionEnum? toReturn;
-            if (onlyReturnInheritedPermissions)
-                toReturn = PermissionsCacheWithInherit.Get(cacheKey, args).Value;
-            else
-                toReturn = PermissionsCacheWithoutInherit.Get(cacheKey, args).Value;
+            if (null == highestPermission)
+                highestPermission = LoadPermissionFromRelated(
+                    new IFileId[] { new FileId(file.FileId.Value) },
+                    userAndGroupIds,
+                    new HashSet<IFileId>(), recurse);
 
-            if (null != toReturn)
-                return toReturn;
-            else if (FileContainer == FileHandlerFactoryLocator.FileSystemResolver.RootDirectoryHandler.FileContainer)
-                // No permission found
+            if (null != highestPermission)
+                return highestPermission;
+
+            if (FileContainer == FileHandlerFactoryLocator.FileSystemResolver.RootDirectoryHandler.FileContainer)
                 return null;
-            else
-                return FileContainer.ParentDirectoryHandler.LoadPermission(FileContainer.Filename, userAndGroupIds, true);
+
+            return FileContainer.ParentDirectoryHandler.LoadPermission(FileContainer.Filename, userAndGroupIds, true);
         }
 
         /// <summary>
@@ -686,14 +658,16 @@ namespace ObjectCloud.Disk.FileHandlers
                 }
 
             // Scan the permissions of the parent related files
-            foreach (IPermission_Readable permission in DatabaseConnection.Permission.Select(
-                Permission_Table.FileId.In(parentIds) & Permission_Table.UserOrGroupId.In(userAndGroupIds) & (Permission_Table.Inherit == true)))
-            {
-                if (null == highestPermission)
-                    highestPermission = permission.Level;
-                else if (permission.Level > highestPermission.Value)
-                    highestPermission = permission.Level;
-            }
+            Permission permission;
+            foreach (IFile_Readable file in DatabaseConnection.File.Select(File_Table.FileId.In(parentIds)))
+                foreach (var userAndGroupId in userAndGroupIds)
+                    if (file.Info.Permissions.TryGetValue(userAndGroupId.Value, out permission))
+                    {
+                        if (null == highestPermission)
+                            highestPermission = permission.Level;
+                        else if (permission.Level > highestPermission.Value)
+                            highestPermission = permission.Level;
+                    }
 
             if (null != highestPermission)
                 return highestPermission;
@@ -726,25 +700,8 @@ namespace ObjectCloud.Disk.FileHandlers
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
 
-            List<IFile_Readable> files;
-
-            Dictionary<FileId, List<IPermission_Readable>> permissionsByFileId =
-                new Dictionary<FileId, List<IPermission_Readable>>();
-
+            List<IFile_Readable> files = new List<IFile_Readable>(DatabaseConnection.File.Select());
             Dictionary<FileId, IFileContainer> fileContainersById = new Dictionary<FileId, IFileContainer>();
-
-            // Load all of the files into memory.  This is because as the files are iterated, additional queries will run
-            files = new List<IFile_Readable>(DatabaseConnection.File.Select());
-
-            // Load all of the permissions that apply to system users and groups into memory
-            foreach (IPermission_Readable permission in DatabaseConnection.Permission.Select())
-                if (FileHandlerFactoryLocator.UserFactory.IsSystemUserOrGroup(permission.UserOrGroupId))
-                {
-                    if (!permissionsByFileId.ContainsKey(permission.FileId))
-                        permissionsByFileId[permission.FileId] = new List<IPermission_Readable>();
-
-                    permissionsByFileId[permission.FileId].Add(permission);
-                }
 
             // Write out each file
             foreach (IFile_Readable file in files)
@@ -826,21 +783,21 @@ namespace ObjectCloud.Disk.FileHandlers
                                     xmlWriter.WriteAttributeString("OwnerId", ownerId.Value.ToString());
 
                                 // Write each permission if it applies to a built-in user or group
-                                if (permissionsByFileId.ContainsKey(file.FileId))
-                                    foreach (IPermission_Readable permission in permissionsByFileId[file.FileId])
+                                    foreach (KeyValuePair<Guid, Permission> permissionKVP in file.Info.Permissions)
                                     {
                                         try
                                         {
-                                            IUserOrGroup userOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroup(permission.UserOrGroupId);
+                                            IUserOrGroup userOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroup(
+                                                new ID<IUserOrGroup, Guid>(permissionKVP.Key));
 
                                             if (userOrGroup.BuiltIn)
                                             {
                                                 xmlWriter.WriteStartElement("Permission");
 
-                                                xmlWriter.WriteAttributeString("UserOrGroupId", permission.UserOrGroupId.Value.ToString());
-                                                xmlWriter.WriteAttributeString("Level", permission.Level.ToString());
-                                                xmlWriter.WriteAttributeString("Inherit", permission.Inherit.ToString());
-                                                xmlWriter.WriteAttributeString("SendNotifications", permission.SendNotifications.ToString());
+                                                xmlWriter.WriteAttributeString("UserOrGroupId", permissionKVP.Key.ToString());
+                                                xmlWriter.WriteAttributeString("Level", permissionKVP.Value.Level.ToString());
+                                                xmlWriter.WriteAttributeString("Inherit", permissionKVP.Value.Inherit.ToString());
+                                                xmlWriter.WriteAttributeString("SendNotifications", permissionKVP.Value.SendNotifications.ToString());
 
                                                 xmlWriter.WriteEndElement();
                                             }
@@ -877,9 +834,11 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public void Rename(IUser changer, string oldFilename, string newFilename)
         {
+            IFile_Readable oldFile = null;
             DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
             {
-                if (null == DatabaseConnection.File.SelectSingle(File_Table.Name == oldFilename))
+                oldFile = DatabaseConnection.File.SelectSingle(File_Table.Name == oldFilename);
+                if (null == oldFile)
                     throw new FileDoesNotExist(FileContainer.FullPath + "/" + oldFilename);
 
                 if (null != DatabaseConnection.File.SelectSingle(File_Table.Name == newFilename))
@@ -898,6 +857,8 @@ namespace ObjectCloud.Disk.FileHandlers
 
             FileIDCacheByName.Remove(oldFilename);
 			FileContainerCache.Remove(oldFilename);
+            FileDataByNameCache.Remove(oldFilename);
+            FileDataByIdCache.Remove(oldFile.FileId);
 
             IFileContainer newFileContainer = FileContainerCache[newFilename];
             newFileContainer.WebHandler.FileContainer = newFileContainer;
@@ -1366,27 +1327,49 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public void SetNamedPermission(IFileId fileId, string namedPermission, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, bool inherit)
         {
-            DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
+            var file = FileDataByIdCache[(FileId)fileId];
+
+            using (TimedLock.Lock(file))
             {
                 foreach (ID<IUserOrGroup, Guid> userOrGroupId in userOrGroupIds)
-                    DatabaseConnection.NamedPermission.Upsert(
-                        NamedPermission_Table.FileId == (ID<IFileContainer, long>)((FileId)fileId) & NamedPermission_Table.NamedPermission == namedPermission & NamedPermission_Table.UserOrGroup == userOrGroupId,
-                        delegate(INamedPermission_Writable np_w)
-                        {
-                            np_w.FileId = (FileId)fileId;
-                            np_w.Inherit = inherit;
-                            np_w.NamedPermission = namedPermission;
-                            np_w.UserOrGroup = userOrGroupId;
-                        });
+                {
+                    Dictionary<string, bool> permissionInfo;
+                    if (!file.Info.NamedPermissions.TryGetValue(userOrGroupId.Value, out permissionInfo))
+                    {
+                        permissionInfo = new Dictionary<string,bool>();
+                        file.Info.NamedPermissions[userOrGroupId.Value] = permissionInfo;
+                    }
 
-                transaction.Commit();
-            });
+                    permissionInfo[namedPermission] = inherit;
+                }
+
+                DatabaseConnection.File.Update(
+                    File_Table.FileId == fileId,
+                    delegate(IFile_Writable fileW)
+                    {
+                        fileW.Info = file.Info;
+                    });
+            }
         }
 
         public void RemoveNamedPermission(IFileId fileId, string namedPermission, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds)
         {
-            DatabaseConnection.NamedPermission.Delete(
-                NamedPermission_Table.FileId == fileId & NamedPermission_Table.NamedPermission == namedPermission & NamedPermission_Table.UserOrGroup.In(userOrGroupIds));
+            var file = FileDataByIdCache[(FileId)fileId];
+
+            using (TimedLock.Lock(file))
+            {
+                Dictionary<string, bool> permissionInfo;
+                foreach (ID<IUserOrGroup, Guid> userOrGroupId in userOrGroupIds)
+                    if (file.Info.NamedPermissions.TryGetValue(userOrGroupId.Value, out permissionInfo))
+                        permissionInfo.Remove(namedPermission);
+
+                DatabaseConnection.File.Update(
+                    File_Table.FileId == fileId,
+                    delegate(IFile_Writable fileW)
+                    {
+                        fileW.Info = file.Info;
+                    });
+            }
         }
 
         public bool HasNamedPermissions(IFileId fileId, IEnumerable<string> namedPermissions, ID<IUserOrGroup, Guid> userId)
@@ -1407,20 +1390,13 @@ namespace ObjectCloud.Disk.FileHandlers
             bool checkInherit,
             uint numCalls)
         {
-            bool toReturn = false;
-
-			using (IEnumerator<INamedPermission_Readable> np_enum = DatabaseConnection.NamedPermission.Select(
-                NamedPermission_Table.FileId.In(fileIds) & NamedPermission_Table.NamedPermission.In(namedPermissions) & NamedPermission_Table.UserOrGroup.In(userOrGroupIds)).GetEnumerator())
-            {
-                toReturn = np_enum.MoveNext();
-				
-				// Clean out the rest of the iterator
-				if (toReturn)
-				{
-					while (np_enum.MoveNext()) {}
-	                return true;
-				}
-            }
+            Dictionary<string, bool> permissionInfo;
+            foreach (IFile_Readable file in DatabaseConnection.File.Select(File_Table.FileId.In(fileIds)))
+                foreach (ID<IUserOrGroup, Guid> userOrGroupId in userOrGroupIds)
+                    if (file.Info.NamedPermissions.TryGetValue(userOrGroupId.Value, out permissionInfo))
+                        foreach (string namedPermission in namedPermissions)
+                            if (permissionInfo.ContainsKey(namedPermission))
+                                return true;
 
             // permission not found, now follow references through any related files
             if (checkInherit)
@@ -1462,17 +1438,19 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public IEnumerable<NamedPermission> GetNamedPermissions(IFileId fileId, string namedPermission)
         {
-            foreach (INamedPermission_Readable np in DatabaseConnection.NamedPermission.Select(
-                NamedPermission_Table.FileId == fileId & NamedPermission_Table.NamedPermission == namedPermission))
-            {
-                NamedPermission toYeild = new NamedPermission();
-                toYeild.FileId = (FileId)np.FileId;
-                toYeild.Inherit = np.Inherit;
-                toYeild.Name = np.NamedPermission;
-                toYeild.UserOrGroupId = np.UserOrGroup;
+            var file = FileDataByIdCache[(FileId)fileId];
 
-                yield return toYeild;
-            }
+            foreach (KeyValuePair<Guid, Dictionary<string, bool>> namedPermissionData in file.Info.NamedPermissions)
+                foreach (KeyValuePair<string, bool> namedPermissionValue in namedPermissionData.Value)
+                {
+                    NamedPermission toYeild = new NamedPermission();
+                    toYeild.FileId = fileId;
+                    toYeild.Inherit = namedPermissionValue.Value;
+                    toYeild.Name = namedPermissionValue.Key;
+                    toYeild.UserOrGroupId = new ID<IUserOrGroup, Guid>(namedPermissionData.Key);
+
+                    yield return toYeild;
+                }
         }
     }
 

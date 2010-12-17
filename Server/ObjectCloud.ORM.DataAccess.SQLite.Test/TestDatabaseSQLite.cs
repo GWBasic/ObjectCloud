@@ -1,3 +1,5 @@
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Database;
@@ -363,7 +365,7 @@ PRAGMA user_version = 2;
 			
 			    command.ExecuteNonQuery();
 			};
-			DatabaseConnector.OnDatabaseWritten(new EventArgs());
+				DatabaseConnector.OnDatabaseWritten(new EventArgs());
 			}
 		}
 		
@@ -395,7 +397,7 @@ PRAGMA user_version = 2;
 			
 			    toReturn = command.ExecuteScalar();
 			};
-			DatabaseConnector.OnDatabaseWritten(new EventArgs());
+				DatabaseConnector.OnDatabaseWritten(new EventArgs());
 			    return (TKey) toReturn;
 			}
 		}
@@ -496,7 +498,7 @@ PRAGMA user_version = 2;
 			    rowsAffected = command.ExecuteNonQuery();
 			
 			}}
-			DatabaseConnector.OnDatabaseWritten(new EventArgs());
+				DatabaseConnector.OnDatabaseWritten(new EventArgs());
 			    return rowsAffected;
 			}
 		
@@ -543,7 +545,7 @@ PRAGMA user_version = 2;
 			    rowsAffected = command.ExecuteNonQuery();
 			
 			};
-			DatabaseConnector.OnDatabaseWritten(new EventArgs());
+				DatabaseConnector.OnDatabaseWritten(new EventArgs());
 			    return rowsAffected;
 			}
 		}

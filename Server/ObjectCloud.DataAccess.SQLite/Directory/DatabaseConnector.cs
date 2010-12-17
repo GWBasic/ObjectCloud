@@ -8,7 +8,11 @@ using System.Data;
 using System.Data.Common;
 using System.Text;
 
+using MongoDB.Bson;
+
 using ObjectCloud.Common;
+using ObjectCloud.DataAccess.Directory;
+using ObjectCloud.Interfaces.Security;
 
 namespace ObjectCloud.DataAccess.SQLite.Directory
 {
@@ -119,6 +123,90 @@ PRAGMA user_version = 5;
 @"alter table Relationships add Inherit boolean;
 Update Relationships set Inherit = 'false';
 PRAGMA user_version = 6;";
+                command.ExecuteNonQuery();
+            }
+
+            if (version < 7)
+            {
+                command = connection.CreateCommand();
+                command.CommandText = "select FileId from File";
+
+                Dictionary<long, FileData> fileInfos = new Dictionary<long, FileData>();
+
+                using (IDataReader dr = command.ExecuteReader())
+                    fileInfos[dr.GetInt64(0)] = new FileData();
+
+                command = connection.CreateCommand();
+                command.CommandText = "select FileId, UserOrGroupId, Level, Inherit, SendNotifications from Permission";
+
+                using (IDataReader dr = command.ExecuteReader())
+                {
+                    FileData fileInfo;
+                    if (fileInfos.TryGetValue(dr.GetInt64(0), out fileInfo))
+                    {
+                        Guid userOrGroupId = new Guid(Convert.FromBase64String(dr.GetString(1)));
+
+                        Permission permission = new Permission();
+                        permission.Level = (FilePermissionEnum)dr.GetInt32(2);
+                        permission.Inherit = dr.GetBoolean(3);
+                        permission.SendNotifications = dr.GetBoolean(4);
+
+                        fileInfo.Permissions[userOrGroupId] = permission;
+                    }
+                }
+
+                command = connection.CreateCommand();
+                command.CommandText = "select FileId, NamedPermission, UserOrGroup, Inherit from NamedPermission";
+
+                using (IDataReader dr = command.ExecuteReader())
+                {
+                    FileData fileInfo;
+                    if (fileInfos.TryGetValue(dr.GetInt64(0), out fileInfo))
+                    {
+                        Guid userOrGroupId = new Guid(Convert.FromBase64String(dr.GetString(2)));
+
+                        Dictionary<string, bool> namedPermissions;
+                        if (!fileInfo.NamedPermissions.TryGetValue(userOrGroupId, out namedPermissions))
+                        {
+                            namedPermissions = new Dictionary<string, bool>();
+                            fileInfo.NamedPermissions[userOrGroupId] = namedPermissions;
+                        }
+
+                        namedPermissions[dr.GetString(1)] = dr.GetBoolean(3);
+                    }
+                }
+
+                command = connection.CreateCommand();
+                command.CommandText =
+@"alter table File add Info string;";
+                command.ExecuteNonQuery();
+
+                foreach (KeyValuePair<long, FileData> idAndInfo in fileInfos)
+                {
+                    command = connection.CreateCommand();
+                    command.CommandText = "update File set Info=@Info where FileId=@FileId";
+
+                    DbParameter parameter;
+
+                    parameter = command.CreateParameter();
+                    command.Parameters.Add(parameter);
+                    parameter.ParameterName = "@Info";
+                    parameter.Value = Convert.ToBase64String(idAndInfo.Value.ToBson());
+
+                    parameter = command.CreateParameter();
+                    command.Parameters.Add(parameter);
+                    parameter.ParameterName = "@FileId";
+                    parameter.Value = idAndInfo.Key;
+
+                    command.ExecuteNonQuery();
+                }
+
+                command = connection.CreateCommand();
+                command.CommandText =
+@"drop table Permission;
+drop table NamedPermission;
+vacuum;
+PRAGMA user_version = 7;";
                 command.ExecuteNonQuery();
             }
         }

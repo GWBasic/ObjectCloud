@@ -41,6 +41,8 @@ namespace ObjectCloud.ORM.DataAccess.Generator.SqLite
         {
             get
             {
+                yield return "MongoDB.Bson";
+                yield return "MongoDB.Bson.Serialization";
                 yield return "System";
                 yield return "System.Collections.Generic";
                 yield return "System.Data.Common";
@@ -338,11 +340,11 @@ namespace ObjectCloud.ORM.DataAccess.Generator.SqLite
 
                 foreach (Column column in table.Columns)
                 {
-                    yield return "\t\tpublic " + StringGenerator.GenerateTypeName(column.Type.ResolvedType) + " " + column.Name + "\n";
+                    yield return "\t\tpublic " + column.Type.TypeName + " " + column.Name + "\n";
                     yield return "\t\t{\n";
                     yield return "\t\t\tget { return _" + column.Name + "; }\n";
                     yield return "\t\t}\t\n";
-                    yield return "\t\tinternal " + StringGenerator.GenerateTypeName(column.Type.ResolvedType) + " _" + column.Name + " = default(" + StringGenerator.GenerateTypeName(column.Type.ResolvedType) + ");\n";
+                    yield return "\t\tinternal " + column.Type.TypeName + " _" + column.Name + " = default(" + column.Type.TypeName + ");\n";
                     yield return "\t\t\n";
                 }
 
@@ -353,6 +355,8 @@ namespace ObjectCloud.ORM.DataAccess.Generator.SqLite
 
                 yield return "\tpublic partial class " + table.Name + "_Table : " + baseClassNamespace + "." + table.Name + "_Table\n";
                 yield return "\t{\n";
+                //yield return "        private Cache<ComparisonCondition, IEnumerable<I" +  table.Name + "_Readable>> SelectCache;\n";
+                //yield return "        \n";
                 yield return "        /// <summary>\n";
                 yield return "        /// Used to connect to the embedded database\n";
                 yield return "        /// </summary>\n";
@@ -371,7 +375,7 @@ namespace ObjectCloud.ORM.DataAccess.Generator.SqLite
                     yield return "\t\t\t" + baseClassNamespace + "." + table.Name + "_Table._" + column.Name + " = ObjectCloud.ORM.DataAccess.Column.Construct<" + table.Name + "_Table, I" + table.Name + "_Writable, I" + table.Name + "_Readable>(\"" + column.Name + "\",\n";
                     yield return "\t\t\t\tdelegate(object writable, object value)\n";
                     yield return "\t\t\t\t{\n";
-                    yield return "\t\t\t\t\t((I" + table.Name + "_Writable)writable)." + column.Name + " = (" + StringGenerator.GenerateTypeName(column.Type.ResolvedType) + ")value;\n";
+                    yield return "\t\t\t\t\t((I" + table.Name + "_Writable)writable)." + column.Name + " = (" + column.Type.TypeName + ")value;\n";
                     yield return "\t\t\t\t});\n";
                 }
 
@@ -419,8 +423,9 @@ namespace ObjectCloud.ORM.DataAccess.Generator.SqLite
                 yield return "\t\t\t    command.CommandText = commandString;\n";
                 yield return "\t\t\t\n";
                 yield return "\t\t\t    command.ExecuteNonQuery();\n";
+                //yield return "\t\t\t\tSelectCache.Clear();\n";
                 yield return "\t\t\t};\n";
-                yield return "\t\t\tDatabaseConnector.OnDatabaseWritten(new EventArgs());\n";
+                yield return "\t\t\t\tDatabaseConnector.OnDatabaseWritten(new EventArgs());\n";
                 yield return "\t\t\t}\n";
                 yield return "\t\t}\n";
                 yield return "\t\t\n";
@@ -456,8 +461,9 @@ namespace ObjectCloud.ORM.DataAccess.Generator.SqLite
                 yield return "\t\t\t    command.CommandText = commandString;\n";
                 yield return "\t\t\t\n";
                 yield return "\t\t\t    toReturn = command.ExecuteScalar();\n";
+                //yield return "\t\t\t\tSelectCache.Clear();\n";
                 yield return "\t\t\t};\n";
-                yield return "\t\t\tDatabaseConnector.OnDatabaseWritten(new EventArgs());\n";
+                yield return "\t\t\t\tDatabaseConnector.OnDatabaseWritten(new EventArgs());\n";
                 yield return "\t\t\t    return (TKey) toReturn;\n";
                 yield return "\t\t\t}\n";
                 yield return "\t\t}\n";
@@ -521,7 +527,7 @@ namespace ObjectCloud.ORM.DataAccess.Generator.SqLite
                     yield return "\t\t\t            if (System.DBNull.Value != values[" + ctr.ToString() + "])\n";
                     yield return "\t\t\t              toYield._" + table.Columns[ctr].Name + " = " + string.Format(table.Columns[ctr].Type.SetConverter, GetResultConverter(table.Columns[ctr].Type.DotNetType_NotNullable, "values[" + ctr.ToString() + "]")) + ";\n";
                     yield return "\t\t\t            else\n";
-                    yield return "\t\t\t              toYield._" + table.Columns[ctr].Name + " = default(" + StringGenerator.GenerateTypeName(table.Columns[ctr].Type.ResolvedType) + ");\n\n";
+                    yield return "\t\t\t              toYield._" + table.Columns[ctr].Name + " = default(" + table.Columns[ctr].Type.TypeName + ");\n\n";
                 }
 
                 yield return "\t\t\t\n";
@@ -560,9 +566,10 @@ namespace ObjectCloud.ORM.DataAccess.Generator.SqLite
                 yield return "\t\t\t\n";
                 yield return "\t\t\t    command.CommandText = commandBuilder.ToString();\n";
                 yield return "\t\t\t    rowsAffected = command.ExecuteNonQuery();\n";
+                //yield return "\t\t\t\tSelectCache.Clear();\n";
                 yield return "\t\t\t\n";
                 yield return "\t\t\t}}\n";
-                yield return "\t\t\tDatabaseConnector.OnDatabaseWritten(new EventArgs());\n";
+                yield return "\t\t\t\tDatabaseConnector.OnDatabaseWritten(new EventArgs());\n";
                 yield return "\t\t\t    return rowsAffected;\n";
                 yield return "\t\t\t}\n";
                 yield return "\t\t\n";
@@ -613,8 +620,9 @@ namespace ObjectCloud.ORM.DataAccess.Generator.SqLite
                 yield return "\t\t\t    command.CommandText = commandBuilder.ToString();\n";
                 yield return "\t\t\t    rowsAffected = command.ExecuteNonQuery();\n";
                 yield return "\t\t\t\n";
+                //yield return "\t\t\t\tSelectCache.Clear();\n";
                 yield return "\t\t\t};\n";
-                yield return "\t\t\tDatabaseConnector.OnDatabaseWritten(new EventArgs());\n";
+                yield return "\t\t\t\tDatabaseConnector.OnDatabaseWritten(new EventArgs());\n";
                 yield return "\t\t\t    return rowsAffected;\n";
                 yield return "\t\t\t}\n";
                 yield return "\t\t}\n";

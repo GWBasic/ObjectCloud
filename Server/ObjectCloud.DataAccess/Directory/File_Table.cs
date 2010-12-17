@@ -24,4 +24,72 @@ namespace ObjectCloud.DataAccess.Directory
             IEnumerable<ObjectCloud.Common.ID<ObjectCloud.Interfaces.Security.IUserOrGroup, Guid>> userOrGroupIds,
             long maxToReturn);
     }
+
+    /// <summary>
+    /// Additional information about a file
+    /// </summary>
+    public class FileData
+    {
+        /// <summary>
+        /// The permissions indexed by user or group id
+        /// </summary>
+        public Dictionary<Guid, Permission> Permissions { get; set; }
+
+        /// <summary>
+        /// The named permissions, indexed by user or group id
+        /// </summary>
+        public Dictionary<Guid, Dictionary<string, bool>> NamedPermissions { get; set; }
+
+        /*// <summary>
+        /// The child relationships
+        /// </summary>
+        public List<Relationship> Relationships { get; set; }
+
+        /// <summary>
+        /// The parent relationships
+        /// </summary>
+        public List<Relationship> ParentRelationships { get; set; }*/
+    }
+
+    /// <summary>
+    /// Details about a permission
+    /// </summary>
+    public class Permission
+    {
+        /// <summary>
+        /// The actual permission
+        /// </summary>
+        public FilePermissionEnum Level { get; set; }
+
+        /// <summary>
+        /// True if the permission is inherited
+        /// </summary>
+        public bool Inherit { get; set; }
+
+        /// <summary>
+        /// True to send notifications
+        /// </summary>
+        public bool SendNotifications { get; set; }
+    }
+
+    /*// <summary>
+    /// Details about a relationship
+    /// </summary>
+    public class Relationship
+    {
+        /// <summary>
+        /// The FileId
+        /// </summary>
+        public long FileId { get; set; }
+
+        /// <summary>
+        /// The name
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// True if the relationship is inherited
+        /// </summary>
+        public bool Inherit { get; set; }
+    }*/
 }
