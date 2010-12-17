@@ -164,6 +164,12 @@ namespace ObjectCloud.Disk.FileHandlers
                         file.OwnerId = ownerId;
                         file.Created = created;
                         file.Extension = GetExtensionFromFilename(filename);
+
+                        FileData fileData = new FileData();
+                        fileData.Permissions = new Dictionary<Guid, Permission>();
+                        fileData.NamedPermissions = new Dictionary<Guid, Dictionary<string, bool>>();
+
+                        file.Info = fileData;
                     });
 
                     // Create the file within the transaction.  This way, if there's an exception, the transaction

@@ -131,57 +131,66 @@ PRAGMA user_version = 6;";
                 command = connection.CreateCommand();
                 command.CommandText = "select FileId from File";
 
-                Dictionary<long, FileData> fileInfos = new Dictionary<long, FileData>();
+                Dictionary<long, FileData> fileDatas = new Dictionary<long, FileData>();
 
                 using (IDataReader dr = command.ExecuteReader())
-                    fileInfos[dr.GetInt64(0)] = new FileData();
+                    while (dr.Read())
+                    {
+                        FileData fileData = new FileData();
+                        fileData.Permissions = new Dictionary<Guid, Permission>();
+                        fileData.NamedPermissions = new Dictionary<Guid, Dictionary<string, bool>>();
+
+                        fileDatas[dr.GetInt64(0)] = fileData;
+                    }
 
                 command = connection.CreateCommand();
                 command.CommandText = "select FileId, UserOrGroupId, Level, Inherit, SendNotifications from Permission";
 
                 using (IDataReader dr = command.ExecuteReader())
-                {
-                    FileData fileInfo;
-                    if (fileInfos.TryGetValue(dr.GetInt64(0), out fileInfo))
+                    while (dr.Read())
                     {
-                        Guid userOrGroupId = new Guid(Convert.FromBase64String(dr.GetString(1)));
+                        FileData fileInfo;
+                        if (fileDatas.TryGetValue(dr.GetInt64(0), out fileInfo))
+                        {
+                            Guid userOrGroupId = dr.GetGuid(1);
 
-                        Permission permission = new Permission();
-                        permission.Level = (FilePermissionEnum)dr.GetInt32(2);
-                        permission.Inherit = dr.GetBoolean(3);
-                        permission.SendNotifications = dr.GetBoolean(4);
+                            Permission permission = new Permission();
+                            permission.Level = (FilePermissionEnum)dr.GetInt32(2);
+                            permission.Inherit = dr.GetBoolean(3);
+                            permission.SendNotifications = dr.GetBoolean(4);
 
-                        fileInfo.Permissions[userOrGroupId] = permission;
+                            fileInfo.Permissions[userOrGroupId] = permission;
+                        }
                     }
-                }
 
                 command = connection.CreateCommand();
                 command.CommandText = "select FileId, NamedPermission, UserOrGroup, Inherit from NamedPermission";
 
                 using (IDataReader dr = command.ExecuteReader())
-                {
-                    FileData fileInfo;
-                    if (fileInfos.TryGetValue(dr.GetInt64(0), out fileInfo))
+                    while (dr.Read())
                     {
-                        Guid userOrGroupId = new Guid(Convert.FromBase64String(dr.GetString(2)));
-
-                        Dictionary<string, bool> namedPermissions;
-                        if (!fileInfo.NamedPermissions.TryGetValue(userOrGroupId, out namedPermissions))
+                        FileData fileData;
+                        if (fileDatas.TryGetValue(dr.GetInt64(0), out fileData))
                         {
-                            namedPermissions = new Dictionary<string, bool>();
-                            fileInfo.NamedPermissions[userOrGroupId] = namedPermissions;
-                        }
+                            Guid userOrGroupId = dr.GetGuid(2);
 
-                        namedPermissions[dr.GetString(1)] = dr.GetBoolean(3);
+                            Dictionary<string, bool> namedPermissions;
+                            if (!fileData.NamedPermissions.TryGetValue(userOrGroupId, out namedPermissions))
+                            {
+                                namedPermissions = new Dictionary<string, bool>();
+                                fileData.NamedPermissions[userOrGroupId] = namedPermissions;
+                            }
+
+                            namedPermissions[dr.GetString(1)] = dr.GetBoolean(3);
+                        }
                     }
-                }
 
                 command = connection.CreateCommand();
                 command.CommandText =
 @"alter table File add Info string;";
                 command.ExecuteNonQuery();
 
-                foreach (KeyValuePair<long, FileData> idAndInfo in fileInfos)
+                foreach (KeyValuePair<long, FileData> idAndInfo in fileDatas)
                 {
                     command = connection.CreateCommand();
                     command.CommandText = "update File set Info=@Info where FileId=@FileId";
