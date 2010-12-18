@@ -103,6 +103,8 @@ namespace ObjectCloud.WebServer.Implementation
         /// </summary>
         public void Start()
         {
+            ResetCloseTimer();
+
             try
             {
                 if (null == Buffer)
@@ -191,6 +193,8 @@ namespace ObjectCloud.WebServer.Implementation
 
         private void ReadHeaderCallback(IAsyncResult ar)
         {
+            ResetCloseTimer();
+
             WebConnectionIOState = WebConnectionIOState.ReadingHeader;
 
             try
@@ -391,6 +395,8 @@ namespace ObjectCloud.WebServer.Implementation
 
         private void ReadContentCallback(IAsyncResult ar)
         {
+            ResetCloseTimer();
+
             try
             {
                 SocketError socketError;
@@ -512,6 +518,8 @@ namespace ObjectCloud.WebServer.Implementation
         /// <param name="stream"></param>
         private void SendToBrowser(Stream stream)
         {
+            ResetCloseTimer();
+
             if (null == SendBuffer)
                 SendBuffer = WebServer.SendBufferRecycler.Get();
 
@@ -617,6 +625,8 @@ namespace ObjectCloud.WebServer.Implementation
 
         private void SendToBrowserCallback(IAsyncResult ar)
         {
+            ResetCloseTimer();
+
             try
             {
                 SocketError socketError;
@@ -687,6 +697,15 @@ namespace ObjectCloud.WebServer.Implementation
 
             if (0 != Interlocked.CompareExchange(ref SocketClosed, 1, 0))
                 return;
+
+            // Stop the close timer
+            Timer closeTimer;
+            do
+                closeTimer = CloseTimer;
+            while (closeTimer != Interlocked.CompareExchange(ref CloseTimer, null, closeTimer));
+
+            if (null != closeTimer)
+                closeTimer.Dispose();
 
             WebServer.WebServerTerminated -= new EventHandler<EventArgs>(WebServer_WebServerTerminated);
 
@@ -759,6 +778,34 @@ namespace ObjectCloud.WebServer.Implementation
                 Close();
             }
         }
+
+        /// <summary>
+        /// Forces idle sockets to close
+        /// </summary>
+        private void ResetCloseTimer()
+        {
+            Timer newTimer = new Timer(
+                delegate(object state)
+                {
+                    Close();
+                },
+                null,
+                3 * 60000,
+                0);
+
+            Timer closeTimer;
+            do
+                closeTimer = CloseTimer;
+            while (closeTimer != Interlocked.CompareExchange(ref CloseTimer, newTimer, closeTimer));
+
+            if (null != closeTimer)
+                closeTimer.Dispose();
+        }
+
+        /// <summary>
+        /// Forces the timer to close
+        /// </summary>
+        private Timer CloseTimer = null;
 
         /// <summary>
         /// Occurs whenever the connection is closed

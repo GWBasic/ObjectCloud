@@ -56,7 +56,7 @@ namespace ObjectCloud.WebServer.Implementation
 
                 TcpListener = new TcpListener(IPAddress.Any, Port);
                 TcpListener.Server.NoDelay = true;
-                TcpListener.Server.LingerState = new LingerOption(true, 0);
+                TcpListener.Server.LingerState = new LingerOption(false, 0);
 
                 Thread serverThread = new Thread(RunServerThread);
                 serverThread.Name = "Socket Acceptor";
@@ -109,7 +109,7 @@ namespace ObjectCloud.WebServer.Implementation
 
                         if (Running)
                         {
-                            //tcpClient.LingerState = new LingerOption(true, 0);
+                            tcpClient.LingerState = new LingerOption(false, 0);
                             tcpClient.NoDelay = true;
 
                             Socket socket = tcpClient.Client;
