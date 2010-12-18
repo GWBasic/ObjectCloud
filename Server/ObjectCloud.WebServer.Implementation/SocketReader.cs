@@ -719,7 +719,28 @@ namespace ObjectCloud.WebServer.Implementation
             }
 
             // Keep reading until no data recieved on the socket
-            Socket.BeginReceive(Buffer, 0, Buffer.Length, SocketFlags.None, CloseCallback, null);
+            try
+            {
+                Socket.BeginReceive(Buffer, 0, Buffer.Length, SocketFlags.None, CloseCallback, null);
+            }
+            catch
+            {
+                try
+                {
+                    Socket.Close();
+                }
+                catch (Exception e)
+                {
+                    log.Warn("Exception closing socket", e);
+                }
+
+                Interlocked.Decrement(ref WebServer.NumActiveSockets);
+
+                WebConnectionIOState = WebConnectionIOState.Disconnected;
+
+                if (null != Closed)
+                    Closed(this, new EventArgs());
+            }
         }
 
         private void CloseCallback(IAsyncResult ar)
