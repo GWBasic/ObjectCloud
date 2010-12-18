@@ -200,7 +200,7 @@ PRAGMA user_version = 6;";
                     parameter = command.CreateParameter();
                     command.Parameters.Add(parameter);
                     parameter.ParameterName = "@Info";
-                    parameter.Value = Convert.ToBase64String(idAndInfo.Value.ToBson());
+                    parameter.Value = Convert.ToBase64String(BsonExtensionMethods.ToBson(idAndInfo.Value));
 
                     parameter = command.CreateParameter();
                     command.Parameters.Add(parameter);

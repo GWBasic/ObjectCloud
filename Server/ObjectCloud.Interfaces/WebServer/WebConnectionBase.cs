@@ -661,17 +661,6 @@ namespace ObjectCloud.Interfaces.WebServer
                 }
             }
 
-            // The file has an extension (/folder/file.extension) if the last index of '.' is greater then '/'
-            bool hasExtension = false;
-
-            int lastIndexOfDot = default(int);
-
-            if (requestedFile.Contains("."))
-            {
-                lastIndexOfDot = requestedFile.LastIndexOf('.');
-                hasExtension = lastIndexOfDot > requestedFile.LastIndexOf('/');
-            }
-
             // Atomically use actions
             Dictionary<string, string> actions = fileContainer.FileConfigurationManager.Actions;
 

@@ -38,7 +38,7 @@ namespace ObjectCloud.ORM.DataAccess.DomainModel
                 SqlType = SqlTypes.String;
                 Nulls = Null.Forbidden;
                 TypeName = typeName;
-                GetConverter = "Convert.ToBase64String({0}.ToBson())";
+                GetConverter = "Convert.ToBase64String(BsonExtensionMethods.ToBson({0}))";
                 SetConverter = "BsonSerializer.Deserialize<" + TypeName + ">(Convert.FromBase64String({0}))";
             }
         }
