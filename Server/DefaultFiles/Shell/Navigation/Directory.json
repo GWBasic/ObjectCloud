@@ -4,6 +4,7 @@
    {"Template":"/Templates/Directory Template","Extension":"","Display":"Directory"},
    {"Template":"/Templates/Pairs Template","Extension":"","Display":"Name-Value pairs"},
    {"Template":"/Templates/Page Template.page","Extension":".page","Display":"Web Page"},
+   {"Template":"/Templates/Latex Template.latex","Extension":".latex","Display":"Latex"},
    {"Template":"/Templates/Text Template.txt","Extension":".txt","Display":"Text File"},
    {"Template":"/Templates/Database Template","Extension":"","Display":"Database"},
    {"Template":"/Templates/Particle Template","Extension":".ibg","Display":"Particle Discussion (Experimental)"},

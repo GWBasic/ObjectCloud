@@ -1,0 +1,18 @@
+{
+   "ViewComponents":
+   [
+      {
+          "NamedPermission":"reply",
+          "Label":"Respond",
+          "Default":true,
+          "FooterComponent":"/Shell/Communication/Replier.oc"
+       }
+   ],
+   "Actions":
+   {
+      "View":"/Shell/Viewers/Latex.oc?FileName=[Target]",
+      "Edit":"/Shell/Editors/Latex.oc?FileName=[Target]"
+   },
+
+   "FileType": "text"
+}

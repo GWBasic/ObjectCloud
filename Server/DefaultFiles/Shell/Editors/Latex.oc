@@ -1,0 +1,13 @@
+<oc:componentdef xmlns="http://www.w3.org/1999/xhtml" xmlns:oc="objectcloud_templating" headerfooter="/DefaultTemplate/objectbar.ochf">
+   <oc:inserthead>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <oc:script src="/Shell/Editors/Latex.js" />
+      <oc:open filename="[_FileName_]" varname="object_target" />
+   </oc:inserthead>
+
+   <oc:jsontemplate oc:url="[_FileName_]" Method="ReadAll">
+      <div id="renderedArea">\[[_contents_]\]</div>
+      <textarea id="editArea">[_contents_]</textarea>
+   </oc:jsontemplate>
+
+</oc:componentdef>

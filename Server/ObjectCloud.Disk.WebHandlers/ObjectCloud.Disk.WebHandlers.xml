@@ -4,6 +4,24 @@
         <name>ObjectCloud.Disk.WebHandlers</name>
     </assembly>
     <members>
+        <member name="T:ObjectCloud.Disk.WebHandlers.Template.Trimmer">
+            <summary>
+            Assists in trimming large XML blobs
+            </summary>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsLoggedIn">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsLoggedIn.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
+            <summary>
+            
+            </summary>
+            <param name="templateParsingState"></param>
+            <param name="me"></param>
+            <returns></returns>
+        </member>
         <member name="T:ObjectCloud.Disk.WebHandlers.LogWebHandler">
             <summary>
             Reads ObjectCloud's system log
@@ -605,12 +623,135 @@
             A <see cref="T:ObjectCloud.Interfaces.WebServer.IWebResults"/>
             </returns>
         </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.Can">
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsMobile">
+            <summary>
+            Allows a template to determine if the user is using a mobile device, such as a handheld or a pad
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsMobile.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
             <summary>
             
             </summary>
+            <param name="templateParsingState"></param>
+            <param name="me"></param>
+            <returns></returns>
         </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.NamedPermissionBase">
+        <member name="T:ObjectCloud.Disk.WebHandlers.BinaryWebHandler">
+            <summary>
+            Handles any kind of binary data
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.BinaryWebHandler.ReadAll(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Reads all of the data in the file
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.BinaryWebHandler.ReadAllBase64(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Reads all of the data in the file and returns a Base64 encoded string
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.BinaryWebHandler.WriteAll(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Byte[])">
+            <summary>
+            Writes all of the data to the file
+            </summary>
+            <param name="webConnection"></param>
+            <param name="contents">Any kind of data</param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.BinaryWebHandler.WriteAllBase64(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
+            <summary>
+            Writes all of the data to the file
+            </summary>
+            <param name="webConnection"></param>
+            <param name="base64">Any kind of data, represented as a base64-encoded string</param>
+            <returns></returns>
+        </member>
+        <member name="P:ObjectCloud.Disk.WebHandlers.BinaryWebHandler.ChangingEvent">
+            <summary>
+            Sends the updated contents whenever the file changes.  The contents are base64 encoded
+            </summary>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler">
+            <summary>
+            Wrapper for web methods that handle name-value pairs
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler.Get(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
+            <summary>
+            Gets the named value
+            </summary>
+            <param name="webConnection"></param>
+            <param name="Name"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler.GetAsJson(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
+            <summary>
+            Gets the named value as a JSON object
+            </summary>
+            <param name="webConnection"></param>
+            <param name="Name"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler.GetAll(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Gets all of the name-values, returns a JSON object with names and values as strings
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler.Contains(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
+            <summary>
+            Returns true if the named value is present, false if it isn't
+            </summary>
+            <param name="webConnection"></param>
+            <param name="Name"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler.Set(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
+            <summary>
+            Sets the given value
+            </summary>
+            <param name="webConnection"></param>
+            <param name="Name"></param>
+            <param name="Value"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler.Delete(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
+            <summary>
+            Deletes the named value
+            </summary>
+            <param name="webConnection"></param>
+            <param name="Name"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler.SetAllJson(ObjectCloud.Interfaces.WebServer.IWebConnection,JsonFx.Json.JsonReader)">
+            <summary>
+            Sets all of the values based on the passed JSON object
+            </summary>
+            <param name="webConnection"></param>
+            <param name="pairs"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler.SetAll(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Sets all of the values based on the results of a POST query
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler.EnforceSetSecurity(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
+            <summary>
+            Throws an exception if the current metadata item can not be set
+            </summary>
+            <param name="Name"></param>
+            <param name="webConnection"></param>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.HasAction">
             <summary>
             
             </summary>
@@ -628,7 +769,7 @@
             <param name="me"></param>
             <returns></returns>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.NamedPermissionBase.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.HasAction.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
             <summary>
             
             </summary>
@@ -636,35 +777,40 @@
             <param name="me"></param>
             <returns></returns>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.NamedPermissionBase.DetermineCondition(ObjectCloud.Interfaces.Templating.ITemplateParsingState,ObjectCloud.Interfaces.Disk.IFileContainer,System.String)">
+        <member name="T:ObjectCloud.Disk.WebHandlers.Template.ComponentAndConditionalsResolver">
             <summary>
-            
+            Removes debug information from documents
             </summary>
-            <param name="templateParsingState"></param>
-            <param name="fileContainer"></param>
-            <param name="namedPermission"></param>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.ImageWebHandler">
+            <summary>
+            Adds additional web-based image processing capabilities
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.ImageWebHandler.GetScaled(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Int32})">
+            <summary>
+            Returns a scaled version of the image to fit the constraints passed in
+            </summary>
+            <param name="webConnection"></param>
+            <param name="width">The width.  If height is not specified, then a proportional height will be used</param>
+            <param name="height">The width.  If width is not specified, then a proportiional width will be used</param>
+            <param name="maxHeight">The maxiumum height to return</param>
+            <param name="maxWidth">The maximum width to return</param>
+            <param name="minHeight">The mimumum height to return</param>
+            <param name="minWidth">The minumum width to return</param>
             <returns></returns>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.Can.DetermineCondition(ObjectCloud.Interfaces.Templating.ITemplateParsingState,ObjectCloud.Interfaces.Disk.IFileContainer,System.String)">
+        <member name="P:ObjectCloud.Disk.WebHandlers.ImageWebHandler.Image">
             <summary>
-            
-            </summary>
-            <param name="templateParsingState"></param>
-            <param name="fileContainer"></param>
-            <param name="namedPermission"></param>
-            <returns></returns>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.Comet.LoopbackQueuingReliableWebHandler">
-            <summary>
-            Simple test of the Quality and Reliable (layer 3) Comet Protocol
+            Im-memory object that encapsulates a saved image.  This allows for programmatic access to metadata
             </summary>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.LoopbackQueuingReliableWebHandler.#ctor">
+        <member name="T:ObjectCloud.Disk.WebHandlers.Comet.MultiplexingCometWebHandler">
             <summary>
-            
+            Web handler that multiplexes layer 1 (transport) to layer 2 (multiplexed) comet sessions
             </summary>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.LoopbackQueuingReliableWebHandler.ConstructCometTransport(ObjectCloud.Interfaces.Security.ISession,System.Collections.Generic.IDictionary{System.String,System.String},System.Int64)">
+        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.MultiplexingCometWebHandler.ConstructCometTransport(ObjectCloud.Interfaces.Security.ISession,System.Collections.Generic.IDictionary{System.String,System.String},System.Int64)">
             <summary>
             
             </summary>
@@ -672,6 +818,438 @@
             <param name="getArguments"></param>
             <param name="transportId"></param>
             <returns></returns>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.Comet.MultiplexingCometWebHandler.MultiplexedCometTransport">
+            <summary>
+            Provides unreliable multiplexed comet transport
+            </summary>
+        </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.Comet.MultiplexingCometWebHandler.MultiplexedCometTransport.FileSystemResolver">
+            <summary>
+            The file system resolver
+            </summary>
+        </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.Comet.MultiplexingCometWebHandler.MultiplexedCometTransport.Session">
+            <summary>
+            The session
+            </summary>
+        </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.Comet.MultiplexingCometWebHandler.MultiplexedCometTransport.Listener">
+            <summary>
+            The listener used for every channel
+            </summary>
+        </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.Comet.MultiplexingCometWebHandler.MultiplexedCometTransport.GetDataMutex">
+            <summary>
+            Provides syncronization
+            </summary>
+        </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.Comet.MultiplexingCometWebHandler.MultiplexedCometTransport.Channels">
+            <summary>
+            All of the channels, indexed by transport ID
+            </summary>
+        </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.Comet.MultiplexingCometWebHandler.MultiplexedCometTransport.RequestedChannels">
+            <summary>
+            Channels that the client keeps requesting
+            </summary>
+        </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.Comet.MultiplexingCometWebHandler.MultiplexedCometTransport.ChannelErrors">
+            <summary>
+            All errors that occured when opening channels
+            </summary>
+        </member>
+        <member name="P:ObjectCloud.Disk.WebHandlers.Comet.MultiplexingCometWebHandler.MultiplexedCometTransport.StartSend">
+            <summary>
+            Lets other channels start sending
+            </summary>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.DocumentationWebHandler">
+            <summary>
+            Assists in getting documentation for ObjectCloud's classes
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.DocumentationWebHandler.GetObjectTypes(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Returns all of the object types that the server supports
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.DocumentationWebHandler.GetXmlReaderForType(System.Type)">
+            <summary>
+            Returns an XmlReader that has the documentation for the given type
+            </summary>
+            <param name="cSharpType"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.DocumentationWebHandler.GetMethodsForObjectType(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
+            <summary>
+            Returns the methods in the given ObjectType
+            </summary>
+            <param name="webConnection"></param>
+            <param name="objectType"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.DocumentationWebHandler.GetMethodsForObjectTypeHelper(System.Type,System.Collections.Generic.List{System.Object})">
+            <summary>
+            Recursively generates documentation for the web-accessible methods on the given type
+            </summary>
+            <param name="cSharpType"></param>
+            <param name="methodsForJSON"></param>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.DocumentationWebHandler.GetMethodDetails(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
+            <summary>
+            Returns information about the specified method
+            </summary>
+            <param name="webConnection"></param>
+            <param name="objectType"></param>
+            <param name="methodName"></param>
+            <returns></returns>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler">
+            <summary>
+            Wraps all functionality of a directory
+            </summary>
+        </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.CreateFileLock">
+            <summary>
+            Synchronizes creating a file
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.CreateFile(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String,System.String,System.Nullable{System.Boolean})">
+            <summary>
+            Creates a file
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+            <param name="FileName">The file name.  Either the file name or extension need to be specified</param>
+            <param name="extension">The file extension.  Either the extension or file name need to be specified</param>
+            <param name="FileType">The file type</param>
+            <param name="ErrorIfExists">True to return an error if the file already exists</param>
+            <param name="fileNameSuggestion">A suggestion for creating a file name.  ObjectCloud will attempt to generate a real file name from this suggestion</param>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.CreateFileHelper(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String,System.String,System.Nullable{System.Boolean})">
+            <summary>
+            Helps in creating a file
+            </summary>
+            <param name="webConnection"></param>
+            <param name="FileName">Filename, this or fileNameSuggestion must be specified</param>
+            <param name="extension"></param>
+            <param name="fileNameSuggestion">Suggestion for a filename.  This can be any string, when specified, extension must also be specified.</param>
+            <param name="FileType"></param>
+            <param name="ErrorIfExists">True to throw an error if there already is an existing file with the same filename.  False if ObjectCloud should silently return a wrapper if the file already exists.  If fileNameSuggestion is used instead of FileName, then if there is an existing filename with the first generated filename, then it will be returned instead of created.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.GenerateFilename(System.String,System.String,System.Boolean)">
+            <summary>
+            Assists in generating a filename
+            </summary>
+            <param name="extension"></param>
+            <param name="fileNameSuggestion"></param>
+            <param name="unique"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.DeleteFile(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
+            <summary>
+            Deletes a file
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+            <param name="FileName"></param>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.Open(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
+            <summary>
+            Returns a JavaScript object that can manipulate the given file
+            </summary>
+            <param name="webConnection"></param>
+            <param name="FileName"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.ListFiles(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Lists all of the files in the directory as a JSON array
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.ListNewestFiles(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Nullable{System.Int32})">
+            <summary>
+            Lists the newest files that the user has access to in descending order of creation
+            </summary>
+            <param name="webConnection"></param>
+            <param name="maxToReturn"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.ReturnFilesAsJSON(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Collections.Generic.IEnumerable{ObjectCloud.Interfaces.Disk.IFileContainer})">
+            <summary>
+            Helper to return files as JSON
+            </summary>
+            <param name="files"></param>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.IsFilePresent(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
+            <summary>
+            Returns "true" if the file is present, "false" otherwise
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+            <param name="FileName"></param>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.SetFilePermission(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String[],System.String[],System.String,System.String,System.Nullable{System.Boolean},System.Nullable{System.Boolean})">
+            <summary>
+            Sets the user's permission for the given file.  Either the user or group ID or name are set
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+            <param name="FileName">The filename</param>
+            <param name="FilePermission">The permission, set to null to disable permissions to the file</param>
+            <param name="Inherit">Set to true to allow permission inheritance.  For example, if this permission applies to a directory, it will be the default for files in the directory</param>
+            <param name="UserOrGroup"></param>
+            <param name="UserOrGroupId"></param>
+            <param name="SendNotifications"></param>
+            <param name="UserOrGroupIds"></param>
+            <param name="UserOrGroups"></param>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.GetFilePermissions(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
+            <summary>
+            Returns all assigned permissions to the object
+            </summary>
+            <param name="webConnection">
+            A <see cref="T:ObjectCloud.Interfaces.WebServer.IWebConnection"/>
+            </param>
+            <returns>
+            A <see cref="T:ObjectCloud.Interfaces.WebServer.IWebResults"/>
+            </returns>
+            <param name="FileName">The filename</param>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.GetUserFilePermission(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
+            <summary>
+            Returns the current user's permission to the given filename
+            </summary>
+            <param name="webConnection">
+            A <see cref="T:ObjectCloud.Interfaces.WebServer.IWebConnection"/>
+            </param>
+            <returns>
+            A <see cref="T:ObjectCloud.Interfaces.WebServer.IWebResults"/>
+            </returns>
+            <param name="FileName">The filename</param>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.RenameFile(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
+            <summary>
+            Renames a file
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+            <param name="NewFileName">The new file name</param>
+            <param name="OldFileName">The old file name</param>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.CopyFile(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
+            <summary>
+            Copies a file
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+            <param name="DestinationFilename">The destination file</param>
+            <param name="SourceFilename">The source file</param>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.Upload(ObjectCloud.Interfaces.WebServer.IWebConnection,ObjectCloud.Common.MimeReader.Part)">
+            <summary>
+            Handles when a user uploads a file
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+            <param name="File">The file as part of a MIME paramater</param>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.GetFileFactoryTypeFromUpload(ObjectCloud.Common.MimeReader.Part,System.String@)">
+            <summary>
+            Figures out the fileFactoryType from an upload
+            </summary>
+            <param name="File"></param>
+            <param name="filename"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.SetIndexFile(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
+            <summary>
+            Sets the index file
+            </summary>
+            <param name="webConnection"></param>
+            <param name="IndexFile"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.GetIndexFile(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Returns the name of the index file, or "No index file" if there is none
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.ShellToIndexFile(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Returns the results of shelling to the index file
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.UpdateConnectionFiles(ObjectCloud.Interfaces.WebServer.IQueuingReliableCometTransport,System.Collections.Generic.IList{ObjectCloud.Interfaces.Disk.IFileContainer})">
+            <summary>
+            Helper to update the files on a connection
+            </summary>
+            <param name="channel"></param>
+            <param name="files"></param>
+        </member>
+        <member name="P:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.ImplicitAction">
+            <summary>
+            If there is an index file set, this sets the implicit action to be something else
+            </summary>
+        </member>
+        <member name="P:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.ChangingEvent">
+            <summary>
+            Sends a packet whenever the contents of the directory changes.  The packet contains the contents of the directory tailored to the user
+            </summary>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.UserWebHandler">
+            <summary>
+            Allows manipulation and querying of local users.
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.GetName(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Returns the user's name
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.GetOpenId(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Returns the user's openID identity
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.GetPublicData(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Gets all of the user's public metadata 
+            </summary>
+            <param name="webConnection">
+            A <see cref="T:ObjectCloud.Interfaces.WebServer.IWebConnection"/>
+            </param>
+            <returns>
+            A <see cref="T:ObjectCloud.Interfaces.WebServer.IWebResults"/>
+            </returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.GetAllData(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Gets all of the name-values, returns a JSON object with names and values as strings
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.Set(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
+            <summary>
+            Sets a named value
+            </summary>
+            <param name="webConnection"></param>
+            <param name="name"></param>
+            <param name="value"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.SetAllData(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Sets all of the values based on the results of a POST query
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.SetAllDataJson(ObjectCloud.Interfaces.WebServer.IWebConnection,JsonFx.Json.JsonReader)">
+            <summary>
+            Sets all of the values based on the results of a POST query
+            </summary>
+            <param name="webConnection"></param>
+            <param name="pairs"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.GetAvatar(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Returns the user's avatar image 
+            </summary>
+            <param name="webConnection">
+            A <see cref="T:ObjectCloud.Interfaces.WebServer.IWebConnection"/>
+            </param>
+            <returns>
+            A <see cref="T:ObjectCloud.Interfaces.WebServer.IWebResults"/>
+            </returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.DoOpenId(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Returns the page that's used when a user from this server is logging into another server.  (TODO, verify)
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.SetPassword(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
+            <summary>
+            Changes the user's password
+            </summary>
+            <param name="webConnection"></param>
+            <param name="OldPassword"></param>
+            <param name="NewPassword"></param>
+            <returns></returns>
+        </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.UserWebHandler.NotificationColumnToParticleSpec">
+            <summary>
+            Maps the strongly-typed enum to the proper name as part of the particle spec
+            </summary>
+        </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.UserWebHandler.ParticleSpecColumnToNotificationColumn">
+            <summary>
+            Maps the particle spec column to the proper NotificationColumn
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.GetNotifications(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Nullable{System.Int64},System.Nullable{System.Int64},System.Nullable{System.Int64},System.String[],System.String[],System.String[])">
+            <summary>
+            Returns notifications for the user in JSON format.
+            </summary>
+            <param name="webConnection"></param>
+            <param name="newestNotificationId"></param>
+            <param name="oldestNotificationId"></param>
+            <param name="maxNotifications"></param>
+            <param name="objectUrls"></param>
+            <param name="senderIdentities"></param>
+            <param name="desiredValues"></param>
+            <returns></returns>
+            <returns>Notifications for the user in JSON format.  These are scrubbed and "eval-safe"</returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.ConfirmLinkPage(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String,System.String,System.String,System.String[],System.String,System.String)">
+            <summary>
+            Displays a page to confirm that the user linked two objects
+            </summary>
+            <param name="webConnection"></param>
+            <param name="objectUrl"></param>
+            <param name="ownerIdentity"></param>
+            <param name="linkSummaryView"></param>
+            <param name="linkUrl"></param>
+            <param name="linkDocumentType"></param>
+            <param name="recipients"></param>
+            <param name="redirectUrl"></param>
+            <param name="linkID"></param>
+            <returns></returns>
+        </member>
+        <member name="P:ObjectCloud.Disk.WebHandlers.UserWebHandler.ParticleAvatarsDirectory">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:ObjectCloud.Disk.WebHandlers.UserWebHandler.IncomingNotificationEvent">
+            <summary>
+            Sends new notifications as they arrive
+            </summary>
+        </member>
+        <member name="P:ObjectCloud.Disk.WebHandlers.UserWebHandler.IncomingNotificationEventThroughTemplate">
+            <summary>
+            Sends new notifications as they arrive
+            </summary>
         </member>
         <member name="T:ObjectCloud.Disk.WebHandlers.UserManagerWebHandler">
             <summary>
@@ -1064,952 +1642,6 @@
             Encapsulates information about the link that comes from both the notification and the confirmation
             </summary>
         </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler">
-            <summary>
-            Wrapper for web methods that handle name-value pairs
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler.Get(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
-            <summary>
-            Gets the named value
-            </summary>
-            <param name="webConnection"></param>
-            <param name="Name"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler.GetAsJson(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
-            <summary>
-            Gets the named value as a JSON object
-            </summary>
-            <param name="webConnection"></param>
-            <param name="Name"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler.GetAll(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Gets all of the name-values, returns a JSON object with names and values as strings
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler.Contains(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
-            <summary>
-            Returns true if the named value is present, false if it isn't
-            </summary>
-            <param name="webConnection"></param>
-            <param name="Name"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler.Set(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
-            <summary>
-            Sets the given value
-            </summary>
-            <param name="webConnection"></param>
-            <param name="Name"></param>
-            <param name="Value"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler.Delete(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
-            <summary>
-            Deletes the named value
-            </summary>
-            <param name="webConnection"></param>
-            <param name="Name"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler.SetAllJson(ObjectCloud.Interfaces.WebServer.IWebConnection,JsonFx.Json.JsonReader)">
-            <summary>
-            Sets all of the values based on the passed JSON object
-            </summary>
-            <param name="webConnection"></param>
-            <param name="pairs"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler.SetAll(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Sets all of the values based on the results of a POST query
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.NameValuePairsWebHandler.EnforceSetSecurity(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
-            <summary>
-            Throws an exception if the current metadata item can not be set
-            </summary>
-            <param name="Name"></param>
-            <param name="webConnection"></param>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.Template.JSONTemplateResolver">
-            <summary>
-            Handles JSON templates
-            </summary>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.Comet.MultiplexingCometWebHandler">
-            <summary>
-            Web handler that multiplexes layer 1 (transport) to layer 2 (multiplexed) comet sessions
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.MultiplexingCometWebHandler.ConstructCometTransport(ObjectCloud.Interfaces.Security.ISession,System.Collections.Generic.IDictionary{System.String,System.String},System.Int64)">
-            <summary>
-            
-            </summary>
-            <param name="session"></param>
-            <param name="getArguments"></param>
-            <param name="transportId"></param>
-            <returns></returns>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.Comet.MultiplexingCometWebHandler.MultiplexedCometTransport">
-            <summary>
-            Provides unreliable multiplexed comet transport
-            </summary>
-        </member>
-        <member name="F:ObjectCloud.Disk.WebHandlers.Comet.MultiplexingCometWebHandler.MultiplexedCometTransport.FileSystemResolver">
-            <summary>
-            The file system resolver
-            </summary>
-        </member>
-        <member name="F:ObjectCloud.Disk.WebHandlers.Comet.MultiplexingCometWebHandler.MultiplexedCometTransport.Session">
-            <summary>
-            The session
-            </summary>
-        </member>
-        <member name="F:ObjectCloud.Disk.WebHandlers.Comet.MultiplexingCometWebHandler.MultiplexedCometTransport.Listener">
-            <summary>
-            The listener used for every channel
-            </summary>
-        </member>
-        <member name="F:ObjectCloud.Disk.WebHandlers.Comet.MultiplexingCometWebHandler.MultiplexedCometTransport.GetDataMutex">
-            <summary>
-            Provides syncronization
-            </summary>
-        </member>
-        <member name="F:ObjectCloud.Disk.WebHandlers.Comet.MultiplexingCometWebHandler.MultiplexedCometTransport.Channels">
-            <summary>
-            All of the channels, indexed by transport ID
-            </summary>
-        </member>
-        <member name="F:ObjectCloud.Disk.WebHandlers.Comet.MultiplexingCometWebHandler.MultiplexedCometTransport.RequestedChannels">
-            <summary>
-            Channels that the client keeps requesting
-            </summary>
-        </member>
-        <member name="F:ObjectCloud.Disk.WebHandlers.Comet.MultiplexingCometWebHandler.MultiplexedCometTransport.ChannelErrors">
-            <summary>
-            All errors that occured when opening channels
-            </summary>
-        </member>
-        <member name="P:ObjectCloud.Disk.WebHandlers.Comet.MultiplexingCometWebHandler.MultiplexedCometTransport.StartSend">
-            <summary>
-            Lets other channels start sending
-            </summary>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler">
-            <summary>
-            Web handler that performs loopback comet requests
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.ConstructCometTransport(ObjectCloud.Interfaces.Security.ISession,System.Collections.Generic.IDictionary{System.String,System.String},System.Int64)">
-            <summary>
-            
-            </summary>
-            <param name="session"></param>
-            <param name="getArguments"></param>
-            <param name="transportId"></param>
-            <returns></returns>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.LoopbackCometTransport">
-            <summary>
-            Comet transport that provides loopback functionality
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.LoopbackCometTransport.#ctor">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.LoopbackCometTransport.OnTimer(System.Object)">
-            <summary>
-            
-            </summary>
-            <param name="state"></param>
-        </member>
-        <member name="F:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.LoopbackCometTransport.MostRecentData">
-            <summary>
-            The most recent data sent from the client
-            </summary>
-        </member>
-        <member name="F:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.LoopbackCometTransport.ToSend">
-            <summary>
-            This is the results that are sent every 10 seconds
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.LoopbackCometTransport.GetDataToSend">
-            <summary>
-            
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.LoopbackCometTransport.HandleIncomingData(System.Object)">
-            <summary>
-            
-            </summary>
-            <param name="incoming"></param>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.LoopbackCometTransport.Dispose">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="P:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.LoopbackCometTransport.StartSend">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.MulticastEventWithTimeout">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.MulticastEventWithTimeout.#ctor(ObjectCloud.Interfaces.WebServer.ICometTransport)">
-            <summary>
-            
-            </summary>
-            <param name="ct"></param>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.MulticastEventWithTimeout.Send(ObjectCloud.Common.EventArgs{System.TimeSpan})">
-            <summary>
-            
-            </summary>
-            <param name="eventArgs"></param>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.DocumentationWebHandler">
-            <summary>
-            Assists in getting documentation for ObjectCloud's classes
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DocumentationWebHandler.GetObjectTypes(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Returns all of the object types that the server supports
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DocumentationWebHandler.GetXmlReaderForType(System.Type)">
-            <summary>
-            Returns an XmlReader that has the documentation for the given type
-            </summary>
-            <param name="cSharpType"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DocumentationWebHandler.GetMethodsForObjectType(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
-            <summary>
-            Returns the methods in the given ObjectType
-            </summary>
-            <param name="webConnection"></param>
-            <param name="objectType"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DocumentationWebHandler.GetMethodsForObjectTypeHelper(System.Type,System.Collections.Generic.List{System.Object})">
-            <summary>
-            Recursively generates documentation for the web-accessible methods on the given type
-            </summary>
-            <param name="cSharpType"></param>
-            <param name="methodsForJSON"></param>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DocumentationWebHandler.GetMethodDetails(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
-            <summary>
-            Returns information about the specified method
-            </summary>
-            <param name="webConnection"></param>
-            <param name="objectType"></param>
-            <param name="methodName"></param>
-            <returns></returns>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.BrowserInfoWebHandler">
-            <summary>
-            Provides run-time information about the browser accessing the server
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.BrowserInfoWebHandler.IsLegacyWithoutChromePlug(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Returns true if thie browser is a legacy browser without ChromePlug
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.UserWebHandler">
-            <summary>
-            Allows manipulation and querying of local users.
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.GetName(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Returns the user's name
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.GetOpenId(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Returns the user's openID identity
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.GetPublicData(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Gets all of the user's public metadata 
-            </summary>
-            <param name="webConnection">
-            A <see cref="T:ObjectCloud.Interfaces.WebServer.IWebConnection"/>
-            </param>
-            <returns>
-            A <see cref="T:ObjectCloud.Interfaces.WebServer.IWebResults"/>
-            </returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.GetAllData(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Gets all of the name-values, returns a JSON object with names and values as strings
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.Set(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
-            <summary>
-            Sets a named value
-            </summary>
-            <param name="webConnection"></param>
-            <param name="name"></param>
-            <param name="value"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.SetAllData(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Sets all of the values based on the results of a POST query
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.SetAllDataJson(ObjectCloud.Interfaces.WebServer.IWebConnection,JsonFx.Json.JsonReader)">
-            <summary>
-            Sets all of the values based on the results of a POST query
-            </summary>
-            <param name="webConnection"></param>
-            <param name="pairs"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.GetAvatar(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Returns the user's avatar image 
-            </summary>
-            <param name="webConnection">
-            A <see cref="T:ObjectCloud.Interfaces.WebServer.IWebConnection"/>
-            </param>
-            <returns>
-            A <see cref="T:ObjectCloud.Interfaces.WebServer.IWebResults"/>
-            </returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.DoOpenId(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Returns the page that's used when a user from this server is logging into another server.  (TODO, verify)
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.SetPassword(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
-            <summary>
-            Changes the user's password
-            </summary>
-            <param name="webConnection"></param>
-            <param name="OldPassword"></param>
-            <param name="NewPassword"></param>
-            <returns></returns>
-        </member>
-        <member name="F:ObjectCloud.Disk.WebHandlers.UserWebHandler.NotificationColumnToParticleSpec">
-            <summary>
-            Maps the strongly-typed enum to the proper name as part of the particle spec
-            </summary>
-        </member>
-        <member name="F:ObjectCloud.Disk.WebHandlers.UserWebHandler.ParticleSpecColumnToNotificationColumn">
-            <summary>
-            Maps the particle spec column to the proper NotificationColumn
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.GetNotifications(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Nullable{System.Int64},System.Nullable{System.Int64},System.Nullable{System.Int64},System.String[],System.String[],System.String[])">
-            <summary>
-            Returns notifications for the user in JSON format.
-            </summary>
-            <param name="webConnection"></param>
-            <param name="newestNotificationId"></param>
-            <param name="oldestNotificationId"></param>
-            <param name="maxNotifications"></param>
-            <param name="objectUrls"></param>
-            <param name="senderIdentities"></param>
-            <param name="desiredValues"></param>
-            <returns></returns>
-            <returns>Notifications for the user in JSON format.  These are scrubbed and "eval-safe"</returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.UserWebHandler.ConfirmLinkPage(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String,System.String,System.String,System.String[],System.String,System.String)">
-            <summary>
-            Displays a page to confirm that the user linked two objects
-            </summary>
-            <param name="webConnection"></param>
-            <param name="objectUrl"></param>
-            <param name="ownerIdentity"></param>
-            <param name="linkSummaryView"></param>
-            <param name="linkUrl"></param>
-            <param name="linkDocumentType"></param>
-            <param name="recipients"></param>
-            <param name="redirectUrl"></param>
-            <param name="linkID"></param>
-            <returns></returns>
-        </member>
-        <member name="P:ObjectCloud.Disk.WebHandlers.UserWebHandler.ParticleAvatarsDirectory">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="P:ObjectCloud.Disk.WebHandlers.UserWebHandler.IncomingNotificationEvent">
-            <summary>
-            Sends new notifications as they arrive
-            </summary>
-        </member>
-        <member name="P:ObjectCloud.Disk.WebHandlers.UserWebHandler.IncomingNotificationEventThroughTemplate">
-            <summary>
-            Sends new notifications as they arrive
-            </summary>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsPad">
-            <summary>
-            Class for determining if the user's browser is a pad
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsPad.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
-            <summary>
-            
-            </summary>
-            <param name="templateParsingState"></param>
-            <param name="me"></param>
-            <returns></returns>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsMobile">
-            <summary>
-            Allows a template to determine if the user is using a mobile device, such as a handheld or a pad
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsMobile.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
-            <summary>
-            
-            </summary>
-            <param name="templateParsingState"></param>
-            <param name="me"></param>
-            <returns></returns>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsEqual">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsEqual.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
-            <summary>
-            
-            </summary>
-            <param name="templateParsingState"></param>
-            <param name="me"></param>
-            <returns></returns>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.Else">
-            <summary>
-            Implements the "else" of an if tag; this always returns true
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.Else.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
-            <summary>
-            Always returns true
-            </summary>
-            <param name="templateParsingState"></param>
-            <param name="me"></param>
-            <returns></returns>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.Template.Trimmer">
-            <summary>
-            Assists in trimming large XML blobs
-            </summary>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsOwner">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsOwner.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
-            <summary>
-            
-            </summary>
-            <param name="templateParsingState"></param>
-            <param name="me"></param>
-            <returns></returns>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateEngine">
-            <summary>
-            Generates complete files from templates
-            </summary>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.WebHandler">
-            <summary>
-            WebHandler for files that don't have any web access
-            </summary>
-        </member>
-        <member name="F:ObjectCloud.Disk.WebHandlers.TemplateEngine.ContentType">
-            <summary>
-            The default content type
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.Evaluate(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
-            <summary>
-            Evaluates the named template
-            </summary>
-            <param name="webConnection"></param>
-            <param name="filename"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.Evaluate(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.Collections.Generic.IDictionary{System.String,System.Object})">
-            <summary>
-            Evaluates the named template
-            </summary>
-            <param name="webConnection"></param>
-            <param name="filename"></param>
-            <param name="arguments"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.EvaluateToStream(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Collections.Generic.IDictionary{System.String,System.Object},System.String)">
-            <summary>
-            Evaluates the named template
-            </summary>
-            <param name="webConnection"></param>
-            <param name="arguments"></param>
-            <param name="filename"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.EvaluateComponent(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
-            <summary>
-            Evaluates the named template
-            </summary>
-            <param name="webConnection"></param>
-            <param name="filename"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.EvaluateComponentString(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.Object)">
-            <summary>
-            Evaluates the named template
-            </summary>
-            <param name="webConnection"></param>
-            <param name="filename"></param>
-            <param name="templateInput"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.EnsureNoEmptyTextareas(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Collections.Generic.IDictionary{System.String,System.Object},System.Xml.XmlElement)">
-            <summary>
-            This is to work around a Mozilla quirk where it can't handle empty text areas
-            </summary>
-            <param name="templateParsingState"></param>
-            <param name="getParameters"></param>
-            <param name="element"></param>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.ResolveHeaderFooter(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Collections.Generic.IDictionary{System.String,System.Object},ObjectCloud.Interfaces.Disk.IFileContainer,ObjectCloud.Disk.WebHandlers.Template.TemplateParsingState)">
-            <summary>
-            Returns the file with all header/footers resolved as XML for further processing
-            </summary>
-            <param name="arguments"></param>
-            <param name="templateFileContainer"></param>
-            <param name="webConnection"></param>
-            <param name="templateParsingState"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.GenerateCompositeJavascript(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Collections.Generic.IEnumerable{System.String})">
-            <summary>
-            Generates composite Javascript from a list of scripts
-            </summary>
-            <param name="webConnection"></param>
-            <param name="scriptUrls"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.GetCompositeScript(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String[])">
-            <summary>
-            Returns a composite script that contains all of the scripts passed in for low-latency loading
-            </summary>
-            <param name="webConnection"></param>
-            <param name="scriptUrls"></param>
-            <returns></returns>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateEngine.TemplateException">
-            <summary>
-            Exceptions that originate from within the templating engine
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.TemplateException.#ctor(System.String)">
-            <summary>
-            
-            </summary>
-            <param name="message"></param>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.TemplateException.#ctor(System.String,System.Exception)">
-            <summary>
-            
-            </summary>
-            <param name="message"></param>
-            <param name="inner"></param>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsLoggedIn">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsLoggedIn.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
-            <summary>
-            
-            </summary>
-            <param name="templateParsingState"></param>
-            <param name="me"></param>
-            <returns></returns>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsA">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsA.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
-            <summary>
-            
-            </summary>
-            <param name="templateParsingState"></param>
-            <param name="me"></param>
-            <returns></returns>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.SessionManagerWebHandler">
-            <summary>
-            Methods to manage the session
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.SessionManagerWebHandler.SetKeepAlive(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Boolean)">
-            <summary>
-            Updates if the browser should remember the session after being closed
-            </summary>
-            <param name="webConnection"></param>
-            <param name="KeepAlive"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.SessionManagerWebHandler.SetMaxAge(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Double)">
-            <summary>
-            Updates the maximum age that a session can be without being pinged
-            </summary>
-            <param name="webConnection"></param>
-            <param name="MaxAge">The maxiumum age, in days</param>
-            <returns></returns>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.JavascriptInterpreterWebHandler">
-            <summary>
-            Web handler for interpreting server-side Javascript
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.JavascriptInterpreterWebHandler.Run(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Runs the specified Javascript
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.GroupWebHandler">
-            <summary>
-            Allows manipulation and querying of local users.
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.GroupWebHandler.getMembers(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Returns all of the members of a group
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.GroupWebHandler.getGroup(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Returns the group and its alias
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.GroupWebHandler.joinGroup(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Allows a user to join the group
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.GroupWebHandler.leaveGroup(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Allows a user to leave a group
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.GroupWebHandler.isMember(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Returns true if the current user is a member of the group, false otherwise
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.BinaryWebHandler">
-            <summary>
-            Handles any kind of binary data
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.BinaryWebHandler.ReadAll(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Reads all of the data in the file
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.BinaryWebHandler.ReadAllBase64(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Reads all of the data in the file and returns a Base64 encoded string
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.BinaryWebHandler.WriteAll(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Byte[])">
-            <summary>
-            Writes all of the data to the file
-            </summary>
-            <param name="webConnection"></param>
-            <param name="contents">Any kind of data</param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.BinaryWebHandler.WriteAllBase64(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
-            <summary>
-            Writes all of the data to the file
-            </summary>
-            <param name="webConnection"></param>
-            <param name="base64">Any kind of data, represented as a base64-encoded string</param>
-            <returns></returns>
-        </member>
-        <member name="P:ObjectCloud.Disk.WebHandlers.BinaryWebHandler.ChangingEvent">
-            <summary>
-            Sends the updated contents whenever the file changes.  The contents are base64 encoded
-            </summary>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.Template.DependancyResolver">
-            <summary>
-            Removes debug information from documents
-            </summary>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsAdministrator">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsAdministrator.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
-            <summary>
-            
-            </summary>
-            <param name="templateParsingState"></param>
-            <param name="me"></param>
-            <returns></returns>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.HTTPWebProxy">
-            <summary>
-            WebHandler that provides a HTTP proxy
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.HTTPWebProxy.GET(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
-            <summary>
-            Proxies GET requests
-            </summary>
-            <param name="webConnection"></param>
-            <param name="targetUrl"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.HTTPWebProxy.POST_urlencoded(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
-            <summary>
-            Proxies POST requests that use the urlencoded convention
-            </summary>
-            <param name="webConnection"></param>
-            <param name="targetUrl"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.HTTPWebProxy.POST(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Proxies all kinds of POST requests
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.HasAction">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.HasAction.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
-            <summary>
-            
-            </summary>
-            <param name="templateParsingState"></param>
-            <param name="me"></param>
-            <returns></returns>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.Template.SecurityTagParser">
-            <summary>
-            Allows insertion of XML in a secure way
-            </summary>
-        </member>
-        <member name="P:ObjectCloud.Disk.WebHandlers.Template.SecurityTagParser.SafeTags">
-            <summary>
-            The safe tags to use
-            </summary>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.CanWrite">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.CanPermission">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.CanPermission.#ctor(ObjectCloud.Interfaces.Security.FilePermissionEnum)">
-            <summary>
-            
-            </summary>
-            <param name="minimumPermission"></param>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.CanPermission.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
-            <summary>
-            
-            </summary>
-            <param name="templateParsingState"></param>
-            <param name="me"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.CanWrite.#ctor">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.Comet.EchoCometWebHandler">
-            <summary>
-            Web handler that performs loopback comet requests
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.EchoCometWebHandler.ConstructCometTransport(ObjectCloud.Interfaces.Security.ISession,System.Collections.Generic.IDictionary{System.String,System.String},System.Int64)">
-            <summary>
-            
-            </summary>
-            <param name="session"></param>
-            <param name="getArguments"></param>
-            <param name="transportId"></param>
-            <returns></returns>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.Comet.EchoCometWebHandler.EchoCometTransport">
-            <summary>
-            Comet transport that provides loopback functionality
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.EchoCometWebHandler.EchoCometTransport.#ctor">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="F:ObjectCloud.Disk.WebHandlers.Comet.EchoCometWebHandler.EchoCometTransport.ToSend">
-            <summary>
-            This is the results that are sent every 10 seconds
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.EchoCometWebHandler.EchoCometTransport.GetDataToSend">
-            <summary>
-            
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.EchoCometWebHandler.EchoCometTransport.HandleIncomingData(System.Object)">
-            <summary>
-            
-            </summary>
-            <param name="incoming"></param>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.Comet.EchoCometWebHandler.MulticastEventWithTimeout">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.EchoCometWebHandler.MulticastEventWithTimeout.#ctor(ObjectCloud.Interfaces.WebServer.ICometTransport)">
-            <summary>
-            
-            </summary>
-            <param name="ct"></param>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.EchoCometWebHandler.MulticastEventWithTimeout.Send(ObjectCloud.Common.EventArgs{System.TimeSpan})">
-            <summary>
-            
-            </summary>
-            <param name="eventArgs"></param>
-        </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.TextWebHandler">
-            <summary>
-            Wrapper for text files
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TextWebHandler.ReadAll(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
-            <summary>
-            Reads all of the text in the file
-            </summary>
-            <param name="webConnection"></param>
-            <param name="EncodeFor"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TextWebHandler.ResolveComponents(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Resolves all of the WebComponents in the file
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TextWebHandler.ResolveComponentsGET(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            A Javascript-acceddible way to resolves all of the WebComponents in the file
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TextWebHandler.WriteAll(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
-            <summary>
-            Writes all of the text
-            </summary>
-            <param name="webConnection"></param>
-            <param name="text"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TextWebHandler.Append(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
-            <summary>
-            Appends the text
-            </summary>
-            <param name="webConnection"></param>
-            <param name="text"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TextWebHandler.WriteAll_HTML(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
-            <summary>
-            Writes all of the text, intended for use from an HTML form
-            </summary>
-            <param name="webConnection"></param>
-            <param name="text"></param>
-            <returns></returns>
-        </member>
-        <member name="P:ObjectCloud.Disk.WebHandlers.TextWebHandler.ChangingEvent">
-            <summary>
-            Sends the updated contents whenever the file changes
-            </summary>
-        </member>
         <member name="F:ObjectCloud.Disk.WebHandlers.Template.TemplateParsingState.ScriptsSet">
             <summary>
             set of loaded scripts
@@ -2154,17 +1786,111 @@
             <param name="xmlNode"></param>
             <returns></returns>
         </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.Template.DebugInformationRemover">
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsPad">
             <summary>
-            Removes debug information from documents
+            Class for determining if the user's browser is a pad
             </summary>
         </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsLocal">
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsPad.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
+            <summary>
+            
+            </summary>
+            <param name="templateParsingState"></param>
+            <param name="me"></param>
+            <returns></returns>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsEqual">
             <summary>
             
             </summary>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsLocal.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsEqual.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
+            <summary>
+            
+            </summary>
+            <param name="templateParsingState"></param>
+            <param name="me"></param>
+            <returns></returns>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.Else">
+            <summary>
+            Implements the "else" of an if tag; this always returns true
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.Else.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
+            <summary>
+            Always returns true
+            </summary>
+            <param name="templateParsingState"></param>
+            <param name="me"></param>
+            <returns></returns>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.Template.DependancyResolver">
+            <summary>
+            Removes debug information from documents
+            </summary>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.CanPermission">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.CanPermission.#ctor(ObjectCloud.Interfaces.Security.FilePermissionEnum)">
+            <summary>
+            
+            </summary>
+            <param name="minimumPermission"></param>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.CanPermission.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
+            <summary>
+            
+            </summary>
+            <param name="templateParsingState"></param>
+            <param name="me"></param>
+            <returns></returns>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.Can">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.NamedPermissionBase">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.NamedPermissionBase.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
+            <summary>
+            
+            </summary>
+            <param name="templateParsingState"></param>
+            <param name="me"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.NamedPermissionBase.DetermineCondition(ObjectCloud.Interfaces.Templating.ITemplateParsingState,ObjectCloud.Interfaces.Disk.IFileContainer,System.String)">
+            <summary>
+            
+            </summary>
+            <param name="templateParsingState"></param>
+            <param name="fileContainer"></param>
+            <param name="namedPermission"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.Can.DetermineCondition(ObjectCloud.Interfaces.Templating.ITemplateParsingState,ObjectCloud.Interfaces.Disk.IFileContainer,System.String)">
+            <summary>
+            
+            </summary>
+            <param name="templateParsingState"></param>
+            <param name="fileContainer"></param>
+            <param name="namedPermission"></param>
+            <returns></returns>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsOwner">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsOwner.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
             <summary>
             
             </summary>
@@ -2182,42 +1908,239 @@
             
             </summary>
         </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.ImageWebHandler">
+        <member name="T:ObjectCloud.Disk.WebHandlers.JavascriptInterpreterWebHandler">
             <summary>
-            Adds additional web-based image processing capabilities
+            Web handler for interpreting server-side Javascript
             </summary>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.ImageWebHandler.GetScaled(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Int32})">
+        <member name="T:ObjectCloud.Disk.WebHandlers.WebHandler">
             <summary>
-            Returns a scaled version of the image to fit the constraints passed in
+            WebHandler for files that don't have any web access
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.JavascriptInterpreterWebHandler.Run(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Runs the specified Javascript
             </summary>
             <param name="webConnection"></param>
-            <param name="width">The width.  If height is not specified, then a proportional height will be used</param>
-            <param name="height">The width.  If width is not specified, then a proportiional width will be used</param>
-            <param name="maxHeight">The maxiumum height to return</param>
-            <param name="maxWidth">The maximum width to return</param>
-            <param name="minHeight">The mimumum height to return</param>
-            <param name="minWidth">The minumum width to return</param>
             <returns></returns>
         </member>
-        <member name="P:ObjectCloud.Disk.WebHandlers.ImageWebHandler.Image">
+        <member name="T:ObjectCloud.Disk.WebHandlers.Template.DebugInformationRemover">
             <summary>
-            Im-memory object that encapsulates a saved image.  This allows for programmatic access to metadata
+            Removes debug information from documents
             </summary>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateEngine">
+            <summary>
+            Generates complete files from templates
+            </summary>
+        </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.TemplateEngine.ContentType">
+            <summary>
+            The default content type
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.Evaluate(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
+            <summary>
+            Evaluates the named template
+            </summary>
+            <param name="webConnection"></param>
+            <param name="filename"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.Evaluate(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.Collections.Generic.IDictionary{System.String,System.Object})">
+            <summary>
+            Evaluates the named template
+            </summary>
+            <param name="webConnection"></param>
+            <param name="filename"></param>
+            <param name="arguments"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.EvaluateToStream(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Collections.Generic.IDictionary{System.String,System.Object},System.String)">
+            <summary>
+            Evaluates the named template
+            </summary>
+            <param name="webConnection"></param>
+            <param name="arguments"></param>
+            <param name="filename"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.EvaluateComponent(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
+            <summary>
+            Evaluates the named template
+            </summary>
+            <param name="webConnection"></param>
+            <param name="filename"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.EvaluateComponentString(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.Object)">
+            <summary>
+            Evaluates the named template
+            </summary>
+            <param name="webConnection"></param>
+            <param name="filename"></param>
+            <param name="templateInput"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.EnsureNoEmptyTextareas(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Collections.Generic.IDictionary{System.String,System.Object},System.Xml.XmlElement)">
+            <summary>
+            This is to work around a Mozilla quirk where it can't handle empty text areas
+            </summary>
+            <param name="templateParsingState"></param>
+            <param name="getParameters"></param>
+            <param name="element"></param>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.ResolveHeaderFooter(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Collections.Generic.IDictionary{System.String,System.Object},ObjectCloud.Interfaces.Disk.IFileContainer,ObjectCloud.Disk.WebHandlers.Template.TemplateParsingState)">
+            <summary>
+            Returns the file with all header/footers resolved as XML for further processing
+            </summary>
+            <param name="arguments"></param>
+            <param name="templateFileContainer"></param>
+            <param name="webConnection"></param>
+            <param name="templateParsingState"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.GenerateCompositeJavascript(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Generates composite Javascript from a list of scripts
+            </summary>
+            <param name="webConnection"></param>
+            <param name="scriptUrls"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.GetCompositeScript(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String[])">
+            <summary>
+            Returns a composite script that contains all of the scripts passed in for low-latency loading
+            </summary>
+            <param name="webConnection"></param>
+            <param name="scriptUrls"></param>
+            <returns></returns>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateEngine.TemplateException">
+            <summary>
+            Exceptions that originate from within the templating engine
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.TemplateException.#ctor(System.String)">
+            <summary>
+            
+            </summary>
+            <param name="message"></param>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateEngine.TemplateException.#ctor(System.String,System.Exception)">
+            <summary>
+            
+            </summary>
+            <param name="message"></param>
+            <param name="inner"></param>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsHandheld">
+            <summary>
+            Condition for determining if a browser is a handheld
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsHandheld.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
+            <summary>
+            
+            </summary>
+            <param name="templateParsingState"></param>
+            <param name="me"></param>
+            <returns></returns>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.CanWrite">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.CanWrite.#ctor">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.SessionManagerWebHandler">
+            <summary>
+            Methods to manage the session
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.SessionManagerWebHandler.SetKeepAlive(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Boolean)">
+            <summary>
+            Updates if the browser should remember the session after being closed
+            </summary>
+            <param name="webConnection"></param>
+            <param name="KeepAlive"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.SessionManagerWebHandler.SetMaxAge(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Double)">
+            <summary>
+            Updates the maximum age that a session can be without being pinged
+            </summary>
+            <param name="webConnection"></param>
+            <param name="MaxAge">The maxiumum age, in days</param>
+            <returns></returns>
         </member>
         <member name="T:ObjectCloud.Disk.WebHandlers.DatabaseWebHandler">
             <summary>
             Web-callable wrapper for embedded databasess
             </summary>
         </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.Template.AggressiveCachingEnabler">
+        <member name="T:ObjectCloud.Disk.WebHandlers.BrowserInfoWebHandler">
             <summary>
-            Enables aggressive caching on a document prior to returning it
+            Provides run-time information about the browser accessing the server
             </summary>
         </member>
-        <member name="F:ObjectCloud.Disk.WebHandlers.Template.AggressiveCachingEnabler.State.PrecalculatedWithMD5">
+        <member name="M:ObjectCloud.Disk.WebHandlers.BrowserInfoWebHandler.IsLegacyWithoutChromePlug(ObjectCloud.Interfaces.WebServer.IWebConnection)">
             <summary>
-            Cache of URLs with the BrowserCache argument added when it's based off of an MD5.  This prevents re-calculating MD5s continuously for common URLs
+            Returns true if thie browser is a legacy browser without ChromePlug
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.Template.JSONTemplateResolver">
+            <summary>
+            Handles JSON templates
+            </summary>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsAdministrator">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsAdministrator.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
+            <summary>
+            
+            </summary>
+            <param name="templateParsingState"></param>
+            <param name="me"></param>
+            <returns></returns>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.Comet.LoopbackQueuingReliableWebHandler">
+            <summary>
+            Simple test of the Quality and Reliable (layer 3) Comet Protocol
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.LoopbackQueuingReliableWebHandler.#ctor">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.LoopbackQueuingReliableWebHandler.ConstructCometTransport(ObjectCloud.Interfaces.Security.ISession,System.Collections.Generic.IDictionary{System.String,System.String},System.Int64)">
+            <summary>
+            
+            </summary>
+            <param name="session"></param>
+            <param name="getArguments"></param>
+            <param name="transportId"></param>
+            <returns></returns>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.Template.SecurityTagParser">
+            <summary>
+            Allows insertion of XML in a secure way
+            </summary>
+        </member>
+        <member name="P:ObjectCloud.Disk.WebHandlers.Template.SecurityTagParser.SafeTags">
+            <summary>
+            The safe tags to use
             </summary>
         </member>
         <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.HasValue">
@@ -2233,16 +2156,6 @@
             <param name="me"></param>
             <returns></returns>
         </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.CanRead">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.CanRead.#ctor">
-            <summary>
-            
-            </summary>
-        </member>
         <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsOpenID">
             <summary>
             
@@ -2256,225 +2169,112 @@
             <param name="me"></param>
             <returns></returns>
         </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsHandheld">
+        <member name="T:ObjectCloud.Disk.WebHandlers.HTTPWebProxy">
             <summary>
-            Condition for determining if a browser is a handheld
+            WebHandler that provides a HTTP proxy
             </summary>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsHandheld.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
+        <member name="M:ObjectCloud.Disk.WebHandlers.HTTPWebProxy.GET(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
+            <summary>
+            Proxies GET requests
+            </summary>
+            <param name="webConnection"></param>
+            <param name="targetUrl"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.HTTPWebProxy.POST_urlencoded(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
+            <summary>
+            Proxies POST requests that use the urlencoded convention
+            </summary>
+            <param name="webConnection"></param>
+            <param name="targetUrl"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.HTTPWebProxy.POST(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Proxies all kinds of POST requests
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler">
+            <summary>
+            Web handler that performs loopback comet requests
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.ConstructCometTransport(ObjectCloud.Interfaces.Security.ISession,System.Collections.Generic.IDictionary{System.String,System.String},System.Int64)">
             <summary>
             
             </summary>
-            <param name="templateParsingState"></param>
-            <param name="me"></param>
+            <param name="session"></param>
+            <param name="getArguments"></param>
+            <param name="transportId"></param>
             <returns></returns>
         </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler">
+        <member name="T:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.LoopbackCometTransport">
             <summary>
-            Wraps all functionality of a directory
+            Comet transport that provides loopback functionality
             </summary>
         </member>
-        <member name="F:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.CreateFileLock">
+        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.LoopbackCometTransport.#ctor">
             <summary>
-            Synchronizes creating a file
+            
             </summary>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.CreateFile(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String,System.String,System.Nullable{System.Boolean})">
+        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.LoopbackCometTransport.OnTimer(System.Object)">
             <summary>
-            Creates a file
+            
             </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-            <param name="FileName">The file name.  Either the file name or extension need to be specified</param>
-            <param name="extension">The file extension.  Either the extension or file name need to be specified</param>
-            <param name="FileType">The file type</param>
-            <param name="ErrorIfExists">True to return an error if the file already exists</param>
-            <param name="fileNameSuggestion">A suggestion for creating a file name.  ObjectCloud will attempt to generate a real file name from this suggestion</param>
+            <param name="state"></param>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.CreateFileHelper(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String,System.String,System.Nullable{System.Boolean})">
+        <member name="F:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.LoopbackCometTransport.MostRecentData">
             <summary>
-            Helps in creating a file
+            The most recent data sent from the client
             </summary>
-            <param name="webConnection"></param>
-            <param name="FileName">Filename, this or fileNameSuggestion must be specified</param>
-            <param name="extension"></param>
-            <param name="fileNameSuggestion">Suggestion for a filename.  This can be any string, when specified, extension must also be specified.</param>
-            <param name="FileType"></param>
-            <param name="ErrorIfExists">True to throw an error if there already is an existing file with the same filename.  False if ObjectCloud should silently return a wrapper if the file already exists.  If fileNameSuggestion is used instead of FileName, then if there is an existing filename with the first generated filename, then it will be returned instead of created.</param>
+        </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.LoopbackCometTransport.ToSend">
+            <summary>
+            This is the results that are sent every 10 seconds
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.LoopbackCometTransport.GetDataToSend">
+            <summary>
+            
+            </summary>
             <returns></returns>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.GenerateFilename(System.String,System.String,System.Boolean)">
+        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.LoopbackCometTransport.HandleIncomingData(System.Object)">
             <summary>
-            Assists in generating a filename
+            
             </summary>
-            <param name="extension"></param>
-            <param name="fileNameSuggestion"></param>
-            <param name="unique"></param>
-            <returns></returns>
+            <param name="incoming"></param>
         </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.DeleteFile(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
+        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.LoopbackCometTransport.Dispose">
             <summary>
-            Deletes a file
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-            <param name="FileName"></param>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.Open(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
-            <summary>
-            Returns a JavaScript object that can manipulate the given file
-            </summary>
-            <param name="webConnection"></param>
-            <param name="FileName"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.ListFiles(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Lists all of the files in the directory as a JSON array
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.ListNewestFiles(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Nullable{System.Int32})">
-            <summary>
-            Lists the newest files that the user has access to in descending order of creation
-            </summary>
-            <param name="webConnection"></param>
-            <param name="maxToReturn"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.ReturnFilesAsJSON(ObjectCloud.Interfaces.WebServer.IWebConnection,System.Collections.Generic.IEnumerable{ObjectCloud.Interfaces.Disk.IFileContainer})">
-            <summary>
-            Helper to return files as JSON
-            </summary>
-            <param name="files"></param>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.IsFilePresent(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
-            <summary>
-            Returns "true" if the file is present, "false" otherwise
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-            <param name="FileName"></param>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.SetFilePermission(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String,System.String[],System.String[],System.String,System.String,System.Nullable{System.Boolean},System.Nullable{System.Boolean})">
-            <summary>
-            Sets the user's permission for the given file.  Either the user or group ID or name are set
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-            <param name="FileName">The filename</param>
-            <param name="FilePermission">The permission, set to null to disable permissions to the file</param>
-            <param name="Inherit">Set to true to allow permission inheritance.  For example, if this permission applies to a directory, it will be the default for files in the directory</param>
-            <param name="UserOrGroup"></param>
-            <param name="UserOrGroupId"></param>
-            <param name="SendNotifications"></param>
-            <param name="UserOrGroupIds"></param>
-            <param name="UserOrGroups"></param>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.GetFilePermissions(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
-            <summary>
-            Returns all assigned permissions to the object
-            </summary>
-            <param name="webConnection">
-            A <see cref="T:ObjectCloud.Interfaces.WebServer.IWebConnection"/>
-            </param>
-            <returns>
-            A <see cref="T:ObjectCloud.Interfaces.WebServer.IWebResults"/>
-            </returns>
-            <param name="FileName">The filename</param>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.GetUserFilePermission(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
-            <summary>
-            Returns the current user's permission to the given filename
-            </summary>
-            <param name="webConnection">
-            A <see cref="T:ObjectCloud.Interfaces.WebServer.IWebConnection"/>
-            </param>
-            <returns>
-            A <see cref="T:ObjectCloud.Interfaces.WebServer.IWebResults"/>
-            </returns>
-            <param name="FileName">The filename</param>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.RenameFile(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
-            <summary>
-            Renames a file
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-            <param name="NewFileName">The new file name</param>
-            <param name="OldFileName">The old file name</param>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.CopyFile(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String,System.String)">
-            <summary>
-            Copies a file
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-            <param name="DestinationFilename">The destination file</param>
-            <param name="SourceFilename">The source file</param>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.Upload(ObjectCloud.Interfaces.WebServer.IWebConnection,ObjectCloud.Common.MimeReader.Part)">
-            <summary>
-            Handles when a user uploads a file
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-            <param name="File">The file as part of a MIME paramater</param>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.GetFileFactoryTypeFromUpload(ObjectCloud.Common.MimeReader.Part,System.String@)">
-            <summary>
-            Figures out the fileFactoryType from an upload
-            </summary>
-            <param name="File"></param>
-            <param name="filename"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.SetIndexFile(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
-            <summary>
-            Sets the index file
-            </summary>
-            <param name="webConnection"></param>
-            <param name="IndexFile"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.GetIndexFile(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Returns the name of the index file, or "No index file" if there is none
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.ShellToIndexFile(ObjectCloud.Interfaces.WebServer.IWebConnection)">
-            <summary>
-            Returns the results of shelling to the index file
-            </summary>
-            <param name="webConnection"></param>
-            <returns></returns>
-        </member>
-        <member name="M:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.UpdateConnectionFiles(ObjectCloud.Interfaces.WebServer.IQueuingReliableCometTransport,System.Collections.Generic.IList{ObjectCloud.Interfaces.Disk.IFileContainer})">
-            <summary>
-            Helper to update the files on a connection
-            </summary>
-            <param name="channel"></param>
-            <param name="files"></param>
-        </member>
-        <member name="P:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.ImplicitAction">
-            <summary>
-            If there is an index file set, this sets the implicit action to be something else
+            
             </summary>
         </member>
-        <member name="P:ObjectCloud.Disk.WebHandlers.DirectoryWebHandler.ChangingEvent">
+        <member name="P:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.LoopbackCometTransport.StartSend">
             <summary>
-            Sends a packet whenever the contents of the directory changes.  The packet contains the contents of the directory tailored to the user
+            
             </summary>
         </member>
-        <member name="T:ObjectCloud.Disk.WebHandlers.Template.ComponentAndConditionalsResolver">
+        <member name="T:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.MulticastEventWithTimeout">
             <summary>
-            Removes debug information from documents
+            
             </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.MulticastEventWithTimeout.#ctor(ObjectCloud.Interfaces.WebServer.ICometTransport)">
+            <summary>
+            
+            </summary>
+            <param name="ct"></param>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.LoopbackCometWebHandler.MulticastEventWithTimeout.Send(ObjectCloud.Common.EventArgs{System.TimeSpan})">
+            <summary>
+            
+            </summary>
+            <param name="eventArgs"></param>
         </member>
         <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.Supports">
             <summary>
@@ -2489,6 +2289,206 @@
             <param name="fileContainer"></param>
             <param name="namedPermission"></param>
             <returns></returns>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.Comet.EchoCometWebHandler">
+            <summary>
+            Web handler that performs loopback comet requests
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.EchoCometWebHandler.ConstructCometTransport(ObjectCloud.Interfaces.Security.ISession,System.Collections.Generic.IDictionary{System.String,System.String},System.Int64)">
+            <summary>
+            
+            </summary>
+            <param name="session"></param>
+            <param name="getArguments"></param>
+            <param name="transportId"></param>
+            <returns></returns>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.Comet.EchoCometWebHandler.EchoCometTransport">
+            <summary>
+            Comet transport that provides loopback functionality
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.EchoCometWebHandler.EchoCometTransport.#ctor">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.Comet.EchoCometWebHandler.EchoCometTransport.ToSend">
+            <summary>
+            This is the results that are sent every 10 seconds
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.EchoCometWebHandler.EchoCometTransport.GetDataToSend">
+            <summary>
+            
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.EchoCometWebHandler.EchoCometTransport.HandleIncomingData(System.Object)">
+            <summary>
+            
+            </summary>
+            <param name="incoming"></param>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.Comet.EchoCometWebHandler.MulticastEventWithTimeout">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.EchoCometWebHandler.MulticastEventWithTimeout.#ctor(ObjectCloud.Interfaces.WebServer.ICometTransport)">
+            <summary>
+            
+            </summary>
+            <param name="ct"></param>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.Comet.EchoCometWebHandler.MulticastEventWithTimeout.Send(ObjectCloud.Common.EventArgs{System.TimeSpan})">
+            <summary>
+            
+            </summary>
+            <param name="eventArgs"></param>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsA">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsA.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
+            <summary>
+            
+            </summary>
+            <param name="templateParsingState"></param>
+            <param name="me"></param>
+            <returns></returns>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TextWebHandler">
+            <summary>
+            Wrapper for text files
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TextWebHandler.ReadAll(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
+            <summary>
+            Reads all of the text in the file
+            </summary>
+            <param name="webConnection"></param>
+            <param name="EncodeFor"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TextWebHandler.ResolveComponents(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Resolves all of the WebComponents in the file
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TextWebHandler.ResolveComponentsGET(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            A Javascript-acceddible way to resolves all of the WebComponents in the file
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TextWebHandler.WriteAll(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
+            <summary>
+            Writes all of the text
+            </summary>
+            <param name="webConnection"></param>
+            <param name="text"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TextWebHandler.Append(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
+            <summary>
+            Appends the text
+            </summary>
+            <param name="webConnection"></param>
+            <param name="text"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TextWebHandler.WriteAll_HTML(ObjectCloud.Interfaces.WebServer.IWebConnection,System.String)">
+            <summary>
+            Writes all of the text, intended for use from an HTML form
+            </summary>
+            <param name="webConnection"></param>
+            <param name="text"></param>
+            <returns></returns>
+        </member>
+        <member name="P:ObjectCloud.Disk.WebHandlers.TextWebHandler.ChangingEvent">
+            <summary>
+            Sends the updated contents whenever the file changes
+            </summary>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsLocal">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.IsLocal.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
+            <summary>
+            
+            </summary>
+            <param name="templateParsingState"></param>
+            <param name="me"></param>
+            <returns></returns>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.GroupWebHandler">
+            <summary>
+            Allows manipulation and querying of local users.
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.GroupWebHandler.getMembers(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Returns all of the members of a group
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.GroupWebHandler.getGroup(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Returns the group and its alias
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.GroupWebHandler.joinGroup(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Allows a user to join the group
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.GroupWebHandler.leaveGroup(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Allows a user to leave a group
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.GroupWebHandler.isMember(ObjectCloud.Interfaces.WebServer.IWebConnection)">
+            <summary>
+            Returns true if the current user is a member of the group, false otherwise
+            </summary>
+            <param name="webConnection"></param>
+            <returns></returns>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.Template.AggressiveCachingEnabler">
+            <summary>
+            Enables aggressive caching on a document prior to returning it
+            </summary>
+        </member>
+        <member name="F:ObjectCloud.Disk.WebHandlers.Template.AggressiveCachingEnabler.State.PrecalculatedWithMD5">
+            <summary>
+            Cache of URLs with the BrowserCache argument added when it's based off of an MD5.  This prevents re-calculating MD5s continuously for common URLs
+            </summary>
+        </member>
+        <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.CanRead">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.CanRead.#ctor">
+            <summary>
+            
+            </summary>
         </member>
     </members>
 </doc>
