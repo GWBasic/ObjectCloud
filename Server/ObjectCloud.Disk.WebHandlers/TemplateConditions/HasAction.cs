@@ -19,34 +19,21 @@ using ObjectCloud.Interfaces.WebServer;
 namespace ObjectCloud.Disk.WebHandlers.TemplateConditions
 {
     /// <summary>
-    /// 
+    /// Returns true if the file supports the action
     /// </summary>
-	public class HasAction : CanBase, ITemplateConditionHandler
-	{
+    public class HasAction : CanBase, ITemplateConditionHandler
+    {
         /// <summary>
-        /// 
         /// </summary>
         /// <param name="templateParsingState"></param>
         /// <param name="me"></param>
         /// <returns></returns>
-		public bool IsConditionMet (ITemplateParsingState templateParsingState, XmlNode me)
-		{
-			IFileContainer fileContainer = GetFileContainer(templateParsingState, me);
-			
-			string actionPath = "/Actions/";
-			
-			if (null == fileContainer.Extension)
-				actionPath += "ByType/" + fileContainer.TypeId;
-			else
-				actionPath += "ByExtension/" + fileContainer.Extension;
-			
-			IFileContainer actionsContainer = templateParsingState.FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(actionPath);
-			INameValuePairsHandler actions = actionsContainer.CastFileHandler<INameValuePairsHandler>();
+        public bool IsConditionMet(ITemplateParsingState templateParsingState, XmlNode me)
+        {
+            IFileContainer fileContainer = GetFileContainer(templateParsingState, me);
+            string action = me.Attributes["action"].Value;
 
-			string action = me.Attributes["action"].Value;
-			
-			return actions.Contains(action);
-		}
-	}
+            return fileContainer.FileConfigurationManager.Actions.ContainsKey(action);
+        }
+    }
 }
-
