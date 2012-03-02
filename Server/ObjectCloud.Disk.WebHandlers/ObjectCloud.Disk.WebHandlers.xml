@@ -753,7 +753,7 @@
         </member>
         <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.HasAction">
             <summary>
-            
+            Returns true if the file supports the action
             </summary>
         </member>
         <member name="T:ObjectCloud.Disk.WebHandlers.TemplateConditions.CanBase">
@@ -771,7 +771,6 @@
         </member>
         <member name="M:ObjectCloud.Disk.WebHandlers.TemplateConditions.HasAction.IsConditionMet(ObjectCloud.Interfaces.Templating.ITemplateParsingState,System.Xml.XmlNode)">
             <summary>
-            
             </summary>
             <param name="templateParsingState"></param>
             <param name="me"></param>
