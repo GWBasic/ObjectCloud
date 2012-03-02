@@ -65,7 +65,7 @@
       <div class="footer maxwidth">
          <hr />
          <a href="http://objectcloud.com"><img src="/Pages/powered-by-banner.png" alt="Powered by ObjectCloud" /></a>
-         <p>ObjectCloud is copyright 2009, 2010, <a href="http://andrewrondeau.com">Andrew Rondeau</a> and is released under an open-source license.  For more information, view <a href="/Docs/license.oc">/Docs/license.oc</a></p>
+         <p>ObjectCloud is copyright 2009 - 2012, <a href="http://andrewrondeau.com">Andrew Rondeau</a> and is released under an open-source license.  For more information, view <a href="/Docs/license.oc">/Docs/license.oc</a></p>
          <p>
             <oc:jsontemplate oc:url="/Shell/version.json" Method="ReadAll">
                   ObjectCloud version [_Major_].[_Minor_], [_State_]

@@ -19,7 +19,7 @@
             <a href="http://objectcloud.com">
                <img src="<? Cache(/Pages/powered-by-banner.png) ?>" alt="Powered by ObjectCloud" />
             </a><br />
-            ObjectCloud is copyright 2009, 2010, <a href="http://andrewrondeau.com">Andrew Rondeau</a> and is released under an open-source license.  For more information, view <a href="/Docs/license.oc">/Docs/license.oc</a>
+            ObjectCloud is copyright 2009 - 2012, <a href="http://andrewrondeau.com">Andrew Rondeau</a> and is released under an open-source license.  For more information, view <a href="/Docs/license.oc">/Docs/license.oc</a>
          </div>
       </div></div>
       <div id="browserBar"><? WebComponent("/Shell/Navigation/SocialBar.webcomponent") ?></div>

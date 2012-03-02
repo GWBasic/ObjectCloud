@@ -2,7 +2,7 @@
 
 <!-- This code is released under the Simple Public License (SimPL) 2.0.  Some additional privelages are granted., See /Docs/license.wchtml -->
 <span id="sb_encase">
-   <span style="float: right; font-size: 0.25em">(c) 2009, 2010 Andrew Rondeau.  <a href="/Docs/license.wchtml" target="_blank">more...</a></span>
+   <span style="float: right; font-size: 0.25em">(c) 2009 - 2012 Andrew Rondeau.  <a href="/Docs/license.wchtml" target="_blank">more...</a></span>
 
    <span style="float: left">
    <input type="text" id="sb_text"></input><input type="button" value="8&#x1504&#x15Df" onclick="sb_speak()"/>
