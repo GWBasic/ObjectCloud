@@ -71,18 +71,13 @@ namespace ObjectCloud.Common
 
         /// <summary>
         /// The GC count that was present at the last cleanup, used to prevent duplicate cleanups
-        /// </summary>
+        /// </summary> 
         private int _GCCountAtLastCleanup = GC.CollectionCount(GC.MaxGeneration);
 
         /// <summary>
-        /// A copy of all of the weak references, used to periodically check to see if a value is GCed
+        /// All of the weak references as they are added. This queue is used to allow each operation to look at a weak refernence to eventually detect when the cache needs to be cleaned
         /// </summary>
-        private WeakReference[] _WRsCopy = new WeakReference[0];
-
-        /// <summary>
-        /// The mod of the is the current weak reference to check on accessing the cache
-        /// </summary>
-        private int _WRCtr = 0;
+        private LockFreeQueue<WeakReference> _ScanQueue = new LockFreeQueue<WeakReference>();
 
         public Cache(CreateForCache<TKey, TValue, TConstructorArg> createForCache)
         {
@@ -106,41 +101,43 @@ namespace ObjectCloud.Common
         /// </summary>
         private void CheckForCleanup()
         {
-            if (0 == _WRsCopy.Length)
-                return;
+            WeakReference wr;
+            if (_ScanQueue.Dequeue(out wr))
+            {
+                // Keep re-queuing items that are still alive
+                if (wr.IsAlive)
+                    _ScanQueue.Enqueue(wr);
 
-            int wrCtr = Interlocked.Increment(ref _WRCtr) % _WRsCopy.Length;
+                else if (_GCCountAtLastCleanup != GC.CollectionCount(GC.MaxGeneration))
+                    ThreadPool.QueueUserWorkItem(DoCleanup);
+            }
+        }
 
-            if (!_WRsCopy[wrCtr].IsAlive)
-                ThreadPool.QueueUserWorkItem(delegate(object state)
+        private void DoCleanup(object state)
+        {
+            Lock.EnterWriteLock();
+
+            try
+            {
+                // Keep scanning while GCs are running
+                while (_GCCountAtLastCleanup != GC.CollectionCount(GC.MaxGeneration))
                 {
-                    Lock.EnterWriteLock();
+                    _GCCountAtLastCleanup = GC.CollectionCount(GC.MaxGeneration);
 
-                    try
+                    foreach (KeyValuePair<TKey, WeakReference> kvp in new Dictionary<TKey, WeakReference>(Dictionary))
                     {
-                        // Keep scanning while GCs are running
-                        while (_GCCountAtLastCleanup != GC.CollectionCount(GC.MaxGeneration))
-                        {
-                            _GCCountAtLastCleanup = GC.CollectionCount(GC.MaxGeneration);
+                        TKey key = kvp.Key;
+                        WeakReference wr = kvp.Value;
 
-                            foreach (KeyValuePair<TKey, WeakReference> kvp in new Dictionary<TKey, WeakReference>(Dictionary))
-                            {
-                                TKey key = kvp.Key;
-                                WeakReference wr = kvp.Value;
-
-                                if (!wr.IsAlive)
-                                    Dictionary.Remove(key);
-                            }
-
-                            _WRsCopy = new WeakReference[Dictionary.Count];
-                            Dictionary.Values.CopyTo(_WRsCopy, 0);
-                        }
+                        if (!wr.IsAlive)
+                            Dictionary.Remove(key);
                     }
-                    finally
-                    {
-                        Lock.ExitWriteLock();
-                    }
-                });
+                }
+            }
+            finally
+            {
+                Lock.ExitWriteLock();
+            }
         }
 
         /// <summary>
@@ -191,8 +188,7 @@ namespace ObjectCloud.Common
                         weakReference = new WeakReference(null);
                         Dictionary[key] = weakReference;
 
-                        _WRsCopy = new WeakReference[Dictionary.Count];
-                        Dictionary.Values.CopyTo(_WRsCopy, 0);
+                        _ScanQueue.Enqueue(weakReference);
                     }
                 }
                 finally
@@ -245,10 +241,10 @@ namespace ObjectCloud.Common
                             weakReference.Target = value;
                         else
                         {
-                            Dictionary[key] = new WeakReference(value);
+                            weakReference = new WeakReference(value);
+                            Dictionary[key] = weakReference;
 
-                            _WRsCopy = new WeakReference[Dictionary.Count];
-                            Dictionary.Values.CopyTo(_WRsCopy, 0);
+                            _ScanQueue.Enqueue(weakReference);
                         }
                     }
                     finally
@@ -283,8 +279,7 @@ namespace ObjectCloud.Common
                 
                 Dictionary.Remove(key);
 
-                _WRsCopy = new WeakReference[Dictionary.Count];
-                Dictionary.Values.CopyTo(_WRsCopy, 0);
+                // No effort is made to remove from _ScanQueue because it'll eventually be cleaned up
             }
             finally
             {
@@ -323,7 +318,7 @@ namespace ObjectCloud.Common
 
                 Dictionary.Clear();
 
-                _WRsCopy = new WeakReference[0];
+                _ScanQueue = new LockFreeQueue<WeakReference>();
             }
             finally
             {
@@ -343,8 +338,6 @@ namespace ObjectCloud.Common
                 Lock.EnterReadLock();
                 try
                 {
-                    CheckForCleanup();
-
                     toEnumerate = Enumerable<WeakReference>.FastCopy(Dictionary.Values);
                 }
                 finally
@@ -352,12 +345,20 @@ namespace ObjectCloud.Common
                     Lock.ExitReadLock();
                 }
 
+                bool queuedCleanup = false;
                 foreach (WeakReference weakReference in toEnumerate)
                 {
                     object toYield = weakReference.Target;
 
                     if (null != toYield)
                         yield return (TValue)toYield;
+
+                    // This is done instead of calling CheckForCleanup because each WR is checked
+                    else if (!queuedCleanup)
+                    {
+                        queuedCleanup = true;
+                        ThreadPool.QueueUserWorkItem(DoCleanup);
+                    }
                 }
             }
         }
