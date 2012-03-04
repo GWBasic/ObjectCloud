@@ -332,15 +332,6 @@ namespace ObjectCloud.Interfaces.WebServer
             set { Cache.CacheSize = value; }
         }
 
-        /// <summary>
-        /// The maxiumum amount of data that ObjectCloud should keep in RAM for items that it knows their size
-        /// </summary>
-        public long MaxKnownMemoryUse
-        {
-            get { return Cache.MaximumMemoryToUse; }
-            set { Cache.MaximumMemoryToUse = value; }
-        }
-
 		/// <summary>
 		/// Comma-seperated list of all of the objects to pre-load.  Directories will be traversed 
 		/// </summary>

@@ -19,7 +19,7 @@ namespace ObjectCloud.Disk.FileHandlers
     /// <summary>
     /// Handles binary files
     /// </summary>
-    public class BinaryHandler : LastModifiedFileHandler, IBinaryHandler, Cache.IAware
+    public class BinaryHandler : LastModifiedFileHandler, IBinaryHandler
     {
         /// <summary>
         /// Creates the text file name
@@ -65,10 +65,7 @@ namespace ObjectCloud.Disk.FileHandlers
             using (TimedLock.Lock(this))
             {
                 if (null == Cached)
-                {
                     Cached = System.IO.File.ReadAllBytes(BinaryFile);
-                    Cache.ManageMemoryUse(Cached.Length);
-                }
 
                 return Array<byte>.ShallowCopy(Cached);
             }
@@ -78,12 +75,10 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             using (TimedLock.Lock(this))
             {
-                ReleaseMemory();
+                Cached = null;
 
                 System.IO.File.WriteAllBytes(BinaryFile, contents);
                 Cached = Array<byte>.ShallowCopy(contents);
-
-                Cache.ManageMemoryUse(Cached.Length);
             }
 
             OnContentsChanged();
@@ -125,7 +120,7 @@ namespace ObjectCloud.Disk.FileHandlers
                     File.Delete(BinaryFile);
                     File.Copy(localDiskPath, BinaryFile);
 
-                    ReleaseMemory();
+                    Cached = null;
                 }
             }
         }
@@ -180,38 +175,6 @@ namespace ObjectCloud.Disk.FileHandlers
             {
                 view = null;
                 return false;
-            }
-        }
-
-        /// <summary>
-        /// Number of cache references
-        /// </summary>
-        private int CacheCount = 0;
-
-        public void IncrementCacheCount()
-        {
-            Interlocked.Increment(ref CacheCount);
-        }
-
-        public void DecrementCacheCount()
-        {
-            if (Interlocked.Decrement(ref CacheCount) <= 0)
-                ReleaseMemory();
-        }
-
-        ~BinaryHandler()
-        {
-            ReleaseMemory();
-        }
-
-        private void ReleaseMemory()
-        {
-            using (TimedLock.Lock(this))
-            {
-                if (null != Cached)
-                    Cache.ManageMemoryUse(-1 * Cached.Length);
-
-                Cached = null;
             }
         }
     }

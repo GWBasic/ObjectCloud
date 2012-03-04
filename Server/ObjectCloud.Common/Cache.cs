@@ -69,6 +69,21 @@ namespace ObjectCloud.Common
 
         protected readonly CreateForCache<TKey, TValue, TConstructorArg> _CreateForCache;
 
+        /// <summary>
+        /// The GC count that was present at the last cleanup, used to prevent duplicate cleanups
+        /// </summary>
+        private int _GCCountAtLastCleanup = GC.CollectionCount(GC.MaxGeneration);
+
+        /// <summary>
+        /// A copy of all of the weak references, used to periodically check to see if a value is GCed
+        /// </summary>
+        private WeakReference[] _WRsCopy = new WeakReference[0];
+
+        /// <summary>
+        /// The mod of the is the current weak reference to check on accessing the cache
+        /// </summary>
+        private int _WRCtr = 0;
+
         public Cache(CreateForCache<TKey, TValue, TConstructorArg> createForCache)
         {
             _CreateForCache = createForCache;
@@ -86,50 +101,46 @@ namespace ObjectCloud.Common
         private bool _Enabled = true;
 #endif
 
-		/// <summary>
-		/// This little bit checks a cache handle to see if it's alive, and if it's not, deletes it
-        /// Basicaly, every time the cache is hit, some randome cache handle is checked to see if it's dead
-		/// </summary>
-        protected override void RemoveCollectedCacheHandles()
+        /// <summary>
+        /// Checks an item in the cache to see if it's been collected, and enqueues a full cleanup if needed. Note: there must be at least an active read lock when calling this method
+        /// </summary>
+        private void CheckForCleanup()
         {
-            try
-            {
-                // First, figure out which items might be ready for removal
+            if (0 == _WRsCopy.Length)
+                return;
 
-                LinkedList<TKey> toRemove = new LinkedList<TKey>();
+            int wrCtr = Interlocked.Increment(ref _WRCtr) % _WRsCopy.Length;
 
-                Lock.EnterReadLock();
-                try
-                {
-                    foreach (KeyValuePair<TKey, WeakReference> kvp in Dictionary)
-                        if (!(kvp.Value.IsAlive))
-                            toRemove.AddLast(kvp.Key);
-                }
-                finally
-                {
-                    Lock.ExitReadLock();
-                }
-
-                // Next, remove them
-                if (toRemove.Count > 0)
+            if (!_WRsCopy[wrCtr].IsAlive)
+                ThreadPool.QueueUserWorkItem(delegate(object state)
                 {
                     Lock.EnterWriteLock();
 
                     try
                     {
-                        foreach (TKey key in toRemove)
-                            Dictionary.Remove(key);
+                        // Keep scanning while GCs are running
+                        while (_GCCountAtLastCleanup != GC.CollectionCount(GC.MaxGeneration))
+                        {
+                            _GCCountAtLastCleanup = GC.CollectionCount(GC.MaxGeneration);
+
+                            foreach (KeyValuePair<TKey, WeakReference> kvp in new Dictionary<TKey, WeakReference>(Dictionary))
+                            {
+                                TKey key = kvp.Key;
+                                WeakReference wr = kvp.Value;
+
+                                if (!wr.IsAlive)
+                                    Dictionary.Remove(key);
+                            }
+
+                            _WRsCopy = new WeakReference[Dictionary.Count];
+                            Dictionary.Values.CopyTo(_WRsCopy, 0);
+                        }
                     }
                     finally
                     {
                         Lock.ExitWriteLock();
                     }
-                }
-			}
-            catch (Exception e)
-            {
-                log.Warn("Exception when cleaning cache", e);
-            }
+                });
         }
 
         /// <summary>
@@ -151,6 +162,8 @@ namespace ObjectCloud.Common
             Lock.EnterReadLock();
             try
             {
+                CheckForCleanup();
+
                 if (Dictionary.TryGetValue(key, out weakReference))
                     toReturn = weakReference.Target;
             }
@@ -177,6 +190,9 @@ namespace ObjectCloud.Common
                     {
                         weakReference = new WeakReference(null);
                         Dictionary[key] = weakReference;
+
+                        _WRsCopy = new WeakReference[Dictionary.Count];
+                        Dictionary.Values.CopyTo(_WRsCopy, 0);
                     }
                 }
                 finally
@@ -214,16 +230,11 @@ namespace ObjectCloud.Common
 
             try
             {
+                CheckForCleanup();
+
                 WeakReference weakReference;
                 if (Dictionary.TryGetValue(key, out weakReference))
-                {
-                    object toUnCache = weakReference.Target;
-
-                    if (null != toUnCache)
-                        UncacheObject(toUnCache);
-
                     weakReference.Target = value;
-                }
                 else
                 {
                     Lock.EnterWriteLock();
@@ -231,16 +242,14 @@ namespace ObjectCloud.Common
                     try
                     {
                         if (Dictionary.TryGetValue(key, out weakReference))
-                        {
-                            object toUnCache = weakReference.Target;
-
-                            if (null != toUnCache)
-                                UncacheObject(toUnCache);
-
                             weakReference.Target = value;
-                        }
                         else
+                        {
                             Dictionary[key] = new WeakReference(value);
+
+                            _WRsCopy = new WeakReference[Dictionary.Count];
+                            Dictionary.Values.CopyTo(_WRsCopy, 0);
+                        }
                     }
                     finally
                     {
@@ -267,10 +276,15 @@ namespace ObjectCloud.Common
             Lock.EnterWriteLock();
             try
             {
+                CheckForCleanup();
+
                 if (!Dictionary.TryGetValue(key, out weakReference))
                     return false;
                 
                 Dictionary.Remove(key);
+
+                _WRsCopy = new WeakReference[Dictionary.Count];
+                Dictionary.Values.CopyTo(_WRsCopy, 0);
             }
             finally
             {
@@ -285,8 +299,6 @@ namespace ObjectCloud.Common
             if (removed is IDisposable)
                 ((IDisposable)removed).Dispose();
 
-            UncacheObject(removed);
-
             return true;
         }
 
@@ -295,8 +307,6 @@ namespace ObjectCloud.Common
         /// </summary>
         public void Clear()
         {
-            HashSet<object> toRemove = new HashSet<object>();
-
             Lock.EnterWriteLock();
             try
             {
@@ -308,19 +318,17 @@ namespace ObjectCloud.Common
                     {
                         if (value is IDisposable)
                             ((IDisposable)value).Dispose();
-
-                        toRemove.Add(value);
                     }
                 }
 
                 Dictionary.Clear();
+
+                _WRsCopy = new WeakReference[0];
             }
             finally
             {
                 Lock.ExitWriteLock();
             }
-
-            UncacheObjects(toRemove);
         }
 
         /// <summary>
@@ -335,6 +343,8 @@ namespace ObjectCloud.Common
                 Lock.EnterReadLock();
                 try
                 {
+                    CheckForCleanup();
+
                     toEnumerate = Enumerable<WeakReference>.FastCopy(Dictionary.Values);
                 }
                 finally
@@ -351,18 +361,6 @@ namespace ObjectCloud.Common
                 }
             }
         }
-
-        /// <summary>
-        /// If the cache is GCed, then it'll attempt to remove its cache handles from the cache
-        /// </summary>
-        ~Cache()
-        {
-            try
-            {
-                UncacheObjects(Dictionary.Values);
-            }
-            catch { }
-        }
     }
 
     /// <summary>
@@ -377,21 +375,6 @@ namespace ObjectCloud.Common
             internal Exception(string message) : base(message) { }
             internal Exception(string message, Exception inner) : base(message, inner) { }
         }
-
-        internal Cache()
-        {
-            AllCaches.Enqueue(new WeakReference(this));
-        }
-
-        /// <summary>
-        /// Weak references to all in-memory caches
-        /// </summary>
-        protected static LockFreeQueue<WeakReference> AllCaches = new LockFreeQueue<WeakReference>();
-
-        /// <summary>
-        /// Used to track when to clean out old cached
-        /// </summary>
-        private static int PriorGCCollectionCount = 0;
 
         /// <summary>
         /// All of the cache handles that are alive
@@ -421,30 +404,12 @@ namespace ObjectCloud.Common
                 if (value == CacheSize)
                     return;
 
-                object[] oldCacheHandles = CachedObjects;
-
                 if (null == value)
                     CachedObjects = null;
-                else
+                else if (null == CachedObjects)
                     CachedObjects = new object[value.Value];
-
-                // If there are old cache handles, spin off a thread that deallocates them
-                if (null != oldCacheHandles)
-                    ThreadPool.QueueUserWorkItem(delegate(object state)
-                        {
-                            for (int ctr = 0; ctr < oldCacheHandles.Length; ctr++)
-                                try
-                                {
-                                    object cached = oldCacheHandles[ctr];
-
-                                    if (cached is IAware)
-                                        ((IAware)cached).DecrementCacheCount();
-                                }
-                                catch (Exception e)
-                                {
-                                    log.Warn("Exception while cleaning out old cached objects after resizing the cache", e);
-                                }
-                        });
+                else
+                    Array.Resize<object>(ref CachedObjects, value.Value);
             }
         }
 
@@ -455,78 +420,13 @@ namespace ObjectCloud.Common
             if (null == cachedObjects)
                 throw new Exception("CacheSize not set, reccomended size: 20,000");
 
-            int cacheHandlesCtr = Convert.ToInt32((Convert.ToInt64(Interlocked.Increment(ref CacheHandlesCtr)) - int.MinValue) % cachedObjects.Length);
-
-            object replaced;
-
             // Keep trying until this is the thread that overwrites
-            do
-                replaced = cachedObjects[cacheHandlesCtr];
-            while (replaced != Interlocked.CompareExchange<object>(ref cachedObjects[cacheHandlesCtr], toCache, replaced));
-
-            // If replaced is aware of the cache, decrememnt its cache count
-            if (replaced is IAware)
-                ((IAware)replaced).DecrementCacheCount();
-
-            if (toCache is IAware)
-                ((IAware)toCache).IncrementCacheCount();
-
-            CheckNeedCleanCaches();
-        }
-
-        public static void UncacheObject(object toRemove)
-        {
-            object[] cachedObjects = CachedObjects;
-
-            if (null == cachedObjects)
-                throw new Exception("CacheSize not set, reccomended size: 20,000");
-
-            if (toRemove is IAware)
-            {
-                IAware casted = (IAware)toRemove;
-
-                for (int ctr = 0; ctr < cachedObjects.Length; ctr++)
-                    if (toRemove == Interlocked.CompareExchange<object>(ref cachedObjects[ctr], null, toRemove))
-                        casted.DecrementCacheCount();
-            }
-            else
-                for (int ctr = 0; ctr < cachedObjects.Length; ctr++)
-                    Interlocked.CompareExchange<object>(ref cachedObjects[ctr], null, toRemove);
-
-            CheckNeedCleanCaches();
-        }
-
-        public static void UncacheObjects(System.Collections.IEnumerable objectsToRemove)
-        {
-            object[] cachedObjects = CachedObjects;
-
-            if (null == cachedObjects)
-                throw new Exception("CacheSize not set, reccomended size: 20,000");
-
-            HashSet<object> setToRemove = objectsToRemove as HashSet<object>;
-            if (null == setToRemove)
-            {
-                if (objectsToRemove is IEnumerable<object>)
-                    setToRemove = new HashSet<object>((IEnumerable<object>)objectsToRemove);
-                else
-                    setToRemove = new HashSet<object>(Enumerable<object>.Cast(objectsToRemove));
-            }
-
-            for (int ctr = 0; ctr < cachedObjects.Length; ctr++)
-            {
-                object cached = cachedObjects[ctr];
-
-                if (setToRemove.Contains(cached))
-                    if (cached == Interlocked.CompareExchange<object>(ref cachedObjects[ctr], null, cached))
-                        if (cached is IAware)
-                            ((IAware)cached).DecrementCacheCount();
-            }
-
-            CheckNeedCleanCaches();
+            int cacheHandlesCtr = Math.Abs(Interlocked.Increment(ref CacheHandlesCtr)) % cachedObjects.Length;
+            cachedObjects[cacheHandlesCtr] = toCache;
         }
 
         /// <summary>
-        /// Clears all in-memory cached objects, except those which have strong references elsewhere
+        /// Releases references to all cached objects, although objects will still be abailable while there are existing hard references and until a GC runs
         /// </summary>
         public static void ReleaseAllCachedMemory()
         {
@@ -535,242 +435,7 @@ namespace ObjectCloud.Common
             if (null == cachedObjects)
                 throw new Exception("CacheSize not set, reccomended size: 20,000");
 
-            for (int ctr = 0; ctr < cachedObjects.Length; ctr++)
-            {
-                object cached = cachedObjects[ctr];
-
-                if (cached == Interlocked.CompareExchange<object>(ref cachedObjects[ctr], null, cached))
-                    if (cached is IAware)
-                        ((IAware)cached).DecrementCacheCount();
-            }
-
-            CheckNeedCleanCaches();
-        }
-
-        /// <summary>
-        /// Whenever a GC has occured, the cached should be cleaned and all dead weak references removed
-        /// </summary>
-        private static void CheckNeedCleanCaches()
-        {
-            int priorGCCollectionCount = PriorGCCollectionCount;
-            int myGCCount = GC.CollectionCount(GC.MaxGeneration);
-
-            if (priorGCCollectionCount != myGCCount)
-                if (priorGCCollectionCount == Interlocked.CompareExchange(ref PriorGCCollectionCount, myGCCount, priorGCCollectionCount))
-                    ThreadPool.QueueUserWorkItem(CleanCaches);
-        }
-		
-		/// <summary>
-		/// Synchronizes CleanCaches so that there aren't duplicate runnning threads in case there are multiple GCs 
-		/// </summary>
-		private static object CleanCachesKey = new object();
-		
-		private static void CleanCaches(object state)
-        {
-			// Prevent duplicate threads from cleaning the caches
-			if (!Monitor.TryEnter(CleanCachesKey))
-				return;
-			
-			try
-			{
-	            LockFreeQueue<WeakReference> allCaches = AllCaches;
-	            AllCaches = new LockFreeQueue<WeakReference>();
-	
-	            WeakReference weakReference;
-	            while (allCaches.Dequeue(out weakReference))
-	                try
-	                {
-	                    {
-	                        Cache cache = weakReference.Target as Cache;
-	
-	                        if (null != cache)
-	                        {
-	                            cache.RemoveCollectedCacheHandles();
-	                            AllCaches.Enqueue(weakReference);
-	                        }
-	                    }
-	                }
-	                catch (Exception e)
-	                {
-	                    log.Warn("Exception while cleaning out old WeakReferences after a garbage collection", e);
-	                }
-            }
-            catch (Exception e)
-            {
-                log.Warn("Exception while cleaning out old WeakReferences after a garbage collection", e);
-            }
-			finally
-			{
-				Monitor.Exit(CleanCachesKey);
-			}
-        }
-
-        private static long MemoryInUse = 0;
-
-        /// <summary>
-        /// The maximum amount of memory that large objects will use; ObjectCloud will release memory when large objects occupy more then the specified memory
-        /// </summary>
-        public static long MaximumMemoryToUse
-        {
-            get { return _MaximumMemoryToUse; }
-            set
-            {
-                _MaximumMemoryToUse = value;
-                ManageMemoryUse(0);
-            }
-        }
-        private static long _MaximumMemoryToUse = long.MaxValue;
-
-        /// <summary>
-        /// Call to help ObjectCloud manually manage memory. For objects that hold large amounts of memory, they chould call this with the delta so ObjectCloud knows when to release memory. It is reccomended to call this prior to allocating and de-allocating memory so that there is free memory available
-        /// </summary>
-        /// <param name="delta"></param>
-        public static void ManageMemoryUse(long delta)
-        {
-            long memoryInUse;
-
-            do
-            {
-                memoryInUse = MemoryInUse;
-            } while (memoryInUse != Interlocked.CompareExchange(ref MemoryInUse, memoryInUse + delta, memoryInUse));
-
-            if (MemoryInUse > _MaximumMemoryToUse)
-                if (!RecoveringMemory)
-                    lock (RecoverMemoryPulser)
-                        Monitor.Pulse(RecoverMemoryPulser);
-        }
-
-        static Cache()
-        {
-            Thread recoverOldMemoryThread = new Thread(RecoverOldMemory);
-            recoverOldMemoryThread.Name = "Scans cache to remove old items occupying lots of RAM";
-            recoverOldMemoryThread.IsBackground = true;
-			recoverOldMemoryThread.Priority = ThreadPriority.Highest;
-
-            recoverOldMemoryThread.Start();
-        }
-
-        /// <summary>
-        /// Set to true when the cache is recovering memory
-        /// </summary>
-        private static bool RecoveringMemory = false;
-
-        /// <summary>
-        /// Used to signal to the recovering memory thread to start
-        /// </summary>
-        private static object RecoverMemoryPulser = new object();
-
-        private static void RecoverOldMemory()
-        {
-            while (true)
-                try
-                {
-                    lock (RecoverMemoryPulser)
-                        Monitor.Wait(RecoverMemoryPulser);
-				
-					log.Info("Recovering memory");
-
-                    RecoveringMemory = true;
-
-                    // Reduse to 80% of target memory use so this thread isn't constantly being started
-                    long targetMemoryUse = Convert.ToInt64(Convert.ToDouble(MaximumMemoryToUse) * 0.80);
-
-                    try
-                    {
-                        // Just write nulls into the cache until memory use falls within acceptable limits
-                        int tries = 0;
-                        while ((MemoryInUse > targetMemoryUse) && (tries < CachedObjects.Length))
-                        {
-                            try
-                            {
-                                CacheObject(null);
-                            }
-                            catch (Exception e)
-                            {
-                                log.Warn("Exception while recovering old memory", e);
-                            }
-
-                            tries++;
-                        }
-				
-						log.Info("Recovering memory, total tries: " + tries.ToString());
-                    }
-                    finally
-                    {
-                        RecoveringMemory = false;
-                    }
-                }
-                catch (Exception e)
-                {
-                    log.Warn("Exception while recovering old memory", e);
-                }
-        }
-        
-        /// <summary>
-		/// Removes all of the collected cache handles from the cache 
-		/// </summary>
-		protected abstract void RemoveCollectedCacheHandles();
-
-        /// <summary>
-        /// Interface for objects that need to know if they are being handled in the cache
-        /// </summary>
-        public interface IAware
-        {
-            /// <summary>
-            /// Called whenever the object is being stored in the cache
-            /// </summary>
-            void IncrementCacheCount();
-
-            /// <summary>
-            /// Called whenever the object is released from the cache
-            /// </summary>
-            void DecrementCacheCount();
-        }
-
-        /// <summary>
-        /// Helper base class for making an object able to manually manage its memory
-        /// </summary>
-        public abstract class Aware : IAware
-        {
-            private int NumReferences = 0;
-
-            public void IncrementCacheCount()
-            {
-                Interlocked.Increment(ref NumReferences);
-            }
-
-            /// <summary>
-            /// Implement this function to manually release memory when the object is no longer alive in the cache
-            /// </summary>
-            protected abstract void ReleaseMemory();
-
-            public void DecrementCacheCount()
-            {
-                if (0 == Interlocked.Decrement(ref NumReferences))
-                {
-                    try
-                    {
-                        ReleaseMemory();
-                        GC.SuppressFinalize(this);
-                    }
-                    catch (Exception e)
-                    {
-                        log.Warn("Exception when releasing memory", e);
-                    }
-                }
-            }
-
-            ~Aware()
-            {
-                try
-                {
-                    ReleaseMemory();
-                }
-                catch (Exception e)
-                {
-                    log.Warn("Exception when releasing memory", e);
-                }
-            }
+            Array.Clear(cachedObjects, 0, cachedObjects.Length);
         }
     }
 

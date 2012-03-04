@@ -163,11 +163,6 @@ namespace ObjectCloud.Interfaces.WebServer
         int? CacheSize { get; set; }
 
         /// <summary>
-        /// The maxiumum amount of data that ObjectCloud should keep in RAM for items that it knows their size
-        /// </summary>
-        long MaxKnownMemoryUse { get; set; }
-
-        /// <summary>
         /// The number of concurrent requests that the web server will handle.  Defaults to 2 per core 
         /// </summary>
         int NumConcurrentRequests { get; set; }

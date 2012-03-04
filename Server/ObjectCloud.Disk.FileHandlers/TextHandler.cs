@@ -16,7 +16,7 @@ using ObjectCloud.Interfaces.Security;
 
 namespace ObjectCloud.Disk.FileHandlers
 {
-    public class TextHandler : LastModifiedFileHandler, ITextHandler, Cache.IAware
+    public class TextHandler : LastModifiedFileHandler, ITextHandler
     {
         string Path;
 
@@ -45,10 +45,7 @@ namespace ObjectCloud.Disk.FileHandlers
             using (TimedLock.Lock(this))
             {
                 if (null == Cached)
-                {
                     Cached = System.IO.File.ReadAllText(Path);
-                    Cache.ManageMemoryUse(Encoding.Default.GetByteCount(Cached));
-                }
 
                 return Cached;
             }
@@ -64,7 +61,6 @@ namespace ObjectCloud.Disk.FileHandlers
 
                 // set cached to null to test round trip
                 Cached = contents;
-                Cache.ManageMemoryUse(Encoding.Default.GetByteCount(Cached));
             }
 
             if (null != FileContainer)
@@ -111,8 +107,6 @@ namespace ObjectCloud.Disk.FileHandlers
                         long size = 0;
                         foreach (string s in CachedEnumerable)
                             size += Encoding.Default.GetByteCount(s);
-
-                        Cache.ManageMemoryUse(size);
                     }
                 }
 
@@ -151,10 +145,7 @@ namespace ObjectCloud.Disk.FileHandlers
                 File.AppendAllText(Path, toAppend);
 
                 if (null != cached)
-                {
                     Cached = cached + toAppend;
-                    Cache.ManageMemoryUse(Encoding.Default.GetByteCount(Cached));
-                }
             }
 
             // TODO:  diffing between the old and new text would be cool to include in the changedata
@@ -175,45 +166,10 @@ namespace ObjectCloud.Disk.FileHandlers
                 ContentsChanged(this, new EventArgs());
         }
 
-        /// <summary>
-        /// Number of cache references
-        /// </summary>
-        private int CacheCount = 0;
-
-        public void IncrementCacheCount()
-        {
-            Interlocked.Increment(ref CacheCount);
-        }
-
-        public void DecrementCacheCount()
-        {
-            if (Interlocked.Decrement(ref CacheCount) <= 0)
-                ReleaseMemory();
-        }
-
-        ~TextHandler()
-        {
-            ReleaseMemory();
-        }
-
         private void ReleaseMemory()
         {
-            using (TimedLock.Lock(this))
-            {
-                long size = 0;
-
-                if (null != Cached)
-                    size += Encoding.Default.GetByteCount(Cached);
-
-                if (null != CachedEnumerable)
-                    foreach (string s in CachedEnumerable)
-                        size += Encoding.Default.GetByteCount(s);
-
-                Cached = null;
-                CachedEnumerable = null;
-
-                Cache.ManageMemoryUse(-1 * size);
-            }
+            Cached = null;
+            CachedEnumerable = null;
         }
     }
 }
