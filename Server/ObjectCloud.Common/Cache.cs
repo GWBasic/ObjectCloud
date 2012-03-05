@@ -75,9 +75,14 @@ namespace ObjectCloud.Common
         private int _GCCountAtLastCleanup = GC.CollectionCount(GC.MaxGeneration);
 
         /// <summary>
-        /// All of the weak references as they are added. This queue is used to allow each operation to look at a weak refernence to eventually detect when the cache needs to be cleaned
+        /// All of the weak references to periodically scan to see if the cache needs to be cleaned up
         /// </summary>
-        private LockFreeQueue<WeakReference> _ScanQueue = new LockFreeQueue<WeakReference>();
+        private List<WeakReference> WRsToScan = new List<WeakReference>();
+
+        /// <summary>
+        /// The next WeakReference to scan
+        /// </summary>
+        private int ScanCtr = int.MinValue;
 
         public Cache(CreateForCache<TKey, TValue, TConstructorArg> createForCache)
         {
@@ -101,16 +106,16 @@ namespace ObjectCloud.Common
         /// </summary>
         private void CheckForCleanup()
         {
-            WeakReference wr;
-            if (_ScanQueue.Dequeue(out wr))
-            {
-                // Keep re-queuing items that are still alive
-                if (wr.IsAlive)
-                    _ScanQueue.Enqueue(wr);
+            List<WeakReference> wrsToScan = WRsToScan;
 
-                else if (_GCCountAtLastCleanup != GC.CollectionCount(GC.MaxGeneration))
-                    ThreadPool.QueueUserWorkItem(DoCleanup);
-            }
+            if (0 == wrsToScan.Count)
+                return;
+
+            int scanCtr = Interlocked.Increment(ref ScanCtr) % wrsToScan.Count;
+            WeakReference wr = wrsToScan[Math.Abs(scanCtr)];
+
+            if (!wr.IsAlive)
+                ThreadPool.QueueUserWorkItem(DoCleanup);
         }
 
         private void DoCleanup(object state)
@@ -124,7 +129,8 @@ namespace ObjectCloud.Common
                 {
                     _GCCountAtLastCleanup = GC.CollectionCount(GC.MaxGeneration);
 
-                    foreach (KeyValuePair<TKey, WeakReference> kvp in new Dictionary<TKey, WeakReference>(Dictionary))
+                    foreach (KeyValuePair<TKey, WeakReference> kvp in 
+                        new List<KeyValuePair<TKey, WeakReference>>(Dictionary))
                     {
                         TKey key = kvp.Key;
                         WeakReference wr = kvp.Value;
@@ -133,6 +139,9 @@ namespace ObjectCloud.Common
                             Dictionary.Remove(key);
                     }
                 }
+
+                WRsToScan.Clear();
+                WRsToScan.AddRange(Dictionary.Values);
             }
             finally
             {
@@ -188,7 +197,7 @@ namespace ObjectCloud.Common
                         weakReference = new WeakReference(null);
                         Dictionary[key] = weakReference;
 
-                        _ScanQueue.Enqueue(weakReference);
+                        WRsToScan.Add(weakReference);
                     }
                 }
                 finally
@@ -244,7 +253,7 @@ namespace ObjectCloud.Common
                             weakReference = new WeakReference(value);
                             Dictionary[key] = weakReference;
 
-                            _ScanQueue.Enqueue(weakReference);
+                            WRsToScan.Add(weakReference);
                         }
                     }
                     finally
@@ -278,8 +287,7 @@ namespace ObjectCloud.Common
                     return false;
                 
                 Dictionary.Remove(key);
-
-                // No effort is made to remove from _ScanQueue because it'll eventually be cleaned up
+                WRsToScan.Remove(weakReference);
             }
             finally
             {
@@ -317,8 +325,7 @@ namespace ObjectCloud.Common
                 }
 
                 Dictionary.Clear();
-
-                _ScanQueue = new LockFreeQueue<WeakReference>();
+                WRsToScan.Clear();
             }
             finally
             {
