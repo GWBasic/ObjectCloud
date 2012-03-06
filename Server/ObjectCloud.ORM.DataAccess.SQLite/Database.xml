@@ -11,7 +11,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
 	xsi:schemaLocation="http://www.springframework.net http://www.springframework.net/xsd/spring-objects-1.1.xsd">
 
-  <object id="EmbeddedDatabaseConnector" type="ObjectCloud.ORM.DataAccess.SQLite.SQLiteConnector, ObjectCloud.ORM.DataAccess.SQLite" />
+  <object id="EmbeddedDatabaseConnector" type="ObjectCloud.ORM.DataAccess.SQLite.PHX_SQLiteDatabaseConnector, ObjectCloud.ORM.DataAccess.SQLite" />
 
   <!-- Bind data access to SQLite, this sets up all data-bound file types to use SQLite as their embedded DB -->
 
