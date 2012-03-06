@@ -111,7 +111,8 @@ namespace ObjectCloud.ORM.DataAccess.SQLite
 				if (null == _SqliteParameterType)
 					_SqliteParameterType = TypeFunctions.LoadType(
 						"Mono.Data.Sqlite.SqliteParameter, Mono.Data.Sqlite",
-					    "System.Data.SQLite.SQLiteParameter, System.Data.SQLite");
+                        "System.Data.SQLite.SQLiteParameter, System.Data.SQLite.Win32",
+					    "System.Data.SQLite.SQLiteParameter, System.Data.SQLite.x64");
 			
 				return _SqliteParameterType;
 			}

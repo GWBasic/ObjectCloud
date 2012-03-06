@@ -6,6 +6,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.IO;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 
@@ -283,6 +286,23 @@ namespace ObjectCloud.ORM.DataAccess.SQLite
             booleanOperatorToSqlOperator[BooleanOperator.And] = "and";
             booleanOperatorToSqlOperator[BooleanOperator.Or] = "or";
             booleanOperatorToSqlOperator[BooleanOperator.Xor] = "xor";
+
+            // deal with 32-bit versus 64-bit
+            string myPath = Assembly.GetExecutingAssembly().Location;
+            myPath = Path.GetDirectoryName(myPath);
+            int environmentSize = Marshal.SizeOf(typeof(IntPtr));
+
+            if (4 == environmentSize)
+                // 32-bit
+                File.Copy(
+                    Path.Combine(myPath, "SQLite.Interop.Win32.dll"),
+                    Path.Combine(myPath, "SQLite.Interop.dll"), true);
+
+            else if (8 == environmentSize)
+                // 64-bit
+                File.Copy(
+                    Path.Combine(myPath, "SQLite.Interop.x64.dll"),
+                    Path.Combine(myPath, "SQLite.Interop.dll"), true);
         }
     }
 }
