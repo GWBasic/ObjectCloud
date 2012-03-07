@@ -26,8 +26,6 @@ namespace ObjectCloud.ORM.DataAccess.SQLite
 			bool isMono = null != Type.GetType ("Mono.Runtime");
 			int environmentSize = Marshal.SizeOf(typeof(IntPtr));
 			
-			//Console.WriteLine(typeof(Mono.Data.Sqlite.SqliteConnection).Assembly.FullName);
-			
 			if (isMono)
 				Assembly.Load("Mono.Data.Sqlite, Version=2.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756");
 			else if (4 == environmentSize)
