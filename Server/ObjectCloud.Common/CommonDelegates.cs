@@ -29,6 +29,11 @@ namespace ObjectCloud.Common
 	/// </summary>
 	public delegate R GenericArgumentReturn<T, R>(T arg);
 
+	/// <summary>
+	/// A delegate that takes a generic argument and returns a generic
+	/// </summary>
+	public delegate R GenericArgumentReturn<T1, T2, R>(T1 arg1, T2 arg2);
+
     public delegate void EventHandler<TSender, TEventArgs>(TSender sender, TEventArgs e)
         where TEventArgs : System.EventArgs;
 }

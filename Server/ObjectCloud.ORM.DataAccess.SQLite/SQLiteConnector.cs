@@ -5,6 +5,7 @@
 using System;
 using System.Data.Common;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 
 using Common.Logging;
@@ -47,15 +48,22 @@ namespace ObjectCloud.ORM.DataAccess.SQLite
 			
 			log.InfoFormat("SqlConnectionType: {0}", sqlConnectionType.AssemblyQualifiedName);
 
-			_SqliteConnectionConstructor = sqlConnectionType.GetConstructor(new Type[] {typeof(string)});
+			ConstructorInfo sqliteConnectionConstructor = sqlConnectionType.GetConstructor(new Type[] {typeof(string)});
 			
-			if (null == _SqliteConnectionConstructor)
+			if (null == sqliteConnectionConstructor)
 				throw new TypeLoadException("SQLite connection class does not have a constructor that takes a connection string");
-
-			_SqliteConnectionCreateFileMethod = sqlConnectionType.GetMethod("CreateFile", BindingFlags.Static | BindingFlags.Public, null, new Type[] {typeof(string)}, null);
 			
-			if (null == _SqliteConnectionCreateFileMethod)
+			_OpenDelegate = (GenericArgumentReturn<string, DbConnection>)CreateDelegate(
+				sqliteConnectionConstructor, typeof(GenericArgumentReturn<string, DbConnection>));
+
+			MethodInfo sqlConnectionCreateFileMethod = sqlConnectionType.GetMethod("CreateFile", BindingFlags.Static | BindingFlags.Public, null, new Type[] {typeof(string)}, null);
+			
+			if (null == sqlConnectionCreateFileMethod)
 				throw new TypeLoadException("Can not find a CreateFile static method for " + sqlConnectionType.Name + " that takes a single argument as a string");
+			
+			_CreateFileDelegate = (GenericArgument<string>)Delegate.CreateDelegate(
+				typeof(GenericArgument<string>),
+				sqlConnectionCreateFileMethod);
 			
 			Type sqlParameterType = null;
 			
@@ -69,76 +77,16 @@ namespace ObjectCloud.ORM.DataAccess.SQLite
 			if (null == sqlParameterType)
 				throw new TypeLoadException("Can not find Mono.Data.Sqlite.SqliteParameter or System.Data.SQLite.SQLiteParameter");
 
-			_SqlParameterConstructor = sqlParameterType.GetConstructor(new Type[] {typeof(string), typeof(object)});
+			ConstructorInfo sqlParameterConstructor = sqlParameterType.GetConstructor(new Type[] {typeof(string), typeof(object)});
 			
-			if (null == _SqlParameterConstructor)
+			if (null == sqlParameterConstructor)
 				throw new TypeLoadException("Can not find a constructor for " + sqlParameterType.Name + " that takes a parameter name and value");
-		}
-		
-		/*public SQLiteConnector()
-		{
-			_SqlConnectionType = Type.GetType("Mono.Data.Sqlite.SqliteConnection, Mono.Data.Sqlite, Version=2.0.0.0"); //typeof(Mono.Data.Sqlite.SqliteConnection);
-			_SqliteParameterType = typeof(Mono.Data.Sqlite.SqliteParameter);
 			
-			Console.WriteLine(_SqlConnectionType.FullName);
-			Console.WriteLine(_SqlConnectionType.AssemblyQualifiedName);
-
-            // deal with 32-bit versus 64-bit
-            string myPath = Assembly.GetExecutingAssembly().Location;
-            myPath = Path.GetDirectoryName(myPath);
-            int environmentSize = Marshal.SizeOf(typeof(IntPtr));
-
-            if (4 == environmentSize)
-                // 32-bit
-                File.Copy(
-                    Path.Combine(myPath, "SQLite.Interop.Win32.dll"),
-                    Path.Combine(myPath, "SQLite.Interop.dll"), true);
-
-            else if (8 == environmentSize)
-                // 64-bit
-                File.Copy(
-                    Path.Combine(myPath, "SQLite.Interop.x64.dll"),
-                    Path.Combine(myPath, "SQLite.Interop.dll"), true);
-		}*/
-		/*
-		/// <value>
-		/// The Type object for SqlConnection
-		/// </value>
-		public Type SqlConnectionType
-		{
-			get
-			{
-                if (null == _SqlConnectionType)
-                    _SqlConnectionType = TypeFunctions.LoadType(
-                        "Mono.Data.Sqlite.SqliteConnection, Mono.Data.Sqlite",
-                        "System.Data.SQLite.SQLiteConnection, System.Data.SQLite");
-			
-				return _SqlConnectionType;
-			}
+			_ConstructParameterDelegate = (GenericArgumentReturn<string, object, DbParameter>)CreateDelegate(
+				sqlParameterConstructor, typeof(GenericArgumentReturn<string, object, DbParameter>));
 		}
-		private Type _SqlConnectionType = null;
 		
-		/// <value>
-		/// SqlConnection's constructor that takes a connection string
-		/// </value>
-		public ConstructorInfo SqliteConnectionConstructor
-		{
-			get
-			{
-				if (null == _SqliteConnectionConstructor)
-				{
-					_SqliteConnectionConstructor = SqlConnectionType.GetConstructor(new Type[] {typeof(string)});
-					
-					if (null == _SqliteConnectionConstructor)
-						throw new TypeLoadException("Can not find a constructor for " + SqlConnectionType.Name + " that takes a single argument as a string");
-				}
-					
-				return _SqliteConnectionConstructor;
-			}
-		}
-		private ConstructorInfo _SqliteConnectionConstructor = null;*/
-		
-		private static ConstructorInfo _SqliteConnectionConstructor = null;
+		private static GenericArgumentReturn<string, DbConnection> _OpenDelegate;
 	
 		/// <summary>
 		/// Opens a connection to the SQLite database with the given connection string.  Automatically chooses System.Data.SQLite or Mono.Data.Sqlite
@@ -151,29 +99,10 @@ namespace ObjectCloud.ORM.DataAccess.SQLite
 		/// </returns>
 		protected override DbConnection OpenInt(string connectionString)
 		{
-			return (DbConnection)_SqliteConnectionConstructor.Invoke(new object[] {connectionString});
+			return _OpenDelegate(connectionString);
 		}
 		
-		/*
-		/// <value>
-		/// SqliteConnection's CreateFile method
-		/// </value>
-		public MethodInfo SqliteConnectionCreateFileMethod
-		{
-			get
-			{
-				if (null == _SqliteConnectionCreateFileMethod)
-				{
-					_SqliteConnectionCreateFileMethod = SqlConnectionType.GetMethod("CreateFile", BindingFlags.Static | BindingFlags.Public, null, new Type[] {typeof(string)}, null);
-					
-					if (null == _SqliteConnectionCreateFileMethod)
-						throw new TypeLoadException("Can not find a CreateFile static method for " + SqlConnectionType.Name + " that takes a single argument as a string");
-				}
-				
-				return _SqliteConnectionCreateFileMethod;
-			}
-		}*/
-		private static MethodInfo _SqliteConnectionCreateFileMethod = null;
+		private static GenericArgument<string> _CreateFileDelegate;
 
 		/// <summary>
 		/// Creates a new SQLite database.  Automatically chooses System.Data.SQLite or Mono.Data.Sqlite
@@ -186,46 +115,10 @@ namespace ObjectCloud.ORM.DataAccess.SQLite
 		/// </returns>
 		public override void CreateFile(string databaseFilename)
 		{
-			_SqliteConnectionCreateFileMethod.Invoke(null, new object[] {databaseFilename});
+			_CreateFileDelegate(databaseFilename);
 		}
-		
-		/*
-		/// <value>
-		/// The Type object for SqliteParameter
-		/// </value>
-		public Type SqliteParameterType
-		{
-			get
-			{
-				if (null == _SqliteParameterType)
-					_SqliteParameterType = TypeFunctions.LoadType(
-						"Mono.Data.Sqlite.SqliteParameter, Mono.Data.Sqlite",
-                        "System.Data.SQLite.SQLiteParameter, System.Data.SQLite");
-			
-				return _SqliteParameterType;
-			}
-		}
-		private Type _SqliteParameterType = null;
-		
-		/// <value>
-		/// SqliteParameter's constructor that takes a connection string
-		/// </value>
-		public ConstructorInfo SqliteParameterConstructor
-		{
-			get
-			{
-				if (null == _SqliteParameterConstructor)
-				{
-					_SqliteParameterConstructor = SqliteParameterType.GetConstructor(new Type[] {typeof(string), typeof(object)});
-					
-					if (null == SqliteParameterConstructor)
-						throw new TypeLoadException("Can not find a constructor for " + SqliteParameterType.Name + " that takes a parameter name and value");
-				}
-					
-				return _SqliteParameterConstructor;
-			}
-		}*/
-		private static ConstructorInfo _SqlParameterConstructor = null;
+
+		private static GenericArgumentReturn<string, object, DbParameter> _ConstructParameterDelegate;
 	
 		/// <summary>
 		/// Constructs the appropriate DbParameter.  Automatically chooses System.Data.SQLite or Mono.Data.Sqlite
@@ -241,7 +134,88 @@ namespace ObjectCloud.ORM.DataAccess.SQLite
 		/// </returns>
 		public override DbParameter ConstructParameter(string parameterName, object value)
 		{
-			return (DbParameter)_SqlParameterConstructor.Invoke(new object[] {parameterName, value});
+			return _ConstructParameterDelegate(parameterName, value);
 		}
+		
+		/// <summary>
+		/// From http://blogs.msdn.com/b/zelmalki/archive/2008/12/12/reflection-fast-object-creation.aspx
+		/// TODO: Turn this into an extension method when I move to .Net 3 or 4
+		/// </summary>
+		public static Delegate CreateDelegate(ConstructorInfo constructor, Type delegateType)
+        {
+            if (constructor == null)
+            {
+                throw new ArgumentNullException("constructor"); 
+            }
+            if (delegateType == null)
+            {
+                throw new ArgumentNullException("delegateType");
+            }
+
+            // Validate the delegate return type
+            MethodInfo delMethod = delegateType.GetMethod("Invoke");
+            /*if (delMethod.ReturnType != constructor.DeclaringType)
+            {
+                throw new InvalidOperationException("The return type of the delegate must match the constructors delclaring type");
+            }*/
+
+            // Validate the signatures
+            ParameterInfo[] delParams = delMethod.GetParameters();
+            ParameterInfo[] constructorParam = constructor.GetParameters();
+            if (delParams.Length != constructorParam.Length)
+            {
+                throw new InvalidOperationException("The delegate signature does not match that of the constructor");
+            }
+            for (int i = 0; i < delParams.Length; i++)
+            {
+                if (delParams[i].ParameterType != constructorParam[i].ParameterType ||  // Probably other things we should check ??
+                    delParams[i].IsOut)
+                {
+                    throw new InvalidOperationException("The delegate signature does not match that of the constructor");
+                }
+            }
+            // Create the dynamic method
+            DynamicMethod method =
+                new DynamicMethod(
+                    string.Format("{0}__{1}", constructor.DeclaringType.Name, Guid.NewGuid().ToString().Replace("-","")),
+                    delMethod.ReturnType,
+                    Array.ConvertAll<ParameterInfo, Type>(constructorParam, p => p.ParameterType),
+                    true
+                    );
+
+            // Create the il
+            ILGenerator gen = method.GetILGenerator();
+            for (int i = 0; i < constructorParam.Length; i++)
+            {
+                if (i < 4)
+                {
+                    switch (i)
+                    {
+                        case 0:
+                            gen.Emit(OpCodes.Ldarg_0);
+                            break;
+                        case 1:
+                            gen.Emit(OpCodes.Ldarg_1);
+                            break;
+                        case 2:
+                            gen.Emit(OpCodes.Ldarg_2);
+                            break;
+                        case 3:
+                            gen.Emit(OpCodes.Ldarg_3);
+                            break;
+                    }
+                }
+                else
+                {
+                    gen.Emit(OpCodes.Ldarg_S, i);   
+                }
+            }
+            gen.Emit(OpCodes.Newobj, constructor);
+            gen.Emit(OpCodes.Ret);
+
+            // Return the delegate :)
+            return method.CreateDelegate(delegateType);
+
+        }
 	}
 }
