@@ -38,17 +38,10 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Data.SQLite, Version=1.0.64.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependancies\System.Data.SQLite.dll</HintPath>
-    </Reference>
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CantOpenDatabaseException.cs" />
-    <Compile Include="PHX_SQLiteDatabaseConnector.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="SQLiteConnectorBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SQLiteConnector.cs" />
@@ -71,11 +64,11 @@
     <Content Include="Database.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="SQLite.Interop.Win32.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <Content Include="System.Data.SQLite.Win32.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="SQLite.Interop.x64.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <Content Include="System.Data.SQLite.x64.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
