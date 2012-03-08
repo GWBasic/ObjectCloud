@@ -4,6 +4,7 @@
 
 using System;
 using System.Data.Common;
+using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
@@ -26,15 +27,31 @@ namespace ObjectCloud.ORM.DataAccess.SQLite
 		{
 			bool isMono = null != Type.GetType ("Mono.Runtime");
 			int environmentSize = Marshal.SizeOf(typeof(IntPtr));
-			
-			if (isMono)
-				Assembly.Load("Mono.Data.Sqlite, Version=2.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756");
-			else if (4 == environmentSize)
-				Assembly.Load("System.Data.SQLite.Win32.dll");
-			else if (8 == environmentSize)
-				Assembly.Load("System.Data.SQLite.x64.dll");
-			else
-				throw new TypeLoadException("Don't know what sqlite library to load");
+
+            //Console.WriteLine(typeof(System.Data.SQLite.SQLiteConnection).AssemblyQualifiedName);
+
+            if (isMono)
+                Assembly.Load("Mono.Data.Sqlite, Version=2.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756");
+            else
+            {
+                string folder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                string destination = Path.Combine(folder, "System.Data.SQLite.dll");
+
+                if (4 == environmentSize)
+                    File.Copy(
+                        Path.Combine(folder, "System.Data.SQLite.Win32.dll"),
+                        destination,
+                        true);
+                else if (8 == environmentSize)
+                    File.Copy(
+                        Path.Combine(folder, "System.Data.SQLite.x64.dll"),
+                        destination,
+                        true);
+                else
+                    throw new TypeLoadException("Don't know what sqlite library to load");
+
+                Assembly.Load("System.Data.SQLite, Version=1.0.79.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139");
+            }
 			
 			Type sqlConnectionType;
 			
