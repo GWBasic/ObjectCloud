@@ -20,21 +20,9 @@ namespace ObjectCloud.Platform
 		{
 			if (null != Type.GetType("Mono.Runtime"))
 			{
+				UseMonoDataSqlite();
+				
 				/*/ Use Mono's version of SQLite
-				SQLitePlatformAdapter.sqliteConnectionType = typeof(Mono.Data.Sqlite.SqliteConnection);
-				SQLitePlatformAdapter.sqliteParameterType = typeof(Mono.Data.Sqlite.SqliteParameter);
-				
-				SQLitePlatformAdapter.openConnection = connectionString =>
-					new Mono.Data.Sqlite.SqliteConnection(connectionString);
-				
-				SQLitePlatformAdapter.createFile = databaseFileName =>
-					Mono.Data.Sqlite.SqliteConnection.CreateFile(databaseFileName);
-				
-				SQLitePlatformAdapter.constructParameter = (parameterName, value) =>
-					new Mono.Data.Sqlite.SqliteParameter(parameterName, value);*/
-				
-				
-				// Use Mono's version of SQLite
 				SQLitePlatformAdapter.sqliteConnectionType = Type.GetType(
 					"Mono.Data.Sqlite.SqliteConnection, Mono.Data.Sqlite, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756");
 				if (null == SQLitePlatformAdapter.sqliteConnectionType)
@@ -68,7 +56,7 @@ namespace ObjectCloud.Platform
 					throw new TypeLoadException("Can not find a constructor for Mono.Data.Sqlite.SqliteParameter that takes a parameter name and value");
 				
 				SQLitePlatformAdapter.constructParameter = (Func<string, object, DbParameter>)sqliteParameterConstructor.CreateDelegate(
-					typeof(Func<string, object, DbParameter>));
+					typeof(Func<string, object, DbParameter>));*/
 			}
 			else
 			{
@@ -107,6 +95,22 @@ namespace ObjectCloud.Platform
 					new System.Data.SQLite.SQLiteParameter(parameterName, value);
 			}
 		}
+
+		static void UseMonoDataSqlite()
+		{
+			// Use Mono's version of SQLite
+			SQLitePlatformAdapter.sqliteConnectionType = typeof(Mono.Data.Sqlite.SqliteConnection);
+			SQLitePlatformAdapter.sqliteParameterType = typeof(Mono.Data.Sqlite.SqliteParameter);
+			
+			SQLitePlatformAdapter.openConnection = connectionString =>
+				new Mono.Data.Sqlite.SqliteConnection(connectionString);
+			
+			SQLitePlatformAdapter.createFile = databaseFileName =>
+				Mono.Data.Sqlite.SqliteConnection.CreateFile(databaseFileName);
+			
+			SQLitePlatformAdapter.constructParameter = (parameterName, value) =>
+				new Mono.Data.Sqlite.SqliteParameter(parameterName, value);
+		}
 		
 		/// <summary>
 		/// The .Net type used to create SQLite connections
@@ -115,7 +119,7 @@ namespace ObjectCloud.Platform
 		{
 			get { return SQLitePlatformAdapter.sqliteConnectionType; }
 		}
-		private readonly static Type sqliteConnectionType;
+		private static Type sqliteConnectionType;
 
 		/// <summary>
 		/// The .Net type used to create SQLite parameters
@@ -124,7 +128,7 @@ namespace ObjectCloud.Platform
 		{
 			get { return SQLitePlatformAdapter.sqliteParameterType; }
 		}
-		private readonly static Type sqliteParameterType;
+		private static Type sqliteParameterType;
 
 		/// <summary>
 		/// Opens a connection with the given connection string
