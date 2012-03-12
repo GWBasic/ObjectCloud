@@ -4,14 +4,17 @@
 
 using System;
 
-using SignalHandller;
+using ObjectCloud.Platform;
 
-namespace SignalHandlerTest
+namespace ObjectCloud.Platform.Test
 {
 	class MainClass
 	{
 		public static void Main(string[] args)
 		{
+			Console.WriteLine(SQLitePlatformAdapter.SqliteConnectionType.AssemblyQualifiedName);
+			Console.WriteLine(SQLitePlatformAdapter.SqliteParameterType.AssemblyQualifiedName);
+			
 			Console.WriteLine("Blocking...");
 			
 			object result = Blocker.Block();

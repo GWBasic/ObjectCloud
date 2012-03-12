@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -7,7 +7,8 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{CE926A20-0D44-4CFF-8522-1E026FB2958F}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <AssemblyName>SignalHandller</AssemblyName>
+    <AssemblyName>ObjectCloud.Platform</AssemblyName>
+    <RootNamespace>ObjectCloud.Platform</RootNamespace>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -28,8 +29,18 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Compile Include="Blocker.cs" />
+    <Compile Include="SQLitePlatformAdapter.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Mono.Posix" />
+    <Reference Include="Mono.Data.Sqlite" />
+    <Reference Include="System.Data.SQLite">
+      <HintPath>..\..\..\Dependancies\System.Data.SQLite.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="SQLite.Interop.x64.dll" />
+    <EmbeddedResource Include="SQLite.Interop.x86.dll" />
   </ItemGroup>
 </Project>

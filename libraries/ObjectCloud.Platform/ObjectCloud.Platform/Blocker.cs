@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using Mono.Unix;
 using Mono.Unix.Native;
 
-namespace SignalHandller
+namespace ObjectCloud.Platform
 {
 	/// <summary>
 	/// Provides functions that block until the program recieves a terminating signal from unix

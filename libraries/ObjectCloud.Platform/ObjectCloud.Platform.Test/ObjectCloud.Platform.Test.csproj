@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -7,7 +7,8 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{DCC22BF7-040A-4BDD-A8D6-063C4B853D68}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <AssemblyName>SignalHandlerTest</AssemblyName>
+    <AssemblyName>ObjectCloud.Platform.Test</AssemblyName>
+    <RootNamespace>ObjectCloud.Platform.Test</RootNamespace>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -33,11 +34,11 @@
     <Compile Include="Main.cs" />
     <Compile Include="AssemblyInfo.cs" />
   </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\SignalHandller\SignalHandller.csproj">
+    <ProjectReference Include="..\ObjectCloud.Platform\ObjectCloud.Platform.csproj">
       <Project>{CE926A20-0D44-4CFF-8522-1E026FB2958F}</Project>
-      <Name>SignalHandller</Name>
+      <Name>ObjectCloud.Platform</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
