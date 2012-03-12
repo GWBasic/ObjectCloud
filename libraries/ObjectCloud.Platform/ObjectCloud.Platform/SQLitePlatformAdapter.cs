@@ -7,19 +7,20 @@ using System.Data.Common;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace ObjectCloud.Platform
 {
 	/// <summary>
 	/// Embedded database connector that dynamically selects Mono.Data.SQLite or System.Data.SQLite at runtime
 	/// </summary>
-	public class SQLitePlatformAdapter
+	public static class SQLitePlatformAdapter
 	{
 		static SQLitePlatformAdapter()
 		{
 			if (null != Type.GetType("Mono.Runtime"))
 			{
-				// Use Mono's version of SQLite
+				/*/ Use Mono's version of SQLite
 				SQLitePlatformAdapter.sqliteConnectionType = typeof(Mono.Data.Sqlite.SqliteConnection);
 				SQLitePlatformAdapter.sqliteParameterType = typeof(Mono.Data.Sqlite.SqliteParameter);
 				
@@ -30,10 +31,10 @@ namespace ObjectCloud.Platform
 					Mono.Data.Sqlite.SqliteConnection.CreateFile(databaseFileName);
 				
 				SQLitePlatformAdapter.constructParameter = (parameterName, value) =>
-					new Mono.Data.Sqlite.SqliteParameter(parameterName, value);
+					new Mono.Data.Sqlite.SqliteParameter(parameterName, value);*/
 				
 				
-				/*/ Use Mono's version of SQLite
+				// Use Mono's version of SQLite
 				SQLitePlatformAdapter.sqliteConnectionType = Type.GetType(
 					"Mono.Data.Sqlite.SqliteConnection, Mono.Data.Sqlite, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756");
 				if (null == SQLitePlatformAdapter.sqliteConnectionType)
@@ -51,7 +52,7 @@ namespace ObjectCloud.Platform
 				SQLitePlatformAdapter.openConnection = (Func<string, DbConnection>)sqliteConnectionConstructor.CreateDelegate(
 					typeof(Func<string, DbConnection>));
 				
-				var sqlConnectionCreateFileMethod = SQLitePlatformAdapter.sqliteParameterType.GetMethod(
+				var sqlConnectionCreateFileMethod = SQLitePlatformAdapter.sqliteConnectionType.GetMethod(
 					"CreateFile", BindingFlags.Static | BindingFlags.Public, null, new Type[] {typeof(string)}, null);
 			
 				if (null == sqlConnectionCreateFileMethod)
@@ -67,7 +68,7 @@ namespace ObjectCloud.Platform
 					throw new TypeLoadException("Can not find a constructor for Mono.Data.Sqlite.SqliteParameter that takes a parameter name and value");
 				
 				SQLitePlatformAdapter.constructParameter = (Func<string, object, DbParameter>)sqliteParameterConstructor.CreateDelegate(
-					typeof(Func<string, object, DbParameter>));*/
+					typeof(Func<string, object, DbParameter>));
 			}
 			else
 			{
@@ -151,5 +152,85 @@ namespace ObjectCloud.Platform
 			SQLitePlatformAdapter.createFile(path);
 		}
 		private static Action<string> createFile;
+		
+		/// <summary>
+		/// From http://blogs.msdn.com/b/zelmalki/archive/2008/12/12/reflection-fast-object-creation.aspx
+		/// TODO: Turn this into an extension method when I move to .Net 3 or 4
+		/// </summary>
+		public static Delegate CreateDelegate(this ConstructorInfo constructor, Type delegateType)
+        {
+            if (constructor == null)
+            {
+                throw new ArgumentNullException("constructor"); 
+            }
+            if (delegateType == null)
+            {
+                throw new ArgumentNullException("delegateType");
+            }
+
+            // Validate the delegate return type
+            MethodInfo delMethod = delegateType.GetMethod("Invoke");
+            /*if (delMethod.ReturnType != constructor.DeclaringType)
+            {
+                throw new InvalidOperationException("The return type of the delegate must match the constructors delclaring type");
+            }*/
+
+            // Validate the signatures
+            ParameterInfo[] delParams = delMethod.GetParameters();
+            ParameterInfo[] constructorParam = constructor.GetParameters();
+            if (delParams.Length != constructorParam.Length)
+            {
+                throw new InvalidOperationException("The delegate signature does not match that of the constructor");
+            }
+            for (int i = 0; i < delParams.Length; i++)
+            {
+                if (delParams[i].ParameterType != constructorParam[i].ParameterType ||  // Probably other things we should check ??
+                    delParams[i].IsOut)
+                {
+                    throw new InvalidOperationException("The delegate signature does not match that of the constructor");
+                }
+            }
+            // Create the dynamic method
+            DynamicMethod method =
+                new DynamicMethod(
+                    string.Format("{0}__{1}", constructor.DeclaringType.Name, Guid.NewGuid().ToString().Replace("-","")),
+                    delMethod.ReturnType,
+                    Array.ConvertAll<ParameterInfo, Type>(constructorParam, p => p.ParameterType),
+                    true
+                    );
+
+            // Create the il
+            ILGenerator gen = method.GetILGenerator();
+            for (int i = 0; i < constructorParam.Length; i++)
+            {
+                if (i < 4)
+                {
+                    switch (i)
+                    {
+                        case 0:
+                            gen.Emit(OpCodes.Ldarg_0);
+                            break;
+                        case 1:
+                            gen.Emit(OpCodes.Ldarg_1);
+                            break;
+                        case 2:
+                            gen.Emit(OpCodes.Ldarg_2);
+                            break;
+                        case 3:
+                            gen.Emit(OpCodes.Ldarg_3);
+                            break;
+                    }
+                }
+                else
+                {
+                    gen.Emit(OpCodes.Ldarg_S, i);   
+                }
+            }
+            gen.Emit(OpCodes.Newobj, constructor);
+            gen.Emit(OpCodes.Ret);
+
+            // Return the delegate :)
+            return method.CreateDelegate(delegateType);
+        }
 	}
 }
