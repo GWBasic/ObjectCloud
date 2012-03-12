@@ -15,21 +15,25 @@ using System.Threading;
 using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Database;
 using ObjectCloud.ORM.DataAccess.WhereConditionals;
+using ObjectCloud.Platform;
 
 namespace ObjectCloud.ORM.DataAccess.SQLite
 {
-    public abstract class SQLiteConnectorBase : IEmbeddedDatabaseConnector
+    public class SQLiteConnector : IEmbeddedDatabaseConnector
     {
-        public SQLiteConnectorBase()
+        public SQLiteConnector()
         {
             ConnectionOpenerCache = new Cache<string, ConnectionOpener>(CreateForCache);
         }
 
-        public abstract void CreateFile(string databaseFilename);
+        public void CreateFile(string databaseFilename)
+        {
+            SQLitePlatformAdapter.CreateFile(databaseFilename);
+        }
 
         public virtual DbConnection OpenEmbedded(string databaseFilename)
         {
-            return Open(string.Format("Data Source=\"{0}\"", databaseFilename));
+            return SQLitePlatformAdapter.OpenConnection(string.Format("Data Source=\"{0}\"", databaseFilename));
         }
 
         public DbConnection Open(string connectionString)
@@ -40,14 +44,14 @@ namespace ObjectCloud.ORM.DataAccess.SQLite
         /// <summary>
         /// Cache of connection openers, indexed by connection string.  Each connection opener will block new connections while there is an existing connection open
         /// </summary>
-        private Cache<string, SQLiteConnectorBase.ConnectionOpener> ConnectionOpenerCache;
+        private Cache<string, SQLiteConnector.ConnectionOpener> ConnectionOpenerCache;
 
         /// <summary>
         /// Opens a connection.  Blocks new connections while an existing connection is open
         /// </summary>
         public class ConnectionOpener
         {
-            public ConnectionOpener(string connectionString, SQLiteConnectorBase databaseConnector)
+            public ConnectionOpener(string connectionString, SQLiteConnector databaseConnector)
             {
                 ConnectionString = connectionString;
                 DatabaseConnector = databaseConnector;
@@ -55,7 +59,7 @@ namespace ObjectCloud.ORM.DataAccess.SQLite
             }
 
             private string ConnectionString;
-            private SQLiteConnectorBase DatabaseConnector;
+            private SQLiteConnector DatabaseConnector;
 
             private Semaphore Semaphore;
 
@@ -63,22 +67,6 @@ namespace ObjectCloud.ORM.DataAccess.SQLite
 			volatile string BlockingCallerStacktrace = null;
             volatile string BlockingCallerThreadName = null;
 #endif
-			/*DbConnection toReturn = null;
-			
-			/// <summary>
-            /// Opens a connection.  There's a problem here, a Thread currently cannot recusively open a connection.
-            /// </summary>
-            /// <returns></returns>
-            public DbConnection Open()
-            {
-				lock (this)
-					if (null == toReturn)
-                		toReturn = DatabaseConnector.OpenInt(ConnectionString);
-
-				Console.WriteLine(toReturn.State.ToString());
-				
-                return toReturn;
-			}*/
 			
             /// <summary>
             /// Opens a connection.  There's a problem here, a Thread currently cannot recusively open a connection.
@@ -88,7 +76,7 @@ namespace ObjectCloud.ORM.DataAccess.SQLite
             {
                 if (Semaphore.WaitOne(30000))
                 {
-                    DbConnection toReturn = DatabaseConnector.OpenInt(ConnectionString);
+                    DbConnection toReturn = SQLitePlatformAdapter.OpenConnection(ConnectionString);
                     toReturn.Disposed += new EventHandler(toReturn_Disposed);
 
 #if DEBUG
@@ -149,19 +137,15 @@ namespace ObjectCloud.ORM.DataAccess.SQLite
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        private SQLiteConnectorBase.ConnectionOpener CreateForCache(string key)
+        private SQLiteConnector.ConnectionOpener CreateForCache(string key)
         {
             return new ConnectionOpener(key, this);
         }
 
-        /// <summary>
-        /// Does the actual opening
-        /// </summary>
-        /// <param name="connectionString"></param>
-        /// <returns></returns>
-        protected abstract DbConnection OpenInt(string connectionString);
-
-        public abstract DbParameter ConstructParameter(string parameterName, object value);
+        public DbParameter ConstructParameter(string parameterName, object value)
+        {
+            return SQLitePlatformAdapter.ConstructParameter(parameterName, value);
+        }
 
         public DbParameter[] Build(ComparisonCondition comparisonCondition, out string whereClause)
         {
@@ -273,7 +257,7 @@ namespace ObjectCloud.ORM.DataAccess.SQLite
 
         private static readonly Dictionary<BooleanOperator, string> booleanOperatorToSqlOperator;
 
-        static SQLiteConnectorBase()
+        static SQLiteConnector()
         {
             comparisonOperatorToSqlOperator = new Dictionary<ComparisonOperator, string>(5);
             comparisonOperatorToSqlOperator[ComparisonOperator.Equals] = "=";
@@ -286,23 +270,6 @@ namespace ObjectCloud.ORM.DataAccess.SQLite
             booleanOperatorToSqlOperator[BooleanOperator.And] = "and";
             booleanOperatorToSqlOperator[BooleanOperator.Or] = "or";
             booleanOperatorToSqlOperator[BooleanOperator.Xor] = "xor";
-
-            // deal with 32-bit versus 64-bit
-            string myPath = Assembly.GetExecutingAssembly().Location;
-            myPath = Path.GetDirectoryName(myPath);
-            int environmentSize = Marshal.SizeOf(typeof(IntPtr));
-
-            if (4 == environmentSize)
-                // 32-bit
-                File.Copy(
-                    Path.Combine(myPath, "SQLite.Interop.Win32.dll"),
-                    Path.Combine(myPath, "SQLite.Interop.dll"), true);
-
-            else if (8 == environmentSize)
-                // 64-bit
-                File.Copy(
-                    Path.Combine(myPath, "SQLite.Interop.x64.dll"),
-                    Path.Combine(myPath, "SQLite.Interop.dll"), true);
         }
     }
 }
