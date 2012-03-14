@@ -10,8 +10,6 @@ using System.Text;
 using System.Threading;
 using System.Xml;
 
-using SignalHandller;
-
 using Spring.Context;
 using Spring.Context.Support;
 
@@ -19,6 +17,7 @@ using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.WebServer;
+using ObjectCloud.Platform;
 using ObjectCloud.Spring.Config;
 
 namespace ObjectCloud

@@ -51,15 +51,13 @@ namespace ObjectCloud.ORM.DataAccess.SQLite
         /// </summary>
         public class ConnectionOpener
         {
-            public ConnectionOpener(string connectionString, SQLiteConnector databaseConnector)
+            public ConnectionOpener(string connectionString)
             {
                 ConnectionString = connectionString;
-                DatabaseConnector = databaseConnector;
                 Semaphore = new Semaphore(1, 1);
             }
 
             private string ConnectionString;
-            private SQLiteConnector DatabaseConnector;
 
             private Semaphore Semaphore;
 
@@ -139,7 +137,7 @@ namespace ObjectCloud.ORM.DataAccess.SQLite
         /// <returns></returns>
         private SQLiteConnector.ConnectionOpener CreateForCache(string key)
         {
-            return new ConnectionOpener(key, this);
+            return new ConnectionOpener(key);
         }
 
         public DbParameter ConstructParameter(string parameterName, object value)
