@@ -18,28 +18,19 @@ namespace ObjectCloud.Disk.Factories
 {
     public class NameValuePairsHandlerFactory : FileHandlerFactory<NameValuePairsHandler>
     {
-        /// <summary>
-        /// Service locator for data access objects
-        /// </summary>
-        public DataAccessLocator DataAccessLocator
-        {
-            get { return _DataAccessLocator; }
-            set { _DataAccessLocator = value; }
-        }
-        private DataAccessLocator _DataAccessLocator;
-
         public override void CreateFile(string path, FileId fileId)
         {
             Directory.CreateDirectory(path);
-
-            string databaseFilename = CreateDatabaseFilename(path);
-
-            DataAccessLocator.DatabaseCreator.Create(databaseFilename);
+			var databaseFilename = this.CreateDatabaseFilename(path);
+			var nameValuePairsHandler = this.ConstructNameValuePairsHander(databaseFilename);
+			
+			nameValuePairsHandler.Clear(null);
         }
 
         public override NameValuePairsHandler OpenFile(string path, FileId fileId)
         {
-            return ConstructNameValuePairsHander(CreateDatabaseFilename(path));
+			var databaseFilename = this.CreateDatabaseFilename(path);
+            return this.ConstructNameValuePairsHander(databaseFilename);
         }
 
         /// <summary>
@@ -49,7 +40,7 @@ namespace ObjectCloud.Disk.Factories
         /// <returns></returns>
         private string CreateDatabaseFilename(string path)
         {
-            return string.Format("{0}{1}db.sqlite", path, Path.DirectorySeparatorChar);
+            return string.Format("{0}{1}namevaluepairs", path, Path.DirectorySeparatorChar);
         }
 
         /// <summary>
@@ -59,9 +50,7 @@ namespace ObjectCloud.Disk.Factories
         /// <returns></returns>
         private NameValuePairsHandler ConstructNameValuePairsHander(string databaseFilename)
         {
-            NameValuePairsHandler toReturn = new NameValuePairsHandler(
-                DataAccessLocator.DatabaseConnectorFactory.CreateConnectorForEmbedded(databaseFilename),
-                FileHandlerFactoryLocator);
+            NameValuePairsHandler toReturn = new NameValuePairsHandler(FileHandlerFactoryLocator, databaseFilename);
 
             return toReturn;
         }

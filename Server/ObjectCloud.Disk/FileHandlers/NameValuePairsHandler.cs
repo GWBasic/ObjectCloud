@@ -9,47 +9,43 @@ using System.Xml;
 
 using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
-using ObjectCloud.DataAccess.NameValuePairs;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
 
 namespace ObjectCloud.Disk.FileHandlers
 {
-    public class NameValuePairsHandler : HasDatabaseFileHandler<IDatabaseConnector, IDatabaseConnection, IDatabaseTransaction>, INameValuePairsHandler
+    public class NameValuePairsHandler : LastModifiedFileHandler, INameValuePairsHandler
     {
-        public NameValuePairsHandler(IDatabaseConnector databaseConnector, FileHandlerFactoryLocator fileHandlerFactoryLocator)
-            : base(databaseConnector, fileHandlerFactoryLocator) { }
-
+        public NameValuePairsHandler(FileHandlerFactoryLocator fileHandlerFactoryLocator, string path)
+			: base(fileHandlerFactoryLocator, path)
+		{
+			this.persistedPairs = new PersistedObject<Dictionary<string, string>>(path);
+		}
+		
+		private readonly PersistedObject<Dictionary<string, string>> persistedPairs;
+		
         public string this[string name]
         {
             get
             {
-                IPairs_Readable pair = DatabaseConnection.Pairs.SelectSingle(Pairs_Table.Name == name);
-
-                if (null == pair)
-                    return null;
-
-                return pair.Value;
+				return this.persistedPairs.Read<string>(pairs =>
+				{
+					string toReturn = null;
+					pairs.TryGetValue(name, out toReturn);
+					return toReturn;
+				});
             }
         }
 
         public void Set(IUser changer, string name, string value)
         {
-            DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
-            {
-                // Not sure if it's worth trying to update as opposed to delete...
-                // Update might be faster, but right now the data access system doesn't support it!
-                DatabaseConnection.Pairs.Delete(Pairs_Table.Name == name);
-
-                if (null != value)
-                    DatabaseConnection.Pairs.Insert(delegate(IPairs_Writable pair)
-                    {
-                        pair.Name = name;
-                        pair.Value = value;
-                    });
-
-                transaction.Commit();
-            });
+			this.persistedPairs.Write(pairs =>
+			{
+				if (null == value)
+					pairs.Remove(name);
+				else
+					pairs[name] = value;
+			});
 
             // TODO, figure out a way to describe the change in the changedata
             SendUpdateNotificationFrom(changer);
@@ -57,24 +53,20 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public bool Contains(string key)
         {
-            return this[key] != null;
+            return this.persistedPairs.Read<bool>(pairs => pairs.ContainsKey(key));
         }
 
         public void Clear(IUser changer)
         {
-            DatabaseConnection.Pairs.Delete();
+			this.persistedPairs.Write(pairs => pairs.Clear());
 
             SendUpdateNotificationFrom(changer);
         }
 
         public IEnumerator<KeyValuePair<string, string>> GetEnumerator()
         {
-            List<KeyValuePair<string, string>> toReturn = new List<KeyValuePair<string, string>>();
-
-            foreach (IPairs_Readable pair in DatabaseConnection.Pairs.Select())
-                toReturn.Add(new KeyValuePair<string, string>(pair.Name, pair.Value));
-
-            return toReturn.GetEnumerator();
+			return this.persistedPairs.Read<IEnumerator<KeyValuePair<string, string>>>(
+				pairs => new Dictionary<string, string>(pairs).GetEnumerator());
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -84,23 +76,13 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public void WriteAll(IUser changer, IEnumerable<KeyValuePair<string, string>> contents, bool clearExisting)
         {
-            DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
+            this.persistedPairs.Write(pairs =>
             {
                 if (clearExisting)
-                    DatabaseConnection.Pairs.Delete();
+                    pairs.Clear();
 
                 foreach (KeyValuePair<string, string> kvp in contents)
-                {
-                    DatabaseConnection.Pairs.Delete(Pairs_Table.Name == kvp.Key);
-
-                    DatabaseConnection.Pairs.Insert(delegate(IPairs_Writable pair)
-                    {
-                        pair.Name = kvp.Key;
-                        pair.Value = kvp.Value;
-                    });
-                }
-
-                transaction.Commit();
+					pairs[kvp.Key] = kvp.Value;
             });
 
             SendUpdateNotificationFrom(changer);
@@ -108,13 +90,12 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public override void Dump(string path, ID<IUserOrGroup, Guid> userId)
         {
-            using (TimedLock.Lock(this))
+			this.persistedPairs.Read(pairs =>
             {
                 DateTime destinationCreated = DateTime.MinValue;
 
                 if (File.Exists(path))
                     destinationCreated = File.GetLastWriteTimeUtc(path);
-
 
                 if (destinationCreated < LastModified)
                 {
@@ -130,7 +111,7 @@ namespace ObjectCloud.Disk.FileHandlers
                         xmlWriter.WriteStartDocument();
                         xmlWriter.WriteStartElement("NameValuePairs");
 
-                        foreach (KeyValuePair<string, string> kvp in this)
+                        foreach (KeyValuePair<string, string> kvp in pairs)
                         {
                             xmlWriter.WriteStartElement("NameValuePair");
 
@@ -147,35 +128,37 @@ namespace ObjectCloud.Disk.FileHandlers
                         xmlWriter.Close();
                     }
                 }
-            }
+            });
         }
 
         public override void SyncFromLocalDisk(string localDiskPath, bool force)
         {
-            DateTime authoritativeCreated = File.GetLastWriteTimeUtc(localDiskPath);
-            DateTime thisCreated = DatabaseConnector.LastModified;
-
-            if (authoritativeCreated > thisCreated || force)
-                using (TextReader tr = File.OpenText(localDiskPath))
-                using (XmlReader xmlReader = XmlReader.Create(tr))
-                {
-                    xmlReader.MoveToContent();
-
-                    while (!xmlReader.Name.Equals("NameValuePairs"))
-                        if (!xmlReader.Read())
-                            throw new SystemFileException("<NameValuePairs> tag missing");
-
-                    while (xmlReader.Read())
-                    {
-                        if ("NameValuePair".Equals(xmlReader.Name))
-                        {
-                            string name = xmlReader.GetAttribute("Name");
-                            string value = xmlReader.GetAttribute("Value");
-
-                            Set(null, name, value);
-                        }
-                    }
-                }
+			this.persistedPairs.Write(pairs =>
+			{
+	            DateTime authoritativeCreated = File.GetLastWriteTimeUtc(localDiskPath);
+	            
+	            if (authoritativeCreated > this.LastModified || force)
+	                using (TextReader tr = File.OpenText(localDiskPath))
+	                using (XmlReader xmlReader = XmlReader.Create(tr))
+	                {
+	                    xmlReader.MoveToContent();
+	
+	                    while (!xmlReader.Name.Equals("NameValuePairs"))
+	                        if (!xmlReader.Read())
+	                            throw new SystemFileException("<NameValuePairs> tag missing");
+	
+	                    while (xmlReader.Read())
+	                    {
+	                        if ("NameValuePair".Equals(xmlReader.Name))
+	                        {
+	                            string name = xmlReader.GetAttribute("Name");
+	                            string value = xmlReader.GetAttribute("Value");
+	
+	                            pairs[name] = value;
+	                        }
+	                    }
+	                }
+			});
         }
     }
 }

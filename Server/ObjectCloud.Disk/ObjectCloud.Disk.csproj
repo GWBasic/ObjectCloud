@@ -71,6 +71,7 @@
     <Compile Include="Factories\TextHandlerFactory.cs" />
     <Compile Include="Factories\UserHandlerFactory.cs" />
     <Compile Include="Factories\UserManagerHandlerFactory.cs" />
+    <Compile Include="FileHandlers\PersistedObject.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
