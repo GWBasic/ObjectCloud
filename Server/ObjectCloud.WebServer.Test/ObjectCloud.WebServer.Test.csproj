@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -46,29 +46,24 @@
     </CustomCommands>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="antlr.runtime, Version=2.7.6.2, Culture=neutral, PublicKeyToken=65e474d141e25e07">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependancies\antlr.runtime.dll</HintPath>
-    </Reference>
-    <Reference Include="Common.Logging, Version=2.0.0.0, Culture=neutral, PublicKeyToken=af08829b84f0328e">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependancies\Common.Logging.dll</HintPath>
-    </Reference>
-    <Reference Include="nunit.core, Version=2.4.8.0, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependancies\nunit.core.dll</HintPath>
-    </Reference>
-    <Reference Include="nunit.framework, Version=2.4.8.0, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependancies\nunit.framework.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Data.SQLite, Version=1.0.64.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="System.Xml" />
+    <Reference Include="antlr.runtime">
+      <HintPath>..\..\Dependancies\antlr.runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="Common.Logging">
+      <HintPath>..\..\Dependancies\Common.Logging.dll</HintPath>
+    </Reference>
+    <Reference Include="nunit.core">
+      <HintPath>..\..\Dependancies\nunit.core.dll</HintPath>
+    </Reference>
+    <Reference Include="nunit.framework">
+      <HintPath>..\..\Dependancies\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data.SQLite">
       <HintPath>..\..\Dependancies\System.Data.SQLite.dll</HintPath>
     </Reference>
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="HasThirdServer.cs" />
@@ -147,10 +142,6 @@
     <ProjectReference Include="..\ObjectCloud.WebServer.Implementation\ObjectCloud.WebServer.Implementation.csproj">
       <Project>{34B1F8C9-E830-4BD6-8854-9FB7DEDA5EE5}</Project>
       <Name>ObjectCloud.WebServer.Implementation</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ObjectCloud.Disk.Factories\ObjectCloud.Disk.Factories.csproj">
-      <Project>{18937C9C-642E-4E6E-9917-306DAE0DA288}</Project>
-      <Name>ObjectCloud.Disk.Factories</Name>
     </ProjectReference>
     <ProjectReference Include="..\ObjectCloud.Disk.WebHandlers\ObjectCloud.Disk.WebHandlers.csproj">
       <Project>{A7EE8471-B9EC-454E-BD65-EF85BE5094B6}</Project>

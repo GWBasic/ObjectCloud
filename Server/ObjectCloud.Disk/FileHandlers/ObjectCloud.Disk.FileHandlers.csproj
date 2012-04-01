@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -15,7 +15,6 @@
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-    <TargetFrameworkProfile />
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -71,18 +70,16 @@
     <Compile Include="UserManagerHandler_Particle.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="ExtremeSwank.OpenId, Version=4.0.1.1, Culture=neutral, PublicKeyToken=7e26a780dbe2aeef">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependancies\ExtremeSwank.OpenId.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="Common.Logging, Version=2.0.0.0, Culture=neutral, PublicKeyToken=af08829b84f0328e">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="System.Core" />
+    <Reference Include="ExtremeSwank.OpenId">
+      <HintPath>..\..\Dependancies\ExtremeSwank.OpenId.dll</HintPath>
+    </Reference>
+    <Reference Include="Common.Logging">
       <HintPath>..\..\Dependancies\Common.Logging.dll</HintPath>
     </Reference>
-    <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\JsonFx.Json\JsonFx.Json.csproj">
@@ -132,9 +129,4 @@
     </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <ProjectExtensions>
-    <MonoDevelop>
-      <Properties InternalTargetFrameworkVersion="3.5" />
-    </MonoDevelop>
-  </ProjectExtensions>
 </Project>

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -66,31 +66,26 @@
     <RunPostBuildEvent>Always</RunPostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="antlr.runtime, Version=2.7.6.2, Culture=neutral, PublicKeyToken=65e474d141e25e07">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependancies\antlr.runtime.dll</HintPath>
-    </Reference>
-    <Reference Include="Common.Logging, Version=2.0.0.0, Culture=neutral, PublicKeyToken=af08829b84f0328e">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependancies\Common.Logging.dll</HintPath>
-    </Reference>
-    <Reference Include="SignalHandller, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\libraries\SignalHandller.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Data.SQLite, Version=1.0.64.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependancies\System.Data.SQLite.dll</HintPath>
-    </Reference>
     <Reference Include="System.Xml" />
-    <Reference Include="Spring.Core, Version=1.2.0.20001, Culture=neutral, PublicKeyToken=null">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependancies\Spring.Core.dll</HintPath>
-    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Drawing" />
+    <Reference Include="antlr.runtime">
+      <HintPath>..\..\Dependancies\antlr.runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="Common.Logging">
+      <HintPath>..\..\Dependancies\Common.Logging.dll</HintPath>
+    </Reference>
+    <Reference Include="SignalHandller">
+      <HintPath>..\..\libraries\SignalHandller.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data.SQLite">
+      <HintPath>..\..\Dependancies\System.Data.SQLite.dll</HintPath>
+    </Reference>
+    <Reference Include="Spring.Core">
+      <HintPath>..\..\Dependancies\Spring.Core.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CallHome.cs" />
@@ -161,14 +156,6 @@
       <Project>{A7EE8471-B9EC-454E-BD65-EF85BE5094B6}</Project>
       <Name>ObjectCloud.Disk.WebHandlers</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ObjectCloud.Disk.Factories\ObjectCloud.Disk.Factories.csproj">
-      <Project>{18937C9C-642E-4E6E-9917-306DAE0DA288}</Project>
-      <Name>ObjectCloud.Disk.Factories</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ObjectCloud.Disk.FileHandlers\ObjectCloud.Disk.FileHandlers.csproj">
-      <Project>{07BDCD3D-668B-47E6-8BC2-F803F7B1CBE6}</Project>
-      <Name>ObjectCloud.Disk.FileHandlers</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ObjectCloud.Spring.Config\ObjectCloud.Spring.Config.csproj">
       <Project>{F4558003-7B34-4081-B99C-78A2FDE4AC3E}</Project>
       <Name>ObjectCloud.Spring.Config</Name>
@@ -176,6 +163,10 @@
     <ProjectReference Include="..\ObjectCloud.ORM.DataAccess.SQLite\ObjectCloud.ORM.DataAccess.SQLite.csproj">
       <Project>{8420B7F6-5479-4CBB-909D-7AAEE909C336}</Project>
       <Name>ObjectCloud.ORM.DataAccess.SQLite</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ObjectCloud.Disk\ObjectCloud.Disk.csproj">
+      <Project>{2380191A-6FC6-429A-8CF5-32BBE656C3A5}</Project>
+      <Name>ObjectCloud.Disk</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

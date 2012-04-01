@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -12,7 +12,6 @@
     <AssemblyName>ObjectCloud.Particle.UnitTests</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -50,10 +49,6 @@
     <Reference Include="nunit.core">
       <HintPath>..\..\Dependancies\nunit.core.dll</HintPath>
     </Reference>
-    <Reference Include="nunit.framework, Version=2.5.3.9345, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependancies\nunit.framework.dll</HintPath>
-    </Reference>
     <Reference Include="Spring.Core">
       <HintPath>..\..\Dependancies\Spring.Core.dll</HintPath>
     </Reference>
@@ -66,6 +61,9 @@
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="nunit.framework">
+      <HintPath>..\..\Dependancies\nunit.framework.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="TestParticle.cs" />
@@ -79,10 +77,6 @@
     <ProjectReference Include="..\ObjectCloud.Common\ObjectCloud.Common.csproj">
       <Project>{4E351911-60AC-4BCE-99D7-066C3C9DA67E}</Project>
       <Name>ObjectCloud.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ObjectCloud.Disk.FileHandlers\ObjectCloud.Disk.FileHandlers.csproj">
-      <Project>{07BDCD3D-668B-47E6-8BC2-F803F7B1CBE6}</Project>
-      <Name>ObjectCloud.Disk.FileHandlers</Name>
     </ProjectReference>
     <ProjectReference Include="..\ObjectCloud.Disk.Implementation\ObjectCloud.Disk.Implementation.csproj">
       <Project>{AF309392-2A65-4ADD-83C6-0D612C48562C}</Project>

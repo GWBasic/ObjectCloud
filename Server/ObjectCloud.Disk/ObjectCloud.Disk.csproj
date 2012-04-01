@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>10.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{2380191A-6FC6-429A-8CF5-32BBE656C3A5}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>ObjectCloud.Disk</RootNamespace>
+    <AssemblyName>ObjectCloud.Disk</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="Common.Logging">
+      <HintPath>..\..\Dependancies\Common.Logging.dll</HintPath>
+    </Reference>
+    <Reference Include="ExtremeSwank.OpenId">
+      <HintPath>..\..\Dependancies\ExtremeSwank.OpenId.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="FileHandlers\BinaryHandler.cs" />
+    <Compile Include="FileHandlers\DatabaseHandler.cs" />
+    <Compile Include="FileHandlers\DirectoryHandler.cs" />
+    <Compile Include="FileHandlers\FileContainer.cs" />
+    <Compile Include="FileHandlers\FileId.cs" />
+    <Compile Include="FileHandlers\HasDatabaseFileHandler.cs" />
+    <Compile Include="FileHandlers\LastModifiedFileHandler.cs" />
+    <Compile Include="FileHandlers\LogHandler.cs" />
+    <Compile Include="FileHandlers\NameValuePairsHandler.cs" />
+    <Compile Include="FileHandlers\Session.cs" />
+    <Compile Include="FileHandlers\SessionManagerHandler.cs" />
+    <Compile Include="FileHandlers\TextHandler.cs" />
+    <Compile Include="FileHandlers\UserHandler.cs" />
+    <Compile Include="FileHandlers\UserManagerHandler_Particle.cs" />
+    <Compile Include="FileHandlers\UserManagerHandler.cs" />
+    <Compile Include="FileHandlers\Particle\Endpoints.cs" />
+    <Compile Include="Factories\BinaryHandlerFactory.cs" />
+    <Compile Include="Factories\DatabaseHandlerFactory.cs" />
+    <Compile Include="Factories\DirectoryHandlerFactory.cs" />
+    <Compile Include="Factories\FileHandlerFactory.cs" />
+    <Compile Include="Factories\FileSystem.cs" />
+    <Compile Include="Factories\LogHandlerFactory.cs" />
+    <Compile Include="Factories\NameValuePairsHandlerFactory.cs" />
+    <Compile Include="Factories\SessionManagerHandlerFactory.cs" />
+    <Compile Include="Factories\SystemFileHandlerFactory.cs" />
+    <Compile Include="Factories\TextHandlerFactory.cs" />
+    <Compile Include="Factories\UserHandlerFactory.cs" />
+    <Compile Include="Factories\UserManagerHandlerFactory.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\JsonFx.Json\JsonFx.Json.csproj">
+      <Project>{ABA23F14-7E47-43FE-A3E7-1FF97840C3FB}</Project>
+      <Name>JsonFx.Json</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ObjectCloud.Common\ObjectCloud.Common.csproj">
+      <Project>{4E351911-60AC-4BCE-99D7-066C3C9DA67E}</Project>
+      <Name>ObjectCloud.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ObjectCloud.DataAccess\ObjectCloud.DataAccess.csproj">
+      <Project>{94994068-0772-49E0-9D4B-0BDBB32AD730}</Project>
+      <Name>ObjectCloud.DataAccess</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ObjectCloud.Disk.Implementation\ObjectCloud.Disk.Implementation.csproj">
+      <Project>{AF309392-2A65-4ADD-83C6-0D612C48562C}</Project>
+      <Name>ObjectCloud.Disk.Implementation</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ObjectCloud.Interfaces\ObjectCloud.Interfaces.csproj">
+      <Project>{DBA3E72A-7B35-4107-88EF-2BD8FB782BAC}</Project>
+      <Name>ObjectCloud.Interfaces</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ObjectCloud.ORM.DataAccess\ObjectCloud.ORM.DataAccess.csproj">
+      <Project>{516C38E4-D59A-41E0-893F-ADDF2E4DB5A6}</Project>
+      <Name>ObjectCloud.ORM.DataAccess</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ObjectCloud.ORM.DataAccess.SQLite\ObjectCloud.ORM.DataAccess.SQLite.csproj">
+      <Project>{8420B7F6-5479-4CBB-909D-7AAEE909C336}</Project>
+      <Name>ObjectCloud.ORM.DataAccess.SQLite</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Factories.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

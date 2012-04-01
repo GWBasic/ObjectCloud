@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -17,7 +17,6 @@
     </UpgradeBackupLocation>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-    <TargetFrameworkProfile />
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -62,30 +61,25 @@
     </CustomCommands>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="antlr.runtime, Version=2.7.6.2, Culture=neutral, PublicKeyToken=65e474d141e25e07">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependancies\antlr.runtime.dll</HintPath>
-    </Reference>
-    <Reference Include="Common.Logging, Version=2.0.0.0, Culture=neutral, PublicKeyToken=af08829b84f0328e">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependancies\Common.Logging.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="nunit.core, Version=2.5.3.9345, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="System.Core" />
+    <Reference Include="antlr.runtime">
+      <HintPath>..\..\Dependancies\antlr.runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="Common.Logging">
+      <HintPath>..\..\Dependancies\Common.Logging.dll</HintPath>
+    </Reference>
+    <Reference Include="nunit.core">
       <HintPath>..\..\Dependancies\nunit.core.dll</HintPath>
     </Reference>
-    <Reference Include="nunit.framework, Version=2.5.3.9345, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="nunit.framework">
       <HintPath>..\..\Dependancies\nunit.framework.dll</HintPath>
     </Reference>
-    <Reference Include="System.Data.SQLite, Version=1.0.65.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="System.Data.SQLite">
       <HintPath>..\..\Dependancies\System.Data.SQLite.dll</HintPath>
     </Reference>
-    <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FileRelationshipsTest.cs" />
@@ -132,10 +126,6 @@
       <Project>{34B1F8C9-E830-4BD6-8854-9FB7DEDA5EE5}</Project>
       <Name>ObjectCloud.WebServer.Implementation</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ObjectCloud.Disk.Factories\ObjectCloud.Disk.Factories.csproj">
-      <Project>{18937C9C-642E-4E6E-9917-306DAE0DA288}</Project>
-      <Name>ObjectCloud.Disk.Factories</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ObjectCloud.Disk.WebHandlers\ObjectCloud.Disk.WebHandlers.csproj">
       <Project>{A7EE8471-B9EC-454E-BD65-EF85BE5094B6}</Project>
       <Name>ObjectCloud.Disk.WebHandlers</Name>
@@ -143,6 +133,10 @@
     <ProjectReference Include="..\ObjectCloud.Spring.Config\ObjectCloud.Spring.Config.csproj">
       <Project>{F4558003-7B34-4081-B99C-78A2FDE4AC3E}</Project>
       <Name>ObjectCloud.Spring.Config</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ObjectCloud.Disk\ObjectCloud.Disk.csproj">
+      <Project>{2380191A-6FC6-429A-8CF5-32BBE656C3A5}</Project>
+      <Name>ObjectCloud.Disk</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -196,9 +190,4 @@
   <PropertyGroup>
     <PostBuildEvent>xcopy "$(SolutionDir)\DefaultFiles\*.*" "$(TargetDir)DefaultFiles\" /s /e /r /y /d</PostBuildEvent>
   </PropertyGroup>
-  <ProjectExtensions>
-    <MonoDevelop>
-      <Properties InternalTargetFrameworkVersion="3.5" />
-    </MonoDevelop>
-  </ProjectExtensions>
 </Project>
