@@ -133,32 +133,32 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public override void SyncFromLocalDisk(string localDiskPath, bool force)
         {
-			this.persistedPairs.Write(pairs =>
-			{
-	            DateTime authoritativeCreated = File.GetLastWriteTimeUtc(localDiskPath);
-	            
-	            if (authoritativeCreated > this.LastModified || force)
-	                using (TextReader tr = File.OpenText(localDiskPath))
-	                using (XmlReader xmlReader = XmlReader.Create(tr))
-	                {
-	                    xmlReader.MoveToContent();
-	
-	                    while (!xmlReader.Name.Equals("NameValuePairs"))
-	                        if (!xmlReader.Read())
-	                            throw new SystemFileException("<NameValuePairs> tag missing");
-	
-	                    while (xmlReader.Read())
-	                    {
-	                        if ("NameValuePair".Equals(xmlReader.Name))
-	                        {
-	                            string name = xmlReader.GetAttribute("Name");
-	                            string value = xmlReader.GetAttribute("Value");
-	
-	                            pairs[name] = value;
-	                        }
-	                    }
-	                }
-			});
+            DateTime authoritativeCreated = File.GetLastWriteTimeUtc(localDiskPath);
+            
+            if (authoritativeCreated > this.LastModified || force)
+				this.persistedPairs.Write(pairs =>
+				{
+		                using (TextReader tr = File.OpenText(localDiskPath))
+		                using (XmlReader xmlReader = XmlReader.Create(tr))
+		                {
+		                    xmlReader.MoveToContent();
+		
+		                    while (!xmlReader.Name.Equals("NameValuePairs"))
+		                        if (!xmlReader.Read())
+		                            throw new SystemFileException("<NameValuePairs> tag missing");
+		
+		                    while (xmlReader.Read())
+		                    {
+		                        if ("NameValuePair".Equals(xmlReader.Name))
+		                        {
+		                            string name = xmlReader.GetAttribute("Name");
+		                            string value = xmlReader.GetAttribute("Value");
+		
+		                            pairs[name] = value;
+		                        }
+		                    }
+		                }
+				});
         }
     }
 }

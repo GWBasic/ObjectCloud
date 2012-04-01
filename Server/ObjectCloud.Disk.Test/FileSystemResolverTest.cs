@@ -90,7 +90,7 @@ namespace ObjectCloud.Disk.Test
             IFileHandler fileHandler = dh.CreateFile(fileName, "name-value", null);
 
             Assert.IsNotNull(fileHandler);
-            Assert.IsInstanceOf<INameValuePairsHandler>(fileHandler);
+            Assert.IsInstanceOfType(typeof(INameValuePairsHandler), fileHandler);
 
             INameValuePairsHandler nameValuePairsHandler = (INameValuePairsHandler)fileHandler;
 
@@ -118,7 +118,7 @@ namespace ObjectCloud.Disk.Test
             IFileHandler fileHandler = dh.CreateFile(sourceFilename, "name-value", null);
 
             Assert.IsNotNull(fileHandler);
-            Assert.IsInstanceOf<INameValuePairsHandler>(fileHandler);
+            Assert.IsInstanceOfType(typeof(INameValuePairsHandler), fileHandler);
 
             INameValuePairsHandler nameValuePairsHandler = (INameValuePairsHandler)fileHandler;
 
@@ -146,7 +146,7 @@ namespace ObjectCloud.Disk.Test
             IFileHandler fileHandler = dh.CreateFile(fileName, "text", null);
 
             Assert.IsNotNull(fileHandler);
-            Assert.IsInstanceOf<ITextHandler>(fileHandler);
+            Assert.IsInstanceOfType(typeof(ITextHandler), fileHandler);
 
             ITextHandler textHandler = (ITextHandler)fileHandler;
 
@@ -166,7 +166,7 @@ namespace ObjectCloud.Disk.Test
             IFileHandler fileHandler = dh.CreateFile(sourceFilename, "text", null);
 
             Assert.IsNotNull(fileHandler);
-            Assert.IsInstanceOf<ITextHandler>(fileHandler);
+            Assert.IsInstanceOfType(typeof(ITextHandler), fileHandler);
 
             ITextHandler textHandler = (ITextHandler)fileHandler;
 
@@ -192,7 +192,7 @@ namespace ObjectCloud.Disk.Test
             IFileHandler fileHandler = dh.CreateFile(fileName, "binary", null);
 
             Assert.IsNotNull(fileHandler);
-            Assert.IsInstanceOf<IBinaryHandler>(fileHandler);
+            Assert.IsInstanceOfType(typeof(IBinaryHandler), fileHandler);
 
             IBinaryHandler binaryHandler = (IBinaryHandler)fileHandler;
 
@@ -214,7 +214,7 @@ namespace ObjectCloud.Disk.Test
             IFileHandler fileHandler = dh.CreateFile(sourceFilename, "binary", null);
 
             Assert.IsNotNull(fileHandler);
-            Assert.IsInstanceOf<IBinaryHandler>(fileHandler);
+            Assert.IsInstanceOfType(typeof(IBinaryHandler), fileHandler);
 
             IBinaryHandler binaryHandler = (IBinaryHandler)fileHandler;
 
@@ -511,7 +511,7 @@ namespace ObjectCloud.Disk.Test
             IFileHandler fileHandler = dh.CreateFile(fileName, "database", null);
 
             Assert.IsNotNull(fileHandler);
-            Assert.IsInstanceOf<IDatabaseHandler>(fileHandler);
+            Assert.IsInstanceOfType(typeof(IDatabaseHandler), fileHandler);
 
             IDatabaseHandler databaseHandler = (IDatabaseHandler)fileHandler;
 
@@ -566,7 +566,7 @@ namespace ObjectCloud.Disk.Test
             IFileHandler fileHandler = dh.CreateFile(fileName, "database", null);
 
             Assert.IsNotNull(fileHandler);
-            Assert.IsInstanceOf<IDatabaseHandler>(fileHandler);
+            Assert.IsInstanceOfType(typeof(IDatabaseHandler), fileHandler);
 
             IDatabaseHandler databaseHandler = (IDatabaseHandler)fileHandler;
 
@@ -609,7 +609,7 @@ namespace ObjectCloud.Disk.Test
             IFileHandler fileHandler = dh.CreateFile(sourceFilename, "database", null);
 
             Assert.IsNotNull(fileHandler);
-            Assert.IsInstanceOf<IDatabaseHandler>(fileHandler);
+            Assert.IsInstanceOfType(typeof(IDatabaseHandler), fileHandler);
 
             IDatabaseHandler databaseHandler = (IDatabaseHandler)fileHandler;
 

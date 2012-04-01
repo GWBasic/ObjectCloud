@@ -87,7 +87,9 @@ namespace ObjectCloud.Disk
 				File.Delete(this.transactionPath);
 
 			// Keep the old object around in case of a failed write
-			File.Move(this.path, this.transactionPath);
+			var hasRollback = File.Exists(this.path);
+			if (hasRollback)
+				File.Move(this.path, this.transactionPath);
 			
 			try
 			{
@@ -103,14 +105,16 @@ namespace ObjectCloud.Disk
 
 				if (File.Exists(this.path))
 					File.Delete(this.path);
-
-				File.Move(this.transactionPath, this.path);
+				
+				if (hasRollback)
+					File.Move(this.transactionPath, this.path);
 				
 				throw;
 			}
 			
 			// On success, delete the transactional file
-			File.Delete(this.transactionPath);
+			if (hasRollback)
+				File.Delete(this.transactionPath);
 		}
 		
 		/// <summary>
@@ -124,6 +128,7 @@ namespace ObjectCloud.Disk
 		/// </typeparam>
 		public R Read<R>(Func<T, R> func)
 		{
+			//Console.WriteLine("BeginRead");
 			this.readerWriterLockSlim.EnterReadLock();
 			
 			try
@@ -132,6 +137,7 @@ namespace ObjectCloud.Disk
 			}
 			finally
 			{
+				//Console.WriteLine("EndRead");
 				this.readerWriterLockSlim.ExitReadLock();
 			}
 		}
@@ -147,6 +153,7 @@ namespace ObjectCloud.Disk
 		/// </typeparam>
 		public void Read(Action<T> action)
 		{
+			//Console.WriteLine("BeginRead");
 			this.readerWriterLockSlim.EnterReadLock();
 			
 			try
@@ -155,6 +162,7 @@ namespace ObjectCloud.Disk
 			}
 			finally
 			{
+				//Console.WriteLine("EndRead");
 				this.readerWriterLockSlim.ExitReadLock();
 			}
 		}
@@ -170,6 +178,7 @@ namespace ObjectCloud.Disk
 		/// </typeparam>
 		public R Write<R>(Func<T, R> func)
 		{
+			//Console.WriteLine("BeginWrite");
 			this.readerWriterLockSlim.EnterWriteLock();
 			
 			try
@@ -186,6 +195,7 @@ namespace ObjectCloud.Disk
 			}
 			finally
 			{
+				//Console.WriteLine("EndWrite");
 				this.readerWriterLockSlim.ExitWriteLock();
 			}
 		}
@@ -201,6 +211,7 @@ namespace ObjectCloud.Disk
 		/// </typeparam>
 		public void Write(Action<T> action)
 		{
+			//Console.WriteLine("BeginWrite");
 			this.readerWriterLockSlim.EnterWriteLock();
 			
 			try
@@ -216,6 +227,7 @@ namespace ObjectCloud.Disk
 			}
 			finally
 			{
+				//Console.WriteLine("EndWrite");
 				this.readerWriterLockSlim.ExitWriteLock();
 			}
 		}

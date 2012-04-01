@@ -71,14 +71,14 @@
     <Reference Include="Common.Logging">
       <HintPath>..\..\Dependancies\Common.Logging.dll</HintPath>
     </Reference>
-    <Reference Include="nunit.core">
-      <HintPath>..\..\Dependancies\nunit.core.dll</HintPath>
-    </Reference>
-    <Reference Include="nunit.framework">
-      <HintPath>..\..\Dependancies\nunit.framework.dll</HintPath>
-    </Reference>
     <Reference Include="System.Data.SQLite">
       <HintPath>..\..\Dependancies\System.Data.SQLite.dll</HintPath>
+    </Reference>
+    <Reference Include="nunit.framework, Version=2.4.8.0, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="nunit.core, Version=2.4.8.0, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77">
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -92,6 +92,7 @@
     <Compile Include="TestSessionManagerHandler.cs" />
     <Compile Include="TestShell.cs" />
     <Compile Include="TestUserManagerHandler.cs" />
+    <Compile Include="TestPersistedObject.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ObjectCloud.Common\ObjectCloud.Common.csproj">
@@ -143,9 +144,6 @@
     <None Include="ObjectCloud.Disk.Test.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Test.ObjectCloudConfig.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -190,4 +188,9 @@
   <PropertyGroup>
     <PostBuildEvent>xcopy "$(SolutionDir)\DefaultFiles\*.*" "$(TargetDir)DefaultFiles\" /s /e /r /y /d</PostBuildEvent>
   </PropertyGroup>
+  <ItemGroup>
+    <Content Include="Test.ObjectCloudConfig.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>

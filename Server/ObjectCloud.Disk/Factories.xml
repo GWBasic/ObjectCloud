@@ -27,7 +27,6 @@
   </object>
   <object id="NameValuePairsHandlerFactory" type="ObjectCloud.Disk.Factories.NameValuePairsHandlerFactory, ObjectCloud.Disk">
     <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
-    <property name="DataAccessLocator" ref="NameValuePairsDataAccessLocator" />
   </object>
   <object id="TextHandlerFactory" type="ObjectCloud.Disk.Factories.TextHandlerFactory, ObjectCloud.Disk">
     <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
