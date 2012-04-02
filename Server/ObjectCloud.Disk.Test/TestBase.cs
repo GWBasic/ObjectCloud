@@ -27,8 +27,23 @@ namespace ObjectCloud.Disk.Test
             get
             {
                 if (null == _FileHandlerFactoryLocator)
-                    _FileHandlerFactoryLocator =
-                        ContextLoader.GetFileHandlerFactoryLocatorForConfigurationFile("Test.ObjectCloudConfig.xml");
+					try
+					{
+                    	_FileHandlerFactoryLocator =
+                        	ContextLoader.GetFileHandlerFactoryLocatorForConfigurationFile("Test.ObjectCloudConfig.xml");
+					}
+					catch (Exception e)
+					{
+						Exception inner = e;
+					
+						do
+						{
+							Console.WriteLine(inner);
+							inner = inner.InnerException;
+						} while (null != inner);
+					
+						throw;
+					}
 
                 return _FileHandlerFactoryLocator; 
             }

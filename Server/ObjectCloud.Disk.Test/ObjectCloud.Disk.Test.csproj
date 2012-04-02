@@ -139,6 +139,10 @@
       <Project>{2380191A-6FC6-429A-8CF5-32BBE656C3A5}</Project>
       <Name>ObjectCloud.Disk</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ObjectCloud.Javascript.SubProcess\ObjectCloud.Javascript.SubProcess.csproj">
+      <Project>{AE17CCFE-4A78-41CF-85B3-B1131F8334B8}</Project>
+      <Name>ObjectCloud.Javascript.SubProcess</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="ObjectCloud.Disk.Test.config">
