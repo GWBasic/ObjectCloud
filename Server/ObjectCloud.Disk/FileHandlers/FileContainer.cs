@@ -35,9 +35,15 @@ namespace ObjectCloud.Disk.FileHandlers
             DateTime created)
             : base(fileId, typeId, filename, parentDirectoryHandler, fileHandlerFactoryLocator, created) {}
 
-        public override DateTime  LastModified
+        public override DateTime LastModified
         {
-        	get { return ((LastModifiedFileHandler)FileHandler).LastModified; }
+        	get 
+			{
+				if (this.FileHandler is LastModifiedFileHandler)
+					return ((LastModifiedFileHandler)FileHandler).LastModified; 
+				else
+					return this.Created;
+			}
         }
     }
 }

@@ -16,51 +16,14 @@ namespace ObjectCloud.Disk.Factories
 {
     public class SessionManagerHandlerFactory : FileHandlerFactory<ISessionManagerHandler>
     {
-        /// <summary>
-        /// Service locator for data access objects
-        /// </summary>
-        public DataAccessLocator DataAccessLocator
-        {
-            get { return _DataAccessLocator; }
-            set { _DataAccessLocator = value; }
-        }
-        private DataAccessLocator _DataAccessLocator;
-
-
         public override void CreateFile(string path, FileId fileId)
         {
             Directory.CreateDirectory(path);
-
-            string databaseFilename = CreateDatabaseFilename(path);
-
-            DataAccessLocator.DatabaseCreator.Create(databaseFilename);
         }
 
         public override ISessionManagerHandler OpenFile(string path, FileId fileId)
         {
-            string databaseFilename = CreateDatabaseFilename(path);
-
-            return new SessionManagerHandler(CreateDatabaseConnector(databaseFilename), FileHandlerFactoryLocator);
-        }
-
-        /// <summary>
-        /// Creates the database file name
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        private string CreateDatabaseFilename(string path)
-        {
-            return string.Format("{0}{1}db.sqlite", path, Path.DirectorySeparatorChar);
-        }
-
-        /// <summary>
-        /// Creates a database connector given a path
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        private IDatabaseConnector CreateDatabaseConnector(string path)
-        {
-            return DataAccessLocator.DatabaseConnectorFactory.CreateConnectorForEmbedded(path);
+            return new SessionManagerHandler(FileHandlerFactoryLocator, path);
         }
 
         public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID, IDirectoryHandler parentDirectory)

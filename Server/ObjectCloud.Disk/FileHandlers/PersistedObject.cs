@@ -7,17 +7,34 @@ using System.IO;
 using System.Threading;
 using System.Runtime.Serialization.Formatters.Binary;
 
-namespace ObjectCloud.Disk
+namespace ObjectCloud.Disk.FileHandlers
 {
 	public class PersistedObject<T>
-		where T:new()
 	{
 		public PersistedObject(string path)
+			: this(path, () => default(T)) { }
+		
+		public PersistedObject(string path, Func<T> constructor)
 		{
+			this.constructor = constructor;
 			this.path = path;
 			this.transactionPath = path + ".transaction";
 			this.Load();
 		}
+		
+		public PersistedObject(string path, T persistedObject)
+		{
+			this.constructor = () => default(T);
+			this.path = path;
+			this.transactionPath = path + ".transaction";
+			this.persistedObject = persistedObject;
+			this.Save();
+		}
+		
+		/// <summary>
+		/// The constructor when no object is present on disk
+		/// </summary>
+		private readonly Func<T> constructor;
 		
 		/// <summary>
 		/// The path to the folder that stores the serialized object
@@ -32,12 +49,20 @@ namespace ObjectCloud.Disk
 		/// The path used for transactional writes, if this file exists, it means that a transaction failed
 		/// </summary>
 		private readonly string transactionPath;
-
+		
+		/// <summary>
+		/// Allows reading or writing without waiting for a lock.
+		/// </summary>
+		public T DirtyObject
+		{
+			get { return this.persistedObject; }
+		}		
+		
 		/// <summary>
 		/// The persisted object. This must be accessed within the context of a lock. It is assumed that reads are thread-safe, writes are not
 		/// </summary>
 		private T persistedObject;
-		
+
 		/// <summary>
 		/// Probides synchronization for reading and writing the object
 		/// </summary>
@@ -74,7 +99,7 @@ namespace ObjectCloud.Disk
 				return;
 			}
 			
-			this.persistedObject = new T();
+			this.persistedObject = this.constructor();
 		}
 		
 		/// <summary>

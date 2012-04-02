@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 
 namespace ObjectCloud.Common
@@ -13,7 +14,8 @@ namespace ObjectCloud.Common
     /// </summary>
     /// <typeparam name="T">The type that the ID is for</typeparam>
     /// <typeparam name="TID">The type of the ID</typeparam>
-    public struct ID<T, TID> : IID
+ 	[Serializable]
+	public struct ID<T, TID> : IID
         where TID : struct
     {
         public ID(TID value)

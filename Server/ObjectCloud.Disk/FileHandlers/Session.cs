@@ -19,142 +19,110 @@ using ISession = ObjectCloud.Interfaces.Security.ISession;
 
 namespace ObjectCloud.Disk.FileHandlers
 {
-    public class Session : ISession
+    internal class Session : ISession
     {
-        public Session(SessionManagerHandler sessionManagerHandler, FileHandlerFactoryLocator fileHandlerFactoryLocator, ID<ISession, Guid> sessionId)
+        public Session(
+			SessionManagerHandler sessionManagerHandler, 
+			FileHandlerFactoryLocator fileHandlerFactoryLocator,
+			PersistedObject<SessionData> persistedSessionData)
         {
-            SessionManagerHandler = sessionManagerHandler;
-            FileHandlerFactoryLocator = fileHandlerFactoryLocator;
-            _SessionId = sessionId;
+            this.sessionManagerHandler = sessionManagerHandler;
+            this.fileHandlerFactoryLocator = fileHandlerFactoryLocator;
+			this.persistedSessionData = persistedSessionData;
         }
 
-        SessionManagerHandler SessionManagerHandler;
-        FileHandlerFactoryLocator FileHandlerFactoryLocator;
+        private readonly SessionManagerHandler sessionManagerHandler;
+        private readonly FileHandlerFactoryLocator fileHandlerFactoryLocator;
+		private readonly PersistedObject<SessionData> persistedSessionData;
 
         /// <summary>
         /// The session ID
         /// </summary>
         public ID<ISession, Guid> SessionId
         {
-            get { return _SessionId; }
+            get { return this.persistedSessionData.DirtyObject.sessionId; }
         }
-        private readonly ID<ISession, Guid> _SessionId;
 
         public IUser User
         {
-            get
-            {
-                using (TimedLock.Lock(userLock))
-                {
-                    if (null == _User)
-                    {
-                        ID<IUserOrGroup, Guid> userId;
-
-                        ISession_Readable session = SessionManagerHandler.DatabaseConnection.Session.SelectSingle(Session_Table.SessionID == SessionId.Value);
-                        userId = session.UserID;
-
-                        _User = FileHandlerFactoryLocator.UserManagerHandler.GetUser(userId);
-                    }
-
-                    return _User;
-                }
-            }
+			get
+			{
+				return this.fileHandlerFactoryLocator.UserManagerHandler.GetUser(
+					this.persistedSessionData.DirtyObject.userId); 
+			}
         }
-        private IUser _User = null;
 
         public void Login(IUser user)
         {
-            using (TimedLock.Lock(userLock))
-            {
-                SessionManagerHandler.DatabaseConnection.Session.Update(Session_Table.SessionID == SessionId.Value,
-                    delegate(ISession_Writable session)
-                    {
-                        session.UserID = user.Id;
-                    });
-
-                _User = user;
-                FilesTouchedForUrls.Clear();
-            }
+			this.persistedSessionData.Write(session =>
+			{
+				session.userId = user.Id;
+				this.filesTouchedForUrls = new Dictionary<string, WeakReference>();
+			});
         }
-
-        /// <summary>
-        /// Provides a lock for syncronizing user access
-        /// </summary>
-        private object userLock = new object();
 
         public TimeSpan MaxAge
         {
-            get
-            {
-                ISession_Readable session = SessionManagerHandler.DatabaseConnection.Session.SelectSingle(Session_Table.SessionID == SessionId.Value);
-                return session.MaxAge;
-            }
+            get { return persistedSessionData.DirtyObject.maxAge; }
             set
             {
-                DateTime lastQuery = LastQuery;
-
-                SessionManagerHandler.DatabaseConnection.Session.Update(Session_Table.SessionID == SessionId.Value,
-                    delegate(ISession_Writable session)
-                    {
-                        session.MaxAge = value;
-                        session.WhenToDelete = lastQuery + value;
-                    });
+				this.persistedSessionData.Write(session => session.maxAge = value);
             }
         }
 
         public DateTime LastQuery
         {
-            get
+            get { return persistedSessionData.DirtyObject.lastQuery; }
+            set
             {
-                ISession_Readable session = SessionManagerHandler.DatabaseConnection.Session.SelectSingle(Session_Table.SessionID == SessionId.Value);
-                return session.WhenToDelete - session.MaxAge;
+				this.persistedSessionData.Write(session => session.lastQuery = value);
             }
         }
 
 
         public bool KeepAlive
         {
-            get
-            {
-                ISession_Readable session = SessionManagerHandler.DatabaseConnection.Session.SelectSingle(Session_Table.SessionID == SessionId.Value);
-                return session.KeepAlive;
-            }
+            get { return persistedSessionData.DirtyObject.keepAlive; }
             set
             {
-                SessionManagerHandler.DatabaseConnection.Session.Update(Session_Table.SessionID == SessionId.Value,
-                    delegate(ISession_Writable session)
-                    {
-                        session.KeepAlive = value;
+				this.persistedSessionData.Write(session =>
+				{
+					session.keepAlive = value;
 
-                        if (value)
-                            session.MaxAge = TimeSpan.FromDays(30);
-                        else
-                            session.MaxAge = TimeSpan.FromDays(0.5);
-                    });
+					if (value)
+                        session.maxAge = TimeSpan.FromDays(30);
+                    else
+                        session.maxAge = TimeSpan.FromDays(0.5);
+				});
             }
         }
 
         /// <summary>
         /// Cache of all files touched for a given URL
+        /// TODO: This implementation is a joke, this needs serious optimization
         /// </summary>
-        Dictionary<string, WeakReference> FilesTouchedForUrls = new Dictionary<string, WeakReference>();
+        Dictionary<string, WeakReference> filesTouchedForUrls = new Dictionary<string, WeakReference>();
 
         public HashSet<IFileContainer> GetFilesTouchedForUrl(string url)
         {
-            using (TimedLock.Lock(userLock))
-            {
-                WeakReference wr = null;
-                if (FilesTouchedForUrls.TryGetValue(url, out wr))
-                    return (HashSet<IFileContainer>)wr.Target;
-            }
+            WeakReference wr = null;
+            if (filesTouchedForUrls.TryGetValue(url, out wr))
+                return (HashSet<IFileContainer>)wr.Target;
 
             return null;
         }
 
         public void SetFilesTouchedForUrl(string url, HashSet<IFileContainer> touchedFiles)
         {
-            using (TimedLock.Lock(userLock))
-                FilesTouchedForUrls[url] = new WeakReference(touchedFiles);
+			Dictionary<string, WeakReference> filesTouchedForUrls;			
+			Dictionary<string, WeakReference> filesTouchedForUrlsCopy;
+			
+			do
+			{
+				filesTouchedForUrls = this.filesTouchedForUrls;
+				filesTouchedForUrlsCopy = new Dictionary<string, WeakReference>(filesTouchedForUrls);
+                filesTouchedForUrlsCopy[url] = new WeakReference(touchedFiles);
+			} while (filesTouchedForUrls != Interlocked.CompareExchange(ref this.filesTouchedForUrls, filesTouchedForUrlsCopy, filesTouchedForUrls));
         }
 
         public override int GetHashCode()
@@ -171,7 +139,7 @@ namespace ObjectCloud.Disk.FileHandlers
         {
 			RunningCometTransports.Enqueue(new WeakReference(cometTransport));
 			
-			if (RunningCometTransports.Count > SessionManagerHandler.MaxCometTransports)
+			if (RunningCometTransports.Count > sessionManagerHandler.MaxCometTransports)
 			{
 				WeakReference wr;
 				if (RunningCometTransports.Dequeue(out wr))

@@ -20,6 +20,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
@@ -72,6 +73,7 @@
     <Compile Include="Factories\UserHandlerFactory.cs" />
     <Compile Include="Factories\UserManagerHandlerFactory.cs" />
     <Compile Include="FileHandlers\PersistedObject.cs" />
+    <Compile Include="FileHandlers\SessionData.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

@@ -19,7 +19,9 @@ namespace ObjectCloud.Disk.FileHandlers
         public NameValuePairsHandler(FileHandlerFactoryLocator fileHandlerFactoryLocator, string path)
 			: base(fileHandlerFactoryLocator, path)
 		{
-			this.persistedPairs = new PersistedObject<Dictionary<string, string>>(path);
+			this.persistedPairs = new PersistedObject<Dictionary<string, string>>(
+				path,
+				() => new Dictionary<string, string>());
 		}
 		
 		private readonly PersistedObject<Dictionary<string, string>> persistedPairs;
