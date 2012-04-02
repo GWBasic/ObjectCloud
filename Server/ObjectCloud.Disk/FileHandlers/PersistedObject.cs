@@ -100,6 +100,7 @@ namespace ObjectCloud.Disk.FileHandlers
 			}
 			
 			this.persistedObject = this.constructor();
+			this.Save();
 		}
 		
 		/// <summary>

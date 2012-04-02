@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 
 namespace ObjectCloud.Common
@@ -12,6 +13,8 @@ namespace ObjectCloud.Common
     /// Wraps any kind of value in an object so it can be syncronized
     /// </summary>
     /// <typeparam name="T"></typeparam>
+    //
+	[Serializable]
     public class Wrapped<T>
     {
         public Wrapped() { }
