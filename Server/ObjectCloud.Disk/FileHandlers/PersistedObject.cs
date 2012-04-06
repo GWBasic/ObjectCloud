@@ -50,13 +50,13 @@ namespace ObjectCloud.Disk.FileHandlers
 		/// </summary>
 		private readonly string transactionPath;
 		
-		/// <summary>
+		/*// <summary>
 		/// Allows reading or writing without waiting for a lock.
 		/// </summary>
 		public T DirtyObject
 		{
 			get { return this.persistedObject; }
-		}		
+		}*/		
 		
 		/// <summary>
 		/// The persisted object. This must be accessed within the context of a lock. It is assumed that reads are thread-safe, writes are not
@@ -243,6 +243,71 @@ namespace ObjectCloud.Disk.FileHandlers
 			try
 			{
 				action(this.persistedObject);
+				this.Save();
+			}
+			catch
+			{
+				// Rollback if an exception occurs while writing
+				this.Load();
+				throw;
+			}
+			finally
+			{
+				//Console.WriteLine("EndWrite");
+				this.readerWriterLockSlim.ExitWriteLock();
+			}
+		}
+		
+		/// <summary>
+		/// The timer when writes will happen eventually.
+		/// </summary>
+		private Timer timer = null;
+		
+		/// <summary>
+		/// How often ObjectCloud flushes eventual writes to disk. More frequent writes improve correctness at the expense of performance
+		/// </summary>
+		public static TimeSpan EventualWriteFrequency 
+		{
+			get { return PersistedObject<T>.eventualWriteFrequency; }
+			set { PersistedObject<T>.eventualWriteFrequency = value; }
+		}		
+		private static TimeSpan eventualWriteFrequency = TimeSpan.FromMinutes(1);
+
+		/// <summary>
+		/// Calls the function within a write context. Changes made are saved eventually, and may be lost if any future writes rollback
+		/// </summary>
+		public void WriteEventual(Action<T> action)
+		{
+			this.readerWriterLockSlim.EnterWriteLock();
+			
+			try
+			{
+				action(this.persistedObject);
+				
+				if (null == this.timer)
+					this.timer = new Timer(this.Flush, null, PersistedObject<T>.eventualWriteFrequency, TimeSpan.Zero);
+			}
+			catch
+			{
+				// Rollback if an exception occurs while writing
+				this.Load();
+				throw;
+			}
+			finally
+			{
+				this.readerWriterLockSlim.ExitWriteLock();
+			}
+		}
+		
+		/// <summary>
+		/// Writes changes made during an eventual write to disk
+		/// </summary>
+		private void Flush(object state)
+		{
+			this.readerWriterLockSlim.EnterWriteLock();
+			
+			try
+			{
 				this.Save();
 			}
 			catch

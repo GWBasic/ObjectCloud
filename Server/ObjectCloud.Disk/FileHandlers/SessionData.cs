@@ -12,7 +12,6 @@ namespace ObjectCloud.Disk.FileHandlers
 	[Serializable]
 	internal class SessionData
 	{
-		public ID<ISession, Guid> sessionId;
 		public ID<IUserOrGroup, Guid> userId;
 		public TimeSpan maxAge;
 		public DateTime lastQuery;

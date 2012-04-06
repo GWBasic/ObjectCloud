@@ -26,7 +26,9 @@ namespace ObjectCloud.Disk.Test
 			try
 			{
 				new PersistedObject<string>(path, "this is a test");
-				Assert.AreEqual("this is a test", new PersistedObject<string>(path).DirtyObject);
+				
+				new PersistedObject<string>(path).Read(value =>
+					Assert.AreEqual("this is a test", value));
 			}
 			finally
 			{
@@ -43,7 +45,9 @@ namespace ObjectCloud.Disk.Test
 			try
 			{
 				new PersistedObject<string>(path, () => "this is a test");
-				Assert.AreEqual("this is a test", new PersistedObject<string>(path).DirtyObject);
+				
+				new PersistedObject<string>(path).Read(value =>
+					Assert.AreEqual("this is a test", value));
 			}
 			finally
 			{
@@ -63,7 +67,8 @@ namespace ObjectCloud.Disk.Test
 				
 				toUpdate.Write(wrapper => wrapper.Value = "updated");
 				
-				Assert.AreEqual("updated", new PersistedObject<Wrapped<string>>(path).DirtyObject.Value);
+				new PersistedObject<Wrapped<string>>(path).Read(value =>
+					Assert.AreEqual("updated", value.Value));
 			}
 			finally
 			{

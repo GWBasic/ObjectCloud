@@ -47,7 +47,8 @@ namespace ObjectCloud.Disk.Test
             Thread.Sleep(25);
 
             session = SessionManagerHandler[session.SessionId];
-
+			
+			Assert.IsNotNull(session, "Session not persisted");
             Assert.Less(DateTime.UtcNow - session.LastQuery, TimeSpan.FromSeconds(0.1), "Error in updated LastQuery");
             Assert.Greater(DateTime.UtcNow - session.LastQuery, TimeSpan.Zero, "Error in updated LastQuery");
         }

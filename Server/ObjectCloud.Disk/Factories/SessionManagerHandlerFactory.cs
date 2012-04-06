@@ -3,6 +3,7 @@
 // For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 
@@ -19,11 +20,26 @@ namespace ObjectCloud.Disk.Factories
         public override void CreateFile(string path, FileId fileId)
         {
             Directory.CreateDirectory(path);
+			var databaseFilename = this.CreateDatabaseFilename(path);
+			
+			// Create an empty persisted session object file
+			new PersistedObject<Dictionary<ID<ISession, Guid>, SessionData>>(databaseFilename, new Dictionary<ID<ISession, Guid>, SessionData>());
         }
 
         public override ISessionManagerHandler OpenFile(string path, FileId fileId)
         {
-            return new SessionManagerHandler(FileHandlerFactoryLocator, path);
+			var databaseFilename = this.CreateDatabaseFilename(path);
+			return new SessionManagerHandler(this.FileHandlerFactoryLocator, databaseFilename);
+        }
+		        
+		/// <summary>
+        /// Creates the database file name
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        private string CreateDatabaseFilename(string path)
+        {
+            return string.Format("{0}{1}persistedsessions", path, Path.DirectorySeparatorChar);
         }
 
         public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID, IDirectoryHandler parentDirectory)

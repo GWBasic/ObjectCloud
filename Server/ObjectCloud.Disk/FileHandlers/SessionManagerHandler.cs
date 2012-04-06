@@ -26,67 +26,29 @@ namespace ObjectCloud.Disk.FileHandlers
         public SessionManagerHandler(FileHandlerFactoryLocator fileHandlerFactoryLocator, string path)
             : base(fileHandlerFactoryLocator)
         {
-			this.path = path;
             this.sessions = new Dictionary<ID<ISession, Guid>, Session>();
+			this.persistedSessionDatas = new PersistedObject<Dictionary<ID<ISession, Guid>, SessionData>>(path);
             me = this;
 			
-			// Load all sessions
-			foreach (var filename in Directory.GetFiles(path))
+			this.persistedSessionDatas.Read(sessionDatas =>
 			{
-				var sessionString = Path.GetFileName(filename);
-				
-				//Console.WriteLine("Looking at:\n\tFile: {0}\n\tGuid: {1}", filename, sessionString);
-				
-				Guid sessionGuid;
-				if (GuidFunctions.TryParse(sessionString, out sessionGuid))
+				foreach (var sessionDataKVP in sessionDatas)
 				{
-					//Console.WriteLine("Loading session: {0}", sessionGuid);
+					var sessionId = sessionDataKVP.Key;
+					var sessionData = sessionDataKVP.Value;
 					
-					var session = new Session(
+					this.sessions[sessionId] = new Session(
 						this,
 						fileHandlerFactoryLocator,
-						new PersistedObject<SessionData>(filename));
-					
-					//Console.WriteLine("session.LastQuery + session.MaxAge: {0}", session.LastQuery.ToLocalTime() + session.MaxAge);
-					
-					if (session.LastQuery + session.MaxAge > DateTime.UtcNow)
-						sessions[session.SessionId] = session;
-					else
-						try
-						{
-							//Console.WriteLine("Session expired: {0}", sessionGuid);
-							File.Delete(filename);
-						}
-						catch (Exception e)
-						{
-							log.WarnFormat(
-								string.Format("Exception deleting session {0}", sessionGuid),
-								e);
-						}
-				}
-				else
-					// Delete junk left over from accidents, crashes, ect
-					try
-					{
-						//Console.WriteLine("Deleting: {0}", filename);
-						File.Delete(filename);
-					}
-					catch (Exception e)
-					{
-						log.WarnFormat(
-							string.Format("Exception deleting leftover session file {0}", filename),
-							e);
-					}
-			}
+						this.persistedSessionDatas,
+						sessionId,
+						sessionData);
+				}		
+			});
 
-            // Clean old sessions every minute
+            // Clean old sessions every hour or so
             this.cleanOldSessionsTimer = new Timer(CleanOldSessions, null, 0, 6000000);
         }
-		
-		/// <summary>
-		/// Where all the sessions are stored
-		/// </summary>
-		private readonly string path;
 		
         /// <summary>
         /// This object should never be garbage collected
@@ -97,23 +59,16 @@ namespace ObjectCloud.Disk.FileHandlers
         /// Cache of sessions
         /// </summary>
         private Dictionary<ID<ISession, Guid>, Session> sessions;
+		
+		/// <summary>
+		/// All of the data for the persisted sessions
+		/// </summary>
+		private PersistedObject<Dictionary<ID<ISession, Guid>, SessionData>> persistedSessionDatas;
 
         /// <summary>
         /// Used to clean old sessions
         /// </summary>
         private readonly Timer cleanOldSessionsTimer = null;
-		
-		/// <summary>
-		/// Returns the session path.
-		/// </summary>
-		private string GetSessionPath(ID<ISession, Guid> sessionId)
-		{
-			return string.Format(
-				"{0}{1}{2}",
-				this.path,
-				Path.DirectorySeparatorChar,
-				sessionId);
-		}
 
         public ISession this[ID<ISession, Guid> sessionId]
         {
@@ -146,41 +101,6 @@ namespace ObjectCloud.Disk.FileHandlers
             }
         }
 		
-		/// <summary>
-		/// Non-blocking way to remove old sessions
-		/// </summary>
-		/// <param name='sessionIds'>
-		/// Session identifiers.
-		/// </param>
-		private void DeleteSessions(HashSet<ID<ISession, Guid>> sessionIds)
-		{
-			Dictionary<ID<ISession, Guid>, Session> sessions;
-			Dictionary<ID<ISession, Guid>, Session> sessionsCopy;
-			
-			// Remove the sessions from RAM
-			do
-			{
-				sessions = this.sessions;
-				sessionsCopy = new Dictionary<ID<ISession, Guid>, Session>(sessions);
-				
-				foreach (var sessionId in sessionIds)
-					sessionsCopy.Remove(sessionId);
-				
-			} while (sessions != Interlocked.CompareExchange(ref this.sessions, sessionsCopy, sessions));
-			
-			foreach (var sessionId in sessionIds)
-				try
-				{
-					File.Delete(this.GetSessionPath(sessionId));
-				}
-				catch (Exception e)
-				{
-					log.WarnFormat(
-						string.Format("Exception deleting session {0}", sessionId),
-						e);
-				}
-		}
-
         public void CleanOldSessions()
         {
             CleanOldSessions(null);
@@ -190,13 +110,24 @@ namespace ObjectCloud.Disk.FileHandlers
         {
 			try
 			{
-				HashSet<ID<ISession, Guid>> sessionIdsToDelete = new HashSet<ID<ISession, Guid>>();
-				
-				foreach (var session in this.sessions.Values)
-					if (session.LastQuery + session.MaxAge < DateTime.UtcNow)
-						sessionIdsToDelete.Add(session.SessionId);
-				
-				this.DeleteSessions(sessionIdsToDelete);
+				this.persistedSessionDatas.Write(sessionDatas =>
+	            {
+					Dictionary<ID<ISession, Guid>, Session> sessions = new Dictionary<ID<ISession, Guid>, Session>(this.sessions);
+					
+					foreach (var sessionDataKVP in sessionDatas)
+					{
+						var sessionData = sessionDataKVP.Value;
+						
+						if (sessionData.lastQuery + sessionData.maxAge < DateTime.UtcNow)
+						{
+							var sessionId = sessionDataKVP.Key;
+							sessionDatas.Remove(sessionId);
+							sessions.Remove(sessionId);
+						}
+					}
+					
+					this.sessions = sessions;
+				});
 			}
 			catch (Exception e)
 			{
@@ -207,33 +138,32 @@ namespace ObjectCloud.Disk.FileHandlers
         public ISession CreateSession()
         {
             ID<ISession, Guid> sessionId = new ID<ISession, Guid>(Guid.NewGuid());
-			var sessionPath = this.GetSessionPath(sessionId);
-			
-			var sessionData = new SessionData()
-			{
-				sessionId = sessionId,
-				lastQuery = DateTime.UtcNow,
-	            maxAge = TimeSpan.FromDays(0.5),
-	            userId = FileHandlerFactoryLocator.UserFactory.AnonymousUser.Id,
-	            keepAlive = false
-			};
-			
-			var session = new Session(
-				this,
-				this.FileHandlerFactoryLocator,
-				new PersistedObject<SessionData>(sessionPath, sessionData));
-			
-			Dictionary<ID<ISession, Guid>, Session> sessions;
-			Dictionary<ID<ISession, Guid>, Session> sessionsCopy;
-			
-			do
-			{
-				sessions = this.sessions;
-				sessionsCopy = new Dictionary<ID<ISession, Guid>, Session>(sessions);
-				sessionsCopy[sessionId] = session;
-			} while (sessions != Interlocked.CompareExchange(ref this.sessions, sessionsCopy, sessions));
-			
-			return session;
+
+			return this.persistedSessionDatas.Write<ISession>(sessionDatas =>
+            {
+				var sessionData = new SessionData()
+				{
+					lastQuery = DateTime.UtcNow,
+		            maxAge = TimeSpan.FromDays(0.5),
+		            userId = FileHandlerFactoryLocator.UserFactory.AnonymousUser.Id,
+		            keepAlive = false
+				};
+				
+				sessionDatas[sessionId] = sessionData;
+				
+				var session = new Session(
+					this,
+					this.FileHandlerFactoryLocator,
+					this.persistedSessionDatas,
+					sessionId,
+					sessionData);
+				
+				var sessions = new Dictionary<ID<ISession, Guid>, Session>(this.sessions);
+				sessions[sessionId] = session;
+				this.sessions = sessions;
+				
+				return session;
+			});
         }
 
         public override void Dump(string path, ID<IUserOrGroup, Guid> userId)
@@ -243,7 +173,15 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public void EndSession(ID<ISession, Guid> sessionId)
         {
-            this.DeleteSessions(new HashSet<ID<ISession, Guid>> {sessionId});
+			this.persistedSessionDatas.Write(sessionDatas =>
+            {
+				Dictionary<ID<ISession, Guid>, Session> sessions = new Dictionary<ID<ISession, Guid>, Session>(this.sessions);
+
+				sessionDatas.Remove(sessionId);
+				sessions.Remove(sessionId);
+				
+				this.sessions = sessions;
+			});
         }
 
         /// <summary>

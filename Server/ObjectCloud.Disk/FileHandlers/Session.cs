@@ -24,78 +24,120 @@ namespace ObjectCloud.Disk.FileHandlers
         public Session(
 			SessionManagerHandler sessionManagerHandler, 
 			FileHandlerFactoryLocator fileHandlerFactoryLocator,
-			PersistedObject<SessionData> persistedSessionData)
+			PersistedObject<Dictionary<ID<ISession, Guid>, SessionData>> persistedSessionDatas,
+			ID<ISession, Guid> sessionId,
+			SessionData sessionData)
         {
             this.sessionManagerHandler = sessionManagerHandler;
             this.fileHandlerFactoryLocator = fileHandlerFactoryLocator;
-			this.persistedSessionData = persistedSessionData;
+			this.persistedSessionDatas = persistedSessionDatas;
+			this.sessionId = sessionId;
+
+			this.maxAge = sessionData.maxAge;
+			this.lastQuery = sessionData.lastQuery;
+			this.keepAlive = sessionData.keepAlive;
         }
 
         private readonly SessionManagerHandler sessionManagerHandler;
         private readonly FileHandlerFactoryLocator fileHandlerFactoryLocator;
-		private readonly PersistedObject<SessionData> persistedSessionData;
+		private readonly PersistedObject<Dictionary<ID<ISession, Guid>, SessionData>> persistedSessionDatas;
 
         /// <summary>
         /// The session ID
         /// </summary>
         public ID<ISession, Guid> SessionId
         {
-            get { return this.persistedSessionData.DirtyObject.sessionId; }
+            get { return this.sessionId; }
         }
+		private readonly ID<ISession, Guid> sessionId;
 
         public IUser User
         {
 			get
 			{
-				return this.fileHandlerFactoryLocator.UserManagerHandler.GetUser(
-					this.persistedSessionData.DirtyObject.userId); 
+				if (null == this.user)
+					this.persistedSessionDatas.Read(sessionDatas => 
+					{
+						var userId = sessionDatas[this.sessionId].userId;
+						this.user = this.fileHandlerFactoryLocator.UserManagerHandler.GetUser(userId);
+					});
+				
+				return this.user;
 			}
         }
+		private IUser user;
 
         public void Login(IUser user)
         {
-			this.persistedSessionData.Write(session =>
-			{
+			this.persistedSessionDatas.Write(sessionDatas =>
+            {
+				var session = sessionDatas[this.sessionId];
 				session.userId = user.Id;
 				this.filesTouchedForUrls = new Dictionary<string, WeakReference>();
+				
+				this.user = user;
 			});
         }
 
         public TimeSpan MaxAge
         {
-            get { return persistedSessionData.DirtyObject.maxAge; }
+            get 
+			{
+				return this.maxAge;
+			}
             set
             {
-				this.persistedSessionData.Write(session => session.maxAge = value);
+				this.persistedSessionDatas.Write(sessionDatas => 
+                {
+					sessionDatas[this.sessionId].maxAge = value;
+					this.maxAge = value;
+				});
             }
         }
+		private TimeSpan maxAge;
 
         public DateTime LastQuery
         {
-            get { return persistedSessionData.DirtyObject.lastQuery; }
+            get 
+			{
+				return this.lastQuery;
+			}
             set
             {
-				this.persistedSessionData.Write(session => session.lastQuery = value);
+				this.persistedSessionDatas.WriteEventual(sessionDatas =>
+                {
+					sessionDatas[this.sessionId].lastQuery = value;
+					this.lastQuery = value;
+				});
             }
         }
-
+        private DateTime lastQuery;
 
         public bool KeepAlive
         {
-            get { return persistedSessionData.DirtyObject.keepAlive; }
+            get 
+			{
+				return this.keepAlive;
+			}
             set
             {
-				this.persistedSessionData.Write(session =>
-				{
+				this.persistedSessionDatas.Write(sessionDatas =>
+                {
+					var session = sessionDatas[this.sessionId];
+					
 					session.keepAlive = value;
 
 					if (value)
                         session.maxAge = TimeSpan.FromDays(30);
                     else
                         session.maxAge = TimeSpan.FromDays(0.5);
+					
+					this.keepAlive = value;
+					this.maxAge = session.maxAge;
 				});
             }
         }
+        private bool keepAlive;
 
         /// <summary>
         /// Cache of all files touched for a given URL
