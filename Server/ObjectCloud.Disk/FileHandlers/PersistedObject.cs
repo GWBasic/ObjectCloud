@@ -314,7 +314,6 @@ namespace ObjectCloud.Disk.FileHandlers
 			{
 				// Rollback if an exception occurs while writing
 				this.Load();
-				throw;
 			}
 			finally
 			{
