@@ -317,6 +317,9 @@ namespace ObjectCloud.Disk.FileHandlers
 			}
 			finally
 			{
+				this.timer.Dispose();
+				this.timer = null;
+				
 				//Console.WriteLine("EndWrite");
 				this.readerWriterLockSlim.ExitWriteLock();
 			}

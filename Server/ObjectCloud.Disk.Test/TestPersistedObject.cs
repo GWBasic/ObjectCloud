@@ -79,6 +79,39 @@ namespace ObjectCloud.Disk.Test
 		[Test]
 		public void TestExceptionRollsback()
 		{
+			var path = Path.GetTempFileName();
+			File.Delete(path);
+			
+			try
+			{
+				var toUpdate = new PersistedObject<Wrapped<string>>(path, () => "this is a test");
+				
+				try
+				{
+					toUpdate.Write(wrapper => 
+					{
+						wrapper.Value = "updated";
+						throw new Exception("123 678");	
+					});
+				} 
+				catch (Exception e)
+				{
+					if ("123 678" != e.Message)
+						throw;
+				}
+				
+				new PersistedObject<Wrapped<string>>(path).Read(value =>
+					Assert.AreEqual("this is a test", value.Value));
+			}
+			finally
+			{
+				File.Delete(path);
+			}
+		}
+		
+		[Test]
+		public void TestWriteEventual()
+		{
 			throw new NotImplementedException();
 		}
 	}
