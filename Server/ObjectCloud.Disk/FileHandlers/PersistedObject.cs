@@ -108,6 +108,13 @@ namespace ObjectCloud.Disk.FileHandlers
 		/// </summary>
 		private void Save()
 		{
+			// If there's an eventual write scheduled, it no longer is needed
+			if (null != this.timer)
+			{
+				this.timer.Dispose();
+				this.timer = null;
+			}	
+			
 			// Delete failed transactional saves
 			if (File.Exists(this.transactionPath))
 				File.Delete(this.transactionPath);
@@ -317,9 +324,6 @@ namespace ObjectCloud.Disk.FileHandlers
 			}
 			finally
 			{
-				this.timer.Dispose();
-				this.timer = null;
-				
 				//Console.WriteLine("EndWrite");
 				this.readerWriterLockSlim.ExitWriteLock();
 			}
