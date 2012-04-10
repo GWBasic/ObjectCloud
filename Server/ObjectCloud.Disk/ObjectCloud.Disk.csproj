@@ -74,6 +74,7 @@
     <Compile Include="Factories\UserManagerHandlerFactory.cs" />
     <Compile Include="FileHandlers\PersistedObject.cs" />
     <Compile Include="FileHandlers\SessionData.cs" />
+    <Compile Include="FileHandlers\PersistedObjectSequence.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
