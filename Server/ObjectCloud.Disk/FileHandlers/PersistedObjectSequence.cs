@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading;
 
+using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Disk;
 
 namespace ObjectCloud.Disk
@@ -12,12 +15,14 @@ namespace ObjectCloud.Disk
 	/// </summary>
 	public class PersistedObjectSequence<T>
 	{
-		public PersistedObjectSequence(string path, FileHandlerFactoryLocator fileHandlerFactoryLocator)
+		public PersistedObjectSequence(string path, long maxChunkSize, long maxSize, FileHandlerFactoryLocator fileHandlerFactoryLocator)
 		{
 			this.path = path;
+			this.maxChunkSize = maxChunkSize;
+			this.maxSize = maxSize;
 			this.currentWriteStreamFilename = Path.Combine(this.path, "newest");
 			
-			fileHandlerFactoryLocator.FileSystemResolver.Stopping += this.CloseAllOpenSequences;
+			fileHandlerFactoryLocator.FileSystemResolver.Stopping += (sender, e) => this.CloseCurrentWriteStream();
 			
 			long lastSuccess = 0;
 			
@@ -28,7 +33,7 @@ namespace ObjectCloud.Disk
 			{
 				while (lastSuccess < this.currentWriteStream.Length)
 				{
-					object deserialized = this.binaryFormatter.Deserialize(this.currentWriteStream);
+					var deserialized = this.binaryFormatter.Deserialize(this.currentWriteStream);
 					if (deserialized is Event)
 						this.newestObjects.Add((Event)deserialized);
 					
@@ -42,9 +47,11 @@ namespace ObjectCloud.Disk
 			}
 			
 			this.currentWriteStream.Position = lastSuccess;
+			
+			this.CreateNewChunkIfNeeded();
 		}
 
-		void CloseAllOpenSequences (IFileSystemResolver sender, EventArgs e)
+		private void CloseCurrentWriteStream()
 		{
 			if (null != currentWriteStream)
 			{
@@ -60,6 +67,21 @@ namespace ObjectCloud.Disk
 		/// The folder on disk where the persisted sequence is stored.
 		/// </summary>
 		private readonly string path;
+		
+		/// <summary>
+		/// Whenever currentWriteStream meets or exceeds this size, a new chunk is created
+		/// </summary>
+		private readonly long maxChunkSize;
+		
+		/// <summary>
+		/// The maximum total space that the sequence will occupy. Older chunks are deleted to keep the sequence within this constraint
+		/// </summary>
+		private readonly long maxSize;
+		
+		/// <summary>
+		/// Probides synchronization for reading and writing the sequence
+		/// </summary>
+		private readonly ReaderWriterLockSlim readerWriterLockSlim = new ReaderWriterLockSlim();
 		
 		/// <summary>
 		/// A single binary formatter instanciated onces for quick reuse
@@ -89,13 +111,145 @@ namespace ObjectCloud.Disk
 		/// </param>
 		public void Append(T item)
 		{
-			var ev = new Event(item);
-			
-			this.binaryFormatter.Serialize(
-				this.currentWriteStream,
-				ev);
-			
-			this.newestObjects.Add(ev);
+			this.readerWriterLockSlim.EnterWriteLock();
+				
+			try
+			{
+				var ev = new Event(item);
+				
+				this.binaryFormatter.Serialize(
+					this.currentWriteStream,
+					ev);
+				
+				this.newestObjects.Add(ev);
+				
+				this.CreateNewChunkIfNeeded();
+			}
+			finally
+			{
+				this.readerWriterLockSlim.ExitWriteLock();
+			}
+		}
+		
+		/// <summary>
+		/// Creates the new chunk if needed.
+		/// </summary>
+		private void CreateNewChunkIfNeeded()
+		{
+			if (this.currentWriteStream.Length >= this.maxChunkSize)
+			{
+				// Make sure that the current file is complete
+				this.CloseCurrentWriteStream();
+				
+				// Delete old chunks
+				// ***********************
+				
+				// First get the size of all files in the directory
+				var fileSizes = new Dictionary<string, long>();
+				foreach (var fileName in Directory.GetFiles(this.path))
+				{
+					var fileInfo = new FileInfo(fileName);
+					fileSizes[fileName] = fileInfo.Length;
+				}
+				
+				// Then keep deleting the oldest file until the size is appropriate
+				while (fileSizes.Values.Sum() >= this.maxSize)
+				{
+					string oldest = fileSizes.Keys.OrderBy(s => s).ElementAt(0);
+					File.Delete(oldest);
+					fileSizes.Remove(oldest);
+				}
+				
+				// Reverse the newest chunk
+				// ************************************
+				
+				// The chunk's file is always named after the newest item in the chunk
+				var oldestObject = newestObjects[0];
+				string chunkPath = Path.Combine(this.path, oldestObject.DateTime.Ticks.ToString());
+				
+				// Always overwrite any previous attempts to create a new chunk, this will handle crashes that occur while copying
+				using (var chunkStream = File.Open(chunkPath, FileMode.Create))
+				{
+					newestObjects.Reverse();
+					foreach (var ev in this.newestObjects)
+						this.binaryFormatter.Serialize(chunkStream, ev);
+					
+					chunkStream.Flush();
+					chunkStream.Close();
+				}
+				
+				// Start the next chunk
+				// ***************************
+				newestObjects.Clear();
+				this.currentWriteStream = File.Open(this.currentWriteStreamFilename, FileMode.Create);
+			}
+		}
+		
+		/// <summary>
+		/// Returns all events in the sequence, starting with the specified newest date, and progressing through older events until keepIterating is set to false
+		/// </summary>
+		/// <param name='keepIterating'>
+		/// Keep iterating.
+		/// </param>
+		public IEnumerable<Event> ReadSequence(DateTime newest, Wrapped<bool> keepIterating)
+		{
+			this.readerWriterLockSlim.EnterReadLock();
+				
+			try
+			{
+				foreach (var ev in this.newestObjects)
+					if (ev.DateTime <= newest && keepIterating.Value)
+						yield return ev;
+				
+				if (keepIterating.Value)
+				{
+					var binaryFormatter = new BinaryFormatter();
+					
+					var files = Directory.GetFiles(this.path).Where(s => s != this.currentWriteStreamFilename).ToList();
+					files.Sort();
+					files.Reverse();
+					
+					foreach (var file in files)
+					{
+						if (keepIterating.Value)
+						{
+							var oldestInFileString = file.Substring(this.path.Length);
+							var oldestInFile = new DateTime(long.Parse(oldestInFileString));
+							
+							if (oldestInFile <= newest)
+							{
+								using (var fileStream = File.OpenRead(file))
+									do
+									{
+										object deserialized = null;
+	
+										try
+										{
+											deserialized = binaryFormatter.Deserialize(fileStream);
+										}
+										catch (Exception e)
+										{
+											// This is managing the logger, thus it can't log
+											Console.Error.WriteLine("Exception reading from {0}, {1}", file, e);
+											fileStream.Position = fileStream.Length;
+										}
+	
+										if (deserialized is Event)
+										{
+											var ev = (Event)deserialized;
+											if (ev.DateTime <= newest && keepIterating.Value)
+												yield return ev;
+										}
+									} while (fileStream.Position < fileStream.Length);
+							}
+						}
+					}
+				}
+			}
+			finally
+			{
+				this.readerWriterLockSlim.ExitReadLock();
+			}
 		}
 		
 		/// <summary>
