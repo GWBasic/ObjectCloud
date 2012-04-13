@@ -22,7 +22,7 @@ namespace ObjectCloud.Disk
 			this.maxSize = maxSize;
 			this.currentWriteStreamFilename = Path.Combine(this.path, "newest");
 			
-			fileHandlerFactoryLocator.FileSystemResolver.Stopping += (sender, e) => this.CloseCurrentWriteStream();
+			fileHandlerFactoryLocator.FileSystemResolver.Stopping += HandleFileHandlerFactoryLocatorFileSystemResolverStopping;
 			
 			long lastSuccess = 0;
 			
@@ -49,6 +49,20 @@ namespace ObjectCloud.Disk
 			this.currentWriteStream.Position = lastSuccess;
 			
 			this.CreateNewChunkIfNeeded();
+		}
+
+		void HandleFileHandlerFactoryLocatorFileSystemResolverStopping (IFileSystemResolver sender, EventArgs e)
+		{
+			this.readerWriterLockSlim.EnterWriteLock();
+			
+			try
+			{
+				this.CloseCurrentWriteStream();
+			}
+			finally
+			{
+				this.readerWriterLockSlim.ExitWriteLock();
+			}
 		}
 
 		private void CloseCurrentWriteStream()
@@ -115,6 +129,9 @@ namespace ObjectCloud.Disk
 				
 			try
 			{
+				if (null == this.currentWriteStream)
+					return;
+				
 				var ev = new Event(item);
 				
 				this.binaryFormatter.Serialize(
@@ -197,7 +214,8 @@ namespace ObjectCloud.Disk
 				
 			try
 			{
-				foreach (var ev in this.newestObjects)
+				var newestObjects = this.newestObjects.ToArray().Reverse();
+				foreach (var ev in newestObjects)
 					if (ev.DateTime <= newest && keepIterating.Value)
 						yield return ev;
 				
@@ -240,7 +258,7 @@ namespace ObjectCloud.Disk
 											if (ev.DateTime <= newest && keepIterating.Value)
 												yield return ev;
 										}
-									} while (fileStream.Position < fileStream.Length);
+									} while (fileStream.Position < fileStream.Length && keepIterating.Value);
 							}
 						}
 					}
@@ -279,3 +297,5 @@ namespace ObjectCloud.Disk
 	}
 }
 
+
+	
