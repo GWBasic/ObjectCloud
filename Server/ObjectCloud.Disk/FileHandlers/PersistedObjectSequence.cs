@@ -13,16 +13,17 @@ namespace ObjectCloud.Disk
 	/// <summary>
 	/// Allows for persisting an ordered sequence of objects. Objects can be read in reverse order by specifying a date
 	/// </summary>
-	public class PersistedObjectSequence<T>
+	public class PersistedObjectSequence<T> : IDisposable
 	{
 		public PersistedObjectSequence(string path, long maxChunkSize, long maxSize, FileHandlerFactoryLocator fileHandlerFactoryLocator)
 		{
+			this.fileHandlerFactoryLocator = fileHandlerFactoryLocator;
 			this.path = path;
 			this.maxChunkSize = maxChunkSize;
 			this.maxSize = maxSize;
 			this.currentWriteStreamFilename = Path.Combine(this.path, "newest");
 			
-			fileHandlerFactoryLocator.FileSystemResolver.Stopping += HandleFileHandlerFactoryLocatorFileSystemResolverStopping;
+			this.fileHandlerFactoryLocator.FileSystemResolver.Stopping += HandleFileHandlerFactoryLocatorFileSystemResolverStopping;
 			
 			long lastSuccess = 0;
 			
@@ -49,6 +50,14 @@ namespace ObjectCloud.Disk
 			this.currentWriteStream.Position = lastSuccess;
 			
 			this.CreateNewChunkIfNeeded();
+		}
+		
+		private readonly FileHandlerFactoryLocator fileHandlerFactoryLocator;
+		
+		public void Dispose()
+		{
+			this.HandleFileHandlerFactoryLocatorFileSystemResolverStopping(null, null);
+			this.fileHandlerFactoryLocator.FileSystemResolver.Stopping -= HandleFileHandlerFactoryLocatorFileSystemResolverStopping;
 		}
 
 		void HandleFileHandlerFactoryLocatorFileSystemResolverStopping (IFileSystemResolver sender, EventArgs e)
@@ -123,24 +132,26 @@ namespace ObjectCloud.Disk
 		/// <param name='item'>
 		/// Item.
 		/// </param>
-		public void Append(T item)
+		public Event Append(T item)
 		{
 			this.readerWriterLockSlim.EnterWriteLock();
 				
 			try
 			{
-				if (null == this.currentWriteStream)
-					return;
-				
 				var ev = new Event(item);
+
+				if (null != this.currentWriteStream)
+				{				
+					this.binaryFormatter.Serialize(
+						this.currentWriteStream,
+						ev);
+					
+					this.newestObjects.Add(ev);
+					
+					this.CreateNewChunkIfNeeded();
+				}
 				
-				this.binaryFormatter.Serialize(
-					this.currentWriteStream,
-					ev);
-				
-				this.newestObjects.Add(ev);
-				
-				this.CreateNewChunkIfNeeded();
+				return ev;
 			}
 			finally
 			{
@@ -208,61 +219,73 @@ namespace ObjectCloud.Disk
 		/// <param name='keepIterating'>
 		/// Keep iterating.
 		/// </param>
-		public IEnumerable<Event> ReadSequence(DateTime newest, Wrapped<bool> keepIterating)
+		public IEnumerable<Event> ReadSequence(DateTime newest, int max, Func<Event, bool> filter)
 		{
+			var toReturn = new List<Event>(max);
+			
 			this.readerWriterLockSlim.EnterReadLock();
 				
 			try
 			{
 				var newestObjects = this.newestObjects.ToArray().Reverse();
-				foreach (var ev in newestObjects)
-					if (ev.DateTime <= newest && keepIterating.Value)
-						yield return ev;
 				
-				if (keepIterating.Value)
-				{
-					var binaryFormatter = new BinaryFormatter();
-					
-					var files = Directory.GetFiles(this.path).Where(s => s != this.currentWriteStreamFilename).ToList();
-					files.Sort();
-					files.Reverse();
-					
-					foreach (var file in files)
-					{
-						if (keepIterating.Value)
+				foreach (var ev in newestObjects)
+					if (ev.DateTime <= newest)
+						if (filter(ev))
 						{
-							var oldestInFileString = file.Substring(this.path.Length);
-							var oldestInFile = new DateTime(long.Parse(oldestInFileString));
-							
-							if (oldestInFile <= newest)
-							{
-								using (var fileStream = File.OpenRead(file))
-									do
-									{
-										object deserialized = null;
-	
-										try
-										{
-											deserialized = binaryFormatter.Deserialize(fileStream);
-										}
-										catch (Exception e)
-										{
-											// This is managing the logger, thus it can't log
-											Console.Error.WriteLine("Exception reading from {0}, {1}", file, e);
-											fileStream.Position = fileStream.Length;
-										}
-	
-										if (deserialized is Event)
-										{
-											var ev = (Event)deserialized;
-											if (ev.DateTime <= newest && keepIterating.Value)
-												yield return ev;
-										}
-									} while (fileStream.Position < fileStream.Length && keepIterating.Value);
-							}
+							toReturn.Add(ev);
+						
+							if (toReturn.Count >= max)
+								return toReturn;
 						}
+				
+				var binaryFormatter = new BinaryFormatter();
+				
+				var files = Directory.GetFiles(this.path).Where(s => s != this.currentWriteStreamFilename).ToList();
+				files.Sort();
+				files.Reverse();
+				
+				foreach (var file in files)
+				{
+					var oldestInFileString = Path.GetFileName(file);
+					var oldestInFile = new DateTime(long.Parse(oldestInFileString));
+					
+					if (oldestInFile <= newest)
+					{
+						using (var fileStream = File.OpenRead(file))
+							do
+							{
+								object deserialized = null;
+
+								try
+								{
+									deserialized = binaryFormatter.Deserialize(fileStream);
+								}
+								catch (Exception e)
+								{
+									// This is managing the logger, thus it can't log
+									Console.Error.WriteLine("Exception reading from {0}, {1}", file, e);
+									fileStream.Position = fileStream.Length;
+								}
+
+								if (deserialized is Event)
+								{
+									var ev = (Event)deserialized;
+									if (ev.DateTime <= newest)
+										if (filter(ev))
+										{
+											toReturn.Add(ev);
+									
+											if (toReturn.Count >= max)
+												return toReturn;
+										}
+								}
+							} while (fileStream.Position < fileStream.Length);
 					}
 				}
+				
+				// Less events were found then requested
+				return toReturn;
 			}
 			finally
 			{

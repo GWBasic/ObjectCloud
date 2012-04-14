@@ -93,6 +93,7 @@
     <Compile Include="TestShell.cs" />
     <Compile Include="TestUserManagerHandler.cs" />
     <Compile Include="TestPersistedObject.cs" />
+    <Compile Include="TestPersistedObjectSequence.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ObjectCloud.Common\ObjectCloud.Common.csproj">
