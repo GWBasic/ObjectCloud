@@ -17,6 +17,19 @@ namespace ObjectCloud.Disk.Test
 	[TestFixture]
 	public class TestPersistedObjectSequence
 	{
+		[Serializable]
+		private class Event<T> : IHasTimeStamp
+		{
+			public Event(T item)
+			{
+				this.Item = item;
+				this.TimeStamp = DateTime.UtcNow;
+			}
+			
+			public DateTime TimeStamp { get; private set; }
+			public T Item { get; private set; }
+		}
+		
 		private string path;
 		private readonly FileHandlerFactoryLocator fileHandlerFactoryLocator = new FileHandlerFactoryLocator()
 		{
@@ -43,18 +56,18 @@ namespace ObjectCloud.Disk.Test
 		[Test]
 		public void TestSimpleSequence()
 		{
-			using (var sequence = new PersistedObjectSequence<int>(this.path, int.MaxValue, int.MaxValue, this.fileHandlerFactoryLocator))
+			using (var sequence = new PersistedObjectSequence<Event<int>>(this.path, int.MaxValue, int.MaxValue, this.fileHandlerFactoryLocator))
 			{
-				sequence.Append(0);
-				sequence.Append(1);
-				sequence.Append(2);
-				sequence.Append(3);
-				sequence.Append(4);
-				sequence.Append(5);
-				sequence.Append(6);
-				sequence.Append(7);
-				sequence.Append(8);
-				sequence.Append(9);
+				sequence.Append(new Event<int>(0));
+				sequence.Append(new Event<int>(1));
+				sequence.Append(new Event<int>(2));
+				sequence.Append(new Event<int>(3));
+				sequence.Append(new Event<int>(4));
+				sequence.Append(new Event<int>(5));
+				sequence.Append(new Event<int>(6));
+				sequence.Append(new Event<int>(7));
+				sequence.Append(new Event<int>(8));
+				sequence.Append(new Event<int>(9));
 				
 				var events = sequence.ReadSequence(DateTime.MaxValue, 10, e => true).Select(e => e.Item).ToArray();
 				
@@ -78,7 +91,7 @@ namespace ObjectCloud.Disk.Test
 		{
 			this.TestSimpleSequence();
 			
-			using (var sequence = new PersistedObjectSequence<int>(this.path, int.MaxValue, int.MaxValue, this.fileHandlerFactoryLocator))
+			using (var sequence = new PersistedObjectSequence<Event<int>>(this.path, int.MaxValue, int.MaxValue, this.fileHandlerFactoryLocator))
 			{
 				var events = sequence.ReadSequence(DateTime.MaxValue, 10, e => true).Select(e => e.Item).ToArray();
 				
@@ -105,19 +118,19 @@ namespace ObjectCloud.Disk.Test
 			
 			serializer.Serialize(
 				memoryStream,
-				new PersistedObjectSequence<byte[]>.Event(new byte[85]));
+				new Event<byte[]>(new byte[85]));
 			
 			var serializedObjectLength = memoryStream.Length;
 			var chunkLength = serializedObjectLength * 10;
 			
-			using (var sequence = new PersistedObjectSequence<byte[]>(this.path, chunkLength, int.MaxValue, this.fileHandlerFactoryLocator))
+			using (var sequence = new PersistedObjectSequence<Event<byte[]>>(this.path, chunkLength, int.MaxValue, this.fileHandlerFactoryLocator))
 			{
 				for (byte ctr = 0; ctr < 30; ctr++)
 				{
 					var bytes = new byte[85];
 					bytes[0] = ctr;
 					
-					sequence.Append(bytes);
+					sequence.Append(new Event<byte[]>(bytes));
 				}
 			}
 			
@@ -137,13 +150,13 @@ namespace ObjectCloud.Disk.Test
 				
 					using (var stream = File.OpenRead(file))
 					{
-						PersistedObjectSequence<byte[]>.Event ev;
+						Event<byte[]> ev;
 						
 						do
-							ev = (PersistedObjectSequence<byte[]>.Event)serializer.Deserialize(stream);
+							ev = (Event<byte[]>)serializer.Deserialize(stream);
 						while (stream.Position < stream.Length);
 						
-						Assert.AreEqual(filename, ev.DateTime.Ticks.ToString());
+						Assert.AreEqual(filename, ev.TimeStamp.Ticks.ToString());
 					}
 				}
 			}
@@ -152,14 +165,14 @@ namespace ObjectCloud.Disk.Test
 		[Test]
 		public void TestRollover()
 		{
-			using (var sequence = new PersistedObjectSequence<int[]>(this.path, 1000, 30000, this.fileHandlerFactoryLocator))
+			using (var sequence = new PersistedObjectSequence<Event<int[]>>(this.path, 1000, 30000, this.fileHandlerFactoryLocator))
 			{
 				for (int ctr = 0; ctr < 100; ctr++)
 				{
 					int[] toSave = new int[40];
 					toSave[0] = ctr;
 					
-					sequence.Append(toSave);
+					sequence.Append(new Event<int[]>(toSave));
 				}
 			}
 			
@@ -168,7 +181,7 @@ namespace ObjectCloud.Disk.Test
 			Assert.IsTrue(totalSize >= 30000, "Total size too small");
 			Assert.IsTrue(totalSize < 31000, "Total size too big");
 
-			using (var sequence = new PersistedObjectSequence<int[]>(this.path, 1000, 30000, this.fileHandlerFactoryLocator))
+			using (var sequence = new PersistedObjectSequence<Event<int[]>>(this.path, 1000, 30000, this.fileHandlerFactoryLocator))
 			{
 				var items = sequence.ReadSequence(DateTime.MaxValue, 2000, ev => true).Select(ev => ev.Item).ToArray();
 				
@@ -184,10 +197,10 @@ namespace ObjectCloud.Disk.Test
 		[Test]
 		public void TestFilter()
 		{
-			using (var sequence = new PersistedObjectSequence<int>(this.path, 500, 3000, this.fileHandlerFactoryLocator))
+			using (var sequence = new PersistedObjectSequence<Event<int>>(this.path, 500, 3000, this.fileHandlerFactoryLocator))
 			{
 				for (int ctr = 0; ctr < 500; ctr++)
-					sequence.Append(ctr);
+					sequence.Append(new Event<int>(ctr));
 				
 				foreach (var ctr in sequence.ReadSequence(DateTime.MaxValue, 100, x => 0 == (x.Item % 5)))
 					Assert.IsTrue(0 == ctr.Item % 5);
@@ -197,16 +210,16 @@ namespace ObjectCloud.Disk.Test
 		[Test]
 		public void TestDateRange()
 		{
-			using (var sequence = new PersistedObjectSequence<int>(this.path, 500, 3000, this.fileHandlerFactoryLocator))
+			using (var sequence = new PersistedObjectSequence<Event<int>>(this.path, 500, 3000, this.fileHandlerFactoryLocator))
 			{
 				for (int ctr = 0; ctr < 500; ctr++)
-					sequence.Append(ctr);
+					sequence.Append(new Event<int>(ctr));
 				
 				var events = sequence.ReadSequence(DateTime.MaxValue, 500, e => true);
 				
 				foreach (var ev in events)
 				{
-					var result = sequence.ReadSequence(ev.DateTime, 1, e => true).ToArray();
+					var result = sequence.ReadSequence(ev.TimeStamp, 1, e => true).ToArray();
 					
 					Assert.AreEqual(1, result.Length);
 					Assert.AreEqual(ev.Item, result[0].Item);
@@ -217,17 +230,17 @@ namespace ObjectCloud.Disk.Test
 		[Test]
 		public void TestDatesOrdered()
 		{
-			using (var sequence = new PersistedObjectSequence<int>(this.path, 500, 3000, this.fileHandlerFactoryLocator))
+			using (var sequence = new PersistedObjectSequence<Event<int>>(this.path, 500, 3000, this.fileHandlerFactoryLocator))
 			{
 				for (int ctr = 0; ctr < 500; ctr++)
-					sequence.Append(ctr);
+					sequence.Append(new Event<int>(ctr));
 				
 				DateTime prev = DateTime.MaxValue;
 				
 				foreach (var ev in sequence.ReadSequence(DateTime.MaxValue, 500, e => true))
 				{
-					Assert.IsTrue(ev.DateTime < prev);
-					prev = ev.DateTime;
+					Assert.IsTrue(ev.TimeStamp < prev);
+					prev = ev.TimeStamp;
 				}
 			}
 		}

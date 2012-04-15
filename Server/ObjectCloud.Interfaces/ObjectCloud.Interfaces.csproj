@@ -194,6 +194,7 @@
     <Compile Include="Disk\IObjectCloudLogHandler.cs" />
     <Compile Include="Disk\LoggingLevel.cs" />
     <Compile Include="WebServer\ChannelEventWebAdaptor.cs" />
+    <Compile Include="Disk\IHasTimeStamp.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\JsonFx.Json\JsonFx.Json.csproj">

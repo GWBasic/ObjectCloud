@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Text.RegularExpressions;
 
 using Common.Logging;
 
@@ -42,18 +43,6 @@ namespace ObjectCloud.Interfaces.Disk
 		    Exception exception);
 
         /// <summary>
-        /// Gets the logging timespans
-        /// </summary>
-        /// <returns></returns>
-        IDictionary<LoggingLevel, TimeSpan> GetLoggingTimespans();
-
-        /// <summary>
-        /// Sets the logging timespans
-        /// </summary>
-        /// <param name="loggingTimeSpans"></param>
-        void UpdateLoggingTimespans(IDictionary<LoggingLevel, TimeSpan> loggingTimeSpans);
-
-        /// <summary>
         /// Indicates that the logger should write to the console.  This should default to false as the console can really slow down the server under load
         /// </summary>
         bool WriteToConsole { get; }
@@ -71,16 +60,16 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="exceptionClassnames"></param>
         /// <returns></returns>
         IEnumerable<LoggingEvent> ReadLog(
-            IEnumerable<string> classnames,
-            DateTime? minTimeStamp,
+			int maxEvents,
+            HashSet<string> classnames,
             DateTime? maxTimeStamp,
-            IEnumerable<LoggingLevel> loggingLevels,
-            IEnumerable<int> threadIds,
-            IEnumerable<ID<ISession, Guid>> sessionIds,
-            IEnumerable<ID<IUserOrGroup, Guid>> userIds,
-            string messageLike,
-            IEnumerable<string> exceptionClassnames,
-            string exceptionMessageLike);
+            HashSet<LoggingLevel> loggingLevels,
+            HashSet<int> threadIds,
+            HashSet<ID<ISession, Guid>> sessionIds,
+            HashSet<ID<IUserOrGroup, Guid>> userIds,
+            Regex messageRegex,
+            HashSet<string> exceptionClassnames,
+            Regex exceptionMessageRegex);
 
 		/// <summary>
 		/// Returns the class names that are currently used

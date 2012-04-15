@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Disk;
@@ -62,22 +63,22 @@ namespace ObjectCloud.Disk.WebHandlers
 		/// </returns>
         /// <param name="remoteEndpoints"></param>
         /// <param name="webConnection"></param>
-        /// <param name="exceptionMessageLike"></param>
-        /// <param name="messageLike"></param>
+        /// <param name="exceptionMessageRegex"></param>
+        /// <param name="messageRegex"></param>
 		[WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Administer, FilePermissionEnum.Administer)]
 		public IWebResults ReadLog(
             IWebConnection webConnection,
+			int? maxEvents,
            	string[] classnames,
-            DateTime? minTimeStamp,
             DateTime? maxTimeStamp,
             LoggingLevel[] loggingLevels,
             int[] threadIds,
             Guid[] sessionIds,
             string[] users,
 		    string[] remoteEndpoints,
-            string messageLike,
+            string messageRegex,
             string[] exceptionClassnames,
-            string exceptionMessageLike)
+            string exceptionMessageRegex)
         {
             // Convert the session Ids
             List<ID<ISession, Guid>> convertedSessionIds = null;
@@ -103,18 +104,21 @@ namespace ObjectCloud.Disk.WebHandlers
                         userIds.Add(user.Id);
                     }
             }
+			
+			if (null == maxEvents)
+				maxEvents = 300;
 
             IEnumerable<LoggingEvent> events = FileHandler.ReadLog(
-                classnames,
-                minTimeStamp,
+				maxEvents.Value,
+                new HashSet<string>(classnames),
                 maxTimeStamp,
-                loggingLevels,
-                threadIds,
-                convertedSessionIds,
-                userIds,
-                messageLike,
-                exceptionClassnames,
-                exceptionMessageLike);
+                new HashSet<LoggingLevel>(loggingLevels),
+                new HashSet<int>(threadIds),
+                new HashSet<ID<ISession, Guid>>(convertedSessionIds),
+                new HashSet<ID<IUserOrGroup, Guid>>(userIds),
+                new Regex(messageRegex),
+                new HashSet<string>(exceptionClassnames),
+                new Regex(exceptionMessageRegex));
 
             Dictionary<ID<IUserOrGroup, Guid>, IUserOrGroup> usersById = new Dictionary<ID<IUserOrGroup, Guid>, IUserOrGroup>();
 
@@ -202,8 +206,8 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Read, FilePermissionEnum.Read)]
 		public IWebResults ReadMyLog(
             IWebConnection webConnection,
+			int? maxEvents,
             string[] classnames,
-            DateTime? minTimeStamp,
             DateTime? maxTimeStamp,
             LoggingLevel[] loggingLevels,
             int[] threadIds,
@@ -215,8 +219,8 @@ namespace ObjectCloud.Disk.WebHandlers
 		{
 			return ReadLog(
 			    webConnection,
+				maxEvents,
 				classnames,
-				minTimeStamp,
 				maxTimeStamp,
 				loggingLevels,
 				threadIds,
@@ -226,64 +230,6 @@ namespace ObjectCloud.Disk.WebHandlers
                 messageLike,
 				exceptionClassnames,
                 exceptionMessageLike);
-		}
-		
-		/// <summary>
-		/// Updates when specific kinds of logging information can be deleted
-		/// </summary>
-		/// <param name="webConnection">
-		/// A <see cref="IWebConnection"/>
-		/// </param>
-		/// <returns>
-		/// A <see cref="IWebResults"/>
-		/// </returns>
-		[WebCallable(WebCallingConvention.GET, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Administer, FilePermissionEnum.Administer)]
-		public IWebResults GetDeleteTimespans(IWebConnection webConnection)
-		{
-			IDictionary<LoggingLevel, TimeSpan> deleteTimespans = FileHandler.GetLoggingTimespans();
-			
-			Dictionary<string, double> toReturn = new Dictionary<string, double>();
-			
-			foreach (LoggingLevel loggingLevel in deleteTimespans.Keys)
-				toReturn[loggingLevel.ToString()] = deleteTimespans[loggingLevel].TotalDays;
-			
-			return WebResults.ToJson(toReturn);
-		}
-		
-		/// <summary>
-		/// Updates when specific kinds of logging information can be deleted
-		/// </summary>
-		/// <param name="webConnection">
-		/// A <see cref="IWebConnection"/>
-		/// </param>
-        /// <param name="deleteTimespans"></param>
-		/// <returns>
-		/// A <see cref="IWebResults"/>
-		/// </returns>
-		[WebCallable(WebCallingConvention.POST_application_x_www_form_urlencoded, WebReturnConvention.Status, FilePermissionEnum.Administer, FilePermissionEnum.Administer)]
-		public IWebResults SetDeleteTimespans(IWebConnection webConnection, Dictionary<string, double> deleteTimespans)
-		{
-			Dictionary<LoggingLevel, TimeSpan> toSet = new Dictionary<LoggingLevel, TimeSpan>();
-			
-			foreach(KeyValuePair<string, double> levelAndDays in deleteTimespans)
-			{
-				LoggingLevel loggingLevel;
-				try
-				{
-					loggingLevel = Enum<LoggingLevel>.Parse(levelAndDays.Key);
-				}
-				catch
-				{
-					throw new WebResultsOverrideException(WebResults.From(
-						Status._400_Bad_Request, levelAndDays.Key + " is not a valid logging level"));
-				}
-				
-				toSet[loggingLevel] = TimeSpan.FromDays(levelAndDays.Value);
-			}
-			
-			FileHandler.UpdateLoggingTimespans(toSet);
-			
-			return WebResults.From(Status._202_Accepted);
 		}
 	}
 }

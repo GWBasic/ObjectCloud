@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 using Common.Logging;
@@ -21,98 +22,39 @@ using ILog = Common.Logging.ILog;
 
 namespace ObjectCloud.Disk.FileHandlers
 {
-	public class LogHandler : HasDatabaseFileHandler<IDatabaseConnector, IDatabaseConnection, IDatabaseTransaction>, IObjectCloudLogHandler
+	public class LogHandler : FileHandler, IObjectCloudLogHandler
 	{
-        private static ILog log = LogManager.GetLogger<LogHandler>();
-
-        public LogHandler(IDatabaseConnector databaseConnector, FileHandlerFactoryLocator fileHandlerFactoryLocator, bool writeToConsole, DelegateQueue delegateQueue)
-            : base(databaseConnector, fileHandlerFactoryLocator) 
+        public LogHandler(PersistedObjectSequence<LoggingEvent> sequence, FileHandlerFactoryLocator fileHandlerFactoryLocator, bool writeToConsole, DelegateQueue delegateQueue)
+            : base(fileHandlerFactoryLocator) 
 		{
-            DelegateQueue = delegateQueue;
-
-			foreach (IClasses_Readable classNameAndId in DatabaseConnection.Classes.Select())
+			this.sequence = sequence;
+            this.delegateQueue = delegateQueue;
+            this.writeToConsole = writeToConsole;
+			
+			this.sequence.ReadSequence(DateTime.MaxValue, 1, loggingEvent =>
 			{
-				ClassNameIds[classNameAndId.Name] = classNameAndId.ClassId;
-				ClassNamesById[classNameAndId.ClassId] = classNameAndId.Name;
-			}
-
-            DelegateQueue.QueueUserWorkItem(DeleteOldLogEntries);
-
-            _WriteToConsole = writeToConsole;
+				if (null != loggingEvent.Classname)
+					this.classNames.Add(loggingEvent.Classname);
+				
+				if (null != loggingEvent.ExceptionClassname)
+					this.classNames.Add(loggingEvent.ExceptionClassname);
+				
+				return false;
+			});
 		}
-
+		
+		private readonly PersistedObjectSequence<LoggingEvent> sequence;
+		
         public bool WriteToConsole
         {
-            get { return _WriteToConsole; }
+            get { return writeToConsole; }
         }
-        private bool _WriteToConsole;
+        private bool writeToConsole;
 
         public override string Title 
 		{
         	get { return "Log"; }
         }
-
-		/// <summary>
-		/// Association of class names and IDs
-		/// </summary>
-		/// <param name="path">
-		/// A <see cref="System.String"/>
-		/// </param>
-		/// <param name="userId">
-		/// A <see cref="ObjectCloud.Common.ID"/>
-		/// </param>
-		private Dictionary<string, long> ClassNameIds = new Dictionary<string, long>();
-		
-		/// <summary>
-		/// Association that goes from ClassNameId back to the name
-		/// </summary>
-		/// <param name="className">
-		/// A <see cref="System.String"/>
-		/// </param>
-		/// <returns>
-		/// A <see cref="System.Int64"/>
-		/// </returns>
-		private Dictionary<long, string> ClassNamesById = new Dictionary<long, string>();
-		
-		/// <summary>
-		/// Returns the appropriate ID for the class name, inserting a row in the foregn key table if needed
-		/// </summary>
-		/// <param name="className">
-		/// A <see cref="System.String"/>
-		/// </param>
-		/// <returns>
-		/// A <see cref="System.Int32"/>
-		/// </returns>
-		private long GetClassNameId(string className)
-		{
-			long toReturn = long.MinValue;
-			if (ClassNameIds.TryGetValue(className, out toReturn))
-				return toReturn;
-			
-			toReturn = DatabaseConnection.Classes.InsertAndReturnPK<long>(delegate(IClasses_Writable classesWritable)
-			{
-				classesWritable.Name = className;
-			});
-			
-			ClassNameIds[className] = toReturn;
-			ClassNamesById[toReturn] = className;
-			return toReturn;
-		}
-		
-		/// <summary>
-		/// Returns all of the ids for the passed in class names
-		/// </summary>
-		/// <param name="classNames">
-		/// A <see cref="IEnumerable"/>
-		/// </param>
-		/// <returns>
-		/// A <see cref="IEnumerable"/>
-		/// </returns>
-		private IEnumerable<long> GetClassNameIds(IEnumerable<string> classNames)
-		{
-			foreach (string className in classNames)
-				yield return GetClassNameId(className);
-		}
 		
         public override void Dump (string path, ObjectCloud.Common.ID<ObjectCloud.Interfaces.Security.IUserOrGroup, Guid> userId)
         {
@@ -122,7 +64,7 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <summary>
         /// Asyncronously runs delegates on a queue where they can't block each other
         /// </summary>
-        private DelegateQueue DelegateQueue;
+        private DelegateQueue delegateQueue;
 
 		public void WriteLog(
 			string className, 
@@ -133,15 +75,11 @@ namespace ObjectCloud.Disk.FileHandlers
 			Exception exception)
         {
 			Thread callingThread = Thread.CurrentThread;
-			DateTime timestamp = DateTime.UtcNow;
 
 			// Always write to the log on a separate thread so it doesn't block the caller
             // But drop logging items if it's going to impede performance
-            if (DelegateQueue.QueuedDelegatesCount < DelegateQueue.BusyThreshold - 5)
-    			DelegateQueue.QueueUserWorkItem(delegate(object state)
-	    		{
-		    		WriteLog(timestamp, callingThread, className, logLevel, session, remoteEndPoint, message, exception);
-			    });
+            if (delegateQueue.QueuedDelegatesCount < delegateQueue.BusyThreshold - 5)
+    			delegateQueue.QueueUserWorkItem(state => WriteLog(callingThread, className, logLevel, session, remoteEndPoint, message, exception));
         }
 
 		/// <summary>
@@ -169,7 +107,6 @@ namespace ObjectCloud.Disk.FileHandlers
 		/// A <see cref="Exception"/>
 		/// </param>
 		private void WriteLog (
-			DateTime timestamp, 
 			Thread callingThread, 
 			string className, 
 			LoggingLevel logLevel, 
@@ -180,42 +117,40 @@ namespace ObjectCloud.Disk.FileHandlers
 		{
 			try
 			{
-				long classId = GetClassNameId(className);
-				long? exceptionClassId = null;
-				string exceptionMessage = null;
-                string exceptionStackTrace = null;
-				
-				if (null != exception)
+				var loggingEvent = new LoggingEvent()
 				{
-					exceptionClassId = GetClassNameId(exception.GetType().FullName);
-					exceptionMessage = exception.Message;
-                    exceptionStackTrace = exception.StackTrace;
+					TimeStamp = DateTime.UtcNow,
+					Classname = className,
+					ExceptionClassname = null != exception ? exception.GetType().FullName : null,
+					ExceptionMessage = null != exception ? exception.Message : null,
+					ExceptionStackTrace = null != exception ? exception.StackTrace : null,
+					Level = logLevel,
+					Message = message,
+					SessionId = null != session ? (ID<ISession, Guid>?)session.SessionId : (ID<ISession, Guid>?)null,
+					ThreadId = callingThread.ManagedThreadId,
+					UserId = null != session ? (ID<IUserOrGroup, Guid>?)session.User.Id : (ID<IUserOrGroup, Guid>?)null,
+					RemoteEndPoint = null != remoteEndPoint ? remoteEndPoint.ToString() : null
+				};
+				
+				// Update the classnames in a thread-safe manner
+				if (!this.classNames.Contains(className))
+				{
+					var classNames = new HashSet<string>(this.classNames);
+					classNames.Add(className);
+					
+					this.classNames = classNames;
 				}
 				
-				DatabaseConnection.Log.Insert(delegate(ILog_Writable logWritable)
-				{
-					logWritable.ClassId = classId;
-					logWritable.ExceptionClassId = exceptionClassId;
-					logWritable.ExceptionMessage = exceptionMessage;
-                    logWritable.ExceptionStackTrace = exceptionStackTrace;
-					logWritable.Level = logLevel;
-					logWritable.Message = message;
-					
-					if (null != session)
+				if (null != loggingEvent.ExceptionClassname)
+					if (!this.classNames.Contains(loggingEvent.ExceptionClassname))
 					{
-						logWritable.SessionId = session.SessionId;
-						logWritable.UserId = session.User.Id;
+						var classNames = new HashSet<string>(this.classNames);
+						classNames.Add(loggingEvent.ExceptionClassname);
+						
+						this.classNames = classNames;
 					}
-					
-					if (null != remoteEndPoint)
-						logWritable.RemoteEndPoint = remoteEndPoint.ToString();
-					
-					logWritable.ThreadId = callingThread.ManagedThreadId;
-					logWritable.TimeStamp = timestamp;
-				});
-
-                if (DateTime.UtcNow > NextTimeToDeleteOldLogEntries)
-                    DeleteOldLogEntries(null);
+				
+				this.sequence.Append(loggingEvent);
 			}
 			catch (Exception e)
 			{
@@ -223,136 +158,77 @@ namespace ObjectCloud.Disk.FileHandlers
 			}
 		}
 
-        /// <summary>
-        /// The next time that old log entries should be deleted
-        /// </summary>
-        private DateTime NextTimeToDeleteOldLogEntries = DateTime.MaxValue;
-
-        public IDictionary<LoggingLevel, TimeSpan> GetLoggingTimespans()
-        {
-            Dictionary<LoggingLevel, TimeSpan> toReturn = new Dictionary<LoggingLevel, TimeSpan>();
-
-            foreach (ILifespan_Readable lifespan in DatabaseConnection.Lifespan.Select())
-                toReturn[lifespan.Level] = lifespan.Timespan;
-
-            return toReturn;
-        }
-
-        public void UpdateLoggingTimespans(IDictionary<LoggingLevel, TimeSpan> loggingTimeSpans)
-        {
-            foreach (LoggingLevel level in loggingTimeSpans.Keys)
-                DatabaseConnection.Lifespan.Update(
-                    Lifespan_Table.Level == level,
-                    delegate(ILifespan_Writable lifespan)
-                    {
-                        lifespan.Timespan = loggingTimeSpans[level];
-                    });
-        }
-
-        /// <summary>
-        /// Deletes old log entries.  Intended to be called from a timer
-        /// </summary>
-        /// <param name="state"></param>
-        void DeleteOldLogEntries(object state)
-        {
-            try
-            {
-                IDictionary<LoggingLevel, TimeSpan> loggingTimespans = GetLoggingTimespans();
-
-                foreach (LoggingLevel level in loggingTimespans.Keys)
-                {
-                    DateTime threashold = DateTime.UtcNow - loggingTimespans[level];
-
-                    DateTime start = DateTime.UtcNow;
-
-                    DatabaseConnection.Log.Delete(
-                        (Log_Table.Level == level) & (Log_Table.TimeStamp < threashold));
-
-                    TimeSpan deleteTime = DateTime.UtcNow - start;
-
-                    log.TraceFormat("Deleting log entries for {0} took {1}", level, deleteTime.ToString());
-                }
-
-                NextTimeToDeleteOldLogEntries = DateTime.UtcNow.AddMinutes(5);
-            }
-            catch (Exception e)
-            {
-                Console.Error.WriteLine("Error when cleaning the logs\n" + e.ToString());
-            }
-        }
-
         public IEnumerable<LoggingEvent> ReadLog(
-			IEnumerable<string> classnames,
-			DateTime? minTimeStamp,
+			int maxEvents,
+			HashSet<string> classnames,
 			DateTime? maxTimeStamp,
-			IEnumerable<LoggingLevel> loggingLevels,
-			IEnumerable<int> threadIds,
-			IEnumerable<ID<ISession, Guid>> sessionIds,
-			IEnumerable<ID<ObjectCloud.Interfaces.Security.IUserOrGroup, Guid>> userIds,
-            string messageLike,
-            IEnumerable<string> exceptionClassnames,
-            string exceptionMessageLike)
+			HashSet<LoggingLevel> loggingLevels,
+			HashSet<int> threadIds,
+			HashSet<ID<ISession, Guid>> sessionIds,
+			HashSet<ID<ObjectCloud.Interfaces.Security.IUserOrGroup, Guid>> userIds,
+            Regex messageRegex,
+            HashSet<string> exceptionClassnames,
+            Regex exceptionMessageRegex)
         {
-			List<ComparisonCondition> comparisonConditions = new List<ComparisonCondition>();
-			
-			if (null != classnames)
-				comparisonConditions.Add(Log_Table.ClassId.In(GetClassNameIds(classnames)));
-			
-			if (null != minTimeStamp)
-				comparisonConditions.Add(Log_Table.TimeStamp >= minTimeStamp.Value);
-			
-			if (null != maxTimeStamp)
-				comparisonConditions.Add(Log_Table.TimeStamp <= maxTimeStamp.Value);
-			
-			if (null != loggingLevels)
-				comparisonConditions.Add(Log_Table.Level.In(loggingLevels));
-			
-			if (null != threadIds)
-				comparisonConditions.Add(Log_Table.ThreadId.In(threadIds));
-			
-			if (null != sessionIds)
-				comparisonConditions.Add(Log_Table.SessionId.In(sessionIds));
-			
-			if (null != userIds)
-				comparisonConditions.Add(Log_Table.UserId.In(userIds));
-
-            if (null != messageLike)
-                comparisonConditions.Add(Log_Table.Message.Like(messageLike));
-			
-			if (null != exceptionClassnames)
-				comparisonConditions.Add(Log_Table.ExceptionClassId.In(GetClassNameIds(exceptionClassnames)));
-
-            if (null != exceptionMessageLike)
-                comparisonConditions.Add(Log_Table.ExceptionMessage.Like(exceptionMessageLike));
-
-            foreach (ILog_Readable logReadable in DatabaseConnection.Log.Select(
-                ComparisonCondition.Condense(comparisonConditions), null, ObjectCloud.ORM.DataAccess.OrderBy.Desc, Log_Table.TimeStamp))
+			return this.sequence.ReadSequence(
+				maxTimeStamp != null ? maxTimeStamp.Value : DateTime.MaxValue,
+				maxEvents,
+				loggingEvent => 
 			{
-				LoggingEvent toYeild = new LoggingEvent();
+				if (null != classnames)
+					if (!classnames.Contains(loggingEvent.Classname))
+						return false;
 				
-				toYeild.Classname = ClassNamesById[logReadable.ClassId];
+				if (null != loggingLevels)
+					if (!loggingLevels.Contains(loggingEvent.Level))
+						return false;
 				
-				if (null != logReadable.ExceptionClassId)
-					toYeild.ExceptionClassname = ClassNamesById[logReadable.ExceptionClassId.Value];
+				if (null != threadIds)
+					if (!threadIds.Contains(loggingEvent.ThreadId))
+						return false;
 				
-				toYeild.ExceptionMessage = logReadable.ExceptionMessage;
-                toYeild.ExceptionStackTrace = logReadable.ExceptionStackTrace;
-				toYeild.Level = logReadable.Level;
-				toYeild.Message = logReadable.Message;
-				toYeild.SessionId = logReadable.SessionId;
-				toYeild.ThreadId = logReadable.ThreadId;
-				toYeild.TimeStamp = logReadable.TimeStamp;
-				toYeild.UserId = logReadable.UserId;
-
-                toYeild.RemoteEndPoint = logReadable.RemoteEndPoint;
+				if (null != sessionIds)
+				{
+					if (null == loggingEvent.SessionId)
+						return false;
+					
+					if (!sessionIds.Contains(loggingEvent.SessionId.Value))
+						return false;
+				}
 				
-				yield return toYeild;
-			}
+				if (null != userIds)
+				{
+					if (null == loggingEvent.UserId)
+						return false;
+					
+					if (!userIds.Contains(loggingEvent.UserId.Value))
+						return false;
+				}
+				
+	            if (null != messageRegex)
+					if (!messageRegex.IsMatch(loggingEvent.Message))
+						return false;
+				
+				if (null != exceptionClassnames)
+					if (!exceptionClassnames.Contains(loggingEvent.ExceptionClassname))
+						return false;
+	
+	            if (null != exceptionMessageRegex)
+					if (!exceptionMessageRegex.IsMatch(loggingEvent.ExceptionMessage))
+						return false;
+				
+				return true;
+			});
         }
 
         public IEnumerable<string> ClassNames
 		{
-			get { return ClassNameIds.Keys; }
+			get 
+			{
+				foreach (var className in this.classNames)
+					yield return className;
+			}
         }
+		private HashSet<string> classNames = new HashSet<string>();
     }
 }

@@ -17,78 +17,47 @@ namespace ObjectCloud.Disk.Factories
 	public class LogHandlerFactory : FileHandlerFactory<LogHandler>
 	{
         /// <summary>
-        /// Service locator for data access objects
-        /// </summary>
-        public DataAccessLocator DataAccessLocator
-        {
-            get { return _DataAccessLocator; }
-            set { _DataAccessLocator = value; }
-        }
-        private DataAccessLocator _DataAccessLocator;
-
-        /// <summary>
         /// Enables writing to the console.  Defaults to false
         /// </summary>
         public bool WriteToConsole
         {
-            get { return _WriteToConsole; }
+            get { return writeToConsole; }
             set
             {
-                _WriteToConsole = value;
+                writeToConsole = value;
 
                 if (!value)
                     NonBlockingConsoleWriter.EndThread();
             }
         }
-        private bool _WriteToConsole = false;
-
+        private bool writeToConsole = false;
+		
+		/// <summary>
+		/// The maximum size of a chunk of logging events
+		/// </summary>
+		public int MaxChunkSize { get; set; }
+		
+		/// <summary>
+		/// The amount of disk to devote to logging
+		/// </summary>
+		public int MaxSize { get; set; }
+		
         public override void CreateFile(string path, FileId fileId)
         {
             Directory.CreateDirectory(path);
-
-            string databaseFilename = CreateDatabaseFilename(path);
-
-            DataAccessLocator.DatabaseCreator.Create(databaseFilename);
-
-            using (LogHandler logHandler = ConstructLogHander(databaseFilename))
-                foreach (LoggingLevel level in Enum<LoggingLevel>.Values)
-                    logHandler.DatabaseConnection.Lifespan.Insert(delegate(ILifespan_Writable lifespan)
-                    {
-                        lifespan.Level = level;
-                        lifespan.Timespan = TimeSpan.FromDays(14);
-                    });
         }
 
         public override LogHandler OpenFile(string path, FileId fileId)
         {
-            return ConstructLogHander(CreateDatabaseFilename(path));
-        }
-
-        /// <summary>
-        /// Creates the database file name
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        private string CreateDatabaseFilename(string path)
-        {
-            return string.Format("{0}{1}db.sqlite", path, Path.DirectorySeparatorChar);
-        }
-
-        /// <summary>
-        /// Constructs the LogHandler to return
-        /// </summary>
-        /// <param name="databaseFilename"></param>
-        /// <returns></returns>
-        private LogHandler ConstructLogHander(string databaseFilename)
-        {
-            DelegateQueue delegateQueue = new DelegateQueue("Log Handler");
-            DelegateQueues.Enqueue(delegateQueue);
-
-            return new LogHandler(
-                DataAccessLocator.DatabaseConnectorFactory.CreateConnectorForEmbedded(databaseFilename),
-                FileHandlerFactoryLocator,
-                WriteToConsole,
-                delegateQueue);
+			var delegateQueue = new DelegateQueue("Log Handler");
+			
+			this.delegateQueues.Enqueue(delegateQueue);
+			
+			return new LogHandler(
+				new PersistedObjectSequence<LoggingEvent>(path, this.MaxChunkSize, this.MaxSize, this.FileHandlerFactoryLocator),
+				this.FileHandlerFactoryLocator,
+				this.WriteToConsole,
+				delegateQueue);
         }
 
         public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID, IDirectoryHandler parentDirectory)
@@ -104,18 +73,18 @@ namespace ObjectCloud.Disk.Factories
         /// <summary>
         /// All of the started delegate queues
         /// </summary>
-        private LockFreeQueue<DelegateQueue> DelegateQueues = new LockFreeQueue<DelegateQueue>();
+        private LockFreeQueue<DelegateQueue> delegateQueues = new LockFreeQueue<DelegateQueue>();
 
         public override void Stop()
         {
-            LockFreeQueue<DelegateQueue> delegateQueues = DelegateQueues;
-            DelegateQueues = new LockFreeQueue<DelegateQueue>();
+            LockFreeQueue<DelegateQueue> delegateQueues = this.delegateQueues;
+            this.delegateQueues = new LockFreeQueue<DelegateQueue>();
 
             DelegateQueue delegateQueue;
             while (delegateQueues.Dequeue(out delegateQueue))
             {
                 delegateQueue.Stop();
-                DelegateQueues.Enqueue(delegateQueue);
+                delegateQueues.Enqueue(delegateQueue);
             }
         }
     }

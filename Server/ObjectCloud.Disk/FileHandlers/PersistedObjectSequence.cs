@@ -14,6 +14,7 @@ namespace ObjectCloud.Disk
 	/// Allows for persisting an ordered sequence of objects. Objects can be read in reverse order by specifying a date
 	/// </summary>
 	public class PersistedObjectSequence<T> : IDisposable
+		where T : IHasTimeStamp
 	{
 		public PersistedObjectSequence(string path, long maxChunkSize, long maxSize, FileHandlerFactoryLocator fileHandlerFactoryLocator)
 		{
@@ -35,8 +36,8 @@ namespace ObjectCloud.Disk
 				while (lastSuccess < this.currentWriteStream.Length)
 				{
 					var deserialized = this.binaryFormatter.Deserialize(this.currentWriteStream);
-					if (deserialized is Event)
-						this.newestObjects.Add((Event)deserialized);
+					if (deserialized is T)
+						this.newestObjects.Add((T)deserialized);
 					
 					lastSuccess = this.currentWriteStream.Position;
 				}
@@ -124,34 +125,30 @@ namespace ObjectCloud.Disk
 		/// <summary>
 		/// The newest objects, in oldest-first order. These are what have been written to the current write stream.
 		/// </summary>
-		private List<Event> newestObjects = new List<Event>();
+		private List<T> newestObjects = new List<T>();
 		
 		/// <summary>
-		/// Append the specified item to the sequence
+		/// Append the specified item to the sequence. The caller must garantee that item's timestamp is always newer then the last call
 		/// </summary>
 		/// <param name='item'>
 		/// Item.
 		/// </param>
-		public Event Append(T item)
+		public void Append(T item)
 		{
 			this.readerWriterLockSlim.EnterWriteLock();
 				
 			try
 			{
-				var ev = new Event(item);
-
-				if (null != this.currentWriteStream)
-				{				
-					this.binaryFormatter.Serialize(
-						this.currentWriteStream,
-						ev);
-					
-					this.newestObjects.Add(ev);
-					
-					this.CreateNewChunkIfNeeded();
-				}
+				if (null == this.currentWriteStream)
+					return;
 				
-				return ev;
+				this.binaryFormatter.Serialize(
+					this.currentWriteStream,
+					item);
+				
+				this.newestObjects.Add(item);
+				
+				this.CreateNewChunkIfNeeded();
 			}
 			finally
 			{
@@ -193,7 +190,7 @@ namespace ObjectCloud.Disk
 				
 				// The chunk's file is always named after the newest item in the chunk
 				var oldestObject = newestObjects[0];
-				string chunkPath = Path.Combine(this.path, oldestObject.DateTime.Ticks.ToString());
+				string chunkPath = Path.Combine(this.path, oldestObject.TimeStamp.Ticks.ToString());
 				
 				// Always overwrite any previous attempts to create a new chunk, this will handle crashes that occur while copying
 				using (var chunkStream = File.Open(chunkPath, FileMode.Create))
@@ -219,9 +216,9 @@ namespace ObjectCloud.Disk
 		/// <param name='keepIterating'>
 		/// Keep iterating.
 		/// </param>
-		public IEnumerable<Event> ReadSequence(DateTime newest, int max, Func<Event, bool> filter)
+		public IEnumerable<T> ReadSequence(DateTime newest, int max, Func<T, bool> filter)
 		{
-			var toReturn = new List<Event>(max);
+			var toReturn = new List<T>(max);
 			
 			this.readerWriterLockSlim.EnterReadLock();
 				
@@ -229,11 +226,11 @@ namespace ObjectCloud.Disk
 			{
 				var newestObjects = this.newestObjects.ToArray().Reverse();
 				
-				foreach (var ev in newestObjects)
-					if (ev.DateTime <= newest)
-						if (filter(ev))
+				foreach (var item in newestObjects)
+					if (item.TimeStamp <= newest)
+						if (filter(item))
 						{
-							toReturn.Add(ev);
+							toReturn.Add(item);
 						
 							if (toReturn.Count >= max)
 								return toReturn;
@@ -268,13 +265,13 @@ namespace ObjectCloud.Disk
 									fileStream.Position = fileStream.Length;
 								}
 
-								if (deserialized is Event)
+								if (deserialized is T)
 								{
-									var ev = (Event)deserialized;
-									if (ev.DateTime <= newest)
-										if (filter(ev))
+									var item = (T)deserialized;
+									if (item.TimeStamp <= newest)
+										if (filter(item))
 										{
-											toReturn.Add(ev);
+											toReturn.Add(item);
 									
 											if (toReturn.Count >= max)
 												return toReturn;
@@ -291,31 +288,6 @@ namespace ObjectCloud.Disk
 			{
 				this.readerWriterLockSlim.ExitReadLock();
 			}
-		}
-		
-		/// <summary>
-		/// Encapsulates an object that's written to the stream
-		/// </summary>
-		[Serializable]
-		public class Event
-		{
-			public Event(T item)
-			{
-				this.item = item;
-				this.dateTime = DateTime.UtcNow;
-			}
-
-			public DateTime DateTime 
-			{
-				get { return this.dateTime; }
-			}
-			private readonly DateTime dateTime;
-
-			public T Item 
-			{
-				get { return this.item; }
-			}
-			private readonly T item;
 		}
 	}
 }

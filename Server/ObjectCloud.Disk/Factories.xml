@@ -54,7 +54,6 @@
   </object>
   <object id="LogHandlerFactory" type="ObjectCloud.Disk.Factories.LogHandlerFactory, ObjectCloud.Disk" >
     <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
-    <property name="DataAccessLocator" ref="LogDataAccessLocator" />
   </object>
 
 </objects>
