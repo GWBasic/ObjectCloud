@@ -168,7 +168,8 @@ namespace ObjectCloud.Disk.FileHandlers
 			HashSet<ID<ObjectCloud.Interfaces.Security.IUserOrGroup, Guid>> userIds,
             Regex messageRegex,
             HashSet<string> exceptionClassnames,
-            Regex exceptionMessageRegex)
+            Regex exceptionMessageRegex,
+			Regex remoteEndpointsRegex)
         {
 			return this.sequence.ReadSequence(
 				maxTimeStamp != null ? maxTimeStamp.Value : DateTime.MaxValue,
@@ -206,16 +207,35 @@ namespace ObjectCloud.Disk.FileHandlers
 				}
 				
 	            if (null != messageRegex)
+				{
+					if (null == loggingEvent.Message)
+						return false;
+					
 					if (!messageRegex.IsMatch(loggingEvent.Message))
 						return false;
+				}
 				
 				if (null != exceptionClassnames)
 					if (!exceptionClassnames.Contains(loggingEvent.ExceptionClassname))
 						return false;
 	
 	            if (null != exceptionMessageRegex)
+				{
+					if (null == loggingEvent.ExceptionMessage)
+						return false;
+					
 					if (!exceptionMessageRegex.IsMatch(loggingEvent.ExceptionMessage))
 						return false;
+				}
+				
+				if (null != remoteEndpointsRegex)
+				{
+					if (null == loggingEvent.RemoteEndPoint)
+						return false;
+					
+					if (!remoteEndpointsRegex.IsMatch(loggingEvent.RemoteEndPoint))
+						return false;
+				}
 				
 				return true;
 			});

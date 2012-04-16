@@ -69,7 +69,8 @@ namespace ObjectCloud.Interfaces.Disk
             HashSet<ID<IUserOrGroup, Guid>> userIds,
             Regex messageRegex,
             HashSet<string> exceptionClassnames,
-            Regex exceptionMessageRegex);
+            Regex exceptionMessageRegex,
+			Regex remoteEndpointsRegex);
 
 		/// <summary>
 		/// Returns the class names that are currently used

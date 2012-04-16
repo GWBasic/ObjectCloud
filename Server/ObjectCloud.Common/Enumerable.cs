@@ -14,6 +14,14 @@ namespace ObjectCloud.Common
 {
     public static class Enumerable<T>
     {
+		/****************
+		 * 
+		 * 
+		 * Note: For a period of time when developing ObjectCloud, I wanted to stay source compatible with .Net 3.0, and avoid Linq
+		 * A lot of the methods below can be replaced with Linq equivalents.
+		 * 
+		 */
+		
         /// <summary>
         /// Allows iteration over many enumerables
         /// </summary>
@@ -293,6 +301,17 @@ namespace ObjectCloud.Common
 
     public static class Enumerable
     {
+		/// <summary>
+		/// Returns a hash set with all of the unique values, or null if the enumerable is null
+		/// </summary>
+		public static HashSet<T> ToHashSet<T>(this IEnumerable<T> items)
+		{
+			if (null != items)
+				return new HashSet<T>(items);
+			else
+				return null;
+		}
+		
         public static bool Equals(IEnumerable l, IEnumerable r)
         {
             if (null == l && null == r)

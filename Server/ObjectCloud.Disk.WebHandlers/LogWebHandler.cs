@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Text.RegularExpressions;
 
 using ObjectCloud.Common;
@@ -107,18 +108,42 @@ namespace ObjectCloud.Disk.WebHandlers
 			
 			if (null == maxEvents)
 				maxEvents = 300;
-
+			else if (maxEvents > 2000)
+				maxEvents = 2000;
+			
+			// Build a regular expression to filter remote endpoints
+			// If the user puts in IPs, then it will just match the IP and any port,
+			// Otherwise, the specific port is matched
+			Regex remoteEndpointsRegex = null;
+			if (null != remoteEndpoints)
+			{
+				var regexStrings = new List<string>(remoteEndpoints.Length);
+				foreach (var remoteEndpoint in remoteEndpoints)
+				{
+					if (remoteEndpoint.Contains(":"))
+						regexStrings.Add(Regex.Escape(remoteEndpoint));
+					else
+						regexStrings.Add(string.Format(
+							"{0}{1}*",
+							Regex.Escape(remoteEndpoint),
+							Regex.Escape(":")));
+				}
+				
+				remoteEndpointsRegex = new Regex(string.Join("|", regexStrings.ToArray()));
+			}
+			
             IEnumerable<LoggingEvent> events = FileHandler.ReadLog(
 				maxEvents.Value,
-                new HashSet<string>(classnames),
+                classnames.ToHashSet(),
                 maxTimeStamp,
-                new HashSet<LoggingLevel>(loggingLevels),
-                new HashSet<int>(threadIds),
-                new HashSet<ID<ISession, Guid>>(convertedSessionIds),
-                new HashSet<ID<IUserOrGroup, Guid>>(userIds),
-                new Regex(messageRegex),
-                new HashSet<string>(exceptionClassnames),
-                new Regex(exceptionMessageRegex));
+                loggingLevels.ToHashSet(),
+                threadIds.ToHashSet(),
+                convertedSessionIds.ToHashSet(),
+                userIds.ToHashSet(),
+                messageRegex != null ? new Regex(messageRegex) : null,
+                exceptionClassnames.ToHashSet(),
+                exceptionMessageRegex != null ? new Regex(exceptionMessageRegex) : null,
+				remoteEndpointsRegex);
 
             Dictionary<ID<IUserOrGroup, Guid>, IUserOrGroup> usersById = new Dictionary<ID<IUserOrGroup, Guid>, IUserOrGroup>();
 

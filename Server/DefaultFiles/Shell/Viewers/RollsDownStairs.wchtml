@@ -1,8 +1,6 @@
 <? WebComponent("/Pages/header.webcomponent?Title=ObjectCloud%20Log%20Viewer" ?>
 <? Scripts(/API/Prototype.js, /API/datetimepicker_css.js, /API/date.js, /System/Log?Method=GetJSW&assignToVariable=Log) ?>
 
-<a href="/Shell/Editors/Whisquil.wchtml?FileName=/System/Log">Access Log as a Database</a>
-
 <script>
 
 /*
@@ -56,9 +54,7 @@ LOG FROM BLAMMO
 </script>
 
 <p>
-   Oldest logging event: <input id="minTimestampInput" type="text" size="25">
-   <a href="javascript:NewCssCal('minTimestampInput','yyyymmdd','dropdown',true,12,false)">
-   <img src="/API/DateTime%20Picker%20Images/cal.png" width="16" height="16" alt="Pick a date"></a>
+   Maximum Logging Events: <input id="maxEventsInput" type="text" size="25" value="300">
 </p>
 
 <p>
@@ -120,7 +116,7 @@ LOG FROM BLAMMO
 </script>
 
 <p>
-   Message like: <input type="text" id="messageLikeInput" size="100" /> <a href="http://www.sqlite.org/lang_expr.html#like">Like Syntax</a>
+   Message regex: <input type="text" id="messageRegexInput" size="100" /> <a href="http://regexhero.net/reference/">Regex Syntax</a>
 </p>
 
 <p>
@@ -137,7 +133,7 @@ LOG FROM BLAMMO
 </p>
 
 <p>
-   Exception Message like: <input type="text" id="exceptionMessageLikeInput" size="100" /> <a href="http://www.sqlite.org/lang_expr.html#like">Like Syntax</a>
+   Exception Message regex: <input type="text" id="exceptionMessageRegexInput" size="100" /> <a href="http://regexhero.net/reference/">Regex Syntax</a>
 </p>
 
 <script>
@@ -172,18 +168,9 @@ LOG FROM BLAMMO
                classnames.push(classnameSelect.options[i].value);
       }
 
-      var minTimeStamp = null;
-      var minTimeStampString = $("minTimestampInput").value;
-      if (minTimeStampString.length > 0)
-         try
-         {
-            minTimeStamp = Date.parse(minTimeStampString).getTime();
-         }
-         catch (exception)
-         {
-            alert('"' + minTimeStampString + '" is not a valid date:\n');
-            return;
-         }
+      var maxEvents = $("maxEventsInput").value;
+      if (maxEvents == "")
+         maxEvents = null;
 
       var maxTimeStamp = null;
       var maxTimeStampString = $("maxTimestampInput").value;
@@ -269,9 +256,9 @@ LOG FROM BLAMMO
             remoteEndpoints[i] = remoteEndpoints[i].replace(/^\s+|\s+$/g,"");
       }
 
-      var messageLike = $("messageLikeInput").value;
-      if (messageLike.length == 0)
-         messageLike = null;
+      var messageRegex = $("messageRegexInput").value;
+      if (messageRegex.length == 0)
+         messageRegex = null;
 
       var exceptionClassnames = null;
       if ($("allexceptionClassesCheckbox").checked)
@@ -284,25 +271,25 @@ LOG FROM BLAMMO
                exceptionClassnames.push(exceptionclassnameSelect.options[i].value);
       }
 
-      var exceptionMessageLike = $("exceptionMessageLikeInput").value;
-      if (exceptionMessageLike.length == 0)
-         exceptionMessageLike = null;
+      var exceptionMessageRegex = $("exceptionMessageRegexInput").value;
+      if (exceptionMessageRegex.length == 0)
+         exceptionMessageRegex = null;
 
       $("getLoggingEventsButton").disable();
 
       Log.ReadLog(
          {
             classnames: classnames,
-            minTimeStamp: minTimeStamp,
+            maxEvents: maxEvents,
             maxTimeStamp: maxTimeStamp,
             loggingLevels: loggingLevels,
             threadIds: threadIds,
             sessionIds: sessionIds,
             users: users,
             remoteEndpoints: remoteEndpoints,
-            messageLike: messageLike,
+            messageRegex: messageRegex,
             exceptionClassnames: exceptionClassnames,
-            exceptionMessageLike: exceptionMessageLike
+            exceptionMessageRegex: exceptionMessageRegex
          },
          displayLoggingEvents,
          function(transport)
