@@ -5,6 +5,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading;
 using System.Xml;
@@ -14,60 +16,76 @@ using JsonFx.Json;
 
 using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
-using ObjectCloud.DataAccess.Directory;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Javascript;
 using ObjectCloud.Interfaces.Security;
 using ObjectCloud.Interfaces.WebServer;
-using ObjectCloud.ORM.DataAccess.WhereConditionals;
 
 namespace ObjectCloud.Disk.FileHandlers
 {
-    public class DirectoryHandler : HasDatabaseFileHandler<IDatabaseConnector, IDatabaseConnection, IDatabaseTransaction>, IDirectoryHandler
+    public class DirectoryHandler : LastModifiedFileHandler, IDirectoryHandler
     {
         private static ILog log = LogManager.GetLogger<DirectoryHandler>();
+		
+		/// <summary>
+		/// Internally represents a file
+		/// </summary>
+		[Serializable]
+		private class File
+		{
+			public FileId fileId;
+			public string filename;
+			public string typeId;
+			public ID<IUserOrGroup, Guid>? ownerId;
+			public DateTime created;
+	        public Dictionary<ID<IUserOrGroup, Guid>, Permission> permissions = new Dictionary<ID<IUserOrGroup, Guid>, Permission>();
+	        public Dictionary<ID<IUserOrGroup, Guid>, Dictionary<string, bool>> namedPermissions = new Dictionary<ID<IUserOrGroup, Guid>, Dictionary<string, bool>>();
+			public Dictionary<FileId, Dictionary<string, bool>> relationships = new Dictionary<FileId, Dictionary<string, bool>>();
+		}
+		
+		/// <summary>
+		/// Stores files in the various different ways of indexing, and other directory data
+		/// </summary>
+		[Serializable]
+		private class DirectoryInformation
+		{
+			public string indexFile;
+			
+			public Dictionary<string, File> filesByName = new Dictionary<string, File>();
+			public Dictionary<FileId, File> filesById = new Dictionary<FileId, File>();
+		}
+		
+	    /// <summary>
+	    /// Details about a permission
+	    /// </summary>
+	    private class Permission
+	    {
+	        /// <summary>
+	        /// The actual permission
+	        /// </summary>
+	        public FilePermissionEnum level;
+	
+	        /// <summary>
+	        /// True if the permission is inherited
+	        /// </summary>
+	        public bool inherit;
+	
+	        /// <summary>
+	        /// True to send notifications
+	        /// </summary>
+	        public bool sendNotifications;
+	    }
 
-        public DirectoryHandler(IDatabaseConnector databaseConnector, FileHandlerFactoryLocator fileHandlerFactoryLocator)
-            : base(databaseConnector, fileHandlerFactoryLocator)
+        public DirectoryHandler(string path, FileHandlerFactoryLocator fileHandlerFactoryLocator)
+            : base(fileHandlerFactoryLocator, path)
         {
-            DatabaseConnector.DatabaseWritten += new EventHandler<IDatabaseConnector, EventArgs>(DatabaseConnector_TransactionCommitted);
-
-            FileContainerCache = new Cache<string, IFileContainer>(CreateForCache);
-            OwnerIdCache = new Cache<IFileId, Wrapped<ID<IUserOrGroup, Guid>?>>(LoadOwnerIdForCache);
-            FileIDCacheByName = new Cache<string, Wrapped<FileId>>(GetFileIdForCache);
-            FileDataByIdCache = new Cache<FileId, IFile_Readable>(LoadFileData);
-            FileDataByNameCache = new Cache<string, IFile_Readable>(LoadFileData);
-
-            // TODO:  This can eventually go away, it's just to support old schemas
-            foreach (IFile_Readable groupFile in new List<IFile_Readable>(
-                DatabaseConnection.File.Select(File_Table.Extension == "group" & File_Table.TypeId == "database")))
-            {
-                DeleteFile(null, groupFile.Name);
-
-                string groupName = groupFile.Name.Substring(0, groupFile.Name.Length - 6);
-
-                IGroup group = FileHandlerFactoryLocator.UserManagerHandler.GetGroup(groupName);
-
-                INameValuePairsHandler groupHandler = (INameValuePairsHandler)CreateFile(groupFile.Name, "group", groupFile.OwnerId);
-
-                groupHandler.Set(null, "GroupId", group.Id.Value.ToString());
-            }
+			this.persistedDirectory = new PersistedObject<DirectoryInformation>(path, () => new DirectoryInformation());
         }
-
-        /// <summary>
-        /// The cache is cleared whenever the database is written to
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        void DatabaseConnector_TransactionCommitted(IDatabaseConnector sender, EventArgs e)
-        {
-            FileContainerCache.Clear();
-        }
-
-        /// <summary>
-        /// Cache of pre-opened FileHandlers.  This is cleared whenever the database is written to
-        /// </summary>
-        private Cache<string, IFileContainer> FileContainerCache;
+		
+		/// <summary>
+		/// Persists information about the directory on disk
+		/// </summary>
+		private PersistedObject<DirectoryInformation> persistedDirectory;
 
         public IFileHandler CreateFile(string filename, string fileType, ID<IUserOrGroup, Guid>? ownerID)
         {
@@ -225,26 +243,7 @@ namespace ObjectCloud.Disk.FileHandlers
 
             return extension;
         }
-
-        /// <summary>
-        /// Called when the cache is missing a file
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        private IFileContainer CreateForCache(string key)
-        {
-            IFile_Readable file = DatabaseConnection.File.SelectSingle(File_Table.Name == key);
-
-            if (null == file)
-                throw new FileDoesNotExist(FileContainer.FullPath + "/" + key);
-
-            IFileContainer toReturn = new FileContainer(new FileId(file.FileId.Value), file.TypeId, key, this, FileHandlerFactoryLocator, file.Created);
-            OwnerIdCache[toReturn.FileId] = file.OwnerId;
-
-            return toReturn;
-        }
-
-
+		
         public IFileContainer OpenFile(string filename)
         {
             string[] splitAtDirs = filename.Split(new char[] {'/'}, 2);
@@ -263,12 +262,23 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             get
             {
-                foreach (IFile_Readable file in DatabaseConnection.File.Select())
+				return this.persistedDirectory.Read<IEnumerable<IFileContainer>>(directoryInformation =>
                 {
-                    IFileContainer toYield = new FileContainer(new FileId(file.FileId.Value), file.TypeId, file.Name, this, FileHandlerFactoryLocator, file.Created);
-                    OwnerIdCache[toYield.FileId] = file.OwnerId;
-                    yield return toYield;
-                }
+					var fileContainers = new List<IFileContainer>(directoryInformation.filesById.Count);
+					
+					foreach (var file in directoryInformation.filesById.Values)
+					{
+						fileContainers.Add(new FileContainer(
+							file.fileId,
+							file.typeId,
+							file.filename,
+							this,
+							this.FileHandlerFactoryLocator,
+							file.created));
+					}
+					
+					return fileContainers;
+				});
             }
         }
 
@@ -300,30 +310,6 @@ namespace ObjectCloud.Disk.FileHandlers
                 OwnerIdCache[toYield.FileId] = file.OwnerId;
                 yield return toYield;
             }
-        }
-
-        /// <summary>
-        /// Cache of file IDs by their name
-        /// </summary>
-        private Cache<string, Wrapped<FileId>> FileIDCacheByName;
-
-        /// <summary>
-        /// Returns the file ID for the given file
-        /// </summary>
-        /// <param name="filename"></param>
-        /// <returns></returns>
-        private Wrapped<FileId> GetFileIdForCache(string filename)
-        {
-            IFile_Readable file = DatabaseConnection.File.SelectSingle(File_Table.Name == filename);
-
-            if (null == file)
-                throw new FileDoesNotExist(FileContainer.FullPath + "/" + filename);
-
-            FileId fileId = new FileId(file.FileId.Value);
-
-            OwnerIdCache[fileId] = file.OwnerId;
-
-            return new Wrapped<FileId>(fileId);
         }
 
         public void SetPermission(ID<IUserOrGroup, Guid>? assigningPermission, string filename, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, FilePermissionEnum level, bool inherit, bool sendNotifications)
@@ -518,44 +504,6 @@ namespace ObjectCloud.Disk.FileHandlers
             IEnumerable<ID<IUserOrGroup, Guid>> userAndGroupsIds = GetAllUserAndGroupIdsThatApplyToUser(userId);
 
             return LoadPermission(filename, userAndGroupsIds, false);
-        }
-
-        /// <summary>
-        /// Cache of file information by name
-        /// </summary>
-        private Cache<string, IFile_Readable> FileDataByNameCache;
-
-        /// <summary>
-        /// Cache of file information by name
-        /// </summary>
-        private Cache<FileId, IFile_Readable> FileDataByIdCache;
-
-        /// <summary>
-        /// Loads file data for the cache
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        private IFile_Readable LoadFileData(string name)
-        {
-            IFile_Readable file = DatabaseConnection.File.SelectSingle(File_Table.Name == name);
-
-            if (null == file)
-                throw new FileDoesNotExist(name);
-
-            FileDataByIdCache[file.FileId] = file;
-            return file;
-        }
-
-        /// <summary>
-        /// Loads file data for the cache
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        private IFile_Readable LoadFileData(FileId fileId)
-        {
-            IFile_Readable file = DatabaseConnection.File.SelectSingle(File_Table.FileId == fileId);
-            FileDataByNameCache[file.Name] = file;
-            return file;
         }
 
         public FilePermissionEnum? LoadPermission(string filename, IEnumerable<ID<IUserOrGroup, Guid>> userAndGroupIds, bool onlyReturnInheritedPermissions)
@@ -906,28 +854,13 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             get
             {
-                IMetadata_Readable meta = DatabaseConnection.Metadata.SelectSingle(Metadata_Table.Name == "IndexFile");
-
-                if (null != meta)
-                    return meta.Value;
-
-                return null;
+				return this.persistedDirectory.Read<string>(
+					directoryInformation => directoryInformation.indexFile);
             }
             set
             {
-                DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
-                {
-                    DatabaseConnection.Metadata.Delete(Metadata_Table.Name == "IndexFile");
-
-                    if (null != value)
-                        DatabaseConnection.Metadata.Insert(delegate(IMetadata_Writable meta)
-                        {
-                            meta.Name = "IndexFile";
-                            meta.Value = value;
-                        });
-
-                    transaction.Commit();
-                });
+				this.persistedDirectory.Write(
+					directoryInformation => directoryInformation.indexFile = value);
 
                 OnDirectoryChanged();
             }
@@ -1132,109 +1065,6 @@ namespace ObjectCloud.Disk.FileHandlers
 			}
 		}
 		
-			/* Old version of GetRelatedFiles, doesn't work if owner of parent file doesn't have permission to see child file
-        {
-            HashSet<FileId> filesToInspect = new HashSet<FileId>();
-            HashSet<FileId> inherited = new HashSet<FileId>();
-
-            // First get the related files
-
-			List<ComparisonCondition> comparisonConditions = new List<ComparisonCondition>();
-
-            comparisonConditions.Add(Relationships_Table.FileId == parentFileId);
-
-            if (null != relationships)
-                comparisonConditions.Add(Relationships_Table.Relationship.In(relationships));
-
-            foreach (IRelationships_Readable relationshipInDb in
-                DatabaseConnection.Relationships.Select(ComparisonCondition.Condense(comparisonConditions)))
-            {
-                if (relationshipInDb.Inherit)
-                    inherited.Add(relationshipInDb.ReferencedFileId);
-                else
-                    filesToInspect.Add(relationshipInDb.ReferencedFileId);
-            }
-
-            // Now filer these files by permission if the user didn't inherit permission to this folder, or didn't inherit permission through a direct
-            // permission on the parent file
-            bool inspectPermissions = true;
-
-            if (null != FileContainer.ParentDirectoryHandler)
-                if (null != FileContainer.ParentDirectoryHandler.LoadPermission(FileContainer.Filename, new ID<IUserOrGroup, Guid>[] { userId }, true))
-                    inspectPermissions = false;
-
-            if (FileHandlerFactoryLocator.UserFactory.RootUser.Id == userId || FileContainer.OwnerId == userId)
-                inspectPermissions = false;
-
-            IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds = null;
-
-            // Only check parent relationships for an inherited permission if we haven't already determined that the user has a permission
-            if (inspectPermissions)
-            {
-                userOrGroupIds = GetAllUserAndGroupIdsThatApplyToUser(userId);
-
-                if (null != LoadPermissionFromRelated(new IFileId[] { parentFileId }, userOrGroupIds, new HashSet<IFileId>(), 0))
-                    inspectPermissions = false;
-            }
-
-            // Check to see if the user has named permissions with the relationship name, if so, then permissions do not need to be inspected
-            //if (inspectPermissions)
-            //{
-            //    if (HasNamedPermissions(parentFileId, relationships, userId))
-            //        inspectPermissions = false;
-            //}
-
-            if (inspectPermissions & filesToInspect.Count > 0)
-            {
-                // This block of code didn't work because it doesn't handle inheritance from the parent directory
-                //IEnumerable<IPermission_Readable> permissions = DatabaseConnection.Permission.Select(
-                //    Permission_Table.FileId.In(filesToInspect) & Permission_Table.UserOrGroupId.In(userOrGroupIds));
-
-                //filesToInspect = new HashSet<FileId>();
-
-                //foreach (IPermission_Readable permission in permissions)
-                //    filesToInspect.Add(permission.FileId);
-
-                // This approach is slow because it explicitly checks each file's permission
-                // Someday it can be optimized
-
-                HashSet<FileId> newFilesToInspect = new HashSet<FileId>();
-
-                foreach (IFile_Readable file in DatabaseConnection.File.Select(File_Table.FileId.In(filesToInspect)))
-                    if (null != LoadPermission(file.Name, userId))
-                        newFilesToInspect.Add(new FileId(file.FileId.Value));
-
-                filesToInspect = newFilesToInspect;
-            }
-
-            // Make sure to add files where there is an inherited permission
-            foreach (FileId fileId in inherited)
-                filesToInspect.Add(fileId);
-
-            comparisonConditions = new List<ComparisonCondition>();
-            comparisonConditions.Add(File_Table.FileId.In(filesToInspect));
-
-            if (null != extensions)
-                comparisonConditions.Add(File_Table.Extension.In(extensions));
-
-            if (null != newest)
-                comparisonConditions.Add(File_Table.Created < newest.Value);
-
-            if (null != oldest)
-                comparisonConditions.Add(File_Table.Created > oldest.Value);
-
-            foreach (IFile_Readable file in DatabaseConnection.File.Select(
-                ComparisonCondition.Condense(comparisonConditions),
-                maxToReturn,
-                ObjectCloud.ORM.DataAccess.OrderBy.Desc,
-                File_Table.Created))
-            {
-                IFileContainer toYield = new FileContainer(new FileId(file.FileId.Value), file.TypeId, file.Name, this, FileHandlerFactoryLocator, file.Created);
-                OwnerIdCache[toYield.FileId] = toYield.OwnerId;
-                yield return toYield;
-            }
-        }*/
-
         public virtual LinkNotificationInformation AddRelationship(IFileContainer parentFile, IFileContainer relatedFile, string relationship, bool inheritPermission)
         {
             DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
@@ -1309,26 +1139,6 @@ namespace ObjectCloud.Disk.FileHandlers
 
 
             OnDirectoryChanged();
-        }
-
-        /// <summary>
-        /// Cache of owner IDs
-        /// </summary>
-        private Cache<IFileId, Wrapped<ID<IUserOrGroup, Guid>?>> OwnerIdCache;
-
-        public ID<IUserOrGroup, Guid>? GetOwnerId(IFileId fileId)
-        {
-            return OwnerIdCache[fileId].Value;
-        }
-
-        /// <summary>
-        /// Called when the cache doesn't know the owner of a file
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        private Wrapped<ID<IUserOrGroup, Guid>?> LoadOwnerIdForCache(IFileId fileId)
-        {
-            return DatabaseConnection.File.SelectSingle(File_Table.FileId == fileId).OwnerId;
         }
 
         public void SetNamedPermission(IFileId fileId, string namedPermission, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, bool inherit)
