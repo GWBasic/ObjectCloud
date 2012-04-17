@@ -79,13 +79,41 @@ namespace ObjectCloud.Disk.FileHandlers
         public DirectoryHandler(string path, FileHandlerFactoryLocator fileHandlerFactoryLocator)
             : base(fileHandlerFactoryLocator, path)
         {
-			this.persistedDirectory = new PersistedObject<DirectoryInformation>(path, () => new DirectoryInformation());
+			this.persistedDirectories = new PersistedObject<Dictionary<IFileId, DirectoryInformation>>(
+				path, () => new Dictionary<IFileId, DirectoryInformation>());
         }
 		
 		/// <summary>
-		/// Persists information about the directory on disk
+		/// All information about the entire file system is held in RAM and persisted to disk as a single object graph
 		/// </summary>
-		private PersistedObject<DirectoryInformation> persistedDirectory;
+		private PersistedObject<Dictionary<IFileId, DirectoryInformation>> persistedDirectories;
+		
+		/// <summary>
+		/// Shortcut for reading
+		/// </summary>
+		private T Read<T>(Func<DirectoryInformation, T> func)
+		{
+			return this.persistedDirectories.Read<T>(
+				directoryInformations => func(directoryInformations[this.FileContainer.FileId]));
+		}
+		
+		/// <summary>
+		/// Shortcut for Write
+		/// </summary>
+		private T Write<T>(Func<DirectoryInformation, T> func)
+		{
+			return this.persistedDirectories.Write<T>(
+				directoryInformations => func(directoryInformations[this.FileContainer.FileId]));
+		}
+		
+		/// <summary>
+		/// Shortcut for Write
+		/// </summary>
+		private void Write(Action<DirectoryInformation> action)
+		{
+			this.persistedDirectories.Write(
+				directoryInformations => action(directoryInformations[this.FileContainer.FileId]));
+		}
 
         public IFileHandler CreateFile(string filename, string fileType, ID<IUserOrGroup, Guid>? ownerID)
         {
@@ -135,9 +163,6 @@ namespace ObjectCloud.Disk.FileHandlers
             // TODO:  Delete file
         }
 
-        // Ensures that only one file can be created at a time, thus preventing an unlikely collision of file IDs
-        private static object CreateFileKey = new object();
-
         private IFileHandler CreateFileHelper(
             string filename, string fileType, ID<IUserOrGroup, Guid>? ownerId, CreateFileDelegate createFileDelegate)
         {
@@ -147,66 +172,58 @@ namespace ObjectCloud.Disk.FileHandlers
 
             FileId fileId = default(FileId);
 
-            int ctr = 0;
-
-            using (TimedLock.Lock(CreateFileKey))
-            {
-                do
-                {
+			this.persistedDirectories.Write(directoryInformations =>
+			{
+				// Determine the file ID
+				bool keepLooping;
+				do
+				{
+					keepLooping = false;
                     fileId = new FileId(SRandom.Next<long>());
-
-                    ctr++;
-
-                    if (ctr > 500)
-                        throw new CanNotCreateFile("Tried too many times to create a file");
-
-                } while (FileHandlerFactoryLocator.FileSystem.IsFilePresent(fileId));
-
-            }
-
-            try
-            {
-                DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
-                {
-                    IFile_Readable existingFile = DatabaseConnection.File.SelectSingle(File_Table.Name == filename);
-
-                    if (null != existingFile)
+					
+					foreach (var directoryInformation in directoryInformations.Values)
+						if (directoryInformation.filesById.ContainsKey(fileId))
+						{
+							keepLooping = true;
+							break;
+						}
+				} while (keepLooping);
+	
+	            try
+	            {
+					var directoryInformation = directoryInformations[this.FileContainer.FileId];
+					
+					if (directoryInformation.filesByName.ContainsKey(filename))
                         throw new DuplicateFile(filename);
-
-                    // Insert database record for file
-                    DatabaseConnection.File.Insert(delegate(IFile_Writable file)
-                    {
-                        file.Name = filename;
-                        file.FileId = fileId;
-                        file.TypeId = fileType;
-                        file.OwnerId = ownerId;
-                        file.Created = created;
-                        file.Extension = GetExtensionFromFilename(filename);
-
-                        FileData fileData = new FileData();
-                        fileData.Permissions = new Dictionary<Guid, Permission>();
-                        fileData.NamedPermissions = new Dictionary<Guid, Dictionary<string, bool>>();
-
-                        file.Info = fileData;
-                    });
-
+					
+					var file = new File()
+					{
+	                    filename = filename,
+	                    fileId = fileId,
+	                    typeId = fileType,
+	                    ownerId = ownerId,
+	                    created = created,
+						permissions = new Dictionary<ID<IUserOrGroup, Guid>, Permission>(),
+						namedPermissions = new Dictionary<ID<IUserOrGroup, Guid>, Dictionary<string, bool>>(),
+						relationships = new Dictionary<FileId, Dictionary<string, bool>>()
+					};
+					
+					directoryInformation.filesById[fileId] = file;
+					directoryInformation.filesByName[filename] = file;
+	
                     // Create the file within the transaction.  This way, if there's an exception, the transaction
                     // is rolled back
                     createFileDelegate(fileId);
-
-                    transaction.Commit();
-
-                    OwnerIdCache[fileId] = ownerId;
-                });
-            }
-            catch (DiskException)
-            {
-                throw;
-            }
-            catch (Exception e)
-            {
-                throw new CanNotCreateFile("Database exception when creating " + filename, e);
-            }
+	            }
+	            catch (DiskException)
+	            {
+	                throw;
+	            }
+	            catch (Exception e)
+	            {
+	                throw new CanNotCreateFile("Database exception when creating " + filename, e);
+	            }
+			});
 
             IFileHandler toReturn = FileHandlerFactoryLocator.FileSystemResolver.LoadFile(fileId, fileType);
             toReturn.FileContainer = new FileContainer(fileId, fileType, filename, this, FileHandlerFactoryLocator, created);
@@ -246,23 +263,52 @@ namespace ObjectCloud.Disk.FileHandlers
 		
         public IFileContainer OpenFile(string filename)
         {
-            string[] splitAtDirs = filename.Split(new char[] {'/'}, 2);
-
-            // If no directory seperators are passed, just return the file
-            if (splitAtDirs.Length == 1)
-                return FileContainerCache[filename];
-
-            // A file in a sub directory was requested
-            IFileContainer subdirContainer = FileContainerCache[splitAtDirs[0]];
-
-            return subdirContainer.CastFileHandler<IDirectoryHandler>().OpenFile(splitAtDirs[1]);
+            string[] splitAtDirs = filename.Split(new char[] {'/'});
+			
+			return this.persistedDirectories.Read<IFileContainer>(directoryInformations =>
+			{
+				var directoryInformation = directoryInformations[this.FileContainer.FileId];
+				
+				File file;
+				
+				// Traverse any subpaths
+				var ctr = 0;
+				for (; ctr < splitAtDirs.Length - 1; ctr++)
+				{
+					if (!directoryInformation.filesByName.TryGetValue(splitAtDirs[ctr], out file))
+					{
+						var pathBuilder = new StringBuilder(this.FileContainer.FullPath);
+						for (int subCtr = 0; subCtr <= ctr; subCtr++)
+							pathBuilder.AppendFormat("/{0}", splitAtDirs[subCtr]);
+							
+						throw new FileDoesNotExist(pathBuilder.ToString());
+					}
+					
+					if (!directoryInformations.TryGetValue(file.fileId, out directoryInformation))
+					{
+						var pathBuilder = new StringBuilder(this.FileContainer.FullPath);
+						for (int subCtr = 0; subCtr <= ctr; subCtr++)
+							pathBuilder.AppendFormat("/{0}", splitAtDirs[subCtr]);
+							
+						pathBuilder.Append(" is not a directory");
+						
+						throw new WrongFileType(pathBuilder.ToString());
+					}
+				}
+				
+				// Actually get the file
+				if (!directoryInformation.filesByName.TryGetValue(splitAtDirs[ctr], out file))
+					throw new FileDoesNotExist(filename);
+				
+				return new FileContainer(file.fileId, file.typeId, splitAtDirs[ctr], this, this.FileHandlerFactoryLocator, file.created);
+			});
         }
 
         public IEnumerable<IFileContainer> Files
         {
             get
             {
-				return this.persistedDirectory.Read<IEnumerable<IFileContainer>>(directoryInformation =>
+				return this.Read<IEnumerable<IFileContainer>>(directoryInformation =>
                 {
 					var fileContainers = new List<IFileContainer>(directoryInformation.filesById.Count);
 					
@@ -284,10 +330,12 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public IEnumerable<IFileContainer> GetNewestFiles(ID<IUserOrGroup, Guid> userId, int maxToReturn)
         {
-            List<ID<IUserOrGroup, Guid>> ids = new List<ID<IUserOrGroup, Guid>>();
+            var ids = new HashSet<ID<IUserOrGroup, Guid>>();
             ids.Add(userId);
-            ids.AddRange(FileHandlerFactoryLocator.UserManagerHandler.GetGroupIdsThatUserIsIn(userId));
             ids.Add(FileHandlerFactoryLocator.UserFactory.Everybody.Id);
+			
+			foreach (var id in FileHandlerFactoryLocator.UserManagerHandler.GetGroupIdsThatUserIsIn(userId))
+				ids.Add(id);
 
             IUserOrGroup user = FileHandlerFactoryLocator.UserManagerHandler.GetUserNoException(userId);
             if (null != user)
@@ -300,16 +348,23 @@ namespace ObjectCloud.Disk.FileHandlers
                         ids.Add(FileHandlerFactoryLocator.UserFactory.LocalUsers.Id);
                 }
             }
-  
-            foreach (IFile_Readable file in DatabaseConnection.File.GetNewestFiles(
-                userId,
-                ids,
-                maxToReturn))
-            {
-                IFileContainer toYield = new FileContainer(new FileId(file.FileId.Value), file.TypeId, file.Name, this, FileHandlerFactoryLocator, file.Created);
-                OwnerIdCache[toYield.FileId] = file.OwnerId;
-                yield return toYield;
-            }
+			
+			return this.Read<IEnumerable<IFileContainer>>(directoryInformation =>
+			{
+				var filesWithAccess = new List<File>(directoryInformation.filesById.Count);
+				foreach (var file in directoryInformation.filesById.Values)
+					if (file.ownerId == userId || file.permissions.Keys.Where(id => ids.Contains(id)).Count() > 0)
+						filesWithAccess.Add(file);
+				
+				var toReturn = new List<IFileContainer>(maxToReturn);
+				filesWithAccess.Sort((a,b) => DateTime.Compare(a.created, b.created));
+				foreach (var file in filesWithAccess.Take(maxToReturn))
+				{
+					toReturn.Add(new FileContainer(file.fileId, file.typeId, file.filename, this, this.FileHandlerFactoryLocator, file.created));
+				}
+				
+				return toReturn;
+			});
         }
 
         public void SetPermission(ID<IUserOrGroup, Guid>? assigningPermission, string filename, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, FilePermissionEnum level, bool inherit, bool sendNotifications)
@@ -854,12 +909,12 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             get
             {
-				return this.persistedDirectory.Read<string>(
+				return this.Read<string>(
 					directoryInformation => directoryInformation.indexFile);
             }
             set
             {
-				this.persistedDirectory.Write(
+				this.Write(
 					directoryInformation => directoryInformation.indexFile = value);
 
                 OnDirectoryChanged();
