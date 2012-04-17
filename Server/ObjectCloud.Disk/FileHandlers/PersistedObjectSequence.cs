@@ -28,17 +28,14 @@ namespace ObjectCloud.Disk
 			
 			long lastSuccess = 0;
 			
-			// Read in all existing objects
 			this.currentWriteStream = File.Open(this.currentWriteStreamFilename, FileMode.OpenOrCreate);
 			
+			// Read through all existing objects; incomplete writes will be overwritten
 			try
 			{
 				while (lastSuccess < this.currentWriteStream.Length)
 				{
-					var deserialized = this.binaryFormatter.Deserialize(this.currentWriteStream);
-					if (deserialized is T)
-						this.newestObjects.Add((T)deserialized);
-					
+					this.binaryFormatter.Deserialize(this.currentWriteStream);
 					lastSuccess = this.currentWriteStream.Position;
 				}
 			}
@@ -63,15 +60,9 @@ namespace ObjectCloud.Disk
 
 		void HandleFileHandlerFactoryLocatorFileSystemResolverStopping (IFileSystemResolver sender, EventArgs e)
 		{
-			this.readerWriterLockSlim.EnterWriteLock();
-			
-			try
+			lock (key)
 			{
 				this.CloseCurrentWriteStream();
-			}
-			finally
-			{
-				this.readerWriterLockSlim.ExitWriteLock();
 			}
 		}
 
@@ -103,9 +94,9 @@ namespace ObjectCloud.Disk
 		private readonly long maxSize;
 		
 		/// <summary>
-		/// Probides synchronization for reading and writing the sequence
+		/// Used to sync
 		/// </summary>
-		private readonly ReaderWriterLockSlim readerWriterLockSlim = new ReaderWriterLockSlim();
+		private readonly object key = new object();
 		
 		/// <summary>
 		/// A single binary formatter instanciated onces for quick reuse
@@ -121,11 +112,11 @@ namespace ObjectCloud.Disk
 		/// The current write stream.
 		/// </summary>
 		private FileStream currentWriteStream;
-
+		
 		/// <summary>
-		/// The newest objects, in oldest-first order. These are what have been written to the current write stream.
+		/// The size of the last object writen
 		/// </summary>
-		private List<T> newestObjects = new List<T>();
+		private long lastWriteSize = 400;
 		
 		/// <summary>
 		/// Append the specified item to the sequence. The caller must garantee that item's timestamp is always newer then the last call
@@ -135,25 +126,34 @@ namespace ObjectCloud.Disk
 		/// </param>
 		public void Append(T item)
 		{
-			this.readerWriterLockSlim.EnterWriteLock();
-				
-			try
+			lock (key)
 			{
 				if (null == this.currentWriteStream)
 					return;
+		
+				var lastPosition = this.currentWriteStream.Length;
 				
 				this.binaryFormatter.Serialize(
 					this.currentWriteStream,
 					item);
 				
-				this.newestObjects.Add(item);
+				this.lastWriteSize = this.currentWriteStream.Position - lastPosition;
 				
 				this.CreateNewChunkIfNeeded();
 			}
-			finally
-			{
-				this.readerWriterLockSlim.ExitWriteLock();
-			}
+		}
+		
+		/// <summary>
+		/// Loads all of the items in the stream
+		/// </summary>
+		private List<T> LoadItemsFromStream(Stream stream)
+		{
+			var items = new List<T>(Convert.ToInt32((stream.Length / this.lastWriteSize) * 2));
+			
+			while (stream.Position < stream.Length)
+				items.Add((T)this.binaryFormatter.Deserialize(stream));
+			
+			return items;
 		}
 		
 		/// <summary>
@@ -163,6 +163,11 @@ namespace ObjectCloud.Disk
 		{
 			if (this.currentWriteStream.Length >= this.maxChunkSize)
 			{
+				// Get the oldest object
+				this.currentWriteStream.Position = 0;
+				
+				var newestItems = LoadItemsFromStream(this.currentWriteStream);
+				
 				// Make sure that the current file is complete
 				this.CloseCurrentWriteStream();
 				
@@ -188,16 +193,18 @@ namespace ObjectCloud.Disk
 				// Reverse the newest chunk
 				// ************************************
 				
-				// The chunk's file is always named after the newest item in the chunk
-				var oldestObject = newestObjects[0];
-				string chunkPath = Path.Combine(this.path, oldestObject.TimeStamp.Ticks.ToString());
+				// The chunk's file is always named after the oldest item in the chunk
+				var oldestItem = newestItems[0];
+				string chunkPath = Path.Combine(this.path, oldestItem.TimeStamp.Ticks.ToString());
 				
 				// Always overwrite any previous attempts to create a new chunk, this will handle crashes that occur while copying
 				using (var chunkStream = File.Open(chunkPath, FileMode.Create))
 				{
-					newestObjects.Reverse();
-					foreach (var ev in this.newestObjects)
-						this.binaryFormatter.Serialize(chunkStream, ev);
+					for (var ctr = newestItems.Count - 1; ctr >= 0; ctr--)
+					{
+						var item = newestItems[ctr];
+						this.binaryFormatter.Serialize(chunkStream, item);
+					}
 					
 					chunkStream.Flush();
 					chunkStream.Close();
@@ -205,7 +212,6 @@ namespace ObjectCloud.Disk
 				
 				// Start the next chunk
 				// ***************************
-				newestObjects.Clear();
 				this.currentWriteStream = File.Open(this.currentWriteStreamFilename, FileMode.Create);
 			}
 		}
@@ -220,13 +226,17 @@ namespace ObjectCloud.Disk
 		{
 			var toReturn = new List<T>(max);
 			
-			this.readerWriterLockSlim.EnterReadLock();
-				
-			try
+			lock (key)
 			{
-				var newestObjects = this.newestObjects.ToArray().Reverse();
+				// Re-load objects that were recently serialized
+				this.currentWriteStream.Position = 0;
+				var newestItems = this.LoadItemsFromStream(this.currentWriteStream);
+				this.currentWriteStream.Position = this.currentWriteStream.Length;
 				
-				foreach (var item in newestObjects)
+				for (var ctr = newestItems.Count - 1; ctr >= 0; ctr--)
+				{
+					var item = newestItems[ctr];
+
 					if (item.TimeStamp <= newest)
 						if (filter(item))
 						{
@@ -235,6 +245,7 @@ namespace ObjectCloud.Disk
 							if (toReturn.Count >= max)
 								return toReturn;
 						}
+				}
 				
 				var binaryFormatter = new BinaryFormatter();
 				
@@ -283,10 +294,6 @@ namespace ObjectCloud.Disk
 				
 				// Less events were found then requested
 				return toReturn;
-			}
-			finally
-			{
-				this.readerWriterLockSlim.ExitReadLock();
 			}
 		}
 	}
