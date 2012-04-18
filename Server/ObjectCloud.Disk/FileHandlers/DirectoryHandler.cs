@@ -51,8 +51,26 @@ namespace ObjectCloud.Disk.FileHandlers
 		{
 			public string indexFile;
 			
-			public Dictionary<string, File> filesByName = new Dictionary<string, File>();
-			public Dictionary<FileId, File> filesById = new Dictionary<FileId, File>();
+			public readonly Dictionary<string, File> filesByName = new Dictionary<string, File>();
+			public readonly Dictionary<FileId, File> filesById = new Dictionary<FileId, File>();
+			
+			/// <summary>
+			/// Gets the <see cref="ObjectCloud.Disk.FileHandlers.DirectoryHandler.DirectoryInformation"/> with the specified name, throws an exception if it doesnt exist.
+			/// </summary>
+			/// <exception cref='FileDoesNotExist'>
+			/// Is thrown when the file does not exist.
+			/// </exception>
+			public File this[string name]
+			{
+				get
+		        {
+					File file;
+					if (filesByName.TryGetValue(name, out file))
+						return file;
+
+					throw new FileDoesNotExist(name);
+		        }
+			}
 		}
 		
 	    /// <summary>
@@ -369,27 +387,20 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public void SetPermission(ID<IUserOrGroup, Guid>? assigningPermission, string filename, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, FilePermissionEnum level, bool inherit, bool sendNotifications)
         {
-            var file = FileDataByNameCache[filename];
+			this.Write(directoryInformation =>
+			{
+	            var file = directoryInformation[filename];
 
-            using (TimedLock.Lock(file))
-            {
-                foreach (ID<IUserOrGroup, Guid> userOrGroupId in userOrGroupIds)
+				foreach (ID<IUserOrGroup, Guid> userOrGroupId in userOrGroupIds)
                 {
                     Permission permission = new Permission();
-                    permission.Level = level;
-                    permission.Inherit = inherit;
-                    permission.SendNotifications = sendNotifications;
+                    permission.level = level;
+                    permission.inherit = inherit;
+                    permission.sendNotifications = sendNotifications;
 
-                    file.Info.Permissions[userOrGroupId.Value] = permission;
+                    file.permissions[userOrGroupId] = permission;
                 }
-
-                DatabaseConnection.File.Update(
-                    File_Table.Name == filename,
-                    delegate(IFile_Writable fileW)
-                    {
-                        fileW.Info = file.Info;
-                    });
-            }
+            });
 
             // If notifications are enabled, then send a notification informing the user of the change
             IFileContainer targetFile = OpenFile(filename);
@@ -405,45 +416,41 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public void RemovePermission(string filename, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds)
         {
-            var file = FileDataByNameCache[filename];
+			this.Write(directoryInformation =>
+			{
+	            var file = directoryInformation[filename];
 
-            using (TimedLock.Lock(file))
-            {
                 foreach (ID<IUserOrGroup, Guid> userOrGroupId in userOrGroupIds)
-                    file.Info.Permissions.Remove(userOrGroupId.Value);
-
-                DatabaseConnection.File.Update(
-                    File_Table.Name == filename,
-                    delegate(IFile_Writable fileW)
-                    {
-                        fileW.Info = file.Info;
-                    });
-            }
+                    file.permissions.Remove(userOrGroupId);
+            });
 
             OnDirectoryChanged();
         }
 
         public IEnumerable<FilePermission> GetPermissions(string filename)
         {
-            var file = FileDataByNameCache[filename];
-
-            using (TimedLock.Lock(file))
-                foreach (KeyValuePair<Guid, Permission> permissionKVP in file.Info.Permissions)
+			return this.Read<IEnumerable<FilePermission>>(directoryInformation =>
+			{
+	            var file = directoryInformation[filename];
+				var permissions = new List<FilePermission>(file.permissions.Count);
+				
+				foreach (KeyValuePair<ID<IUserOrGroup, Guid>, Permission> permissionKVP in file.permissions)
                 {
-                    FilePermission toYield = new FilePermission();
-                    toYield.UserOrGroupId = new ID<IUserOrGroup, Guid>(permissionKVP.Key);
-                    toYield.FilePermissionEnum = permissionKVP.Value.Level;
-                    toYield.Inherit = permissionKVP.Value.Inherit;
-                    toYield.SendNotifications = permissionKVP.Value.SendNotifications;
+                    FilePermission permission = new FilePermission();
+                    permission.UserOrGroupId = permissionKVP.Key;
+                    permission.FilePermissionEnum = permissionKVP.Value.level;
+                    permission.Inherit = permissionKVP.Value.inherit;
+                    permission.SendNotifications = permissionKVP.Value.sendNotifications;
 
                     Dictionary<string, bool> namedPermissions;
-                    if (file.Info.NamedPermissions.TryGetValue(permissionKVP.Key, out namedPermissions))
-                        toYield.NamedPermissions = DictionaryFunctions.Create<string, bool>(namedPermissions);
+                    if (file.namedPermissions.TryGetValue(permissionKVP.Key, out namedPermissions))
+                        permission.NamedPermissions = DictionaryFunctions.Create<string, bool>(namedPermissions);
                     else
-                        toYield.NamedPermissions = new Dictionary<string,bool>();
-
-                    yield return toYield;
+                        permission.NamedPermissions = new Dictionary<string,bool>();
                 }
+				
+				return permissions;
+			});
         }
 
         public void DeleteFile(IUser changer, string filename)
@@ -468,40 +475,26 @@ namespace ObjectCloud.Disk.FileHandlers
             {
                 log.Error("Error occured while " + fileContainer.FullPath + " that it's being deleted", e);
             }
+			
+			this.persistedDirectories.Write(directoryInformations =>
+			{
+				var directoryInformation = directoryInformations[this.FileContainer.FileId];
+                var toDelete = directoryInformation[filename];
+				
+				foreach (var diItr in directoryInformations.Values)
+					foreach (var file in diItr.filesById.Values)
+						file.relationships.Remove(toDelete.fileId);
 
-            IFile_Readable toDelete = null;
-            DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
-            {
-                toDelete = DatabaseConnection.File.SelectSingle(File_Table.Name == filename);
-
-                if (null == toDelete)
-                    throw new FileDoesNotExist(FileContainer.FullPath + "/" + filename);
-
-                DatabaseConnection.Relationships.Delete(
-                    Relationships_Table.FileId == toDelete.FileId | Relationships_Table.ReferencedFileId == toDelete.FileId);
-
-                DatabaseConnection.File.Delete(File_Table.FileId == toDelete.FileId);
-
-                FileId fileId = toDelete.FileId;
-
-                FileHandlerFactoryLocator.FileSystemResolver.DeleteFile(fileId);
-
-                OwnerIdCache.Remove(fileId);
-
-                transaction.Commit();
+				FileHandlerFactoryLocator.FileSystemResolver.DeleteFile(toDelete.fileId);
             });
-
-            FileIDCacheByName.Remove(filename);
-            FileDataByNameCache.Remove(filename);
-            FileDataByIdCache.Remove(toDelete.FileId);
 
             OnDirectoryChanged();
         }
 
         public IEnumerable<string> GetFilenames()
         {
-            foreach (IFile_Readable file in DatabaseConnection.File.Select())
-                yield return file.Name;
+			return this.Read<IEnumerable<string>>(
+				directoryInformation => directoryInformation.filesByName.Keys.ToArray());
         }
 
         /// <summary>
