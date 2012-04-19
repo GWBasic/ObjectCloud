@@ -31,7 +31,7 @@ namespace ObjectCloud.Disk.FileHandlers
 		/// Internally represents a file
 		/// </summary>
 		[Serializable]
-		private class File
+		private class FileInformation
 		{
 			public FileId fileId;
 			public string filename;
@@ -40,19 +40,37 @@ namespace ObjectCloud.Disk.FileHandlers
 			public DateTime created;
 	        public Dictionary<ID<IUserOrGroup, Guid>, Permission> permissions = new Dictionary<ID<IUserOrGroup, Guid>, Permission>();
 	        public Dictionary<ID<IUserOrGroup, Guid>, Dictionary<string, bool>> namedPermissions = new Dictionary<ID<IUserOrGroup, Guid>, Dictionary<string, bool>>();
-			public Dictionary<FileId, Dictionary<string, bool>> relationships = new Dictionary<FileId, Dictionary<string, bool>>();
+			
+			/// <summary>
+			/// All of the files that this file is related to, and the relationship
+			/// </summary>
+			public Dictionary<FileInformation, Relationship> relationships = new Dictionary<FileInformation, Relationship>();
+
+			/// <summary>
+			/// All of the files that are related to this file, and their relationships
+			/// </summary>
+			public Dictionary<FileInformation, Relationship> parentRelationships = new Dictionary<FileInformation, Relationship>();
+			
+			public override bool Equals (object obj)
+			{
+				return this == obj;
+			}
+			
+			public override int GetHashCode ()
+			{
+				return fileId.GetHashCode();
+			}
 		}
 		
 		/// <summary>
 		/// Stores files in the various different ways of indexing, and other directory data
 		/// </summary>
 		[Serializable]
-		private class DirectoryInformation
+		private class DirectoryInformation : FileInformation
 		{
 			public string indexFile;
 			
-			public readonly Dictionary<string, File> filesByName = new Dictionary<string, File>();
-			public readonly Dictionary<FileId, File> filesById = new Dictionary<FileId, File>();
+			public readonly Dictionary<string, FileInformation> files = new Dictionary<string, FileInformation>();
 			
 			/// <summary>
 			/// Gets the <see cref="ObjectCloud.Disk.FileHandlers.DirectoryHandler.DirectoryInformation"/> with the specified name, throws an exception if it doesnt exist.
@@ -60,12 +78,12 @@ namespace ObjectCloud.Disk.FileHandlers
 			/// <exception cref='FileDoesNotExist'>
 			/// Is thrown when the file does not exist.
 			/// </exception>
-			public File this[string name]
+			public FileInformation this[string name]
 			{
 				get
 		        {
-					File file;
-					if (filesByName.TryGetValue(name, out file))
+					FileInformation file;
+					if (files.TryGetValue(name, out file))
 						return file;
 
 					throw new FileDoesNotExist(name);
@@ -93,18 +111,34 @@ namespace ObjectCloud.Disk.FileHandlers
 	        /// </summary>
 	        public bool sendNotifications;
 	    }
+		
+	    /// <summary>
+	    /// Represents a relationship between two files
+	    /// </summary>
+		private class Relationship
+		{
+			/// <summary>
+			/// The name of the relationship
+			/// </summary>
+			public string name;
+			
+			/// <summary>
+			/// True if the permission should inherit.
+			/// </summary>
+			public bool inherit;
+		}
 
         public DirectoryHandler(string path, FileHandlerFactoryLocator fileHandlerFactoryLocator)
             : base(fileHandlerFactoryLocator, path)
         {
-			this.persistedDirectories = new PersistedObject<Dictionary<IFileId, DirectoryInformation>>(
-				path, () => new Dictionary<IFileId, DirectoryInformation>());
+			this.persistedDirectories = new PersistedObject<Dictionary<IFileId, FileInformation>>(
+				path, () => new Dictionary<IFileId, FileInformation>());
         }
 		
 		/// <summary>
 		/// All information about the entire file system is held in RAM and persisted to disk as a single object graph
 		/// </summary>
-		private PersistedObject<Dictionary<IFileId, DirectoryInformation>> persistedDirectories;
+		private PersistedObject<Dictionary<IFileId, FileInformation>> persistedDirectories;
 		
 		/// <summary>
 		/// Shortcut for reading
@@ -112,7 +146,7 @@ namespace ObjectCloud.Disk.FileHandlers
 		private T Read<T>(Func<DirectoryInformation, T> func)
 		{
 			return this.persistedDirectories.Read<T>(
-				directoryInformations => func(directoryInformations[this.FileContainer.FileId]));
+				fileInformations => func((DirectoryInformation)fileInformations[this.FileContainer.FileId]));
 		}
 		
 		/// <summary>
@@ -121,7 +155,7 @@ namespace ObjectCloud.Disk.FileHandlers
 		private T Write<T>(Func<DirectoryInformation, T> func)
 		{
 			return this.persistedDirectories.Write<T>(
-				directoryInformations => func(directoryInformations[this.FileContainer.FileId]));
+				fileInformations => func((DirectoryInformation)fileInformations[this.FileContainer.FileId]));
 		}
 		
 		/// <summary>
@@ -130,7 +164,7 @@ namespace ObjectCloud.Disk.FileHandlers
 		private void Write(Action<DirectoryInformation> action)
 		{
 			this.persistedDirectories.Write(
-				directoryInformations => action(directoryInformations[this.FileContainer.FileId]));
+				fileInformations => action((DirectoryInformation)fileInformations[this.FileContainer.FileId]));
 		}
 
         public IFileHandler CreateFile(string filename, string fileType, ID<IUserOrGroup, Guid>? ownerID)
@@ -189,49 +223,47 @@ namespace ObjectCloud.Disk.FileHandlers
             DateTime created = DateTime.UtcNow;
 
             FileId fileId = default(FileId);
+			IFileHandler fileHandler = null;
 
-			this.persistedDirectories.Write(directoryInformations =>
+			this.persistedDirectories.Write(fileInformations =>
 			{
 				// Determine the file ID
-				bool keepLooping;
 				do
-				{
-					keepLooping = false;
                     fileId = new FileId(SRandom.Next<long>());
-					
-					foreach (var directoryInformation in directoryInformations.Values)
-						if (directoryInformation.filesById.ContainsKey(fileId))
-						{
-							keepLooping = true;
-							break;
-						}
-				} while (keepLooping);
+				while (!fileInformations.ContainsKey(fileId));
 	
 	            try
 	            {
-					var directoryInformation = directoryInformations[this.FileContainer.FileId];
+					var directoryInformation = (DirectoryInformation)fileInformations[this.FileContainer.FileId];
 					
-					if (directoryInformation.filesByName.ContainsKey(filename))
+					if (directoryInformation.files.ContainsKey(filename))
                         throw new DuplicateFile(filename);
-					
-					var file = new File()
-					{
-	                    filename = filename,
-	                    fileId = fileId,
-	                    typeId = fileType,
-	                    ownerId = ownerId,
-	                    created = created,
-						permissions = new Dictionary<ID<IUserOrGroup, Guid>, Permission>(),
-						namedPermissions = new Dictionary<ID<IUserOrGroup, Guid>, Dictionary<string, bool>>(),
-						relationships = new Dictionary<FileId, Dictionary<string, bool>>()
-					};
-					
-					directoryInformation.filesById[fileId] = file;
-					directoryInformation.filesByName[filename] = file;
-	
-                    // Create the file within the transaction.  This way, if there's an exception, the transaction
+
+					// Create the file within the transaction.  This way, if there's an exception, the transaction
                     // is rolled back
                     createFileDelegate(fileId);
+					
+		            fileHandler = FileHandlerFactoryLocator.FileSystemResolver.LoadFile(fileId, fileType);
+					
+					FileInformation file;
+					if (fileHandler is DirectoryHandler)
+						file = new DirectoryInformation();
+					else
+						file = new FileInformation();
+					
+	                file.filename = filename;
+	                file.fileId = fileId;
+	                file.typeId = fileType;
+	                file.ownerId = ownerId;
+	                file.created = created;
+					file.permissions = new Dictionary<ID<IUserOrGroup, Guid>, Permission>();
+					file.namedPermissions = new Dictionary<ID<IUserOrGroup, Guid>, Dictionary<string, bool>>();
+					file.relationships = new Dictionary<FileInformation, Relationship>();
+					file.parentRelationships = new Dictionary<FileInformation, Relationship>();
+					
+					fileInformations[fileId] = file;
+					directoryInformation.files[filename] = file;
+	
 	            }
 	            catch (DiskException)
 	            {
@@ -243,8 +275,7 @@ namespace ObjectCloud.Disk.FileHandlers
 	            }
 			});
 
-            IFileHandler toReturn = FileHandlerFactoryLocator.FileSystemResolver.LoadFile(fileId, fileType);
-            toReturn.FileContainer = new FileContainer(fileId, fileType, filename, this, FileHandlerFactoryLocator, created);
+            fileHandler.FileContainer = new FileContainer(fileId, fileType, filename, this, FileHandlerFactoryLocator, created);
 
             /*IUser changer = null;
             if (null != ownerId)
@@ -264,7 +295,7 @@ namespace ObjectCloud.Disk.FileHandlers
 
             OnDirectoryChanged();
 
-            return toReturn;
+            return fileHandler;
         }
 
         private static string GetExtensionFromFilename(string filename)
@@ -283,17 +314,17 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             string[] splitAtDirs = filename.Split(new char[] {'/'});
 			
-			return this.persistedDirectories.Read<IFileContainer>(directoryInformations =>
+			return this.persistedDirectories.Read<IFileContainer>(fileInformations =>
 			{
-				var directoryInformation = directoryInformations[this.FileContainer.FileId];
+				var directoryInformation = (DirectoryInformation)fileInformations[this.FileContainer.FileId];
 				
-				File file;
+				FileInformation file;
 				
 				// Traverse any subpaths
 				var ctr = 0;
 				for (; ctr < splitAtDirs.Length - 1; ctr++)
 				{
-					if (!directoryInformation.filesByName.TryGetValue(splitAtDirs[ctr], out file))
+					if (!directoryInformation.files.TryGetValue(splitAtDirs[ctr], out file))
 					{
 						var pathBuilder = new StringBuilder(this.FileContainer.FullPath);
 						for (int subCtr = 0; subCtr <= ctr; subCtr++)
@@ -302,7 +333,8 @@ namespace ObjectCloud.Disk.FileHandlers
 						throw new FileDoesNotExist(pathBuilder.ToString());
 					}
 					
-					if (!directoryInformations.TryGetValue(file.fileId, out directoryInformation))
+					directoryInformation = file as DirectoryInformation;
+					if (null == directoryInformation)
 					{
 						var pathBuilder = new StringBuilder(this.FileContainer.FullPath);
 						for (int subCtr = 0; subCtr <= ctr; subCtr++)
@@ -315,7 +347,7 @@ namespace ObjectCloud.Disk.FileHandlers
 				}
 				
 				// Actually get the file
-				if (!directoryInformation.filesByName.TryGetValue(splitAtDirs[ctr], out file))
+				if (!directoryInformation.files.TryGetValue(splitAtDirs[ctr], out file))
 					throw new FileDoesNotExist(filename);
 				
 				return new FileContainer(file.fileId, file.typeId, splitAtDirs[ctr], this, this.FileHandlerFactoryLocator, file.created);
@@ -328,9 +360,9 @@ namespace ObjectCloud.Disk.FileHandlers
             {
 				return this.Read<IEnumerable<IFileContainer>>(directoryInformation =>
                 {
-					var fileContainers = new List<IFileContainer>(directoryInformation.filesById.Count);
+					var fileContainers = new List<IFileContainer>(directoryInformation.files.Count);
 					
-					foreach (var file in directoryInformation.filesById.Values)
+					foreach (var file in directoryInformation.files.Values)
 					{
 						fileContainers.Add(new FileContainer(
 							file.fileId,
@@ -369,8 +401,8 @@ namespace ObjectCloud.Disk.FileHandlers
 			
 			return this.Read<IEnumerable<IFileContainer>>(directoryInformation =>
 			{
-				var filesWithAccess = new List<File>(directoryInformation.filesById.Count);
-				foreach (var file in directoryInformation.filesById.Values)
+				var filesWithAccess = new List<FileInformation>(directoryInformation.files.Count);
+				foreach (var file in directoryInformation.files.Values)
 					if (file.ownerId == userId || file.permissions.Keys.Where(id => ids.Contains(id)).Count() > 0)
 						filesWithAccess.Add(file);
 				
@@ -476,14 +508,19 @@ namespace ObjectCloud.Disk.FileHandlers
                 log.Error("Error occured while " + fileContainer.FullPath + " that it's being deleted", e);
             }
 			
-			this.persistedDirectories.Write(directoryInformations =>
+			this.persistedDirectories.Write(fileInformations =>
 			{
-				var directoryInformation = directoryInformations[this.FileContainer.FileId];
+				var directoryInformation = (DirectoryInformation)fileInformations[this.FileContainer.FileId];
                 var toDelete = directoryInformation[filename];
 				
-				foreach (var diItr in directoryInformations.Values)
-					foreach (var file in diItr.filesById.Values)
-						file.relationships.Remove(toDelete.fileId);
+				// Remove relationships
+				foreach (var relatedFile in toDelete.relationships.Keys)
+					relatedFile.parentRelationships.Remove(toDelete);
+				foreach (var parentFile in toDelete.parentRelationships.Keys)
+					parentFile.relationships.Remove(toDelete);
+				
+				directoryInformation.files.Remove(filename);
+				fileInformations.Remove(toDelete.fileId);
 
 				FileHandlerFactoryLocator.FileSystemResolver.DeleteFile(toDelete.fileId);
             });
@@ -494,7 +531,7 @@ namespace ObjectCloud.Disk.FileHandlers
         public IEnumerable<string> GetFilenames()
         {
 			return this.Read<IEnumerable<string>>(
-				directoryInformation => directoryInformation.filesByName.Keys.ToArray());
+				directoryInformation => directoryInformation.files.Keys.ToArray());
         }
 
         /// <summary>
@@ -556,129 +593,73 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public FilePermissionEnum? LoadPermission(string filename, IEnumerable<ID<IUserOrGroup, Guid>> userAndGroupIds, bool onlyReturnInheritedPermissions)
         {
-            return LoadPermission(filename, userAndGroupIds, onlyReturnInheritedPermissions, 0);
-        }
-
-        public FilePermissionEnum? LoadPermission(string filename, IEnumerable<ID<IUserOrGroup, Guid>> userAndGroupIds, bool onlyReturnInheritedPermissions, uint recurse)
-        {
-            var file = FileDataByNameCache[filename];
-
-            Permission permission;
-            FilePermissionEnum? highestPermission = null;
-            foreach (ID<IUserOrGroup, Guid> userAndGroupId in userAndGroupIds)
-                if (file.Info.Permissions.TryGetValue(userAndGroupId.Value, out permission))
-                    if (!onlyReturnInheritedPermissions | permission.Inherit)
-                    {
-                        if (null == highestPermission)
-                            highestPermission = permission.Level;
-                        else if (permission.Level > highestPermission.Value)
-                            highestPermission = permission.Level;
-                    }
-
-            if (null == highestPermission)
-                highestPermission = LoadPermissionFromRelated(
-                    new IFileId[] { new FileId(file.FileId.Value) },
-                    userAndGroupIds,
-                    new HashSet<IFileId>(), recurse);
-
-            if (null != highestPermission)
-                return highestPermission;
-
-            if (FileContainer == FileHandlerFactoryLocator.FileSystemResolver.RootDirectoryHandler.FileContainer)
-                return null;
-
-            return FileContainer.ParentDirectoryHandler.LoadPermission(FileContainer.Filename, userAndGroupIds, true);
-        }
-
-        /// <summary>
-        /// Helper function to load permissions from files that are related
-        /// </summary>
-        /// <param name="fileIds"></param>
-        /// <param name="userAndGroupIds"></param>
-        /// <returns></returns>
-        private FilePermissionEnum? LoadPermissionFromRelated(
-            IEnumerable<IFileId> fileIds,
-            IEnumerable<ID<IUserOrGroup, Guid>> userAndGroupIds,
-            HashSet<IFileId> alreadyChecked,
-            uint recurse)
-        {
-            FilePermissionEnum? highestPermission = null;
-            List<IFileId> parentIds = new List<IFileId>();
-            List<IFileId> inheritedParentIds = new List<IFileId>();
-
-            // Load all of the parent related files
-            foreach (IRelationships_Readable relationship in DatabaseConnection.Relationships.Select(
-                Relationships_Table.ReferencedFileId.In(fileIds) & Relationships_Table.Inherit == true))
+			return this.persistedDirectories.Read<FilePermissionEnum?>(fileInformations =>
             {
-                FileId fileId = relationship.FileId;
-
-                if (!alreadyChecked.Contains(fileId))
-                {
-                    parentIds.Add(fileId);
-                    alreadyChecked.Add(fileId);
-
-                    if (relationship.Inherit)
-                        inheritedParentIds.Add(fileId);
-                }
-            }
-
-            // If there are no parent relationships, just return null
-            if (0 == parentIds.Count)
-                return null;
-
-            // Deal with explicitly set inherit permissions
-            HashSet<string> parentFileNames = new HashSet<string>();
-            HashSet<ID<IUserOrGroup, Guid>> parentOwners = new HashSet<ID<IUserOrGroup, Guid>>();
-            // TODO:  This is very untested
-            if (inheritedParentIds.Count > 0)
-                foreach (IFile_Readable file in DatabaseConnection.File.Select(File_Table.FileId.In(inheritedParentIds)))
-                {
-                    parentFileNames.Add(file.Name);
-
-                    if (null != file.OwnerId)
-                        parentOwners.Add(file.OwnerId.Value);
-                }
-
-            // If any of the users owns any of the parent files, then permission is granted
-            // Else, if any of the users has permission to any of the parent files, then permission is granted
-            parentOwners.IntersectWith(userAndGroupIds);
-            bool ownsParentFile = parentOwners.Count > 0;
-            parentOwners = null;
-
-            if (ownsParentFile)
-                highestPermission = FilePermissionEnum.Read;
-
-            else
-                foreach (string filename in parentFileNames)
-                {
-                    FilePermissionEnum? fromFile = LoadPermission(filename, userAndGroupIds, false, recurse + 1);
-                    if (fromFile != null)
-                    {
-                        highestPermission = FilePermissionEnum.Read;
-                        break;
-                    }
-                }
-
-            // Scan the permissions of the parent related files
-            Permission permission;
-            foreach (IFile_Readable file in DatabaseConnection.File.Select(File_Table.FileId.In(parentIds)))
-                foreach (var userAndGroupId in userAndGroupIds)
-                    if (file.Info.Permissions.TryGetValue(userAndGroupId.Value, out permission))
-                    {
-                        if (null == highestPermission)
-                            highestPermission = permission.Level;
-                        else if (permission.Level > highestPermission.Value)
-                            highestPermission = permission.Level;
-                    }
-
-            if (null != highestPermission)
-                return highestPermission;
-
-            // Prevent infinate recursion
-            if (recurse >= 150)
-                return null;
-
-            return LoadPermissionFromRelated(parentIds, userAndGroupIds, alreadyChecked, recurse + 1);
+				IDirectoryHandler directoryHandler = this;
+				FilePermissionEnum? highestPermission = null;
+	        	
+	        	do
+	        	{
+	        		var directoryInformation = (DirectoryInformation)fileInformations[directoryHandler.FileContainer.FileId];
+	        	          var file = directoryInformation[filename];
+	        		
+	        		if (null != file.ownerId)
+	        			if (userAndGroupIds.Contains(file.ownerId.Value))
+	        				return FilePermissionEnum.Administer;
+	        	
+	        		// Look at all permissions explicity assigned to this file.
+	        		// Do any of them match the user id, or any of the user's groups?
+					Permission permission;
+					foreach (ID<IUserOrGroup, Guid> userAndGroupId in userAndGroupIds)
+					    if (file.permissions.TryGetValue(userAndGroupId, out permission))
+					        if (!onlyReturnInheritedPermissions | permission.inherit)
+					        {
+					            if (null == highestPermission)
+					                highestPermission = permission.level;
+					            else if (permission.level > highestPermission.Value)
+					                highestPermission = permission.level;
+					        }
+	        	
+	        		// If no permission found, do any of the related files allow for inheriting permission?
+	        		// When permission is inherited through a relationship, then it's only for read
+        	          if (null == highestPermission)
+	        		{
+	        			var alreadyScanned = new HashSet<FileInformation>();
+	        			var parentRelated = new List<KeyValuePair<FileInformation, Relationship>>(
+	        				file.parentRelationships.Where(kvp => kvp.Value.inherit));
+	        			
+	        			while (parentRelated.Count > 0)
+	        			{
+	        				var scanning = parentRelated;
+	        				parentRelated = new List<KeyValuePair<FileInformation, Relationship>>(scanning.Count * 2);
+	        				
+	        				foreach (var fileAndRelationship in scanning)
+	        				{
+	        					var parentFile = fileAndRelationship.Key;
+	        	
+	        					if (null != parentFile.ownerId)
+	        						if (userAndGroupIds.Contains(parentFile.ownerId.Value))
+	        							return FilePermissionEnum.Read;
+	        					
+	        					alreadyScanned.Add(parentFile);
+	        					
+	        		            foreach (ID<IUserOrGroup, Guid> userAndGroupId in userAndGroupIds)
+	        		                if (parentFile.permissions.TryGetValue(userAndGroupId, out permission))
+	        							return FilePermissionEnum.Read;
+	        					
+	        					parentRelated.AddRange(
+	        						parentFile.parentRelationships.Where(kvp => kvp.Value.inherit && !alreadyScanned.Contains(kvp.Key)));
+	        				}
+	        			}
+	        		}
+	        		
+	        		onlyReturnInheritedPermissions = true;
+	        		directoryHandler = directoryHandler.FileContainer.ParentDirectoryHandler;
+	        		
+	        	} while (null != directoryHandler);
+	        	
+	        	return highestPermission;
+			});
         }
 
         /// <summary>
@@ -688,9 +669,8 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <returns></returns>
         public bool IsFilePresent(string filename)
         {
-            IFile_Readable file = DatabaseConnection.File.SelectSingle(File_Table.Name == filename);
-
-            return null != file;
+			return this.Read<bool>(
+				directoryInformation => directoryInformation.files.ContainsKey(filename));
         }
 
         /// <summary>
