@@ -688,6 +688,8 @@ namespace ObjectCloud.Disk.FileHandlers
 
                 transaction.Commit();
             });
+			
+			// TODO: Need to delete all permissions assigned to the user!
         }
 
         public void DeleteGroup(string name)
@@ -729,6 +731,8 @@ namespace ObjectCloud.Disk.FileHandlers
 
                 transaction.Commit();
             });
+			
+			// TODO: Need to delete all permissions assigned to the group!
         }
 
         public IUser Root

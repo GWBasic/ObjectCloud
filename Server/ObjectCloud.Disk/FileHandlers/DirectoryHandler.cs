@@ -682,23 +682,15 @@ namespace ObjectCloud.Disk.FileHandlers
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
 
-            List<IFile_Readable> files = new List<IFile_Readable>(DatabaseConnection.File.Select());
-            Dictionary<FileId, IFileContainer> fileContainersById = new Dictionary<FileId, IFileContainer>();
-
-            // Write out each file
-            foreach (IFile_Readable file in files)
-            {
-                IFileContainer fileContainer = OpenFile(file.Name);
-
-                using (TimedLock.Lock(fileContainer.FileHandler))
-                {
-                    fileContainer.FileHandler.Dump(
-                        path + Path.DirectorySeparatorChar + file.Name, userId);
-                }
-
-                fileContainersById[file.FileId] = fileContainer;
-            }
-
+			// Keep an immutable copy of all the files
+            var fileContainersById = this.Files.ToDictionary(file => file.FileId);
+			
+			// Dump all files in the folder
+			foreach (var fileContainer in fileContainersById.Values)
+				fileContainer.FileHandler.Dump(
+					Path.Combine(path, fileContainer.Filename),
+					userId);
+			
             string metadataFile = path + Path.DirectorySeparatorChar + "metadata.xml";
 
             DateTime destinationCreated = DateTime.MinValue;
@@ -727,15 +719,11 @@ namespace ObjectCloud.Disk.FileHandlers
                         xmlWriter.WriteAttributeString("IndexFile", indexFile);
 
                     // make sure the files are always written in the same order.  This assists with diffing changes
-                    files.Sort(delegate(IFile_Readable a, IFile_Readable b)
-                    {
-                        return a.Name.CompareTo(b.Name);
-                    });
+					var files = new List<IFileContainer>(fileContainersById.Values);
+                    files.Sort((a,b) => a.Filename.CompareTo(b.Filename));
 
-                    foreach (IFile_Readable file in files)
+                    foreach (var fileContainer in files)
                     {
-                        IFileContainer fileContainer = fileContainersById[file.FileId];
-
                         // Load user's permission for file
                         FilePermissionEnum? filePermissionEnum = fileContainer.LoadPermission(userId);
 
@@ -746,47 +734,40 @@ namespace ObjectCloud.Disk.FileHandlers
                                 xmlWriter.WriteStartElement("File");
 
                                 // Write the file's attributes
-                                xmlWriter.WriteAttributeString("Name", file.Name);
-                                xmlWriter.WriteAttributeString("TypeId", file.TypeId);
+                                xmlWriter.WriteAttributeString("Name", fileContainer.Filename);
+                                xmlWriter.WriteAttributeString("TypeId", fileContainer.TypeId);
 
                                 // Only write the ownerId if it's a built-in user.  This might change if Dump is set up to do true backups, but right now
                                 // the files aren't supposed to be tied to specific users
-                                ID<IUserOrGroup, Guid>? ownerId = null;
-                                if (null != file.OwnerId)
-                                {
-                                    IUser owner = FileHandlerFactoryLocator.UserManagerHandler.GetUserNoException(file.OwnerId.Value);
-
-                                    if (null != owner)
-                                        if (owner.BuiltIn)
-                                            ownerId = owner.Id;
-                                }
-
-                                if (null != ownerId)
-                                    xmlWriter.WriteAttributeString("OwnerId", ownerId.Value.ToString());
+                                if (null != fileContainer.Owner)
+                                    xmlWriter.WriteAttributeString("OwnerId", fileContainer.OwnerId.ToString());
 
                                 // Write each permission if it applies to a built-in user or group
-                                    foreach (KeyValuePair<Guid, Permission> permissionKVP in file.Info.Permissions)
+                                foreach (var permission in this.GetPermissions(fileContainer.Filename))
+                                {
+                                    try
                                     {
-                                        try
+                                        var userOrGroup = this.FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroup(
+											permission.UserOrGroupId);
+
+                                        if (userOrGroup.BuiltIn)
                                         {
-                                            IUserOrGroup userOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroup(
-                                                new ID<IUserOrGroup, Guid>(permissionKVP.Key));
+                                            xmlWriter.WriteStartElement("Permission");
 
-                                            if (userOrGroup.BuiltIn)
-                                            {
-                                                xmlWriter.WriteStartElement("Permission");
+                                            xmlWriter.WriteAttributeString("UserOrGroupId", userOrGroup.Id.Value.ToString());
+                                            xmlWriter.WriteAttributeString("Level", permission.FilePermissionEnum.ToString());
+                                            xmlWriter.WriteAttributeString("Inherit", permission.Inherit.ToString());
+                                            xmlWriter.WriteAttributeString("SendNotifications", permission.SendNotifications.ToString());
 
-                                                xmlWriter.WriteAttributeString("UserOrGroupId", permissionKVP.Key.ToString());
-                                                xmlWriter.WriteAttributeString("Level", permissionKVP.Value.Level.ToString());
-                                                xmlWriter.WriteAttributeString("Inherit", permissionKVP.Value.Inherit.ToString());
-                                                xmlWriter.WriteAttributeString("SendNotifications", permissionKVP.Value.SendNotifications.ToString());
-
-                                                xmlWriter.WriteEndElement();
-                                            }
+                                            xmlWriter.WriteEndElement();
                                         }
-                                        // For now, swallow userIds that aren't a valid user
-                                        catch (UnknownUser) { }
                                     }
+                                    // For now, swallow userIds that aren't a valid user
+                                    catch (UnknownUser ue) 
+									{
+										log.Warn("Found permission assigned to an unknown user", ue);
+									}
+                                }
 
                                 // </FileInDirectory>
                                 xmlWriter.WriteEndElement();
@@ -801,7 +782,7 @@ namespace ObjectCloud.Disk.FileHandlers
                     xmlWriter.Flush();
                     xmlWriter.Close();
                 }
-
+				
                 log.Info("Successfully wrote " + FileContainer.FullPath);
             }
         }
@@ -816,33 +797,21 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public void Rename(IUser changer, string oldFilename, string newFilename)
         {
-            IFile_Readable oldFile = null;
-            DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
-            {
-                oldFile = DatabaseConnection.File.SelectSingle(File_Table.Name == oldFilename);
-                if (null == oldFile)
-                    throw new FileDoesNotExist(FileContainer.FullPath + "/" + oldFilename);
-
-                if (null != DatabaseConnection.File.SelectSingle(File_Table.Name == newFilename))
+			this.Write(directoryInformation =>
+			{
+				var file = directoryInformation[oldFilename];
+				
+				if (directoryInformation.files.ContainsKey(newFilename))
                     throw new DuplicateFile(FileContainer.FullPath + "/" + newFilename);
+				
+				directoryInformation.files.Remove(oldFilename);
+				
+				file.filename = newFilename;
+				
+				directoryInformation.files[newFilename] = file;
+			});
 
-                DatabaseConnection.File.Update(
-                    File_Table.Name == oldFilename,
-                    delegate(IFile_Writable file)
-                    {
-                        file.Name = newFilename;
-                        file.Extension = GetExtensionFromFilename(newFilename);
-                    });
-
-                transaction.Commit();
-            });
-
-            FileIDCacheByName.Remove(oldFilename);
-			FileContainerCache.Remove(oldFilename);
-            FileDataByNameCache.Remove(oldFilename);
-            FileDataByIdCache.Remove(oldFile.FileId);
-
-            IFileContainer newFileContainer = FileContainerCache[newFilename];
+            var newFileContainer = this.OpenFile(newFilename);
             newFileContainer.WebHandler.FileContainer = newFileContainer;
             newFileContainer.WebHandler.ResetExecutionEnvironment();
 
@@ -904,6 +873,8 @@ namespace ObjectCloud.Disk.FileHandlers
             log.Trace("Syncing " + FileContainer.FullPath);
 			
             string metadataPath = Path.GetFullPath(localDiskPath + Path.DirectorySeparatorChar + "metadata.xml");
+			
+			var hasWrites = false;
 
             if (File.Exists(metadataPath))
                 using (TextReader tr = File.OpenText(metadataPath))
@@ -955,12 +926,13 @@ namespace ObjectCloud.Disk.FileHandlers
                                             log.Error("Error syncing " + toSync.FullPath, e);
                                             throw;
                                         }
-
-                                        DatabaseConnection.File.Update((File_Table.Name == filename) & (File_Table.OwnerId != ownerId),
-                                            delegate(IFile_Writable file)
-                                            {
-                                                file.OwnerId = ownerId;
-                                            });
+								
+										hasWrites = true;
+										this.persistedDirectories.WriteEventual(directoryInformations =>
+								        {
+											var directoryInformation = (DirectoryInformation)directoryInformations[this.FileContainer.FileId];
+											directoryInformation[filename].ownerId = ownerId;
+										});
                                     }
                                 }
                                 else
@@ -994,6 +966,9 @@ namespace ObjectCloud.Disk.FileHandlers
                 foreach (string toDelete in File.ReadAllLines(deleteListPath))
                     if (IsFilePresent(toDelete))
                         DeleteFile(null, toDelete);
+			
+			if (hasWrites)
+				this.Write(d => {});
         }
 
         public override string Title
