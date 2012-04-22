@@ -44,8 +44,8 @@ namespace ObjectCloud.Disk.FileHandlers
 			/// <summary>
 			/// All of the files that this file is related to, and the relationship
 			/// </summary>
-			public Dictionary<FileInformation, List<string>> relationships =
-				new Dictionary<FileInformation, List<string>>();
+			public Dictionary<FileInformation, HashSet<string>> relationships =
+				new Dictionary<FileInformation, HashSet<string>>();
 
 			/// <summary>
 			/// All of the files that are related to this file, and their relationships
@@ -244,7 +244,6 @@ namespace ObjectCloud.Disk.FileHandlers
 	                file.created = created;
 					file.permissions = new Dictionary<ID<IUserOrGroup, Guid>, Permission>();
 					file.namedPermissions = new Dictionary<ID<IUserOrGroup, Guid>, Dictionary<string, bool>>();
-					file.relationships = new Dictionary<FileInformation, List<string>>();
 					file.parentRelationships = new Dictionary<FileInformation, Dictionary<string, bool>>();
 					
 					fileInformations[fileId] = file;
@@ -1017,7 +1016,7 @@ namespace ObjectCloud.Disk.FileHandlers
             DateTime? oldest,
             uint? maxToReturn)
 		{
-			Func<List<string>, bool> checkRelationship;
+			Func<HashSet<string>, bool> checkRelationship;
 			if (null != relationships)
 				checkRelationship = relationshipNames =>
 				{
@@ -1114,33 +1113,37 @@ namespace ObjectCloud.Disk.FileHandlers
 		
         public virtual LinkNotificationInformation AddRelationship(IFileContainer parentFile, IFileContainer relatedFile, string relationship, bool inheritPermission)
         {
-            DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
-            {
-                if (null == DatabaseConnection.File.Select(File_Table.FileId == parentFile.FileId))
+			this.persistedDirectories.Write(fileInformations =>
+			{
+				var parentFileInformation = fileInformations[parentFile.FileId];
+				var relatedFileInformation = fileInformations[relatedFile.FileId];
+				
+				var directoryInformation = (DirectoryInformation)fileInformations[this.FileContainer.FileId];
+				
+				if (!directoryInformation.files.ContainsValue(parentFileInformation))
                     throw new DiskException("Parent file must be in the directory where the relationship exists");
-
-                if (null == DatabaseConnection.File.Select(File_Table.FileId == relatedFile.FileId))
-                    throw new DiskException("Related file must be in the directory where the relationship exists");
-
-                try
-                {
-                    DatabaseConnection.Relationships.Insert(delegate(IRelationships_Writable relationshipInDb)
-                    {
-                        relationshipInDb.FileId = (FileId)(parentFile.FileId);
-                        relationshipInDb.ReferencedFileId = (FileId)relatedFile.FileId;
-                        relationshipInDb.Relationship = relationship;
-                        relationshipInDb.Inherit = inheritPermission;
-                    });
-                }
-                catch (Exception e)
-                {
-                    transaction.Rollback();
-                    throw new DiskException("Relationships in a directory must be unique.  Ensure that the relationship is unique", e);
-                }
-
-                transaction.Commit();
-            });
-
+				
+				Dictionary<string, bool> parentRelationships;
+				if (!relatedFileInformation.parentRelationships.TryGetValue(parentFileInformation, out parentRelationships))
+				{
+					parentRelationships = new Dictionary<string, bool>();
+					relatedFileInformation.parentRelationships[parentFileInformation] = parentRelationships;
+				}
+				
+				if (parentRelationships.ContainsKey(relationship))
+                    throw new DiskException("Relationships in a directory must be unique.  Ensure that the relationship is unique");
+				
+				parentRelationships[relationship] = inheritPermission;
+				
+				HashSet<string> relationshipNames;
+				if (!parentFileInformation.relationships.TryGetValue(relatedFileInformation, out relationshipNames))
+				{
+					relationshipNames = new HashSet<string>();
+					parentFileInformation.relationships[relatedFileInformation] = relationshipNames;
+				}
+				relationshipNames.Add(relationship);
+			});
+			
             LinkNotificationInformation toReturn = 
                 parentFile.FileHandler.SendLinkNotificationFrom(parentFile.Owner, relatedFile);
 
@@ -1151,8 +1154,32 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public void DeleteRelationship(IFileContainer parentFile, IFileContainer relatedFile, string relationship)
         {
-            DatabaseConnection.Relationships.Delete(
-                Relationships_Table.FileId == parentFile.FileId & Relationships_Table.ReferencedFileId == relatedFile.FileId & Relationships_Table.Relationship == relationship);
+			this.persistedDirectories.Write(fileInformations =>
+			{
+				var parentFileInformation = fileInformations[parentFile.FileId];
+				var relatedFileInformation = fileInformations[relatedFile.FileId];
+				
+				var directoryInformation = (DirectoryInformation)fileInformations[this.FileContainer.FileId];
+				
+				if (!directoryInformation.files.ContainsValue(parentFileInformation))
+                    throw new DiskException("Parent file must be in the directory where the relationship exists");
+				
+				HashSet<string> relationshipNames;
+				if (parentFileInformation.relationships.TryGetValue(relatedFileInformation, out relationshipNames))
+				{
+					relationshipNames.Remove(relationship);
+					if (0 == relationshipNames.Count)
+						parentFileInformation.relationships.Remove(relatedFileInformation);
+				}
+				
+				Dictionary<string, bool> parentRelationships;
+				if (relatedFileInformation.parentRelationships.TryGetValue(parentFileInformation, out parentRelationships))
+				{
+					parentRelationships.Remove(relationship);
+					if (0 == parentRelationships.Count)
+						relatedFileInformation.parentRelationships.Remove(parentFileInformation);
+				}
+			});
 
             parentFile.FileHandler.OnRelationshipDeleted(new RelationshipEventArgs(relatedFile, relationship));
         }
