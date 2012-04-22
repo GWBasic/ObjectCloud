@@ -44,12 +44,14 @@ namespace ObjectCloud.Disk.FileHandlers
 			/// <summary>
 			/// All of the files that this file is related to, and the relationship
 			/// </summary>
-			public Dictionary<FileInformation, Relationship> relationships = new Dictionary<FileInformation, Relationship>();
+			public Dictionary<FileInformation, List<string>> relationships =
+				new Dictionary<FileInformation, List<string>>();
 
 			/// <summary>
 			/// All of the files that are related to this file, and their relationships
 			/// </summary>
-			public Dictionary<FileInformation, Relationship> parentRelationships = new Dictionary<FileInformation, Relationship>();
+			public Dictionary<FileInformation, Dictionary<string, bool>> parentRelationships =
+				new Dictionary<FileInformation, Dictionary<string, bool>>();
 			
 			public override bool Equals (object obj)
 			{
@@ -112,22 +114,6 @@ namespace ObjectCloud.Disk.FileHandlers
 	        public bool sendNotifications;
 	    }
 		
-	    /// <summary>
-	    /// Represents a relationship between two files
-	    /// </summary>
-		private class Relationship
-		{
-			/// <summary>
-			/// The name of the relationship
-			/// </summary>
-			public string name;
-			
-			/// <summary>
-			/// True if the permission should inherit.
-			/// </summary>
-			public bool inherit;
-		}
-
         public DirectoryHandler(string path, FileHandlerFactoryLocator fileHandlerFactoryLocator)
             : base(fileHandlerFactoryLocator, path)
         {
@@ -258,8 +244,8 @@ namespace ObjectCloud.Disk.FileHandlers
 	                file.created = created;
 					file.permissions = new Dictionary<ID<IUserOrGroup, Guid>, Permission>();
 					file.namedPermissions = new Dictionary<ID<IUserOrGroup, Guid>, Dictionary<string, bool>>();
-					file.relationships = new Dictionary<FileInformation, Relationship>();
-					file.parentRelationships = new Dictionary<FileInformation, Relationship>();
+					file.relationships = new Dictionary<FileInformation, List<string>>();
+					file.parentRelationships = new Dictionary<FileInformation, Dictionary<string, bool>>();
 					
 					fileInformations[fileId] = file;
 					directoryInformation.files[filename] = file;
@@ -586,7 +572,7 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <returns>The user's permission for the file, or null if the user has no access to the file</returns>
         public virtual FilePermissionEnum? LoadPermission(string filename, ID<IUserOrGroup, Guid> userId)
         {
-            IEnumerable<ID<IUserOrGroup, Guid>> userAndGroupsIds = GetAllUserAndGroupIdsThatApplyToUser(userId);
+            var userAndGroupsIds = GetAllUserAndGroupIdsThatApplyToUser(userId);
 
             return LoadPermission(filename, userAndGroupsIds, false);
         }
@@ -594,73 +580,91 @@ namespace ObjectCloud.Disk.FileHandlers
         public FilePermissionEnum? LoadPermission(string filename, IEnumerable<ID<IUserOrGroup, Guid>> userAndGroupIds, bool onlyReturnInheritedPermissions)
         {
 			return this.persistedDirectories.Read<FilePermissionEnum?>(fileInformations =>
-            {
-				IDirectoryHandler directoryHandler = this;
-				FilePermissionEnum? highestPermission = null;
-	        	
-	        	do
-	        	{
-	        		var directoryInformation = (DirectoryInformation)fileInformations[directoryHandler.FileContainer.FileId];
-	        	          var file = directoryInformation[filename];
-	        		
-	        		if (null != file.ownerId)
-	        			if (userAndGroupIds.Contains(file.ownerId.Value))
-	        				return FilePermissionEnum.Administer;
-	        	
-	        		// Look at all permissions explicity assigned to this file.
-	        		// Do any of them match the user id, or any of the user's groups?
-					Permission permission;
-					foreach (ID<IUserOrGroup, Guid> userAndGroupId in userAndGroupIds)
-					    if (file.permissions.TryGetValue(userAndGroupId, out permission))
-					        if (!onlyReturnInheritedPermissions | permission.inherit)
-					        {
-					            if (null == highestPermission)
-					                highestPermission = permission.level;
-					            else if (permission.level > highestPermission.Value)
-					                highestPermission = permission.level;
-					        }
-	        	
-	        		// If no permission found, do any of the related files allow for inheriting permission?
-	        		// When permission is inherited through a relationship, then it's only for read
-        	          if (null == highestPermission)
-	        		{
-	        			var alreadyScanned = new HashSet<FileInformation>();
-	        			var parentRelated = new List<KeyValuePair<FileInformation, Relationship>>(
-	        				file.parentRelationships.Where(kvp => kvp.Value.inherit));
-	        			
-	        			while (parentRelated.Count > 0)
-	        			{
-	        				var scanning = parentRelated;
-	        				parentRelated = new List<KeyValuePair<FileInformation, Relationship>>(scanning.Count * 2);
-	        				
-	        				foreach (var fileAndRelationship in scanning)
-	        				{
-	        					var parentFile = fileAndRelationship.Key;
-	        	
-	        					if (null != parentFile.ownerId)
-	        						if (userAndGroupIds.Contains(parentFile.ownerId.Value))
-	        							return FilePermissionEnum.Read;
-	        					
-	        					alreadyScanned.Add(parentFile);
-	        					
-	        		            foreach (ID<IUserOrGroup, Guid> userAndGroupId in userAndGroupIds)
-	        		                if (parentFile.permissions.TryGetValue(userAndGroupId, out permission))
-	        							return FilePermissionEnum.Read;
-	        					
-	        					parentRelated.AddRange(
-	        						parentFile.parentRelationships.Where(kvp => kvp.Value.inherit && !alreadyScanned.Contains(kvp.Key)));
-	        				}
-	        			}
-	        		}
-	        		
-	        		onlyReturnInheritedPermissions = true;
-	        		directoryHandler = directoryHandler.FileContainer.ParentDirectoryHandler;
-	        		
-	        	} while (null != directoryHandler);
-	        	
-	        	return highestPermission;
+			{
+				var directoryInformation = (DirectoryInformation)fileInformations[this.FileContainer.FileId];
+		    	var file = directoryInformation[filename];
+
+				return this.LoadPermissionInt(
+					fileInformations,
+					directoryInformation,
+					file,
+					userAndGroupIds.ToHashSet(),
+					onlyReturnInheritedPermissions);
 			});
         }
+
+		private FilePermissionEnum? LoadPermissionInt(
+			Dictionary<IFileId, FileInformation> fileInformations,
+			DirectoryInformation directoryInformation,
+			FileInformation file,
+			HashSet<ID<IUserOrGroup, Guid>> userAndGroupIds,
+			bool onlyReturnInheritedPermissions)
+		{
+			IDirectoryHandler directoryHandler = this;
+        	FilePermissionEnum? highestPermission = null;
+        	     	
+	     	do
+	     	{
+	     		if (null != file.ownerId)
+	     			if (userAndGroupIds.Contains(file.ownerId.Value))
+	     				return FilePermissionEnum.Administer;
+	     	
+	     		// Look at all permissions explicity assigned to this file.
+	     		// Do any of them match the user id, or any of the user's groups?
+				Permission permission;
+				foreach (ID<IUserOrGroup, Guid> userAndGroupId in userAndGroupIds)
+				    if (file.permissions.TryGetValue(userAndGroupId, out permission))
+				        if (!onlyReturnInheritedPermissions | permission.inherit)
+				        {
+				            if (null == highestPermission)
+				                highestPermission = permission.level;
+				            else if (permission.level > highestPermission.Value)
+				                highestPermission = permission.level;
+				        }
+	     	
+	     		// If no permission found, do any of the related files allow for inheriting permission?
+	     		// When permission is inherited through a relationship, then it's only for read
+				if (null == highestPermission)
+	     		{
+	     			var alreadyScanned = new HashSet<FileInformation>();
+	     			var parentRelated = file.parentRelationships.Where(
+						relationship => relationship.Value.Any(kvp => kvp.Value)).ToList();
+	     			
+	     			while (parentRelated.Count > 0)
+	     			{
+	     				var scanning = parentRelated;
+	     				parentRelated = new List<KeyValuePair<FileInformation, Dictionary<string, bool>>>(scanning.Count * 2);
+	     				
+	     				foreach (var fileAndRelationship in scanning)
+	     				{
+	     					var parentFile = fileAndRelationship.Key;
+	     	
+	     					if (null != parentFile.ownerId)
+	     						if (userAndGroupIds.Contains(parentFile.ownerId.Value))
+	     							return FilePermissionEnum.Read;
+	     					
+	     					alreadyScanned.Add(parentFile);
+	     					
+	     		            foreach (ID<IUserOrGroup, Guid> userAndGroupId in userAndGroupIds)
+	     		                if (parentFile.permissions.TryGetValue(userAndGroupId, out permission))
+	     							return FilePermissionEnum.Read;
+	     					
+	     					parentRelated.AddRange(parentFile.parentRelationships.Where(relationship => 
+	                            relationship.Value.Any(kvp => kvp.Value) && 
+	                            !alreadyScanned.Contains(relationship.Key)));
+	     				}
+	     			}
+	     		}
+	     		
+	     		onlyReturnInheritedPermissions = true;
+	     		directoryHandler = directoryHandler.FileContainer.ParentDirectoryHandler;
+				file = directoryInformation;
+	  			directoryInformation = (DirectoryInformation)fileInformations[directoryHandler.FileContainer.FileId];
+	     		
+	     	} while (null != directoryHandler);
+	     	
+	     	return highestPermission;
+		}
 
         /// <summary>
         /// Returns true if the file is present, false otherwise
@@ -1007,65 +1011,105 @@ namespace ObjectCloud.Disk.FileHandlers
         public virtual IEnumerable<IFileContainer> GetRelatedFiles(
             ID<IUserOrGroup, Guid> userId,
             IFileId parentFileId,
-            IEnumerable<string> relationships,
-            IEnumerable<string> extensions,
+            HashSet<string> relationships,
+            HashSet<string> extensions,
             DateTime? newest,
             DateTime? oldest,
             uint? maxToReturn)
 		{
-			LinkedList<FileId> allFiles = new LinkedList<FileId>();
-			HashSet<FileId> inspectPermission = new HashSet<FileId>();
-			
-			LinkedList<ComparisonCondition> comparisonConditions = new LinkedList<ComparisonCondition>();
-
-            comparisonConditions.AddLast(Relationships_Table.FileId == parentFileId);
-
-            if (null != relationships)
-                comparisonConditions.AddLast(Relationships_Table.Relationship.In(relationships));
-
-            foreach (IRelationships_Readable relationshipInDb in Enumerable<IRelationships_Readable>.FastCopy(
-                DatabaseConnection.Relationships.Select(ComparisonCondition.Condense(comparisonConditions))))
-            {
-                if (!relationshipInDb.Inherit)
-                    inspectPermission.Add(relationshipInDb.ReferencedFileId);
-				
-				allFiles.AddLast(relationshipInDb.ReferencedFileId);
-            }
-  
-			comparisonConditions.Clear();
-            comparisonConditions.AddLast(File_Table.FileId.In(allFiles));
-
-            if (null != extensions)
-                comparisonConditions.AddLast(File_Table.Extension.In(extensions));
-
-            if (null != newest)
-                comparisonConditions.AddLast(File_Table.Created < newest.Value);
-
-            if (null != oldest)
-                comparisonConditions.AddLast(File_Table.Created > oldest.Value);
-
-			LinkedList<ID<IUserOrGroup, Guid>> userAndGroupIds = new LinkedList<ID<IUserOrGroup, Guid>>(
-				FileHandlerFactoryLocator.UserManagerHandler.GetGroupIdsThatUserIsIn(userId));
-			userAndGroupIds.AddLast(userId);
-			
-			foreach (IFile_Readable file in Enumerable<IFile_Readable>.FastCopy(DatabaseConnection.File.Select(
-                ComparisonCondition.Condense(comparisonConditions),
-                maxToReturn,
-                ObjectCloud.ORM.DataAccess.OrderBy.Desc,
-                File_Table.Created)))
-            {
-				// Slow, but simple
-				// TODO: Optimize
-				IFileContainer toYield = FileContainerCache[file.Name];
-				
-				if (inspectPermission.Contains(file.FileId))
+			Func<List<string>, bool> checkRelationship;
+			if (null != relationships)
+				checkRelationship = relationshipNames =>
 				{
-					if (null != toYield.LoadPermission(userId))
-						yield return toYield;
-				}
-				else
-					yield return toYield;
+					foreach (var relationshipName in relationshipNames)
+						if (relationships.Contains(relationshipName))
+							return true;
+				
+					return false;
+				};
+			else
+				checkRelationship = relationshipValues => true;
+			
+			Func<FileInformation, bool> checkExtension;
+			if (null != extensions)
+			{
+				var filteredExtensions = new List<string>(extensions.Select(extension => "." + extension));
+
+				checkExtension = relatedFileInfo =>
+				{
+					foreach (var filteredExtension in filteredExtensions)
+						if (relatedFileInfo.filename.EndsWith(filteredExtension))
+							return true;
+					
+					return false;
+				};
 			}
+			else
+				checkExtension = relatedFileInfo => true;
+
+			var userAndGroupsIds = GetAllUserAndGroupIdsThatApplyToUser(userId).ToHashSet();
+
+			return this.persistedDirectories.Read(fileInformations =>
+            {
+				var directoryInformation = (DirectoryInformation)fileInformations[this.FileContainer.FileId];
+
+				FileInformation fileInformation;
+				if (!fileInformations.TryGetValue(parentFileId, out fileInformation))
+					throw new FileDoesNotExist(parentFileId.ToString());
+				
+				if (!directoryInformation.files.ContainsValue(fileInformation))
+					throw new FileDoesNotExist(fileInformation.filename);
+				
+				// Filter the related files scanned by date
+				var relatedFileInformations = new List<FileInformation>(fileInformation.relationships.Keys);
+				relatedFileInformations.Sort((a, b) => a.created.CompareTo(b.created));
+
+				if (null != newest)
+					relatedFileInformations = relatedFileInformations.Where(
+						relatedFileInfo => relatedFileInfo.created < newest.Value).ToList();
+
+				if (null != oldest)
+					relatedFileInformations = relatedFileInformations.Where(
+						relatedFileInfo => relatedFileInfo.created > oldest.Value).ToList();
+				
+				var relatedFileContainers = new List<IFileContainer>(relatedFileInformations.Count);
+
+				foreach (var relatedFileInfo in relatedFileInformations)
+				{
+					var relationshipValues = fileInformation.relationships[relatedFileInfo];
+					
+					if (checkRelationship(relationshipValues))
+						if (checkExtension(relatedFileInfo))
+						{
+							// At this point we know that the file is properly related to this file, and that the extension matches the query
+							// What we don't know is if the user has permission
+						
+							var permission = this.LoadPermissionInt(
+								fileInformations,
+								directoryInformation,
+								relatedFileInfo,
+								userAndGroupsIds,
+								false);
+						
+							if (null != permission)
+							{
+								relatedFileContainers.Add(new FileContainer(
+									relatedFileInfo.fileId,
+									relatedFileInfo.typeId,
+									relatedFileInfo.filename,
+									this,
+									this.FileHandlerFactoryLocator,
+									relatedFileInfo.created));
+								
+								if (null != maxToReturn)
+									if (relatedFileContainers.Count >= maxToReturn.Value)
+										return relatedFileContainers;
+							}
+						}
+				}
+
+				return relatedFileContainers;
+			});
 		}
 		
         public virtual LinkNotificationInformation AddRelationship(IFileContainer parentFile, IFileContainer relatedFile, string relationship, bool inheritPermission)

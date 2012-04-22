@@ -79,8 +79,8 @@ namespace ObjectCloud.Interfaces.Disk
         IEnumerable<IFileContainer> GetRelatedFiles(
             ID<IUserOrGroup, Guid> userId,
             IFileId parentFileId,
-            IEnumerable<string> relationships,
-            IEnumerable<string> extensions,
+            HashSet<string> relationships,
+            HashSet<string> extensions,
             DateTime? newest,
             DateTime? oldest,
             uint? maxToReturn);
