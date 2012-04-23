@@ -31,7 +31,7 @@ namespace ObjectCloud.Disk.FileHandlers
 		/// Internally represents a file
 		/// </summary>
 		[Serializable]
-		private class FileInformation
+		internal class FileInformation
 		{
 			public FileId fileId;
 			public string filename;
@@ -68,7 +68,7 @@ namespace ObjectCloud.Disk.FileHandlers
 		/// Stores files in the various different ways of indexing, and other directory data
 		/// </summary>
 		[Serializable]
-		private class DirectoryInformation : FileInformation
+		internal class DirectoryInformation : FileInformation
 		{
 			public string indexFile;
 			
@@ -96,7 +96,7 @@ namespace ObjectCloud.Disk.FileHandlers
 	    /// <summary>
 	    /// Details about a permission
 	    /// </summary>
-	    private class Permission
+	    internal class Permission
 	    {
 	        /// <summary>
 	        /// The actual permission
@@ -114,11 +114,15 @@ namespace ObjectCloud.Disk.FileHandlers
 	        public bool sendNotifications;
 	    }
 		
-        public DirectoryHandler(string path, FileHandlerFactoryLocator fileHandlerFactoryLocator)
+        internal DirectoryHandler(
+			PersistedObject<Dictionary<IFileId, FileInformation>> persistedDirectories,
+			string path,
+			FileHandlerFactoryLocator fileHandlerFactoryLocator)
             : base(fileHandlerFactoryLocator, path)
         {
-			this.persistedDirectories = new PersistedObject<Dictionary<IFileId, FileInformation>>(
-				path, () => new Dictionary<IFileId, FileInformation>());
+			this.persistedDirectories = persistedDirectories;
+			
+			throw new NotImplementedException("FileInformation should have a static cache of FileContainers, use that instead of creating new FileContainers");
         }
 		
 		/// <summary>
@@ -1056,7 +1060,7 @@ namespace ObjectCloud.Disk.FileHandlers
 				if (!fileInformations.TryGetValue(parentFileId, out fileInformation))
 					throw new FileDoesNotExist(parentFileId.ToString());
 				
-				if (!directoryInformation.files.ContainsValue(fileInformation))
+				if (fileInformation != directoryInformation[fileInformation.filename])
 					throw new FileDoesNotExist(fileInformation.filename);
 				
 				// Filter the related files scanned by date
@@ -1120,7 +1124,7 @@ namespace ObjectCloud.Disk.FileHandlers
 				
 				var directoryInformation = (DirectoryInformation)fileInformations[this.FileContainer.FileId];
 				
-				if (!directoryInformation.files.ContainsValue(parentFileInformation))
+				if (parentFileInformation != directoryInformation[parentFileInformation.filename])
                     throw new DiskException("Parent file must be in the directory where the relationship exists");
 				
 				Dictionary<string, bool> parentRelationships;
@@ -1161,7 +1165,7 @@ namespace ObjectCloud.Disk.FileHandlers
 				
 				var directoryInformation = (DirectoryInformation)fileInformations[this.FileContainer.FileId];
 				
-				if (!directoryInformation.files.ContainsValue(parentFileInformation))
+				if (parentFileInformation != directoryInformation[parentFileInformation.filename])
                     throw new DiskException("Parent file must be in the directory where the relationship exists");
 				
 				HashSet<string> relationshipNames;
@@ -1186,80 +1190,76 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public void Chown(IUser changer, IFileId fileId, ID<IUserOrGroup, Guid>? newOwnerId)
         {
-            IFile_Readable oldFile = DatabaseConnection.File.SelectSingle(File_Table.FileId == fileId);
-			if (null == oldFile)
-				throw new FileDoesNotExist("ID: " + fileId.ToString());
-
-            // Verify that the new owner exists
-            if (null != newOwnerId)
-                FileHandlerFactoryLocator.UserManagerHandler.GetUser(newOwnerId.Value);
-
-            using (TimedLock.Lock(this))
-            {
-                DatabaseConnection.File.Update(
-                    File_Table.FileId == fileId,
-                    delegate(IFile_Writable file)
-                    {
-                        file.OwnerId = newOwnerId;
-                    });
-
-                OwnerIdCache[fileId] = newOwnerId;
-            }
-
-            FileContainerCache.Remove(oldFile.Name);
-            IFileContainer newFileContainer = FileContainerCache[oldFile.Name];
-            newFileContainer.WebHandler.FileContainer = newFileContainer;
-            newFileContainer.WebHandler.ResetExecutionEnvironment();
-
+			this.persistedDirectories.Write(fileInformations =>
+			{
+				var directoryInformation = (DirectoryInformation)fileInformations[this.FileContainer.FileId];
+				var fileInformation = fileInformations[fileId];
+				
+				if (fileInformation != directoryInformation[fileInformation.filename])
+					throw new DiskException("Chown must be called on the owning directory");
+				
+				fileInformation.ownerId = newOwnerId;
+				
+				var fileContainer = new FileContainer(
+					fileInformation.fileId,
+					fileInformation.typeId,
+					fileInformation.filename,
+					this,
+					this.FileHandlerFactoryLocator,
+					fileInformation.created);
+				
+				fileContainer.WebHandler.FileContainer = fileContainer;
+            	fileContainer.WebHandler.ResetExecutionEnvironment();
+			});
 
             OnDirectoryChanged();
         }
 
         public void SetNamedPermission(IFileId fileId, string namedPermission, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, bool inherit)
         {
-            var file = FileDataByIdCache[(FileId)fileId];
-
-            using (TimedLock.Lock(file))
-            {
-                foreach (ID<IUserOrGroup, Guid> userOrGroupId in userOrGroupIds)
-                {
-                    Dictionary<string, bool> permissionInfo;
-                    if (!file.Info.NamedPermissions.TryGetValue(userOrGroupId.Value, out permissionInfo))
+			this.persistedDirectories.Write(fileInformations =>
+			{
+				var directoryInformation = (DirectoryInformation)fileInformations[this.FileContainer.FileId];
+				var fileInformation = fileInformations[fileId];
+				
+				if (fileInformation != directoryInformation[fileInformation.filename])
+					throw new DiskException("SetNamedPermission must be called on the owning directory");
+				
+				foreach (var userOrGroupId in userOrGroupIds)
+				{
+					Dictionary<string, bool> namedPermissions;
+                    if (!fileInformation.namedPermissions.TryGetValue(userOrGroupId, out namedPermissions))
                     {
-                        permissionInfo = new Dictionary<string,bool>();
-                        file.Info.NamedPermissions[userOrGroupId.Value] = permissionInfo;
+                        namedPermissions = new Dictionary<string,bool>();
+                        fileInformation.namedPermissions[userOrGroupId] = namedPermissions;
                     }
 
-                    permissionInfo[namedPermission] = inherit;
-                }
-
-                DatabaseConnection.File.Update(
-                    File_Table.FileId == fileId,
-                    delegate(IFile_Writable fileW)
-                    {
-                        fileW.Info = file.Info;
-                    });
-            }
+					namedPermissions[namedPermission] = inherit;
+				}
+			});
         }
 
         public void RemoveNamedPermission(IFileId fileId, string namedPermission, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds)
         {
-            var file = FileDataByIdCache[(FileId)fileId];
-
-            using (TimedLock.Lock(file))
-            {
-                Dictionary<string, bool> permissionInfo;
-                foreach (ID<IUserOrGroup, Guid> userOrGroupId in userOrGroupIds)
-                    if (file.Info.NamedPermissions.TryGetValue(userOrGroupId.Value, out permissionInfo))
-                        permissionInfo.Remove(namedPermission);
-
-                DatabaseConnection.File.Update(
-                    File_Table.FileId == fileId,
-                    delegate(IFile_Writable fileW)
+			this.persistedDirectories.Write(fileInformations =>
+			{
+				var directoryInformation = (DirectoryInformation)fileInformations[this.FileContainer.FileId];
+				var fileInformation = fileInformations[fileId];
+				
+				if (fileInformation != directoryInformation[fileInformation.filename])
+					throw new DiskException("RemovedNamedPermission must be called on the owning directory");
+				
+				foreach (var userOrGroupId in userOrGroupIds)
+				{
+					Dictionary<string, bool> namedPermissions;
+                    if (fileInformation.namedPermissions.TryGetValue(userOrGroupId, out namedPermissions))
                     {
-                        fileW.Info = file.Info;
-                    });
-            }
+						namedPermissions.Remove(namedPermission);
+						if (0 == namedPermissions.Count)
+							fileInformation.namedPermissions.Remove(userOrGroupId);
+                    }
+				}
+			});
         }
 
         public bool HasNamedPermissions(IFileId fileId, IEnumerable<string> namedPermissions, ID<IUserOrGroup, Guid> userId)
