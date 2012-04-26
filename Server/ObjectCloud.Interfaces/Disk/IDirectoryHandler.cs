@@ -214,6 +214,13 @@ namespace ObjectCloud.Interfaces.Disk
         ID<IUserOrGroup, Guid>? GetOwnerId(IFileId fileId);
 
         /// <summary>
+        /// Returns the name of the file
+        /// </summary>
+        /// <param name="fileId"></param>
+        /// <returns></returns>
+        string GetFilename(IFileId fileId);
+
+        /// <summary>
         /// Sets a named permission
         /// </summary>
         /// <param name="fileId"></param>

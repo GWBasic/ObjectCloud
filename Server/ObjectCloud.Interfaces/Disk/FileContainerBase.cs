@@ -25,11 +25,10 @@ namespace ObjectCloud.Interfaces.Disk
             IFileHandler fileHandler,
             IFileId fileId,
             string typeId,
-            string filename,
             IDirectoryHandler parentDirectoryHandler,
             FileHandlerFactoryLocator fileHandlerFactoryLocator,
             DateTime created)
-            : this(fileId, typeId, filename, parentDirectoryHandler, fileHandlerFactoryLocator, created)
+            : this(fileId, typeId, parentDirectoryHandler, fileHandlerFactoryLocator, created)
         {
             _FileHandler = fileHandler;
         }
@@ -37,14 +36,12 @@ namespace ObjectCloud.Interfaces.Disk
         public FileContainerBase(
             IFileId fileId, 
             string typeId, 
-            string filename, 
             IDirectoryHandler parentDirectoryHandler,
             FileHandlerFactoryLocator fileHandlerFactoryLocator,
             DateTime created)
         {
             _FileId = fileId;
             _TypeId = typeId;
-            _Filename = filename;
             _ParentDirectoryHandler = parentDirectoryHandler;
             _FileHandler = null;
             _FileHandlerFactory = null;
@@ -107,9 +104,14 @@ namespace ObjectCloud.Interfaces.Disk
         /// </summary>
         public string Filename
         {
-            get { return _Filename; }
+            get 
+			{
+				if (null != ParentDirectoryHandler)
+					return ParentDirectoryHandler.GetFilename(_FileId); 
+				else
+					return string.Empty;
+			}
         }
-        private readonly string _Filename;
 
         /// <summary>
         /// Casts the file handler to the given type

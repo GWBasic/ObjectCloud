@@ -117,9 +117,9 @@ namespace ObjectCloud.Disk.Factories
             return IsFilePresent(RootDirectoryId);
         }
 
-        public IFileContainer ConstructFileContainer(IFileHandler fileHandler, IFileId fileId, string typeId, string filename, IDirectoryHandler parentDirectoryHandler, FileHandlerFactoryLocator fileHandlerFactoryLocator, DateTime created)
+        public IFileContainer ConstructFileContainer(IFileHandler fileHandler, IFileId fileId, string typeId, IDirectoryHandler parentDirectoryHandler, FileHandlerFactoryLocator fileHandlerFactoryLocator, DateTime created)
         {
-            return new FileContainer(fileHandler, fileId, typeId, filename, parentDirectoryHandler, fileHandlerFactoryLocator, created);
+            return new FileContainer(fileHandler, fileId, typeId, parentDirectoryHandler, fileHandlerFactoryLocator, created);
         }
     }
 }

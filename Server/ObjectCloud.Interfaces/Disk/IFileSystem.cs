@@ -56,7 +56,6 @@ namespace ObjectCloud.Interfaces.Disk
             IFileHandler fileHandler,
             IFileId fileId,
             string typeId,
-            string filename,
             IDirectoryHandler parentDirectoryHandler,
             FileHandlerFactoryLocator fileHandlerFactoryLocator,
             DateTime created);

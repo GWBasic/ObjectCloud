@@ -1344,13 +1344,13 @@ namespace ObjectCloud.Disk.WebHandlers
             DateTime? oldest,
             uint? maxToReturn)
         {
-            List<string> relationshipsAsList = null;
+            HashSet<string> relationshipsAsList = null;
 
             // Convert relationships
             if (null != relationships)
             {
                 object relationshipsAsObject = JsonReader.Deserialize(relationships);
-                relationshipsAsList = new List<string>();
+                relationshipsAsList = new HashSet<string>();
 
                 if (relationshipsAsObject is string)
                     relationshipsAsList.Add(relationshipsAsObject.ToString());
@@ -1362,13 +1362,13 @@ namespace ObjectCloud.Disk.WebHandlers
                         WebResults.From(Status._406_Not_Acceptable, relationships + " is invalid, must be either a JSON string or JSON array"));
             }
 
-            List<string> extensionsAsList = null;
+            HashSet<string> extensionsAsList = null;
 
             // Convert extensions
             if (null != extensions)
             {
                 object extensionsAsObject = JsonReader.Deserialize(extensions);
-                extensionsAsList = new List<string>();
+                extensionsAsList = new HashSet<string>();
 
                 if (extensionsAsObject is string)
                     extensionsAsList.Add(extensionsAsObject.ToString());

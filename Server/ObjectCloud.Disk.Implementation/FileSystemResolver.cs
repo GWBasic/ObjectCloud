@@ -323,7 +323,6 @@ namespace ObjectCloud.Disk.Implementation
                         null,
                         FileHandlerFactoryLocator.FileSystem.RootDirectoryId,
                         "directory",
-                        "",
                         null,
                         FileHandlerFactoryLocator,
                         FileHandlerFactoryLocator.FileSystem.GetRootDirectoryCreationTime());
@@ -338,7 +337,6 @@ namespace ObjectCloud.Disk.Implementation
                         null,
                         FileHandlerFactoryLocator.FileSystem.RootDirectoryId,
                         "directory",
-                        "",
                         null,
                         FileHandlerFactoryLocator,
                         DateTime.UtcNow);

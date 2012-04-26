@@ -20,20 +20,18 @@ namespace ObjectCloud.Disk.FileHandlers
             IFileHandler fileHandler,
             IFileId fileId,
             string typeId,
-            string filename,
             IDirectoryHandler parentDirectoryHandler,
             FileHandlerFactoryLocator fileHandlerFactoryLocator,
             DateTime created)
-            : base(fileHandler, fileId, typeId, filename, parentDirectoryHandler, fileHandlerFactoryLocator, created) { }
+            : base(fileHandler, fileId, typeId, parentDirectoryHandler, fileHandlerFactoryLocator, created) { }
 
         public FileContainer(
             IFileId fileId, 
             string typeId, 
-            string filename, 
             IDirectoryHandler parentDirectoryHandler,
             FileHandlerFactoryLocator fileHandlerFactoryLocator,
             DateTime created)
-            : base(fileId, typeId, filename, parentDirectoryHandler, fileHandlerFactoryLocator, created) {}
+            : base(fileId, typeId, parentDirectoryHandler, fileHandlerFactoryLocator, created) {}
 
         public override DateTime LastModified
         {

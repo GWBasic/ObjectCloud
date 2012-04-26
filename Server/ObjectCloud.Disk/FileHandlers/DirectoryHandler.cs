@@ -121,10 +121,25 @@ namespace ObjectCloud.Disk.FileHandlers
             : base(fileHandlerFactoryLocator, path)
         {
 			this.persistedDirectories = persistedDirectories;
+			this.fileContainerCache = new Cache<IFileId, FileContainer, FileInformation>(this.CreateForCache);
 			
-			throw new NotImplementedException("FileInformation should have a static cache of FileContainers, use that instead of creating new FileContainers");
-			//throw new NotImplementedException("Need to remove permissions from missing users");
+			throw new NotImplementedException("Need to remove permissions from missing users");
         }
+		
+		/// <summary>
+		/// Allows for reuse of FileContainer objects, and allows for updating metadata when the a reference is held onto the metadata
+		/// </summary>
+		private Cache<IFileId, FileContainer, FileInformation> fileContainerCache;
+		
+		private FileContainer CreateForCache(IFileId key, FileInformation fileInformation)
+		{
+			return new FileContainer(
+				fileInformation.fileId,
+				fileInformation.typeId,
+				this,
+				this.FileHandlerFactoryLocator,
+				fileInformation.created);
+		}
 		
 		/// <summary>
 		/// All information about the entire file system is held in RAM and persisted to disk as a single object graph
@@ -254,6 +269,7 @@ namespace ObjectCloud.Disk.FileHandlers
 					fileInformations[fileId] = file;
 					directoryInformation.files[filename] = file;
 	
+		            fileHandler.FileContainer = this.fileContainerCache.Get(fileId, file);
 	            }
 	            catch (DiskException)
 	            {
@@ -264,8 +280,6 @@ namespace ObjectCloud.Disk.FileHandlers
 	                throw new CanNotCreateFile("Database exception when creating " + filename, e);
 	            }
 			});
-
-            fileHandler.FileContainer = new FileContainer(fileId, fileType, filename, this, FileHandlerFactoryLocator, created);
 
             /*IUser changer = null;
             if (null != ownerId)
@@ -340,7 +354,7 @@ namespace ObjectCloud.Disk.FileHandlers
 				if (!directoryInformation.files.TryGetValue(splitAtDirs[ctr], out file))
 					throw new FileDoesNotExist(filename);
 				
-				return new FileContainer(file.fileId, file.typeId, splitAtDirs[ctr], this, this.FileHandlerFactoryLocator, file.created);
+				return this.fileContainerCache.Get(file.fileId, file);
 			});
         }
 
@@ -353,15 +367,7 @@ namespace ObjectCloud.Disk.FileHandlers
 					var fileContainers = new List<IFileContainer>(directoryInformation.files.Count);
 					
 					foreach (var file in directoryInformation.files.Values)
-					{
-						fileContainers.Add(new FileContainer(
-							file.fileId,
-							file.typeId,
-							file.filename,
-							this,
-							this.FileHandlerFactoryLocator,
-							file.created));
-					}
+						fileContainers.Add(this.fileContainerCache.Get(file.fileId, file));
 					
 					return fileContainers;
 				});
@@ -399,9 +405,7 @@ namespace ObjectCloud.Disk.FileHandlers
 				var toReturn = new List<IFileContainer>(maxToReturn);
 				filesWithAccess.Sort((a,b) => DateTime.Compare(a.created, b.created));
 				foreach (var file in filesWithAccess.Take(maxToReturn))
-				{
-					toReturn.Add(new FileContainer(file.fileId, file.typeId, file.filename, this, this.FileHandlerFactoryLocator, file.created));
-				}
+					toReturn.Add(this.fileContainerCache.Get(file.fileId, file));
 				
 				return toReturn;
 			});
@@ -513,6 +517,7 @@ namespace ObjectCloud.Disk.FileHandlers
 				fileInformations.Remove(toDelete.fileId);
 
 				FileHandlerFactoryLocator.FileSystemResolver.DeleteFile(toDelete.fileId);
+				this.fileContainerCache.Remove(toDelete.fileId);
             });
 
             OnDirectoryChanged();
@@ -1097,13 +1102,7 @@ namespace ObjectCloud.Disk.FileHandlers
 						
 							if (null != permission)
 							{
-								relatedFileContainers.Add(new FileContainer(
-									relatedFileInfo.fileId,
-									relatedFileInfo.typeId,
-									relatedFileInfo.filename,
-									this,
-									this.FileHandlerFactoryLocator,
-									relatedFileInfo.created));
+								relatedFileContainers.Add(this.fileContainerCache.Get(relatedFileInfo.fileId, relatedFileInfo));
 								
 								if (null != maxToReturn)
 									if (relatedFileContainers.Count >= maxToReturn.Value)
@@ -1201,15 +1200,7 @@ namespace ObjectCloud.Disk.FileHandlers
 				
 				fileInformation.ownerId = newOwnerId;
 				
-				var fileContainer = new FileContainer(
-					fileInformation.fileId,
-					fileInformation.typeId,
-					fileInformation.filename,
-					this,
-					this.FileHandlerFactoryLocator,
-					fileInformation.created);
-				
-				fileContainer.WebHandler.FileContainer = fileContainer;
+				var fileContainer = this.fileContainerCache.Get(fileInformation.fileId, fileInformation);
             	fileContainer.WebHandler.ResetExecutionEnvironment();
 			});
 
@@ -1332,6 +1323,26 @@ namespace ObjectCloud.Disk.FileHandlers
 				return namedPermissions;
 			});
         }
+		
+		public ID<IUserOrGroup, Guid>? GetOwnerId(IFileId fileId)
+		{
+			return this.persistedDirectories.Read(fileInformations =>
+			{
+				// TODO: Assert that the file is in this directory...
+				
+				return fileInformations[fileId].ownerId;
+			});
+		}
+		
+		public string GetFilename(IFileId fileId)
+		{
+			return this.persistedDirectories.Read(fileInformations =>
+			{
+				// TODO: Assert that the file is in this directory...
+				
+				return fileInformations[fileId].filename;
+			});
+		}
     }
 
     /// <summary>
