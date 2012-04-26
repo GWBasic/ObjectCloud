@@ -230,7 +230,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="userOrGroupId"></param>
         void RemoveNamedPermission(IFileId fileId, string namedPermission, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds);
 
-        /// <summary>
+        /*// <summary>
         /// True if any of the users or groups has the named permission
         /// </summary>
         /// <param name="fileId"></param>
@@ -238,7 +238,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="userOrGroupIds"></param>
         /// <param name="checkInherit">True to check parent directories</param>
         /// <returns></returns>
-        bool HasNamedPermissions(IEnumerable<IFileId> fileIds, IEnumerable<string> namedPermission, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, bool checkInherit);
+        bool HasNamedPermissions(IEnumerable<IFileId> fileIds, IEnumerable<string> namedPermission, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, bool checkInherit);*/
 
         /// <summary>
         /// True if the user has the named permission

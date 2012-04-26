@@ -123,6 +123,7 @@ namespace ObjectCloud.Disk.FileHandlers
 			this.persistedDirectories = persistedDirectories;
 			
 			throw new NotImplementedException("FileInformation should have a static cache of FileContainers, use that instead of creating new FileContainers");
+			//throw new NotImplementedException("Need to remove permissions from missing users");
         }
 		
 		/// <summary>
@@ -1264,83 +1265,72 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public bool HasNamedPermissions(IFileId fileId, IEnumerable<string> namedPermissions, ID<IUserOrGroup, Guid> userId)
         {
-            IEnumerable<ID<IUserOrGroup, Guid>> userAndGroupsIds = GetAllUserAndGroupIdsThatApplyToUser(userId);
-            return HasNamedPermissions(new IFileId[] { fileId }, namedPermissions, userAndGroupsIds, true);
-        }
+            var userAndGroupIds = this.GetAllUserAndGroupIdsThatApplyToUser(userId).ToHashSet();
 
-        public bool HasNamedPermissions(IEnumerable<IFileId> fileIds, IEnumerable<string> namedPermissions, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, bool checkInherit)
-        {
-            return HasNamedPermissions(fileIds, namedPermissions, userOrGroupIds, checkInherit, 0);
-        }
+			return this.persistedDirectories.Read(fileInformations =>
+			{
+				// TODO: Assert that the file is in this directory...
 
-        private bool HasNamedPermissions(
-            IEnumerable<IFileId> fileIds,
-            IEnumerable<string> namedPermissions,
-            IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds,
-            bool checkInherit,
-            uint numCalls)
-        {
-            Dictionary<string, bool> permissionInfo;
-            foreach (IFile_Readable file in DatabaseConnection.File.Select(File_Table.FileId.In(fileIds)))
-                foreach (ID<IUserOrGroup, Guid> userOrGroupId in userOrGroupIds)
-                    if (file.Info.NamedPermissions.TryGetValue(userOrGroupId.Value, out permissionInfo))
-                        foreach (string namedPermission in namedPermissions)
-                            if (permissionInfo.ContainsKey(namedPermission))
-                                return true;
+				bool checkInherit = false;
+				
+				var fileInformationsToCheck = new List<FileInformation>(1);
+				fileInformationsToCheck.Add(fileInformations[fileId]);
+				var scanned = new HashSet<FileInformation>();
 
-            // permission not found, now follow references through any related files
-            if (checkInherit)
-                if (HasNamedPermissionThroughRelationship(fileIds, namedPermissions, userOrGroupIds, numCalls))
-                    return true;
+				do
+				{
+					var fileInformationsToRecurse = new List<FileInformation>(
+						fileInformationsToCheck.Sum(fileInformation => fileInformation.relationships.Count));
+					
+					foreach (var fileInformation in fileInformationsToCheck)
+					{
+						foreach (var namedPermissionsForUser in fileInformation.namedPermissions.Where(
+							npKVP => userAndGroupIds.Contains(npKVP.Key)).Select(npKVP => npKVP.Value))
+						{
+							bool inherit;
+							foreach (var namedPermission in namedPermissions)
+								if (namedPermissionsForUser.TryGetValue(namedPermission, out inherit))
+									if ((checkInherit && inherit) || !checkInherit)
+										return true;
+						}
+					
+						scanned.Add(fileInformation);
+						
+						fileInformationsToRecurse.AddRange(
+							fileInformation.relationships.Keys.Where(related => !scanned.Contains(related)));
+					}
+					
+					checkInherit = true;
 
-            // As written, this won't work and is illogical
-            // It passes FileIDs that are invalid in the parent directory, and there is no way to communicate to only return true
-            // if the permission is inherited
-            //if (checkInherit && null != FileContainer.ParentDirectoryHandler)
-            //    return FileContainer.ParentDirectoryHandler.HasNamedPermissions(fileIds, namedPermissions, userOrGroupIds, checkInherit);
-
-            return false;
-        }
-
-        /// <summary>
-        /// Returns true if the user has the named permission in any parent relationships where the named permission is the relationship
-        /// </summary>
-        /// <param name="fileId"></param>
-        /// <param name="namedPermission"></param>
-        /// <param name="userOrGroupIds"></param>
-        /// <returns></returns>
-        private bool HasNamedPermissionThroughRelationship(
-            IEnumerable<IFileId> fileIds, IEnumerable<string> namedPermissions, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, uint numCalls)
-        {
-            List<IRelationships_Readable> relationships = new List<IRelationships_Readable>(
-                DatabaseConnection.Relationships.Select(Relationships_Table.ReferencedFileId.In(fileIds) & Relationships_Table.Relationship.In(namedPermissions)));
-
-            List<IFileId> parentFileIds = new List<IFileId>();
-
-            foreach (IRelationships_Readable relationship in relationships)
-                parentFileIds.Add(new FileId(relationship.FileId.Value));
-
-            if (parentFileIds.Count > 0 && numCalls < 150) // prevent infinate recursion
-                return HasNamedPermissions(parentFileIds, namedPermissions, userOrGroupIds, false, numCalls++);
-
-            return false;
+					fileInformationsToCheck = fileInformationsToRecurse;
+				} while (fileInformationsToCheck.Count > 0);
+				
+				return false;
+			});
         }
 
         public IEnumerable<NamedPermission> GetNamedPermissions(IFileId fileId, string namedPermission)
         {
-            var file = FileDataByIdCache[(FileId)fileId];
+			return this.persistedDirectories.Read(fileInformations =>
+			{
+				// TODO: Assert that the file is in this directory...
 
-            foreach (KeyValuePair<Guid, Dictionary<string, bool>> namedPermissionData in file.Info.NamedPermissions)
-                foreach (KeyValuePair<string, bool> namedPermissionValue in namedPermissionData.Value)
-                {
-                    NamedPermission toYeild = new NamedPermission();
-                    toYeild.FileId = fileId;
-                    toYeild.Inherit = namedPermissionValue.Value;
-                    toYeild.Name = namedPermissionValue.Key;
-                    toYeild.UserOrGroupId = new ID<IUserOrGroup, Guid>(namedPermissionData.Key);
+				var fileInformation = fileInformations[fileId];
+				var namedPermissions = new List<NamedPermission>(
+					fileInformation.namedPermissions.Sum(namedPermissionData => namedPermissionData.Value.Count));
 
-                    yield return toYeild;
-                }
+	            foreach (KeyValuePair<ID<IUserOrGroup, Guid>, Dictionary<string, bool>> namedPermissionData in fileInformation.namedPermissions)
+	                foreach (KeyValuePair<string, bool> namedPermissionValue in namedPermissionData.Value)
+						namedPermissions.Add(new NamedPermission()
+	                    {
+		                    FileId = fileId,
+		                    Inherit = namedPermissionValue.Value,
+		                    Name = namedPermissionValue.Key,
+		                    UserOrGroupId = namedPermissionData.Key
+						});
+				
+				return namedPermissions;
+			});
         }
     }
 
