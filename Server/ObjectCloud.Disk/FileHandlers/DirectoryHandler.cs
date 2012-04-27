@@ -116,9 +116,8 @@ namespace ObjectCloud.Disk.FileHandlers
 		
         internal DirectoryHandler(
 			PersistedObject<Dictionary<IFileId, FileInformation>> persistedDirectories,
-			string path,
 			FileHandlerFactoryLocator fileHandlerFactoryLocator)
-            : base(fileHandlerFactoryLocator, path)
+            : base(fileHandlerFactoryLocator, persistedDirectories.Path)
         {
 			this.persistedDirectories = persistedDirectories;
 			this.fileContainerCache = new Cache<IFileId, FileContainer, FileInformation>(this.CreateForCache);

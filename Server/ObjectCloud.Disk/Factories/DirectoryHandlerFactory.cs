@@ -3,6 +3,7 @@
 // For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 
@@ -16,55 +17,31 @@ namespace ObjectCloud.Disk.Factories
 {
     public class DirectoryHandlerFactory : FileHandlerFactory<IDirectoryHandler>
     {
-        /// <summary>
-        /// Service locator for data access objects
-        /// </summary>
-        public DataAccessLocator DataAccessLocator
-        {
-            get { return _DataAccessLocator; }
-            set { _DataAccessLocator = value; }
-        }
-        private DataAccessLocator _DataAccessLocator;
+		private PersistedObject<Dictionary<IFileId, DirectoryHandler.FileInformation>> persistedFileInformations = null;
 
         public override void CreateFile(string path, FileId fileId)
         {
-            Directory.CreateDirectory(path);
-
-            string databaseFilename = CreateDatabaseFilename(path);
-
-            DataAccessLocator.DatabaseCreator.Create(databaseFilename);
         }
 
         public override IDirectoryHandler OpenFile(string path, FileId fileId)
         {
-            string databaseFilename = CreateDatabaseFilename(path);
-
-            return new DirectoryHandler(CreateDatabaseConnector(databaseFilename, DataAccessLocator), FileHandlerFactoryLocator);
-        }
-
-        /// <summary>
-        /// Creates the database file name
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        internal static string CreateDatabaseFilename(string path)
-        {
-            return string.Format("{0}{1}db.sqlite", path, Path.DirectorySeparatorChar);
-        }
-
-        /// <summary>
-        /// Creates a database connector given a path
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        internal static IDatabaseConnector CreateDatabaseConnector(string path, DataAccessLocator dataAccessLocator)
-        {
-            return dataAccessLocator.DatabaseConnectorFactory.CreateConnectorForEmbedded(path);
+			if (null == this.persistedFileInformations)
+				lock (this)
+					if (null == this.persistedFileInformations)
+					{
+						var metadataLocation = Path.Combine(
+							((FileSystem)this.FileHandlerFactoryLocator.FileSystem).ConnectionString,
+							"metadata");
+				
+						this.persistedFileInformations = new PersistedObject<Dictionary<IFileId, DirectoryHandler.FileInformation>>(
+							metadataLocation, () => new Dictionary<IFileId, DirectoryHandler.FileInformation>());
+					}
+			
+			return new DirectoryHandler(this.persistedFileInformations, this.FileHandlerFactoryLocator);
         }
 
         public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID, IDirectoryHandler parentDirectory)
         {
-            CreateFile(fileId);
             using (IDirectoryHandler target = OpenFile(fileId))
             {
                 foreach (IFileContainer toCopy in ((IDirectoryHandler)sourceFileHandler).Files)

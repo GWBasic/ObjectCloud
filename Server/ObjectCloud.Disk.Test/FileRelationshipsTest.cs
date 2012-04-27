@@ -76,14 +76,14 @@ namespace ObjectCloud.Disk.Test
 
             // Test with "aaa" type relationship
             fileContainers = new List<IFileContainer>(
-                directory.GetRelatedFiles(FileHandlerFactoryLocator.UserFactory.RootUser.Id, parentContainer.FileId, new string[] { "aaa" }, null, null, null, null));
+                directory.GetRelatedFiles(FileHandlerFactoryLocator.UserFactory.RootUser.Id, parentContainer.FileId, new string[] { "aaa" }.ToHashSet(), null, null, null, null));
 
             Assert.IsTrue(fileContainers.Contains(related1Container), "File missing");
             Assert.IsTrue(fileContainers.Contains(related2Container), "File missing");
 
             // Test with both types of relationships
             fileContainers = new List<IFileContainer>(
-                directory.GetRelatedFiles(FileHandlerFactoryLocator.UserFactory.RootUser.Id, parentContainer.FileId, new string[] { "aaa", "bbb" }, null, null, null, null));
+                directory.GetRelatedFiles(FileHandlerFactoryLocator.UserFactory.RootUser.Id, parentContainer.FileId, new string[] { "aaa", "bbb" }.ToHashSet(), null, null, null, null));
 
             Assert.IsTrue(fileContainers.Contains(related1Container), "File missing");
             Assert.IsTrue(fileContainers.Contains(related2Container), "File missing");
@@ -92,28 +92,28 @@ namespace ObjectCloud.Disk.Test
 
             // Test with "bbb" type of relationship
             fileContainers = new List<IFileContainer>(
-                directory.GetRelatedFiles(FileHandlerFactoryLocator.UserFactory.RootUser.Id, parentContainer.FileId, new string[] { "bbb" }, null, null, null, null));
+                directory.GetRelatedFiles(FileHandlerFactoryLocator.UserFactory.RootUser.Id, parentContainer.FileId, new string[] { "bbb" }.ToHashSet(), null, null, null, null));
 
             Assert.IsTrue(fileContainers.Contains(related3Container), "File missing");
             Assert.IsTrue(fileContainers.Contains(related4Container), "File missing");
 
             // Test with "txt" extension
             fileContainers = new List<IFileContainer>(
-                directory.GetRelatedFiles(FileHandlerFactoryLocator.UserFactory.RootUser.Id, parentContainer.FileId, null, new string[] { "txt" }, null, null, null));
+                directory.GetRelatedFiles(FileHandlerFactoryLocator.UserFactory.RootUser.Id, parentContainer.FileId, null, new string[] { "txt" }.ToHashSet(), null, null, null));
 
             Assert.IsTrue(fileContainers.Contains(related1Container), "File missing");
             Assert.IsTrue(fileContainers.Contains(related3Container), "File missing");
 
             // Test with "xml" extension
             fileContainers = new List<IFileContainer>(
-                directory.GetRelatedFiles(FileHandlerFactoryLocator.UserFactory.RootUser.Id, parentContainer.FileId, null, new string[] { "xml" }, null, null, null));
+                directory.GetRelatedFiles(FileHandlerFactoryLocator.UserFactory.RootUser.Id, parentContainer.FileId, null, new string[] { "xml" }.ToHashSet(), null, null, null));
 
             Assert.IsTrue(fileContainers.Contains(related2Container), "File missing");
             Assert.IsTrue(fileContainers.Contains(related4Container), "File missing");
 
             // Test with both types of extensions
             fileContainers = new List<IFileContainer>(
-                directory.GetRelatedFiles(FileHandlerFactoryLocator.UserFactory.RootUser.Id, parentContainer.FileId, null, new string[] { "txt", "xml" }, null, null, null));
+                directory.GetRelatedFiles(FileHandlerFactoryLocator.UserFactory.RootUser.Id, parentContainer.FileId, null, new string[] { "txt", "xml" }.ToHashSet(), null, null, null));
 
             Assert.IsTrue(fileContainers.Contains(related1Container), "File missing");
             Assert.IsTrue(fileContainers.Contains(related2Container), "File missing");
@@ -206,7 +206,7 @@ namespace ObjectCloud.Disk.Test
             Assert.AreEqual(FilePermissionEnum.Read, relatedContainer.LoadPermission(User3.Id), "User did not have permission for a related file");
 
             List<IFileContainer> relatedFiles = new List<IFileContainer>(
-                directory.GetRelatedFiles(User3.Id, parentContainer.FileId, new string[] { "aaa" }, null, null, null, null));
+                directory.GetRelatedFiles(User3.Id, parentContainer.FileId, new string[] { "aaa" }.ToHashSet(), null, null, null, null));
 
             Assert.AreEqual(1, relatedFiles.Count, "No related files found via permissions");
             Assert.AreEqual(relatedContainer, relatedFiles[0], "Wrong related file found");
@@ -233,13 +233,13 @@ namespace ObjectCloud.Disk.Test
             directory.AddRelationship(parentContainer, relatedContainerB, "bbb", false);
 
             List<IFileContainer> relatedFiles = new List<IFileContainer>(
-                directory.GetRelatedFiles(User3.Id, parentContainer.FileId, new string[] { "aaa" }, null, null, null, null));
+                directory.GetRelatedFiles(User3.Id, parentContainer.FileId, new string[] { "aaa" }.ToHashSet(), null, null, null, null));
 
             Assert.AreEqual(1, relatedFiles.Count, "No related files found via permissions");
             Assert.AreEqual(relatedContainerA, relatedFiles[0], "Wrong related file found");
 
             relatedFiles = new List<IFileContainer>(
-                directory.GetRelatedFiles(User3.Id, parentContainer.FileId, new string[] { "bbb" }, null, null, null, null));
+                directory.GetRelatedFiles(User3.Id, parentContainer.FileId, new string[] { "bbb" }.ToHashSet(), null, null, null, null));
 
             Assert.AreEqual(1, relatedFiles.Count, "No related files found via permissions");
             Assert.AreEqual(relatedContainerB, relatedFiles[0], "Wrong related file found");

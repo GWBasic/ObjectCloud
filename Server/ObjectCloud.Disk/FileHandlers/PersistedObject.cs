@@ -37,7 +37,7 @@ namespace ObjectCloud.Disk.FileHandlers
 		private readonly Func<T> constructor;
 		
 		/// <summary>
-		/// The path to the folder that stores the serialized object
+		/// The path to the serialized object
 		/// </summary>
 		public string Path 
 		{
