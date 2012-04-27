@@ -121,8 +121,6 @@ namespace ObjectCloud.Disk.FileHandlers
         {
 			this.persistedDirectories = persistedDirectories;
 			this.fileContainerCache = new Cache<IFileId, FileContainer, FileInformation>(this.CreateForCache);
-			
-			throw new NotImplementedException("Need to remove permissions from missing users");
         }
 		
 		/// <summary>
@@ -235,7 +233,7 @@ namespace ObjectCloud.Disk.FileHandlers
 				// Determine the file ID
 				do
                     fileId = new FileId(SRandom.Next<long>());
-				while (!fileInformations.ContainsKey(fileId));
+				while (fileInformations.ContainsKey(fileId));
 	
 	            try
 	            {

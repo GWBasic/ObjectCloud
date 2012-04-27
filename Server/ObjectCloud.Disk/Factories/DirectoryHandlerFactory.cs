@@ -4,7 +4,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
+using System.Threading;
 using System.Xml;
 
 using ObjectCloud.Common;
@@ -35,10 +37,45 @@ namespace ObjectCloud.Disk.Factories
 				
 						this.persistedFileInformations = new PersistedObject<Dictionary<IFileId, DirectoryHandler.FileInformation>>(
 							metadataLocation, () => new Dictionary<IFileId, DirectoryHandler.FileInformation>());
+				
+						ThreadPool.QueueUserWorkItem(_ => this.RemoveDeadPermissions());
 					}
 			
 			return new DirectoryHandler(this.persistedFileInformations, this.FileHandlerFactoryLocator);
         }
+		
+		/// <summary>
+		/// Cleans up dead permissions. Runs on a background thread because it relies on complete initialization
+		/// </summary>
+		private void RemoveDeadPermissions()
+		{
+			var allUserIds = this.FileHandlerFactoryLocator.UserManagerHandler.GetAllLocalUserIds().ToHashSet();
+			var missingUserAndGroupIds = new HashSet<ID<IUserOrGroup, Guid>>();
+
+			// Clean up permissions for deleted users
+			// This really should be event-driven
+			this.persistedFileInformations.Read(fileInformations =>
+			{
+				foreach (var fileInformation in fileInformations.Values)
+					foreach (var userOrGroupId in fileInformation.permissions.Keys.Union(
+						fileInformation.namedPermissions.Keys))
+					{
+						if (!allUserIds.Contains(userOrGroupId))
+							missingUserAndGroupIds.Add(userOrGroupId);
+					}
+			});
+	
+			if (missingUserAndGroupIds.Count > 0)
+				this.persistedFileInformations.Write(fileInformations =>
+		        {
+					foreach (var fileInformation in fileInformations.Values)
+						foreach (var userOrGroupId in missingUserAndGroupIds)
+						{
+							fileInformation.namedPermissions.Remove(userOrGroupId);
+							fileInformation.permissions.Remove(userOrGroupId);
+						}
+				});
+		}
 
         public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID, IDirectoryHandler parentDirectory)
         {
