@@ -36,7 +36,7 @@ namespace ObjectCloud.Disk.Factories
 							"metadata");
 				
 						this.persistedFileInformations = new PersistedObject<Dictionary<IFileId, DirectoryHandler.FileInformation>>(
-							metadataLocation, () => new Dictionary<IFileId, DirectoryHandler.FileInformation>());
+							metadataLocation, this.CreateInitialFileInformations);
 				
 						ThreadPool.QueueUserWorkItem(_ => this.RemoveDeadPermissions());
 					}
@@ -44,27 +44,53 @@ namespace ObjectCloud.Disk.Factories
 			return new DirectoryHandler(this.persistedFileInformations, this.FileHandlerFactoryLocator);
         }
 		
+		private Dictionary<IFileId, DirectoryHandler.FileInformation> CreateInitialFileInformations()
+		{
+			var initialFileInformations = new Dictionary<IFileId, DirectoryHandler.FileInformation>();
+			
+			initialFileInformations[this.FileHandlerFactoryLocator.FileSystem.RootDirectoryId] = new DirectoryHandler.DirectoryInformation()
+			{
+				fileId = (FileId)this.FileHandlerFactoryLocator.FileSystem.RootDirectoryId,
+				filename = string.Empty,
+				typeId = "directory",
+				ownerId = null,
+                created = DateTime.UtcNow,
+				permissions = new Dictionary<ID<IUserOrGroup, Guid>, DirectoryHandler.Permission>(),
+				namedPermissions = new Dictionary<ID<IUserOrGroup, Guid>, Dictionary<string, bool>>(),
+				parentRelationships = new Dictionary<DirectoryHandler.FileInformation, Dictionary<string, bool>>()
+			};
+			
+			return initialFileInformations;
+		}
+		
 		/// <summary>
 		/// Cleans up dead permissions. Runs on a background thread because it relies on complete initialization
 		/// </summary>
 		private void RemoveDeadPermissions()
 		{
 			var allUserIds = this.FileHandlerFactoryLocator.UserManagerHandler.GetAllLocalUserIds().ToHashSet();
-			var missingUserAndGroupIds = new HashSet<ID<IUserOrGroup, Guid>>();
-
-			// Clean up permissions for deleted users
-			// This really should be event-driven
-			this.persistedFileInformations.Read(fileInformations =>
+			HashSet<ID<IUserOrGroup, Guid>> missingUserAndGroupIds;
+			
+			do
 			{
-				foreach (var fileInformation in fileInformations.Values)
-					foreach (var userOrGroupId in fileInformation.permissions.Keys.Union(
-						fileInformation.namedPermissions.Keys))
-					{
-						if (!allUserIds.Contains(userOrGroupId))
-							missingUserAndGroupIds.Add(userOrGroupId);
-					}
-			});
+				missingUserAndGroupIds = new HashSet<ID<IUserOrGroup, Guid>>();
 	
+				// Clean up permissions for deleted users
+				// This really should be event-driven
+				this.persistedFileInformations.Read(fileInformations =>
+				{
+					foreach (var fileInformation in fileInformations.Values)
+						foreach (var userOrGroupId in fileInformation.permissions.Keys.Union(
+							fileInformation.namedPermissions.Keys))
+						{
+							if (!allUserIds.Contains(userOrGroupId))
+								missingUserAndGroupIds.Add(userOrGroupId);
+						}
+				});
+
+				allUserIds = this.FileHandlerFactoryLocator.UserManagerHandler.GetAllLocalUserIds().ToHashSet();
+			} while (allUserIds.ContainsAny(missingUserAndGroupIds));
+			
 			if (missingUserAndGroupIds.Count > 0)
 				this.persistedFileInformations.Write(fileInformations =>
 		        {

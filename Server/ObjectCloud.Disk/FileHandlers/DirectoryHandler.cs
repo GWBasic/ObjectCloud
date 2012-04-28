@@ -96,6 +96,7 @@ namespace ObjectCloud.Disk.FileHandlers
 	    /// <summary>
 	    /// Details about a permission
 	    /// </summary>
+	    [Serializable]
 	    internal class Permission
 	    {
 	        /// <summary>
@@ -187,10 +188,7 @@ namespace ObjectCloud.Disk.FileHandlers
             IFileHandlerFactory fileHandlerFactory = fileSystemResolver.GetFactoryForFileType(fileType);
 
             return CreateFileHelper(
-                filename, fileType, userId, delegate(IFileId fileId)
-                {
-                    fileHandlerFactory.RestoreFile(fileId, pathToRestoreFrom, userId, this);
-                });
+                filename, fileType, userId, fileId => fileHandlerFactory.RestoreFile(fileId, pathToRestoreFrom, userId, this));
         }
 
         public TFileHandler CreateSystemFile<TFileHandler>(string filename, string fileType, ID<IUserOrGroup, Guid>? ownerID)

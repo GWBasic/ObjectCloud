@@ -312,6 +312,18 @@ namespace ObjectCloud.Common
 				return null;
 		}
 		
+		/// <summary>
+		/// Returns true if the HashSet contains any of the values
+		/// </summary>
+		public static bool ContainsAny<T>(this HashSet<T> hashSet, IEnumerable<T> values)
+		{
+			foreach (var value in values)
+				if (hashSet.Contains(value))
+					return true;
+			
+			return false;
+		}
+		
         public static bool Equals(IEnumerable l, IEnumerable r)
         {
             if (null == l && null == r)

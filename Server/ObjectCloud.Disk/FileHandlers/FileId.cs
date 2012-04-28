@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Data.Common;
+using System.Runtime.Serialization.Formatters.Binary;
 
 using ObjectCloud.Common;
 using ObjectCloud.Interfaces.Database;
@@ -19,7 +20,8 @@ namespace ObjectCloud.Disk.FileHandlers
     /// </summary>
     /// <typeparam name="T">The type that the ID is for</typeparam>
     /// <typeparam name="long">The type of the ID</typeparam>
-    public struct FileId : IFileId
+    [Serializable]
+	public struct FileId : IFileId
     {
         public FileId(long value)
         {
