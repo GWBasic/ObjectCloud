@@ -38,9 +38,6 @@ namespace ObjectCloud.Disk.WebHandlers
 		/// <param name="classnames">
 		/// A <see cref="System.String"/>
 		/// </param>
-		/// <param name="minTimeStamp">
-		/// A <see cref="System.Nullable"/>
-		/// </param>
 		/// <param name="maxTimeStamp">
 		/// A <see cref="System.Nullable"/>
 		/// </param>
@@ -66,6 +63,7 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="webConnection"></param>
         /// <param name="exceptionMessageRegex"></param>
         /// <param name="messageRegex"></param>
+        /// <param name="maxEvents"></param>
 		[WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Administer, FilePermissionEnum.Administer)]
 		public IWebResults ReadLog(
             IWebConnection webConnection,
@@ -205,9 +203,6 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <param name="classnames">
 		/// A <see cref="System.String"/>
 		/// </param>
-		/// <param name="minTimeStamp">
-		/// A <see cref="System.Nullable"/>
-		/// </param>
 		/// <param name="maxTimeStamp">
 		/// A <see cref="System.Nullable"/>
 		/// </param>
@@ -228,6 +223,7 @@ namespace ObjectCloud.Disk.WebHandlers
 		/// </returns>
         /// <param name="exceptionMessageLike"></param>
         /// <param name="messageLike"></param>
+        /// <param name="maxEvents"></param>
         [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Read, FilePermissionEnum.Read)]
 		public IWebResults ReadMyLog(
             IWebConnection webConnection,
