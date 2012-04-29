@@ -204,6 +204,106 @@ namespace ObjectCloud.Disk.Test
 				File.Delete(path);
 			}
 		}
+		
+		[Test]
+		public void TestWriteReentrant()
+		{
+			var path = Path.GetTempFileName();
+			File.Delete(path);
+			
+			try
+			{
+				PersistedObject<Wrapped<string>>.EventualWriteFrequency = TimeSpan.FromMilliseconds(100);
+				
+				var toUpdate = new PersistedObject<Wrapped<string>>(path, () => "this is a test");
+				
+				toUpdate.WriteReentrant(wrapper => 
+				{
+					wrapper.Value = "updated1";
+					
+					toUpdate.WriteReentrant(wrapper2 => 
+					{
+						wrapper2.Value = "updated2";
+					
+						toUpdate.WriteReentrant(wrapper3 => 
+						{
+							wrapper3.Value = "updated3";
+					
+							toUpdate.WriteReentrant(wrapper4 => 
+							{
+								wrapper4.Value = "updated4";
+							});
+							
+							Assert.AreEqual("updated4", wrapper3.Value);
+						});
+							
+						Assert.AreEqual("updated4", wrapper2.Value);
+					});
+							
+					Assert.AreEqual("updated4", wrapper.Value);
+				});
+				
+				new PersistedObject<Wrapped<string>>(path).Read(value =>
+					Assert.AreEqual("updated4", value.Value));
+				
+				Thread.Sleep(200);
+				
+				new PersistedObject<Wrapped<string>>(path).Read(value =>
+					Assert.AreEqual("updated4", value.Value));
+			}
+			finally
+			{
+				File.Delete(path);
+			}
+		}
+		
+		private class TestWriteReentrantExceptionException : Exception{}
+		
+		[Test]
+		public void TestWriteReentrantException()
+		{
+			var path = Path.GetTempFileName();
+			File.Delete(path);
+			
+			try
+			{
+				PersistedObject<Wrapped<string>>.EventualWriteFrequency = TimeSpan.FromMilliseconds(100);
+				
+				var toUpdate = new PersistedObject<Wrapped<string>>(path, () => "this is a test");
+				
+				try
+				{
+					toUpdate.WriteReentrant(wrapper => 
+					{
+						wrapper.Value = "updated1";
+						
+						toUpdate.WriteReentrant(wrapper2 => 
+						{
+							wrapper2.Value = "updated2";
+						
+							toUpdate.WriteReentrant(wrapper3 => 
+							{
+								wrapper3.Value = "updated3";
+						
+								toUpdate.WriteReentrant(wrapper4 => 
+								{
+									wrapper4.Value = "updated4";
+									throw new TestWriteReentrantExceptionException();
+								});
+							});
+						});
+					});
+				}
+				catch (TestWriteReentrantExceptionException) {}
+				
+				new PersistedObject<Wrapped<string>>(path).Read(value =>
+					Assert.AreEqual("this is a test", value.Value));
+			}
+			finally
+			{
+				File.Delete(path);
+			}
+		}
 	}
 }
 

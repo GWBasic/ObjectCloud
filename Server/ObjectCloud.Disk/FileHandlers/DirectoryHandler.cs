@@ -170,7 +170,16 @@ namespace ObjectCloud.Disk.FileHandlers
 			this.persistedDirectories.Write(
 				fileInformations => action((DirectoryInformation)fileInformations[this.FileContainer.FileId]));
 		}
-
+		
+		/// <summary>
+		/// Shortcut for WriteReentrant
+		/// </summary>
+		private void WriteReentrant(Action<DirectoryInformation> action)
+		{
+			this.persistedDirectories.WriteReentrant(
+				fileInformations => action((DirectoryInformation)fileInformations[this.FileContainer.FileId]));
+		}
+		
         public IFileHandler CreateFile(string filename, string fileType, ID<IUserOrGroup, Guid>? ownerID)
         {
             IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
@@ -226,7 +235,7 @@ namespace ObjectCloud.Disk.FileHandlers
             FileId fileId = default(FileId);
 			IFileHandler fileHandler = null;
 
-			this.persistedDirectories.Write(fileInformations =>
+			this.persistedDirectories.WriteReentrant(fileInformations =>
 			{
 				// Determine the file ID
 				do
@@ -864,7 +873,7 @@ namespace ObjectCloud.Disk.FileHandlers
             }
             set
             {
-				this.Write(
+				this.WriteReentrant(
 					directoryInformation => directoryInformation.indexFile = value);
 
                 OnDirectoryChanged();

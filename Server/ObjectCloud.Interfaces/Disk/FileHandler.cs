@@ -37,7 +37,13 @@ namespace ObjectCloud.Interfaces.Disk
 
         public IFileContainer FileContainer
         {
-            get { return _FileContainer; }
+            get 
+			{
+				if (null == _FileContainer)
+					throw new NullReferenceException("FileContainer hasn't been set yet");
+				
+				return _FileContainer; 
+			}
             set 
             {
 /*#if DEBUG

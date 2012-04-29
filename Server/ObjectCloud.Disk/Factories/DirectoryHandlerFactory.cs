@@ -119,9 +119,11 @@ namespace ObjectCloud.Disk.Factories
 
         public override void RestoreFile(IFileId fileId, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId, IDirectoryHandler parentDirectory)
         {
-            CreateFile(fileId);
-            using (IDirectoryHandler target = OpenFile(fileId))
+            this.CreateFile(fileId);
+            using (IDirectoryHandler target = this.OpenFile(fileId))
             {
+				target.FileContainer = new FileContainer(target, fileId, "directory", parentDirectory, this.FileHandlerFactoryLocator, DateTime.UtcNow);
+				
                 string metadataPath = Path.GetFullPath(pathToRestoreFrom + Path.DirectorySeparatorChar + "metadata.xml");
 
                 using (TextReader tr = File.OpenText(metadataPath))

@@ -3,6 +3,7 @@
 // For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -203,12 +204,6 @@ namespace ObjectCloud.Disk.FileHandlers
 		/// <summary>
 		/// Calls the function within a write context
 		/// </summary>
-		/// <param name='func'>
-		/// Func.
-		/// </param>
-		/// <typeparam name='R'>
-		/// The 1st type parameter.
-		/// </typeparam>
 		public R Write<R>(Func<T, R> func)
 		{
 			//Console.WriteLine("BeginWrite");
@@ -236,12 +231,6 @@ namespace ObjectCloud.Disk.FileHandlers
 		/// <summary>
 		/// Calls the function within a write context
 		/// </summary>
-		/// <param name='func'>
-		/// Func.
-		/// </param>
-		/// <typeparam name='R'>
-		/// The 1st type parameter.
-		/// </typeparam>
 		public void Write(Action<T> action)
 		{
 			//Console.WriteLine("BeginWrite");
@@ -262,6 +251,71 @@ namespace ObjectCloud.Disk.FileHandlers
 			{
 				//Console.WriteLine("EndWrite");
 				this.readerWriterLockSlim.ExitWriteLock();
+			}
+		}
+		
+		/// <summary>
+		/// The thread that is in WriteReentrant, or null
+		/// </summary>
+		Thread writeReentrantThread = null;
+		
+		/// <summary>
+		/// The number of calls into WriteReentrant
+		/// </summary>
+		int writeReentrantCount = 0;
+		
+		/// <summary>
+		/// An exception thrown within any call to WriteReentrant. If an exception is leaked, this will continuously be re-thrown until the object is restored
+		/// </summary>
+		Exception writeReentrantException = null;
+		
+		/// <summary>
+		/// Calls the function within a write context, can be called re-entrantly. The object is only written to disk when there are no re-entrant calls on the stack
+		/// </summary>
+		public void WriteReentrant(Action<T> action)
+		{
+			if (Thread.CurrentThread != this.writeReentrantThread)
+			{
+				this.readerWriterLockSlim.EnterWriteLock();
+				this.writeReentrantThread = Thread.CurrentThread;
+			}
+			
+			if (null != this.writeReentrantException)
+				throw writeReentrantException;
+			
+			this.writeReentrantCount++;
+			
+			try
+			{
+				action(this.persistedObject);
+				
+				if (null != this.writeReentrantException)
+					throw writeReentrantException;
+				
+				// Only save if there are no re-entrant operations
+				if (1 == this.writeReentrantCount)
+					this.Save();
+			}
+			catch (Exception e)
+			{
+				this.writeReentrantException = e;
+				
+				// Rollback if an exception occurs while writing
+				if (1 == this.writeReentrantCount)
+					this.Load();
+				
+				throw;
+			}
+			finally
+			{
+				this.writeReentrantCount--;
+				
+				if (0 == this.writeReentrantCount)
+				{
+					this.readerWriterLockSlim.ExitWriteLock();
+					this.writeReentrantThread = null;
+					this.writeReentrantException = null;
+				}
 			}
 		}
 		
