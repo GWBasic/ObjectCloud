@@ -163,7 +163,8 @@ namespace ObjectCloud.Disk.FileHandlers
 		public R Read<R>(Func<T, R> func)
 		{
 			//Console.WriteLine("BeginRead");
-			this.readerWriterLockSlim.EnterReadLock();
+			if (Thread.CurrentThread != this.writeReentrantThread)
+				this.readerWriterLockSlim.EnterReadLock();
 			
 			try
 			{
@@ -172,7 +173,8 @@ namespace ObjectCloud.Disk.FileHandlers
 			finally
 			{
 				//Console.WriteLine("EndRead");
-				this.readerWriterLockSlim.ExitReadLock();
+				if (Thread.CurrentThread != this.writeReentrantThread)
+					this.readerWriterLockSlim.ExitReadLock();
 			}
 		}
 		
@@ -188,7 +190,8 @@ namespace ObjectCloud.Disk.FileHandlers
 		public void Read(Action<T> action)
 		{
 			//Console.WriteLine("BeginRead");
-			this.readerWriterLockSlim.EnterReadLock();
+			if (Thread.CurrentThread != this.writeReentrantThread)
+				this.readerWriterLockSlim.EnterReadLock();
 			
 			try
 			{
@@ -197,7 +200,8 @@ namespace ObjectCloud.Disk.FileHandlers
 			finally
 			{
 				//Console.WriteLine("EndRead");
-				this.readerWriterLockSlim.ExitReadLock();
+				if (Thread.CurrentThread != this.writeReentrantThread)
+					this.readerWriterLockSlim.ExitReadLock();
 			}
 		}
 		

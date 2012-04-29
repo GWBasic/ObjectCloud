@@ -248,15 +248,11 @@ namespace ObjectCloud.Disk.FileHandlers
 					
 					if (directoryInformation.files.ContainsKey(filename))
                         throw new DuplicateFile(filename);
-
-					// Create the file within the transaction.  This way, if there's an exception, the transaction
-                    // is rolled back
-                    createFileDelegate(fileId);
 					
-		            fileHandler = FileHandlerFactoryLocator.FileSystemResolver.LoadFile(fileId, fileType);
-					
+					// TODO: This used to look at the type returned by FileHandlerFactoryLocator.FileSystemResolver.LoadFile
+					// It no longer works with holding everything in RAM because a created directory will rely on this object being present
 					FileInformation file;
-					if (fileHandler is DirectoryHandler)
+					if ("directory" == fileType)
 						file = new DirectoryInformation();
 					else
 						file = new FileInformation();
@@ -272,7 +268,12 @@ namespace ObjectCloud.Disk.FileHandlers
 					
 					fileInformations[fileId] = file;
 					directoryInformation.files[filename] = file;
-	
+
+					// Create the file within the transaction.  This way, if there's an exception, the transaction
+                    // is rolled back
+                    createFileDelegate(fileId);
+					
+		            fileHandler = FileHandlerFactoryLocator.FileSystemResolver.LoadFile(fileId, fileType);
 		            fileHandler.FileContainer = this.fileContainerCache.Get(fileId, file);
 	            }
 	            catch (DiskException)
@@ -417,7 +418,7 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public void SetPermission(ID<IUserOrGroup, Guid>? assigningPermission, string filename, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, FilePermissionEnum level, bool inherit, bool sendNotifications)
         {
-			this.Write(directoryInformation =>
+			this.WriteReentrant(directoryInformation =>
 			{
 	            var file = directoryInformation[filename];
 
