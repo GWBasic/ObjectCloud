@@ -672,12 +672,14 @@ namespace ObjectCloud.Disk.FileHandlers
 	     		
 	     		onlyReturnInheritedPermissions = true;
 	     		directoryHandler = directoryHandler.FileContainer.ParentDirectoryHandler;
+				
+				if (null == directoryHandler)
+					return highestPermission;
+				
 				file = directoryInformation;
 	  			directoryInformation = (DirectoryInformation)fileInformations[directoryHandler.FileContainer.FileId];
 	     		
-	     	} while (null != directoryHandler);
-	     	
-	     	return highestPermission;
+	     	} while (true);
 		}
 
         /// <summary>
