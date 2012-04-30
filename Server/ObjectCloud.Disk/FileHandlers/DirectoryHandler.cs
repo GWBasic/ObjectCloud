@@ -526,6 +526,8 @@ namespace ObjectCloud.Disk.FileHandlers
 				FileHandlerFactoryLocator.FileSystemResolver.DeleteFile(toDelete.fileId);
 				this.fileContainerCache.Remove(toDelete.fileId);
             });
+			
+			this.FileHandlerFactoryLocator.FileSystemResolver.DeleteFile(fileContainer.FileId);
 
             OnDirectoryChanged();
         }
@@ -812,9 +814,7 @@ namespace ObjectCloud.Disk.FileHandlers
         public override void OnDelete(IUser changer)
         {
             foreach (IFileContainer fileContainer in new List<IFileContainer>(Files))
-                DeleteFile(changer, fileContainer.Filename);
-
-            base.OnDelete(changer);
+                this.DeleteFile(changer, fileContainer.Filename);
         }
 
         public void Rename(IUser changer, string oldFilename, string newFilename)

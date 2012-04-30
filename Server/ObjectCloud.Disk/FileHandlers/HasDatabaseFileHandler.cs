@@ -187,13 +187,6 @@ namespace ObjectCloud.Disk.FileHandlers
             }
         }
 
-        public override void OnDelete(ObjectCloud.Interfaces.Security.IUser changer)
-        {
-            Dispose();
-
-            base.OnDelete(changer);
-        }
-
         public override void SyncFromLocalDisk(string localDiskPath, bool force)
         {
             using (TimedLock.Lock(this))

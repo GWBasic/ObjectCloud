@@ -125,6 +125,8 @@ namespace ObjectCloud.Disk.Factories
             {
                 get { return FileContainer.Created; }
             }
+			
+			public override void OnDelete (IUser changer) { }
         }
     }
 }

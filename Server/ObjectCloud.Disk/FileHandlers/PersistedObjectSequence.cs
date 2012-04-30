@@ -19,10 +19,10 @@ namespace ObjectCloud.Disk
 		public PersistedObjectSequence(string path, long maxChunkSize, long maxSize, FileHandlerFactoryLocator fileHandlerFactoryLocator)
 		{
 			this.fileHandlerFactoryLocator = fileHandlerFactoryLocator;
-			this.path = path;
+			this.directoryName = path;
 			this.maxChunkSize = maxChunkSize;
 			this.maxSize = maxSize;
-			this.currentWriteStreamFilename = Path.Combine(this.path, "newest");
+			this.currentWriteStreamFilename = Path.Combine(this.directoryName, "newest");
 			
 			this.fileHandlerFactoryLocator.FileSystemResolver.Stopping += HandleFileHandlerFactoryLocatorFileSystemResolverStopping;
 			
@@ -81,8 +81,12 @@ namespace ObjectCloud.Disk
 		/// <summary>
 		/// The folder on disk where the persisted sequence is stored.
 		/// </summary>
-		private readonly string path;
-		
+		public string DirectoryName
+		{
+			get { return this.directoryName; }
+		}		
+		private readonly string directoryName;
+
 		/// <summary>
 		/// Whenever currentWriteStream meets or exceeds this size, a new chunk is created
 		/// </summary>
@@ -176,7 +180,7 @@ namespace ObjectCloud.Disk
 				
 				// First get the size of all files in the directory
 				var fileSizes = new Dictionary<string, long>();
-				foreach (var fileName in Directory.GetFiles(this.path))
+				foreach (var fileName in Directory.GetFiles(this.directoryName))
 				{
 					var fileInfo = new FileInfo(fileName);
 					fileSizes[fileName] = fileInfo.Length;
@@ -199,7 +203,7 @@ namespace ObjectCloud.Disk
 				
 				// The chunk's file is always named after the oldest item in the chunk
 				var oldestItem = newestItems[0];
-				string chunkPath = Path.Combine(this.path, oldestItem.TimeStamp.Ticks.ToString());
+				string chunkPath = Path.Combine(this.directoryName, oldestItem.TimeStamp.Ticks.ToString());
 				
 				// Always overwrite any previous attempts to create a new chunk, this will handle crashes that occur while copying
 				using (var chunkStream = File.Open(chunkPath, FileMode.Create))
@@ -253,7 +257,7 @@ namespace ObjectCloud.Disk
 				
 				var binaryFormatter = new BinaryFormatter();
 				
-				var files = Directory.GetFiles(this.path).Where(s => s != this.currentWriteStreamFilename).ToList();
+				var files = Directory.GetFiles(this.directoryName).Where(s => s != this.currentWriteStreamFilename).ToList();
 				files.Sort();
 				files.Reverse();
 				

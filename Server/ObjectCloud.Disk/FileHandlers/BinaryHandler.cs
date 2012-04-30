@@ -38,6 +38,12 @@ namespace ObjectCloud.Disk.FileHandlers
             BinaryFile = CreateBinaryFilename(path);
             ContentsChanged += new EventHandler<IBinaryHandler, EventArgs>(BinaryHandler_ContentsChanged);
         }
+		
+		public override void OnDelete (ObjectCloud.Interfaces.Security.IUser changer)
+		{
+			var path = Path.GetDirectoryName(this.BinaryFile);
+			new ObjectCloud.Disk.Factories.FileSystem().RecursiveDelete(path);
+		}
 
         void BinaryHandler_ContentsChanged(IBinaryHandler sender, EventArgs e)
         {

@@ -44,7 +44,12 @@ namespace ObjectCloud.Disk.FileHandlers
 		}
 		
 		private readonly PersistedObjectSequence<LoggingEvent> sequence;
-		
+				
+		public override void OnDelete (ObjectCloud.Interfaces.Security.IUser changer)
+		{
+			new ObjectCloud.Disk.Factories.FileSystem().RecursiveDelete(this.sequence.DirectoryName);
+		}
+
         public bool WriteToConsole
         {
             get { return writeToConsole; }

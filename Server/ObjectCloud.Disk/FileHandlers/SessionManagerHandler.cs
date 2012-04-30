@@ -49,7 +49,13 @@ namespace ObjectCloud.Disk.FileHandlers
             // Clean old sessions every hour or so
             this.cleanOldSessionsTimer = new Timer(CleanOldSessions, null, 0, 6000000);
         }
-		
+						
+		public override void OnDelete (ObjectCloud.Interfaces.Security.IUser changer)
+		{
+			var path = Path.GetDirectoryName(this.persistedSessionDatas.Path);
+			new ObjectCloud.Disk.Factories.FileSystem().RecursiveDelete(path);
+		}
+
         /// <summary>
         /// This object should never be garbage collected
         /// </summary>

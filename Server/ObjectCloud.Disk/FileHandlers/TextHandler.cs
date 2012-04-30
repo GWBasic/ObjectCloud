@@ -18,13 +18,19 @@ namespace ObjectCloud.Disk.FileHandlers
 {
     public class TextHandler : LastModifiedFileHandler, ITextHandler
     {
-        string Path;
+        string path;
 
         public TextHandler(string path, FileHandlerFactoryLocator fileHandlerFactoryLocator)
             : base(fileHandlerFactoryLocator, path)
         {
-            Path = path;
+            this.path = path;
         }
+				
+		public override void OnDelete (ObjectCloud.Interfaces.Security.IUser changer)
+		{
+			var path = Path.GetDirectoryName(this.path);
+			new ObjectCloud.Disk.Factories.FileSystem().RecursiveDelete(path);
+		}
 
         /// <summary>
         /// The cached text to minimize disk usage
@@ -45,7 +51,7 @@ namespace ObjectCloud.Disk.FileHandlers
             using (TimedLock.Lock(this))
             {
                 if (null == Cached)
-                    Cached = System.IO.File.ReadAllText(Path);
+                    Cached = System.IO.File.ReadAllText(path);
 
                 return Cached;
             }
@@ -57,7 +63,7 @@ namespace ObjectCloud.Disk.FileHandlers
             {
                 ReleaseMemory();
 
-                System.IO.File.WriteAllText(Path, contents);
+                System.IO.File.WriteAllText(path, contents);
 
                 // set cached to null to test round trip
                 Cached = contents;
@@ -78,7 +84,7 @@ namespace ObjectCloud.Disk.FileHandlers
                 if (File.Exists(path))
                     destinationCreated = File.GetLastWriteTimeUtc(path);
 
-                DateTime thisCreated = File.GetLastWriteTimeUtc(Path);
+                DateTime thisCreated = File.GetLastWriteTimeUtc(path);
 
                 if (destinationCreated < thisCreated)
                 {
@@ -101,7 +107,7 @@ namespace ObjectCloud.Disk.FileHandlers
 
                     if (null == cachedEnumerable)
                     {
-                        cachedEnumerable = File.ReadAllLines(Path);
+                        cachedEnumerable = File.ReadAllLines(path);
                         CachedEnumerable = cachedEnumerable;
 
                         long size = 0;
@@ -118,16 +124,16 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             using (TimedLock.Lock(this))
             {
-                if (!File.Exists(Path))
-                    File.Copy(localDiskPath, Path);
+                if (!File.Exists(path))
+                    File.Copy(localDiskPath, path);
 
                 DateTime authoritativeCreated = File.GetLastWriteTimeUtc(localDiskPath);
-                DateTime thisCreated = File.GetLastWriteTimeUtc(Path);
+                DateTime thisCreated = File.GetLastWriteTimeUtc(path);
 
                 if (authoritativeCreated > thisCreated || force)
                 {
-                    File.Delete(Path);
-                    File.Copy(localDiskPath, Path);
+                    File.Delete(path);
+                    File.Copy(localDiskPath, path);
                 }
 
                 ReleaseMemory();
@@ -142,7 +148,7 @@ namespace ObjectCloud.Disk.FileHandlers
 
                 ReleaseMemory();
 
-                File.AppendAllText(Path, toAppend);
+                File.AppendAllText(path, toAppend);
 
                 if (null != cached)
                     Cached = cached + toAppend;
