@@ -39,8 +39,9 @@ namespace ObjectCloud.Interfaces.Disk
         {
             get 
 			{
-				if (null == _FileContainer)
-					throw new NullReferenceException("FileContainer hasn't been set yet");
+				// For debugging, other parts of code perform null checks during initialization
+				//if (null == _FileContainer)
+				//	throw new NullReferenceException("FileContainer hasn't been set yet");
 				
 				return _FileContainer; 
 			}

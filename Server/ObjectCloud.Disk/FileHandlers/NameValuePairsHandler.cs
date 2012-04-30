@@ -62,7 +62,7 @@ namespace ObjectCloud.Disk.FileHandlers
         {
 			this.persistedPairs.Write(pairs => pairs.Clear());
 
-            SendUpdateNotificationFrom(changer);
+            this.SendUpdateNotificationFrom(changer);
         }
 
         public IEnumerator<KeyValuePair<string, string>> GetEnumerator()

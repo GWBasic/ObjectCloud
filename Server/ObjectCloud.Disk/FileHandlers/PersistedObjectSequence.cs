@@ -185,9 +185,13 @@ namespace ObjectCloud.Disk
 				// Then keep deleting the oldest file until the size is appropriate
 				while (fileSizes.Values.Sum() >= this.maxSize)
 				{
-					string oldest = fileSizes.Keys.OrderBy(s => s).ElementAt(0);
-					File.Delete(oldest);
-					fileSizes.Remove(oldest);
+					var oldest = fileSizes.Keys.OrderBy(s => s).ToArray();
+					
+					if (oldest.Length > 0)
+					{
+						File.Delete(oldest[0]);
+						fileSizes.Remove(oldest[0]);
+					}
 				}
 				
 				// Reverse the newest chunk

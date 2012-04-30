@@ -15,12 +15,26 @@ namespace ObjectCloud.Disk.Test
 {
     public abstract class TestBase
     {
-        public TestBase()
+        /*public TestBase()
         {
             FileHandlerFactoryLocator.FileSystemResolver.Start();
 
             DoAdditionalSetup();
-        }
+        }*/
+		
+		bool setupRun = false;
+
+		[SetUp]
+		public void Setup()
+		{
+			if (!this.setupRun)
+			{
+	            FileHandlerFactoryLocator.FileSystemResolver.Start();
+	            DoAdditionalSetup();
+				
+				this.setupRun = true;
+			}
+		}
 
         public FileHandlerFactoryLocator FileHandlerFactoryLocator
         {

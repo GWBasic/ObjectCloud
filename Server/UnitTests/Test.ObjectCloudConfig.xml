@@ -11,6 +11,9 @@
     KeepAlive="true" />
 
   <!-- When running a real server, this line should be deleted.  Writing to the console really kills performance -->
-  <LogHandlerFactory WriteToConsole="true" />
+  <LogHandlerFactory
+	WriteToConsole="true"
+	MaxChunkSize="5242880"
+	MaxSize="524288000" />
 
 </ObjectCloudConfig>
