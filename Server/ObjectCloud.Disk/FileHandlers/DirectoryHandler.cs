@@ -527,7 +527,7 @@ namespace ObjectCloud.Disk.FileHandlers
 				this.fileContainerCache.Remove(toDelete.fileId);
             });
 			
-			this.FileHandlerFactoryLocator.FileSystemResolver.DeleteFile(fileContainer.FileId);
+			//this.FileHandlerFactoryLocator.FileSystemResolver.DeleteFile(fileContainer.FileId);
 
             OnDirectoryChanged();
         }
