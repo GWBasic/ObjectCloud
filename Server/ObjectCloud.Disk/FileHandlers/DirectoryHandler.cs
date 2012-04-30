@@ -478,6 +478,8 @@ namespace ObjectCloud.Disk.FileHandlers
                         permission.NamedPermissions = DictionaryFunctions.Create<string, bool>(namedPermissions);
                     else
                         permission.NamedPermissions = new Dictionary<string,bool>();
+					
+					permissions.Add(permission);
                 }
 				
 				return permissions;

@@ -107,6 +107,9 @@ namespace ObjectCloud.Disk.Factories
         {
             using (IDirectoryHandler target = OpenFile(fileId))
             {
+				target.FileContainer = new FileContainer(
+					target, fileId, "directory", parentDirectory, this.FileHandlerFactoryLocator, DateTime.UtcNow);
+			
                 foreach (IFileContainer toCopy in ((IDirectoryHandler)sourceFileHandler).Files)
                     try
                     {
