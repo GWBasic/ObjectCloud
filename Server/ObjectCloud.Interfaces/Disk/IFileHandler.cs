@@ -66,7 +66,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// </summary>
         /// <param name="localDiskPath"></param>
         /// <param name="force">Set to true to force syncing</param>
-        void SyncFromLocalDisk(string localDiskPath, bool force);
+        void SyncFromLocalDisk(string localDiskPath, bool force, DateTime lastModified);
 		
 		/// <summary>
 		/// Performs any needed maintanence operations, such as a SQLite vacuum

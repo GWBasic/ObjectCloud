@@ -325,29 +325,29 @@ namespace ObjectCloud.Disk.Implementation
             if (rootDirectoryHandler.IsFilePresent("Actions"))
             {
                 dir = rootDirectoryHandler.OpenFile("Actions").FileHandler;
-                dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Actions", false);
+                dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Actions", false, DateTime.MinValue);
             }
 
             dir = rootDirectoryHandler.OpenFile("Shell").FileHandler;
-            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Shell", false);
+            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Shell", false, DateTime.MinValue);
 
             dir = rootDirectoryHandler.OpenFile("API").FileHandler;
-            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "API", false);
+            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "API", false, DateTime.MinValue);
 
             dir = rootDirectoryHandler.OpenFile("Templates").FileHandler;
-            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Templates", false);
+            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Templates", false, DateTime.MinValue);
 
             dir = rootDirectoryHandler.OpenFile("Tests").FileHandler;
-            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Tests", false);
+            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Tests", false, DateTime.MinValue);
 
             dir = rootDirectoryHandler.OpenFile("Pages").FileHandler;
-            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Pages", false);
+            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Pages", false, DateTime.MinValue);
 
             dir = rootDirectoryHandler.OpenFile("Docs").FileHandler;
-            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Docs", false);
+            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Docs", false, DateTime.MinValue);
 
             dir = rootDirectoryHandler.OpenFile("Classes").FileHandler;
-            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Classes", false);
+            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Classes", false, DateTime.MinValue);
 
             if (!rootDirectoryHandler.IsFilePresent("Config"))
             {
@@ -373,7 +373,7 @@ namespace ObjectCloud.Disk.Implementation
             else
                 dir = rootDirectoryHandler.OpenFile("Config").FileHandler;
 
-            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Config", false);
+            dir.SyncFromLocalDisk("." + Path.DirectorySeparatorChar + "DefaultFiles" + Path.DirectorySeparatorChar + "Config", false, DateTime.MinValue);
 
             if (!rootDirectoryHandler.IsFilePresent("DefaultTemplate"))
             {

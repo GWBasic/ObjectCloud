@@ -120,17 +120,16 @@ namespace ObjectCloud.Disk.FileHandlers
                 yield return s;
         }
 
-        public override void SyncFromLocalDisk(string localDiskPath, bool force)
+        public override void SyncFromLocalDisk(string localDiskPath, bool force, DateTime lastModified)
         {
             using (TimedLock.Lock(this))
             {
                 if (!File.Exists(path))
                     File.Copy(localDiskPath, path);
 
-                DateTime authoritativeCreated = File.GetLastWriteTimeUtc(localDiskPath);
                 DateTime thisCreated = File.GetLastWriteTimeUtc(path);
 
-                if (authoritativeCreated > thisCreated || force)
+                if (lastModified > thisCreated || force)
                 {
                     File.Delete(path);
                     File.Copy(localDiskPath, path);

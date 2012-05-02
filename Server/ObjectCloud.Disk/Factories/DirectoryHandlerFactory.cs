@@ -158,7 +158,10 @@ namespace ObjectCloud.Disk.Factories
                                     ownerId = userId;
 
                                 target.RestoreFile(
-                                    filename, typeId, pathToRestoreFrom + Path.DirectorySeparatorChar + filename, ownerId.Value);
+                                    filename,
+									typeId,
+									Path.Combine(pathToRestoreFrom, filename),
+									ownerId.Value);
                             }
                             else if ("Permission".Equals(xmlReader.Name))
                             {

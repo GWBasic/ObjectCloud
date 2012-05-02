@@ -715,97 +715,90 @@ namespace ObjectCloud.Disk.FileHandlers
 					Path.Combine(path, fileContainer.Filename),
 					userId);
 			
-            string metadataFile = path + Path.DirectorySeparatorChar + "metadata.xml";
+            string metadataFile = Path.Combine(path, "metadata.xml");
 
-            DateTime destinationCreated = DateTime.MinValue;
+            XmlWriterSettings settings = new XmlWriterSettings();
+            settings.Indent = true;
+            settings.IndentChars = "\t";
+            settings.NewLineChars = "\n";
+            settings.NewLineHandling = NewLineHandling.Entitize;
+            settings.NewLineOnAttributes = true;
 
-            if (File.Exists(metadataFile))
-                destinationCreated = File.GetLastWriteTimeUtc(metadataFile);
-
-            if (destinationCreated < LastModified)
+            // Write metadata to XML
+            using (XmlWriter xmlWriter = XmlWriter.Create(metadataFile, settings))
             {
-                XmlWriterSettings settings = new XmlWriterSettings();
-                settings.Indent = true;
-                settings.IndentChars = "\t";
-                settings.NewLineChars = "\n";
-                settings.NewLineHandling = NewLineHandling.Entitize;
-                settings.NewLineOnAttributes = true;
+                xmlWriter.WriteStartDocument();
 
-                // Write metadata to XML
-                using (XmlWriter xmlWriter = XmlWriter.Create(metadataFile, settings))
+                xmlWriter.WriteStartElement("Directory");
+
+                string indexFile = IndexFile;
+                if (null != indexFile)
+                    xmlWriter.WriteAttributeString("IndexFile", indexFile);
+
+                // make sure the files are always written in the same order.  This assists with diffing changes
+				var files = new List<IFileContainer>(fileContainersById.Values);
+                files.Sort((a,b) => a.Filename.CompareTo(b.Filename));
+
+                foreach (var fileContainer in files)
                 {
-                    xmlWriter.WriteStartDocument();
+                    // Load user's permission for file
+                    FilePermissionEnum? filePermissionEnum = fileContainer.LoadPermission(userId);
 
-                    xmlWriter.WriteStartElement("Directory");
+                    if (null != filePermissionEnum)
+                        if (filePermissionEnum.Value >= FilePermissionEnum.Read)
+                        {
+                            // <FileInDirectory>
+                            xmlWriter.WriteStartElement("File");
 
-                    string indexFile = IndexFile;
-                    if (null != indexFile)
-                        xmlWriter.WriteAttributeString("IndexFile", indexFile);
+                            // Write the file's attributes
+                            xmlWriter.WriteAttributeString("Name", fileContainer.Filename);
+                            xmlWriter.WriteAttributeString("TypeId", fileContainer.TypeId);
+							xmlWriter.WriteAttributeString("LastModified", fileContainer.LastModified.Ticks.ToString());
 
-                    // make sure the files are always written in the same order.  This assists with diffing changes
-					var files = new List<IFileContainer>(fileContainersById.Values);
-                    files.Sort((a,b) => a.Filename.CompareTo(b.Filename));
+                            // Only write the ownerId if it's a built-in user.  This might change if Dump is set up to do true backups, but right now
+                            // the files aren't supposed to be tied to specific users
+                            if (null != fileContainer.Owner)
+                                xmlWriter.WriteAttributeString("OwnerId", fileContainer.OwnerId.ToString());
 
-                    foreach (var fileContainer in files)
-                    {
-                        // Load user's permission for file
-                        FilePermissionEnum? filePermissionEnum = fileContainer.LoadPermission(userId);
-
-                        if (null != filePermissionEnum)
-                            if (filePermissionEnum.Value >= FilePermissionEnum.Read)
+                            // Write each permission if it applies to a built-in user or group
+                            foreach (var permission in this.GetPermissions(fileContainer.Filename))
                             {
-                                // <FileInDirectory>
-                                xmlWriter.WriteStartElement("File");
-
-                                // Write the file's attributes
-                                xmlWriter.WriteAttributeString("Name", fileContainer.Filename);
-                                xmlWriter.WriteAttributeString("TypeId", fileContainer.TypeId);
-
-                                // Only write the ownerId if it's a built-in user.  This might change if Dump is set up to do true backups, but right now
-                                // the files aren't supposed to be tied to specific users
-                                if (null != fileContainer.Owner)
-                                    xmlWriter.WriteAttributeString("OwnerId", fileContainer.OwnerId.ToString());
-
-                                // Write each permission if it applies to a built-in user or group
-                                foreach (var permission in this.GetPermissions(fileContainer.Filename))
+                                try
                                 {
-                                    try
+                                    var userOrGroup = this.FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroup(
+										permission.UserOrGroupId);
+
+                                    if (userOrGroup.BuiltIn)
                                     {
-                                        var userOrGroup = this.FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroup(
-											permission.UserOrGroupId);
+                                        xmlWriter.WriteStartElement("Permission");
 
-                                        if (userOrGroup.BuiltIn)
-                                        {
-                                            xmlWriter.WriteStartElement("Permission");
+                                        xmlWriter.WriteAttributeString("UserOrGroupId", userOrGroup.Id.Value.ToString());
+                                        xmlWriter.WriteAttributeString("Level", permission.FilePermissionEnum.ToString());
+                                        xmlWriter.WriteAttributeString("Inherit", permission.Inherit.ToString());
+                                        xmlWriter.WriteAttributeString("SendNotifications", permission.SendNotifications.ToString());
 
-                                            xmlWriter.WriteAttributeString("UserOrGroupId", userOrGroup.Id.Value.ToString());
-                                            xmlWriter.WriteAttributeString("Level", permission.FilePermissionEnum.ToString());
-                                            xmlWriter.WriteAttributeString("Inherit", permission.Inherit.ToString());
-                                            xmlWriter.WriteAttributeString("SendNotifications", permission.SendNotifications.ToString());
-
-                                            xmlWriter.WriteEndElement();
-                                        }
+                                        xmlWriter.WriteEndElement();
                                     }
-                                    // For now, swallow userIds that aren't a valid user
-                                    catch (UnknownUser ue) 
-									{
-										log.Warn("Found permission assigned to an unknown user", ue);
-									}
                                 }
-
-                                // </FileInDirectory>
-                                xmlWriter.WriteEndElement();
+                                // For now, swallow userIds that aren't a valid user
+                                catch (UnknownUser ue) 
+								{
+									log.Warn("Found permission assigned to an unknown user", ue);
+								}
                             }
-                    }
 
-                    // </Directory>
-                    xmlWriter.WriteEndElement();
-
-                    xmlWriter.WriteEndDocument();
-
-                    xmlWriter.Flush();
-                    xmlWriter.Close();
+                            // </FileInDirectory>
+                            xmlWriter.WriteEndElement();
+                        }
                 }
+
+                // </Directory>
+                xmlWriter.WriteEndElement();
+
+                xmlWriter.WriteEndDocument();
+
+                xmlWriter.Flush();
+                xmlWriter.Close();
 				
                 log.Info("Successfully wrote " + FileContainer.FullPath);
             }
@@ -885,7 +878,7 @@ namespace ObjectCloud.Disk.FileHandlers
             }
         }
 
-        public override void SyncFromLocalDisk(string localDiskPath, bool force)
+        public override void SyncFromLocalDisk(string localDiskPath, bool force, DateTime lastModified)
         {
             SyncFromLocalDisk(localDiskPath, force, false);
         }
@@ -926,13 +919,22 @@ namespace ObjectCloud.Disk.FileHandlers
                                     ownerId = new ID<IUserOrGroup, Guid>(new Guid(ownerIdString));
                                 else
                                     ownerId = FileContainer.OwnerId;
+								
+								var lastModified = DateTime.MinValue;
+								var lastModifiedString = xmlReader.GetAttribute("LastModified");
+								if (null != lastModifiedString)
+								{
+									long lastModifiedTicks;
+									if (long.TryParse(lastModifiedString, out lastModifiedTicks))
+										lastModified = new DateTime(lastModifiedTicks);
+								}
 
                                 if (IsFilePresent(filename))
                                 {
                                     if (!onlyMissing)
                                     {
                                         // If the file is already present, just update it
-                                        string fileToSync = localDiskPath + Path.DirectorySeparatorChar + filename;
+                                        string fileToSync = Path.Combine(localDiskPath, filename);
                                         fileToSync = Path.GetFullPath(fileToSync);
 
                                         IFileContainer toSync = OpenFile(filename);
@@ -941,7 +943,7 @@ namespace ObjectCloud.Disk.FileHandlers
 
                                         try
                                         {
-                                            toSync.FileHandler.SyncFromLocalDisk(fileToSync, force);
+                                            toSync.FileHandler.SyncFromLocalDisk(fileToSync, force, lastModified);
                                         }
                                         catch (Exception e)
                                         {
@@ -949,12 +951,15 @@ namespace ObjectCloud.Disk.FileHandlers
                                             throw;
                                         }
 								
-										hasWrites = true;
-										this.persistedDirectories.WriteEventual(directoryInformations =>
-								        {
-											var directoryInformation = (DirectoryInformation)directoryInformations[this.FileContainer.FileId];
-											directoryInformation[filename].ownerId = ownerId;
-										});
+										if (toSync.OwnerId != ownerId)
+										{
+											hasWrites = true;
+											this.persistedDirectories.WriteEventual(directoryInformations =>
+									        {
+												var directoryInformation = (DirectoryInformation)directoryInformations[this.FileContainer.FileId];
+												directoryInformation[filename].ownerId = ownerId;
+											});
+										}
                                     }
                                 }
                                 else
@@ -990,7 +995,7 @@ namespace ObjectCloud.Disk.FileHandlers
                         DeleteFile(null, toDelete);
 			
 			if (hasWrites)
-				this.Write(d => {});
+				this.Write(_ => {});
         }
 
         public override string Title

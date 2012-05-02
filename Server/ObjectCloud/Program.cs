@@ -155,7 +155,7 @@ namespace ObjectCloud
                                         fileHandlerFactoryLocator.UserFactory.RootUser.Id);
 
                                 fileHandlerFactoryLocator.FileSystemResolver.ResolveFile(
-                                    objectCloudfileToRestore).FileHandler.SyncFromLocalDisk(fileSystemSource, true);
+                                    objectCloudfileToRestore).FileHandler.SyncFromLocalDisk(fileSystemSource, true, DateTime.MinValue);
 
                                 break;
                             }

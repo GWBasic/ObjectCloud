@@ -231,7 +231,7 @@ namespace ObjectCloud.Interfaces.Disk
 			});
         }
 
-        public virtual void SyncFromLocalDisk(string localDiskPath, bool force)
+        public virtual void SyncFromLocalDisk(string localDiskPath, bool force, DateTime lastModified)
         {
             throw new NotImplementedException();
         }
