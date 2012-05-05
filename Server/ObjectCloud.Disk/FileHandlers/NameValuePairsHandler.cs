@@ -19,7 +19,7 @@ namespace ObjectCloud.Disk.FileHandlers
         public NameValuePairsHandler(FileHandlerFactoryLocator fileHandlerFactoryLocator, string path)
 			: base(fileHandlerFactoryLocator, path)
 		{
-			this.persistedPairs = new PersistedObject<Dictionary<string, string>>(
+			this.persistedPairs = new PersistedBinaryFormatterObject<Dictionary<string, string>>(
 				path,
 				() => new Dictionary<string, string>());
 		}
@@ -30,7 +30,7 @@ namespace ObjectCloud.Disk.FileHandlers
 			new ObjectCloud.Disk.Factories.FileSystem().RecursiveDelete(path);
 		}
 
-		private readonly PersistedObject<Dictionary<string, string>> persistedPairs;
+		private readonly PersistedBinaryFormatterObject<Dictionary<string, string>> persistedPairs;
 		
         public string this[string name]
         {

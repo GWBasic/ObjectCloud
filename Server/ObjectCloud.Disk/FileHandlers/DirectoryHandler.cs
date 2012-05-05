@@ -116,7 +116,7 @@ namespace ObjectCloud.Disk.FileHandlers
 	    }
 		
         internal DirectoryHandler(
-			PersistedObject<Dictionary<IFileId, FileInformation>> persistedDirectories,
+			PersistedBinaryFormatterObject<Dictionary<IFileId, FileInformation>> persistedDirectories,
 			FileHandlerFactoryLocator fileHandlerFactoryLocator)
             : base(fileHandlerFactoryLocator, persistedDirectories.Path)
         {
@@ -142,7 +142,7 @@ namespace ObjectCloud.Disk.FileHandlers
 		/// <summary>
 		/// All information about the entire file system is held in RAM and persisted to disk as a single object graph
 		/// </summary>
-		private PersistedObject<Dictionary<IFileId, FileInformation>> persistedDirectories;
+		private PersistedBinaryFormatterObject<Dictionary<IFileId, FileInformation>> persistedDirectories;
 		
 		/// <summary>
 		/// Shortcut for reading

@@ -72,9 +72,11 @@
     <Compile Include="Factories\TextHandlerFactory.cs" />
     <Compile Include="Factories\UserHandlerFactory.cs" />
     <Compile Include="Factories\UserManagerHandlerFactory.cs" />
-    <Compile Include="FileHandlers\PersistedObject.cs" />
     <Compile Include="FileHandlers\SessionData.cs" />
     <Compile Include="FileHandlers\PersistedObjectSequence.cs" />
+    <Compile Include="FileHandlers\PersistedObjectBase.cs" />
+    <Compile Include="FileHandlers\PersistedBinaryFormatterObject.cs" />
+    <Compile Include="FileHandlers\PersistedObject.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

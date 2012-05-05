@@ -19,7 +19,7 @@ namespace ObjectCloud.Disk.Factories
 {
     public class DirectoryHandlerFactory : FileHandlerFactory<IDirectoryHandler>
     {
-		private PersistedObject<Dictionary<IFileId, DirectoryHandler.FileInformation>> persistedFileInformations = null;
+		private PersistedBinaryFormatterObject<Dictionary<IFileId, DirectoryHandler.FileInformation>> persistedFileInformations = null;
 
         public override void CreateFile(string path, FileId fileId)
         {
@@ -35,7 +35,7 @@ namespace ObjectCloud.Disk.Factories
 							((FileSystem)this.FileHandlerFactoryLocator.FileSystem).ConnectionString,
 							"metadata");
 				
-						this.persistedFileInformations = new PersistedObject<Dictionary<IFileId, DirectoryHandler.FileInformation>>(
+						this.persistedFileInformations = new PersistedBinaryFormatterObject<Dictionary<IFileId, DirectoryHandler.FileInformation>>(
 							metadataLocation, this.CreateInitialFileInformations);
 				
 						ThreadPool.QueueUserWorkItem(_ => this.RemoveDeadPermissions());

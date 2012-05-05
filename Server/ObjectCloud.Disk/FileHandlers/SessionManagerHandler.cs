@@ -27,7 +27,7 @@ namespace ObjectCloud.Disk.FileHandlers
             : base(fileHandlerFactoryLocator)
         {
             this.sessions = new Dictionary<ID<ISession, Guid>, Session>();
-			this.persistedSessionDatas = new PersistedObject<Dictionary<ID<ISession, Guid>, SessionData>>(path);
+			this.persistedSessionDatas = new PersistedBinaryFormatterObject<Dictionary<ID<ISession, Guid>, SessionData>>(path);
             me = this;
 			
 			this.persistedSessionDatas.Read(sessionDatas =>
@@ -69,7 +69,7 @@ namespace ObjectCloud.Disk.FileHandlers
 		/// <summary>
 		/// All of the data for the persisted sessions
 		/// </summary>
-		private PersistedObject<Dictionary<ID<ISession, Guid>, SessionData>> persistedSessionDatas;
+		private PersistedBinaryFormatterObject<Dictionary<ID<ISession, Guid>, SessionData>> persistedSessionDatas;
 
         /// <summary>
         /// Used to clean old sessions

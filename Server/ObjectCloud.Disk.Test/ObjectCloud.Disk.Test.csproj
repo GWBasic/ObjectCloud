@@ -92,8 +92,8 @@
     <Compile Include="TestSessionManagerHandler.cs" />
     <Compile Include="TestShell.cs" />
     <Compile Include="TestUserManagerHandler.cs" />
-    <Compile Include="TestPersistedObject.cs" />
     <Compile Include="TestPersistedObjectSequence.cs" />
+    <Compile Include="TestPersistedBinaryFormatterObject.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ObjectCloud.Common\ObjectCloud.Common.csproj">
