@@ -10,6 +10,7 @@ using System.Threading;
 using System.Xml;
 
 using ObjectCloud.Common;
+using ObjectCloud.Common.StreamEx;
 using ObjectCloud.DataAccess.Directory;
 using ObjectCloud.Disk.FileHandlers;
 using ObjectCloud.Interfaces.Disk;
@@ -19,7 +20,7 @@ namespace ObjectCloud.Disk.Factories
 {
     public class DirectoryHandlerFactory : FileHandlerFactory<IDirectoryHandler>
     {
-		private PersistedBinaryFormatterObject<Dictionary<IFileId, DirectoryHandler.FileInformation>> persistedFileInformations = null;
+		private PersistedObject<Dictionary<IFileId, DirectoryHandler.FileInformation>> persistedFileInformations = null;
 
         public override void CreateFile(string path, FileId fileId)
         {
@@ -35,8 +36,8 @@ namespace ObjectCloud.Disk.Factories
 							((FileSystem)this.FileHandlerFactoryLocator.FileSystem).ConnectionString,
 							"metadata");
 				
-						this.persistedFileInformations = new PersistedBinaryFormatterObject<Dictionary<IFileId, DirectoryHandler.FileInformation>>(
-							metadataLocation, this.CreateInitialFileInformations);
+						this.persistedFileInformations = new PersistedObject<Dictionary<IFileId, DirectoryHandler.FileInformation>>(
+							metadataLocation, this.CreateInitialFileInformations, this.Deserialize, this.Serialize);
 				
 						ThreadPool.QueueUserWorkItem(_ => this.RemoveDeadPermissions());
 					}
@@ -190,5 +191,229 @@ namespace ObjectCloud.Disk.Factories
                 }
             }
         }
-    }
+		
+		/// <summary>
+		/// Represents a relationship while loading
+		/// </summary>
+		private class Relationship
+		{
+			public DirectoryHandler.FileInformation parentFile;
+			public string name;
+			public FileId relatedFileId;
+		}
+		
+		/// <summary>
+		/// Deserializes all metadata about the filesystem
+		/// </summary>
+		private Dictionary<IFileId, DirectoryHandler.FileInformation> Deserialize(Stream readStream)
+		{
+			var fileInformations = new Dictionary<IFileId, DirectoryHandler.FileInformation>();
+			
+			// version
+			readStream.Read<int>();
+			
+			var relationships = new List<Relationship>(readStream.Read<int>());
+			
+			this.ReadDirectoryInformation(fileInformations, readStream, relationships);
+			
+			foreach (var relationship in relationships)
+			{
+				var relatedFile = fileInformations[relationship.relatedFileId];
+				
+				HashSet<string> names;
+				if (!relationship.parentFile.relationships.TryGetValue(relatedFile, out names))
+				{
+					relationship.parentFile.relationships[relatedFile] = names = new HashSet<string>();
+				}
+				
+				names.Add(relationship.name);
+				
+				throw new Exception("Not storing inhert for named permissions");
+				
+				/*if (!relatedFile.parentRelationships[relationship.parentFile].TryGetValue(names, out names))
+				{
+					relatedFile.parentRelationships[relationship.parentFile] = names = new HashSet<string>();
+				}*/
+			}
+			
+			return fileInformations;
+		}
+		
+		/// <summary>
+		/// Deserializes a directory from the read stream, including its files and its subdirectories
+		/// </summary>
+		private DirectoryHandler.DirectoryInformation ReadDirectoryInformation(
+			Dictionary<IFileId, DirectoryHandler.FileInformation> fileInformations,
+			Stream readStream,
+			List<Relationship> relationships)
+		{
+			var directoryInformation = new DirectoryHandler.DirectoryInformation();
+			
+			this.ReadFileInformation(fileInformations, readStream, relationships, directoryInformation);
+			
+			directoryInformation.indexFile = readStream.ReadString();
+
+			var numFiles = readStream.Read<int>();
+			for (var ctr = 0; ctr < numFiles; ctr++)
+			{
+				DirectoryHandler.FileInformation fileInformation;
+				
+				// if is a directory...
+				if (readStream.Read<bool>())
+					fileInformation = this.ReadDirectoryInformation(fileInformations, readStream, relationships);
+				else
+					fileInformation = this.ReadFileInformation(fileInformations, readStream, relationships);
+				
+				directoryInformation.files[fileInformation.filename] = fileInformation;
+			}
+			
+			return directoryInformation;
+		}
+		
+		/// <summary>
+		/// Reads a FileInformation from a stream.
+		/// </summary>
+		private DirectoryHandler.FileInformation ReadFileInformation (
+			Dictionary<IFileId, DirectoryHandler.FileInformation> fileInformations,
+			Stream readStream,
+			List<Relationship> relationships)
+		{
+			var fileInformation = new DirectoryHandler.FileInformation();
+			this.ReadFileInformation(fileInformations, readStream, relationships, fileInformation);
+			
+			return fileInformation;
+		}
+		
+		/// <summary>
+		/// Reads a FileInformation from a stream.
+		/// </summary>
+		private void ReadFileInformation (
+			Dictionary<IFileId, DirectoryHandler.FileInformation> fileInformations,
+			Stream readStream,
+			List<Relationship> relationships,
+			DirectoryHandler.FileInformation fileInformation)
+		{
+			fileInformation.fileId = new FileId(readStream.Read<long>());
+			fileInformation.typeId = readStream.ReadString();
+			fileInformation.filename = readStream.ReadString();
+			fileInformation.ownerId = readStream.Read<ID<IUserOrGroup, Guid>>();
+			fileInformation.created = readStream.Read<DateTime>();
+			fileInformation.permissions = new Dictionary<ID<IUserOrGroup, Guid>, DirectoryHandler.Permission>();
+			fileInformation.namedPermissions = new Dictionary<ID<IUserOrGroup, Guid>, Dictionary<string, bool>>();
+			fileInformation.relationships = new Dictionary<DirectoryHandler.FileInformation, HashSet<string>>();
+			fileInformation.parentRelationships = new Dictionary<DirectoryHandler.FileInformation, Dictionary<string, bool>>();
+			
+			int numPermissions = readStream.Read<int>();
+			for (var ctr = 0; ctr < numPermissions; ctr++)
+				fileInformation.permissions[readStream.Read<ID<IUserOrGroup, Guid>>()] =
+					new DirectoryHandler.Permission()
+					{
+						level = readStream.Read<FilePermissionEnum>(),
+						inherit = readStream.Read<bool>(),
+						sendNotifications = readStream.Read<bool>()
+					};
+			
+			int numNamedPermissions = readStream.Read<int>();
+			for (var ctr = 0; ctr < numNamedPermissions; ctr++)
+			{
+				var numNamedPermissionsForUser = readStream.Read<int>();
+				var namedPermissions = new Dictionary<string, bool>();
+				
+				fileInformation.namedPermissions[readStream.Read<ID<IUserOrGroup, Guid>>()] = namedPermissions;
+				
+				for (var npCtr = 0; npCtr < numNamedPermissionsForUser; npCtr++)
+					namedPermissions[readStream.ReadString()] = readStream.Read<bool>();
+			}
+			
+			int numRelationships = readStream.Read<int>();
+			for (var ctr = 0; ctr < numRelationships; ctr++)
+				relationships.Add(new Relationship()
+				{
+					parentFile = fileInformation,
+					name = readStream.ReadString(),
+					relatedFileId = readStream.Read<FileId>()
+				});
+			
+			fileInformations[fileInformation.fileId] = fileInformation;
+		}
+		
+		private void Serialize(Stream writeStream, Dictionary<IFileId, DirectoryHandler.FileInformation> fileInformations)
+		{
+			// The version
+			writeStream.Write(0);
+			
+			// The total number of relationships. Keeps memory allocations lower
+			fileInformations.Values.Sum(fileInformation => fileInformation.relationships.Values.Sum(relationships => relationships.Count));
+			
+			this.SerializeDirectory(
+				writeStream,
+				(DirectoryHandler.DirectoryInformation)fileInformations[this.FileHandlerFactoryLocator.FileSystem.RootDirectoryId]);
+		}
+		
+		private void SerializeDirectory(Stream writeStream, DirectoryHandler.DirectoryInformation directoryInformation)
+		{
+			this.SerializeFile(writeStream, directoryInformation);
+			
+			writeStream.WriteString(directoryInformation.indexFile);
+			
+			writeStream.Write(directoryInformation.files.Count);
+			foreach (var subFileInformation in directoryInformation.files.Values)
+				if (subFileInformation is DirectoryHandler.DirectoryInformation)
+				{
+					writeStream.Write(true);
+					this.SerializeDirectory(writeStream, (DirectoryHandler.DirectoryInformation)subFileInformation);
+				}
+				else
+				{
+					writeStream.Write(false);
+					this.SerializeFile(writeStream, subFileInformation);
+				}
+		}
+		
+		private void SerializeFile(Stream writeStream, DirectoryHandler.FileInformation fileInformation)
+		{
+			writeStream.Write(fileInformation.fileId);
+			writeStream.WriteString(fileInformation.typeId);
+			writeStream.WriteString(fileInformation.filename);
+			writeStream.WriteNullable(fileInformation.ownerId);
+			writeStream.Write(fileInformation.created);
+			
+			// Permissions
+			writeStream.Write(fileInformation.permissions.Count);
+			foreach (var permissionKVP in fileInformation.permissions)
+			{
+				writeStream.Write(permissionKVP.Key);
+				
+				var permission = permissionKVP.Value;
+				writeStream.Write(permission.level);
+				writeStream.Write(permission.inherit);
+				writeStream.Write(permission.sendNotifications);
+			}
+			
+			writeStream.Write(fileInformation.namedPermissions.Count);
+			foreach (var namedPermissionKVP in fileInformation.namedPermissions)
+			{
+				var namedPermissionsForUser = namedPermissionKVP.Value;
+				writeStream.Write(namedPermissionsForUser.Count);
+				writeStream.Write(namedPermissionKVP.Key);
+				
+				foreach (var namedPermissionForUserKVP in namedPermissionsForUser)
+				{
+					writeStream.WriteString(namedPermissionForUserKVP.Key);
+					writeStream.Write(namedPermissionForUserKVP.Value);
+				}
+			}
+			
+			writeStream.Write(fileInformation.relationships.Count);
+			foreach (var relationshipKVP in fileInformation.relationships)
+			{
+				var relatedFile = relationshipKVP.Key;
+				foreach (var name in relationshipKVP.Value)
+				{
+					writeStream.WriteString(name);
+					writeStream.Write(relatedFile.fileId);
+				}
+			}
+		}
+	}
 }

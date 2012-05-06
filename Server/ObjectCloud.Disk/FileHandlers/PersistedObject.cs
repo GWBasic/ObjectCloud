@@ -19,14 +19,14 @@ namespace ObjectCloud.Disk.FileHandlers
 			this.serializeCallback = serializeCallback;
 		}
 		
-		public PersistedObject(string path, Func<T> constructor)
+		public PersistedObject(string path, Func<T> constructor, Func<Stream, T> deserializeCallback, Action<Stream, T> serializeCallback)
 			: base(path, constructor)
 		{
 			this.deserializeCallback = deserializeCallback;
 			this.serializeCallback = serializeCallback;
 		}
 		
-		public PersistedObject(string path, T persistedObject)
+		public PersistedObject(string path, T persistedObject, Func<Stream, T> deserializeCallback, Action<Stream, T> serializeCallback)
 			: base(path, persistedObject)
 		{
 			this.deserializeCallback = deserializeCallback;
