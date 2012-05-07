@@ -26,7 +26,7 @@ namespace ObjectCloud.Disk.Test
         public void TestCreateFileSystemResolver()
         {
             Assert.AreEqual(
-                "." + Path.DirectorySeparatorChar + "FileSystem",
+                Path.GetFullPath("." + Path.DirectorySeparatorChar + "FileSystem"),
                 ((FileSystem)FileHandlerFactoryLocator.FileSystem).ConnectionString);
             Assert.AreEqual("0", FileHandlerFactoryLocator.FileSystem.RootDirectoryId.ToString());
 
@@ -282,7 +282,7 @@ namespace ObjectCloud.Disk.Test
             dh.CreateFile(fileName, "name-value", null);
 
             // Make sure that the file was actually created
-            dh.OpenFile(fileName);
+            dh.OpenFile(fileName).CastFileHandler<INameValuePairsHandler>().Set(null, "name", "value");
 
             dh.DeleteFile(null, fileName);
 

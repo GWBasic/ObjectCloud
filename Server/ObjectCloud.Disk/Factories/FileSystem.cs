@@ -44,6 +44,8 @@ namespace ObjectCloud.Disk.Factories
                     _ConnectionString = _ConnectionString.Replace('/', Path.DirectorySeparatorChar);
                     _ConnectionString = _ConnectionString.Replace('\\', Path.DirectorySeparatorChar);
                 }
+				
+				_ConnectionString = Path.GetFullPath(_ConnectionString);
             }
         }
         private string _ConnectionString;
@@ -55,7 +57,7 @@ namespace ObjectCloud.Disk.Factories
         /// <returns></returns>
         public string GetFullPath(IFileId id)
         {
-            return ConnectionString + Path.DirectorySeparatorChar + id.ToString();
+            return Path.Combine(ConnectionString, id.ToString());
         }
 
         public void DeleteFile(IFileId fileId)

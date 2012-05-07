@@ -185,8 +185,8 @@ namespace ObjectCloud.Disk.FileHandlers
             IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
             IFileHandlerFactory fileHandlerFactory = fileSystemResolver.GetFactoryForFileType(fileType);
 
-            return CreateFileHelper(
-                filename, fileType, ownerID, new CreateFileDelegate(fileHandlerFactory.CreateFile));
+            return this.CreateFileHelper(
+                filename, fileType, ownerID, fileHandlerFactory.CreateFile);
         }
 
         public IFileHandler RestoreFile(string filename, string fileType, string pathToRestoreFrom, ID<IUserOrGroup, Guid> userId)
@@ -196,7 +196,7 @@ namespace ObjectCloud.Disk.FileHandlers
             IFileSystemResolver fileSystemResolver = FileHandlerFactoryLocator.FileSystemResolver;
             IFileHandlerFactory fileHandlerFactory = fileSystemResolver.GetFactoryForFileType(fileType);
 
-            return CreateFileHelper(
+            return this.CreateFileHelper(
                 filename, fileType, userId, fileId => fileHandlerFactory.RestoreFile(fileId, pathToRestoreFrom, userId, this));
         }
 
@@ -802,12 +802,6 @@ namespace ObjectCloud.Disk.FileHandlers
 				
                 log.Info("Successfully wrote " + FileContainer.FullPath);
             }
-        }
-
-        public override void OnDelete(IUser changer)
-        {
-            foreach (IFileContainer fileContainer in new List<IFileContainer>(Files))
-                this.DeleteFile(changer, fileContainer.Filename);
         }
 
         public void Rename(IUser changer, string oldFilename, string newFilename)

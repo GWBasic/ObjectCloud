@@ -23,12 +23,6 @@ namespace ObjectCloud.Disk.FileHandlers
 				path,
 				() => new Dictionary<string, string>());
 		}
-						
-		public override void OnDelete (ObjectCloud.Interfaces.Security.IUser changer)
-		{
-			var path = Path.GetDirectoryName(this.persistedPairs.Path);
-			new ObjectCloud.Disk.Factories.FileSystem().RecursiveDelete(path);
-		}
 
 		private readonly PersistedBinaryFormatterObject<Dictionary<string, string>> persistedPairs;
 		

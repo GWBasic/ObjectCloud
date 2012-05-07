@@ -26,14 +26,6 @@ namespace ObjectCloud.Disk.FileHandlers
         public UserHandler(IDatabaseConnector databaseConnector, FileHandlerFactoryLocator fileHandlerFactoryLocator)
             : base(databaseConnector, fileHandlerFactoryLocator) { }
 						
-		public override void OnDelete (ObjectCloud.Interfaces.Security.IUser changer)
-		{
-			/*var path = Path.GetDirectoryName(this._DatabaseFilename);
-			new ObjectCloud.Disk.Factories.FileSystem().RecursiveDelete(path);*/
-			
-			// TODO!!!
-		}
-
         public string this[string name]
         {
             get

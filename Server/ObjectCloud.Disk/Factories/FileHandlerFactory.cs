@@ -38,7 +38,7 @@ namespace ObjectCloud.Disk.Factories
 
         public void CreateFile(IFileId fileId)
         {
-            string path = FileSystem.GetFullPath(fileId);
+            string path = this.FileSystem.GetFullPath(fileId);
 
             bool success = null != Directory.CreateDirectory(path);
 

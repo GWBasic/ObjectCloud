@@ -26,12 +26,6 @@ namespace ObjectCloud.Disk.FileHandlers
             this.path = path;
         }
 				
-		public override void OnDelete (ObjectCloud.Interfaces.Security.IUser changer)
-		{
-			var path = Path.GetDirectoryName(this.path);
-			new ObjectCloud.Disk.Factories.FileSystem().RecursiveDelete(path);
-		}
-
         /// <summary>
         /// The cached text to minimize disk usage
         /// </summary>

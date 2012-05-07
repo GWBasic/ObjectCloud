@@ -142,9 +142,5 @@ namespace ObjectCloud.CallHomePlugin
 
             return toReturn;
         }
-		
-		public override void OnDelete (IUser changer)
-		{
-		}
     }
 }

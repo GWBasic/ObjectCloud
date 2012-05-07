@@ -24,12 +24,6 @@ namespace ObjectCloud.Disk.FileHandlers
 			_DatabaseFilename = databaseFilename;
             _EmbeddedDatabaseConnector = embeddedDatabaseConnector;
 		}
-				
-		public override void OnDelete (ObjectCloud.Interfaces.Security.IUser changer)
-		{
-			var path = Path.GetDirectoryName(this._DatabaseFilename);
-			new ObjectCloud.Disk.Factories.FileSystem().RecursiveDelete(path);
-		}
 
 		/// <summary>
 		/// The filename of the embedded database

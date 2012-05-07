@@ -34,14 +34,6 @@ namespace ObjectCloud.Disk.FileHandlers
             MaxLocalUsers = maxLocalUsers;
             GroupIdsThatUserIsInCache = new Cache<ID<IUserOrGroup, Guid>, ICollection<ID<IUserOrGroup, Guid>>>(GetGroupIdsThatUserIsInForCache);
         }
-						
-		public override void OnDelete (ObjectCloud.Interfaces.Security.IUser changer)
-		{
-			/*var path = Path.GetDirectoryName(this._DatabaseFilename);
-			new ObjectCloud.Disk.Factories.FileSystem().RecursiveDelete(path);*/
-			
-			// TODO
-		}
 
         public int? MaxLocalUsers { get; set; }
 

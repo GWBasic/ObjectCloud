@@ -68,7 +68,9 @@ namespace ObjectCloud.Interfaces.Disk
 
         public abstract void Dump(string path, ObjectCloud.Common.ID<ObjectCloud.Interfaces.Security.IUserOrGroup, Guid> userId);
 
-        public abstract void OnDelete(IUser changer);
+        public virtual void OnDelete(IUser changer)
+		{
+		}
 
         public FileHandlerFactoryLocator FileHandlerFactoryLocator
         {
