@@ -19,7 +19,6 @@ namespace ObjectCloud.Disk.FileHandlers
 			this.constructor = constructor;
 			this.path = path;
 			this.transactionPath = path + ".transaction";
-			this.Load();
 		}
 		
 		public PersistedObjectBase(string path, T persistedObject)
@@ -28,7 +27,6 @@ namespace ObjectCloud.Disk.FileHandlers
 			this.path = path;
 			this.transactionPath = path + ".transaction";
 			this.persistedObject = persistedObject;
-			this.Save();
 		}
 		
 		/// <summary>
@@ -71,7 +69,7 @@ namespace ObjectCloud.Disk.FileHandlers
 		/// <summary>
 		/// Loads the object from disk
 		/// </summary>
-		private void Load()
+		protected void Load()
 		{
 			// Restore failed write transactions
 			if (File.Exists(this.transactionPath))
@@ -106,7 +104,7 @@ namespace ObjectCloud.Disk.FileHandlers
 		/// <summary>
 		/// Saves the object to disk
 		/// </summary>
-		private void Save()
+		protected void Save()
 		{
 			// If there's an eventual write scheduled, it no longer is needed
 			if (null != this.timer)

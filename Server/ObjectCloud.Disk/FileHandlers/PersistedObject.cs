@@ -17,6 +17,8 @@ namespace ObjectCloud.Disk.FileHandlers
 		{
 			this.deserializeCallback = deserializeCallback;
 			this.serializeCallback = serializeCallback;
+
+			this.Load();
 		}
 		
 		public PersistedObject(string path, Func<T> constructor, Func<Stream, T> deserializeCallback, Action<Stream, T> serializeCallback)
@@ -24,6 +26,8 @@ namespace ObjectCloud.Disk.FileHandlers
 		{
 			this.deserializeCallback = deserializeCallback;
 			this.serializeCallback = serializeCallback;
+
+			this.Load();
 		}
 		
 		public PersistedObject(string path, T persistedObject, Func<Stream, T> deserializeCallback, Action<Stream, T> serializeCallback)
@@ -31,6 +35,8 @@ namespace ObjectCloud.Disk.FileHandlers
 		{
 			this.deserializeCallback = deserializeCallback;
 			this.serializeCallback = serializeCallback;
+
+			this.Save();
 		}
 		
 		/// <summary>

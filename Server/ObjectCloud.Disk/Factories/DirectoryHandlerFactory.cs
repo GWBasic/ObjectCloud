@@ -195,11 +195,12 @@ namespace ObjectCloud.Disk.Factories
 		/// <summary>
 		/// Represents a relationship while loading
 		/// </summary>
-		private class Relationship
+		private struct Relationship
 		{
-			public DirectoryHandler.FileInformation parentFile;
+			public DirectoryHandler.FileInformation relatedFile;
+			public FileId parentFileId;
 			public string name;
-			public FileId relatedFileId;
+			public bool inherit;
 		}
 		
 		/// <summary>
@@ -218,22 +219,22 @@ namespace ObjectCloud.Disk.Factories
 			
 			foreach (var relationship in relationships)
 			{
-				var relatedFile = fileInformations[relationship.relatedFileId];
+				var parentFile = fileInformations[relationship.parentFileId];
+				var relatedFile = relationship.relatedFile;
 				
 				HashSet<string> names;
-				if (!relationship.parentFile.relationships.TryGetValue(relatedFile, out names))
+				if (!parentFile.relationships.TryGetValue(relatedFile, out names))
 				{
-					relationship.parentFile.relationships[relatedFile] = names = new HashSet<string>();
+					parentFile.relationships[relatedFile] = names = new HashSet<string>();
 				}
-				
 				names.Add(relationship.name);
 				
-				throw new Exception("Not storing inhert for named permissions");
-				
-				/*if (!relatedFile.parentRelationships[relationship.parentFile].TryGetValue(names, out names))
+				Dictionary<string, bool> namesAndInherit;				
+				if (!relatedFile.parentRelationships.TryGetValue(parentFile, out namesAndInherit))
 				{
-					relatedFile.parentRelationships[relationship.parentFile] = names = new HashSet<string>();
-				}*/
+					relatedFile.parentRelationships[parentFile] = namesAndInherit = new Dictionary<string, bool>();
+				}
+				namesAndInherit[relationship.name] = relationship.inherit;
 			}
 			
 			return fileInformations;
@@ -296,8 +297,8 @@ namespace ObjectCloud.Disk.Factories
 			fileInformation.fileId = new FileId(readStream.Read<long>());
 			fileInformation.typeId = readStream.ReadString();
 			fileInformation.filename = readStream.ReadString();
-			fileInformation.ownerId = readStream.Read<ID<IUserOrGroup, Guid>>();
-			fileInformation.created = readStream.Read<DateTime>();
+			fileInformation.ownerId = readStream.ReadNullable<ID<IUserOrGroup, Guid>>();
+			fileInformation.created = readStream.ReadDateTime();
 			fileInformation.permissions = new Dictionary<ID<IUserOrGroup, Guid>, DirectoryHandler.Permission>();
 			fileInformation.namedPermissions = new Dictionary<ID<IUserOrGroup, Guid>, Dictionary<string, bool>>();
 			fileInformation.relationships = new Dictionary<DirectoryHandler.FileInformation, HashSet<string>>();
@@ -308,7 +309,7 @@ namespace ObjectCloud.Disk.Factories
 				fileInformation.permissions[readStream.Read<ID<IUserOrGroup, Guid>>()] =
 					new DirectoryHandler.Permission()
 					{
-						level = readStream.Read<FilePermissionEnum>(),
+						level = (FilePermissionEnum)readStream.Read<int>(),
 						inherit = readStream.Read<bool>(),
 						sendNotifications = readStream.Read<bool>()
 					};
@@ -327,12 +328,19 @@ namespace ObjectCloud.Disk.Factories
 			
 			int numRelationships = readStream.Read<int>();
 			for (var ctr = 0; ctr < numRelationships; ctr++)
-				relationships.Add(new Relationship()
-				{
-					parentFile = fileInformation,
-					name = readStream.ReadString(),
-					relatedFileId = readStream.Read<FileId>()
-				});
+			{
+				var parentFileId = readStream.Read<FileId>();
+				var numRelationshipsForParentFile = readStream.Read<int>();
+				
+				for (var relCtr = 0; relCtr < numRelationshipsForParentFile; relCtr++)
+					relationships.Add(new Relationship()
+					{
+						parentFileId = parentFileId,
+						name = readStream.ReadString(),
+						inherit = readStream.Read<bool>(),
+						relatedFile = fileInformation
+					});				
+			}
 			
 			fileInformations[fileInformation.fileId] = fileInformation;
 		}
@@ -343,7 +351,8 @@ namespace ObjectCloud.Disk.Factories
 			writeStream.Write(0);
 			
 			// The total number of relationships. Keeps memory allocations lower
-			fileInformations.Values.Sum(fileInformation => fileInformation.relationships.Values.Sum(relationships => relationships.Count));
+			int numRelationships = fileInformations.Values.Sum(fileInformation => fileInformation.relationships.Values.Sum(relationships => relationships.Count));
+			writeStream.Write(numRelationships);
 			
 			this.SerializeDirectory(
 				writeStream,
@@ -385,7 +394,7 @@ namespace ObjectCloud.Disk.Factories
 				writeStream.Write(permissionKVP.Key);
 				
 				var permission = permissionKVP.Value;
-				writeStream.Write(permission.level);
+				writeStream.Write((int)permission.level);
 				writeStream.Write(permission.inherit);
 				writeStream.Write(permission.sendNotifications);
 			}
@@ -404,14 +413,19 @@ namespace ObjectCloud.Disk.Factories
 				}
 			}
 			
-			writeStream.Write(fileInformation.relationships.Count);
-			foreach (var relationshipKVP in fileInformation.relationships)
+			writeStream.Write(fileInformation.parentRelationships.Count);
+			foreach (var parentRelationshipKVP in fileInformation.parentRelationships)
 			{
-				var relatedFile = relationshipKVP.Key;
-				foreach (var name in relationshipKVP.Value)
+				var parentFile = parentRelationshipKVP.Key;
+				writeStream.Write(parentFile.fileId);
+				
+				var relationshipsAndInhert = parentRelationshipKVP.Value;
+				writeStream.Write(relationshipsAndInhert.Count);
+				
+				foreach (var relationshipAndInhert in relationshipsAndInhert)
 				{
-					writeStream.WriteString(name);
-					writeStream.Write(relatedFile.fileId);
+					writeStream.WriteString(relationshipAndInhert.Key);
+					writeStream.Write(relationshipAndInhert.Value);
 				}
 			}
 		}

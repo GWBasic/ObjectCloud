@@ -12,11 +12,20 @@ namespace ObjectCloud.Disk.FileHandlers
 {
 	public class PersistedBinaryFormatterObject<T> : PersistedObjectBase<T>
 	{
-		public PersistedBinaryFormatterObject(string path) : base(path) {}
+		public PersistedBinaryFormatterObject(string path) : base(path)
+		{
+			this.Load();
+		}
 		
-		public PersistedBinaryFormatterObject(string path, Func<T> constructor) : base(path, constructor) {}
+		public PersistedBinaryFormatterObject(string path, Func<T> constructor) : base(path, constructor) 
+		{
+			this.Load();
+		}
 		
-		public PersistedBinaryFormatterObject(string path, T persistedObject) : base(path, persistedObject) {}
+		public PersistedBinaryFormatterObject(string path, T persistedObject) : base(path, persistedObject) 
+		{
+			this.Save();
+		}
 		
 		/// <summary>
 		/// A single binary formatter instanciated onces for quick reuse

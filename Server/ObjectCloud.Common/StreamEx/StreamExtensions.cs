@@ -47,6 +47,53 @@ namespace ObjectCloud.Common.StreamEx
             }
 		}
 		
+		/*public static T ReadEnum<T>(this Stream stream)
+			where T : struct
+		{
+			var t = Enum.GetUnderlyingType(typeof(T));
+			
+			if (t == typeof(int))
+				return (T)stream.Read<int>();
+			
+			else if (t == typeof(long))
+				return (T)stream.Read<long>();
+			
+			else if (t == typeof(uint))
+				return (T)stream.Read<uint>();
+			
+			else if (t == typeof(ulong))
+				return (T)stream.Read<ulong>();
+			
+			else if (t == typeof(byte))
+				return (T)stream.Read<byte>();
+			
+			return stream.Read<T>();
+		}
+
+		public static T WriteEnum<T>(this Stream stream, T val)
+			where T : struct
+		{
+			var t = Enum.GetUnderlyingType(typeof(T));
+
+			if (t == typeof(int))
+				stream.Write((int)val);
+			
+			else if (t == typeof(long))
+				stream.Write((long)val);
+			
+			else if (t == typeof(uint))
+				stream.Write((uint)val);
+			
+			else if (t == typeof(ulong))
+				stream.Write((ulong)val);
+			
+			else if (t == typeof(byte))
+				stream.Write((byte)val);
+			
+			else			
+				stream.Write(val);
+		}*/
+
 		public static T? ReadNullable<T>(this Stream stream)
             where T : struct
         {
@@ -68,6 +115,16 @@ namespace ObjectCloud.Common.StreamEx
 				stream.Write(false);
 		}
 		
+		public static DateTime ReadDateTime(this Stream stream)
+		{
+			return new DateTime(stream.Read<long>());
+		}
+		
+		public static void Write(this Stream stream, DateTime dateTime)
+		{
+			stream.Write(dateTime.Ticks);
+		}
+		
 		public static string ReadString(this Stream stream)
 		{
 			var length = stream.Read<int>();
@@ -85,7 +142,10 @@ namespace ObjectCloud.Common.StreamEx
 		public static void WriteString(this Stream stream, string val)
 		{
 			if (null == val)
+			{
 				stream.Write(int.MinValue);
+				return;
+			}
 			
 			var buffer = Encoding.UTF8.GetBytes(val);
 			
