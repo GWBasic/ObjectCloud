@@ -29,7 +29,18 @@ namespace ObjectCloud.Disk.Factories
 
         IFileHandler IFileHandlerFactory.OpenFile(IFileId fileId)
 		{
-            return OpenFile(fileId);
+			try
+			{
+            	return OpenFile(fileId);
+			}
+			catch (DirectoryNotFoundException)
+			{
+				throw new InvalidFileId(fileId);
+			}
+			catch (FileNotFoundException)
+			{
+				throw new InvalidFileId(fileId);
+			}
 		}
 
         public abstract void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID, IDirectoryHandler parentDirectory);

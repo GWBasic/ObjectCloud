@@ -1351,6 +1351,14 @@ namespace ObjectCloud.Disk.FileHandlers
 				return fileInformations[fileId].filename;
 			});
 		}
+		
+		public override void OnDelete (IUser changer)
+		{
+			foreach (var file in this.Files)
+				this.DeleteFile(changer, file.Filename);
+			
+			base.OnDelete(changer);
+		}
     }
 
     /// <summary>

@@ -319,8 +319,10 @@ namespace ObjectCloud.Disk.Test
             // Create a token file
             IDirectoryHandler subDirHandler = (IDirectoryHandler)fileHandler;
             subDirHandler.CreateFile("flah", "name-value", null);
-
-            IFileContainer lastFile = subDirHandler.OpenFile("flah");
+			
+			// Ensure that the file can be resolved
+			IFileContainer lastFile = subDirHandler.OpenFile("flah");
+            fileSystemResolver.ResolveFile(fileName + "/1/2/3");
 
             dh.DeleteFile(null, fileName);
 

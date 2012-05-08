@@ -42,6 +42,18 @@ namespace ObjectCloud.Disk.Factories
 						ThreadPool.QueueUserWorkItem(_ => this.RemoveDeadPermissions());
 					}
 			
+			this.persistedFileInformations.Read(fileInformations =>
+			{
+				DirectoryHandler.FileInformation fi;
+				if (fileInformations.TryGetValue(fileId, out fi))
+					if (fi is DirectoryHandler.DirectoryInformation)
+						return;
+					else
+						throw new InvalidFileId(fileId);
+				
+				throw new InvalidFileId(fileId);
+			});
+			
 			return new DirectoryHandler(this.persistedFileInformations, this.FileHandlerFactoryLocator);
         }
 		

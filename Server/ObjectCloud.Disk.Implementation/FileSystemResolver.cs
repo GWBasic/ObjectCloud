@@ -165,12 +165,12 @@ namespace ObjectCloud.Disk.Implementation
 
         public IFileHandler LoadFile(IFileId id, string fileType)
         {
-            return FileHandlers.Get(id, fileType);
+            return this.FileHandlers.Get(id, fileType);
         }
 
         public WebHandlers LoadWebHandlers(IFileContainer fileContainer)
         {
-            return WebHandlers.Get(fileContainer.FileId, fileContainer);
+            return this.WebHandlers.Get(fileContainer.FileId, fileContainer);
         }
 
         /// <summary>
@@ -236,9 +236,9 @@ namespace ObjectCloud.Disk.Implementation
 
         public void DeleteFile(IFileId id)
         {
-            FileHandlers.Remove(id);
-            WebHandlers.Remove(id);
-            FileHandlerFactoryLocator.FileSystem.DeleteFile(id);
+            this.FileHandlers.Remove(id);
+            this.WebHandlers.Remove(id);
+            this.FileHandlerFactoryLocator.FileSystem.DeleteFile(id);
         }
 
         public void CopyFile(string sourceFileName, string destinationFileName, ID<IUserOrGroup, Guid>? ownerID)
