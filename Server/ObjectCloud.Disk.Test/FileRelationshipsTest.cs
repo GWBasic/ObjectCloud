@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 using NUnit.Framework;
@@ -158,91 +159,31 @@ namespace ObjectCloud.Disk.Test
             directory.SetPermission(null, related1Container.Filename, new ID<IUserOrGroup, Guid>[] { User1.Id, Group.Id, User2.Id }, FilePermissionEnum.Read, false, false);
             directory.FileContainer.ParentDirectoryHandler.SetPermission(null, directory.FileContainer.Filename, new ID<IUserOrGroup, Guid>[] { User3.Id }, FilePermissionEnum.Read, true, false);
 
-            List<IFileContainer> fileContainers;
-
             // Test user1
-            fileContainers = new List<IFileContainer>(
-                directory.GetRelatedFiles(User1.Id, parentContainer.FileId, null, null, null, null, null));
+            var fileContainers = directory.GetRelatedFiles(User1.Id, parentContainer.FileId, null, null, null, null, null).Select(f => f.FileId);
 
-            Assert.IsTrue(fileContainers.Contains(related1Container), "File missing");
-            Assert.IsTrue(fileContainers.Contains(related2Container), "File missing");
-            Assert.IsTrue(!fileContainers.Contains(related3Container), "File missing");
-            Assert.IsTrue(!fileContainers.Contains(related4Container), "File missing");
+            Assert.IsTrue(fileContainers.Contains(related1Container.FileId), "File missing");
+            Assert.IsTrue(!fileContainers.Contains(related2Container.FileId), "File missing");
+            Assert.IsTrue(!fileContainers.Contains(related3Container.FileId), "File missing");
+            Assert.IsTrue(!fileContainers.Contains(related4Container.FileId), "File missing");
 
             // Test user2
-            fileContainers = new List<IFileContainer>(
-                directory.GetRelatedFiles(User2.Id, parentContainer.FileId, null, null, null, null, null));
+            fileContainers = 
+                directory.GetRelatedFiles(User2.Id, parentContainer.FileId, null, null, null, null, null).Select(f => f.FileId);
 
-            Assert.IsTrue(!fileContainers.Contains(related1Container), "File missing");
-            Assert.IsTrue(!fileContainers.Contains(related2Container), "File missing");
-            Assert.IsTrue(fileContainers.Contains(related3Container), "File missing");
-            Assert.IsTrue(!fileContainers.Contains(related4Container), "File missing");
+            Assert.IsTrue(fileContainers.Contains(related1Container.FileId), "File missing");
+            Assert.IsTrue(!fileContainers.Contains(related2Container.FileId), "File missing");
+            Assert.IsTrue(!fileContainers.Contains(related3Container.FileId), "File missing");
+            Assert.IsTrue(!fileContainers.Contains(related4Container.FileId), "File missing");
 
             // Test user3
-            fileContainers = new List<IFileContainer>(
-                directory.GetRelatedFiles(User3.Id, parentContainer.FileId, null, null, null, null, null));
+            fileContainers = 
+                directory.GetRelatedFiles(User3.Id, parentContainer.FileId, null, null, null, null, null).Select(f => f.FileId);
 
-            Assert.IsTrue(fileContainers.Contains(related1Container), "File missing");
-            Assert.IsTrue(fileContainers.Contains(related2Container), "File missing");
-            Assert.IsTrue(fileContainers.Contains(related3Container), "File missing");
-            Assert.IsTrue(fileContainers.Contains(related4Container), "File missing");
-        }
-
-        [Test]
-        public void TestPermissionsWorkThroughRelationships()
-        {
-            IDirectoryHandler directory = (IDirectoryHandler)FileHandlerFactoryLocator.FileSystemResolver.RootDirectoryHandler.CreateFile(
-                "TestPermissionsWorkThroughRelationships" + SRandom.Next<uint>(),
-                "directory",
-                FileHandlerFactoryLocator.UserFactory.RootUser.Id);
-
-            IFileContainer parentContainer = directory.CreateFile("parent", "text", User1.Id).FileContainer;
-            directory.SetNamedPermission(parentContainer.FileId, "aaa", new ID<IUserOrGroup, Guid>[] { User2.Id, User3.Id }, false);
-            directory.SetPermission(null, parentContainer.Filename, new ID<IUserOrGroup, Guid>[] { User3.Id }, FilePermissionEnum.Read, false, false);
-
-            IFileContainer relatedContainer = directory.CreateFile("related.txt", "text", User2.Id).FileContainer;
-            directory.AddRelationship(parentContainer, relatedContainer, "aaa", false);
-
-            Assert.AreEqual(FilePermissionEnum.Read, relatedContainer.LoadPermission(User3.Id), "User did not have permission for a related file");
-
-            List<IFileContainer> relatedFiles = new List<IFileContainer>(
-                directory.GetRelatedFiles(User3.Id, parentContainer.FileId, new string[] { "aaa" }.ToHashSet(), null, null, null, null));
-
-            Assert.AreEqual(1, relatedFiles.Count, "No related files found via permissions");
-            Assert.AreEqual(relatedContainer, relatedFiles[0], "Wrong related file found");
-        }
-
-        [Test]
-        public void TestCorrectRelationshipsTraveresed()
-        {
-            IDirectoryHandler directory = (IDirectoryHandler)FileHandlerFactoryLocator.FileSystemResolver.RootDirectoryHandler.CreateFile(
-                "TestCorrectRelationshipsTraveresed" + SRandom.Next<uint>(),
-                "directory",
-                FileHandlerFactoryLocator.UserFactory.RootUser.Id);
-
-            IFileContainer parentContainer = directory.CreateFile("parent", "text", User1.Id).FileContainer;
-            directory.SetNamedPermission(parentContainer.FileId, "aaa", new ID<IUserOrGroup, Guid>[] { User2.Id }, false);
-            directory.SetNamedPermission(parentContainer.FileId, "aaa", new ID<IUserOrGroup, Guid>[] { User3.Id }, false);
-            directory.SetNamedPermission(parentContainer.FileId, "bbb", new ID<IUserOrGroup, Guid>[] { User2.Id }, false);
-            directory.SetNamedPermission(parentContainer.FileId, "bbb", new ID<IUserOrGroup, Guid>[] { User3.Id }, false);
-            directory.SetPermission(null, parentContainer.Filename, new ID<IUserOrGroup, Guid>[] { User3.Id }, FilePermissionEnum.Read, false, false);
-
-            IFileContainer relatedContainerA = directory.CreateFile("relatedA.txt", "text", User2.Id).FileContainer;
-            directory.AddRelationship(parentContainer, relatedContainerA, "aaa", false);
-            IFileContainer relatedContainerB = directory.CreateFile("relatedB.txt", "text", User2.Id).FileContainer;
-            directory.AddRelationship(parentContainer, relatedContainerB, "bbb", false);
-
-            List<IFileContainer> relatedFiles = new List<IFileContainer>(
-                directory.GetRelatedFiles(User3.Id, parentContainer.FileId, new string[] { "aaa" }.ToHashSet(), null, null, null, null));
-
-            Assert.AreEqual(1, relatedFiles.Count, "No related files found via permissions");
-            Assert.AreEqual(relatedContainerA, relatedFiles[0], "Wrong related file found");
-
-            relatedFiles = new List<IFileContainer>(
-                directory.GetRelatedFiles(User3.Id, parentContainer.FileId, new string[] { "bbb" }.ToHashSet(), null, null, null, null));
-
-            Assert.AreEqual(1, relatedFiles.Count, "No related files found via permissions");
-            Assert.AreEqual(relatedContainerB, relatedFiles[0], "Wrong related file found");
+            Assert.IsTrue(fileContainers.Contains(related1Container.FileId), "File missing");
+            Assert.IsTrue(fileContainers.Contains(related2Container.FileId), "File missing");
+            Assert.IsTrue(fileContainers.Contains(related3Container.FileId), "File missing");
+            Assert.IsTrue(fileContainers.Contains(related4Container.FileId), "File missing");
         }
     }
 }
