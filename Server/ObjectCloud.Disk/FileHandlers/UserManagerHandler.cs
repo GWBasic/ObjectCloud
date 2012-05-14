@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Data.Common;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 using System.Text;
 using System.Xml;
@@ -24,18 +25,59 @@ using ObjectCloud.ORM.DataAccess.WhereConditionals;
 
 namespace ObjectCloud.Disk.FileHandlers
 {
-    public partial class UserManagerHandler : HasDatabaseFileHandler<IDatabaseConnector, IDatabaseConnection, IDatabaseTransaction>, IUserManagerHandler
+    public partial class UserManagerHandler : FileHandler, IUserManagerHandler
     {
         private static ILog log = LogManager.GetLogger<UserManagerHandler>();
+		
+		[Serializable]
+		internal class UserManagerData
+		{
+			public Dictionary<ID<IUserOrGroup, Guid>, User> users;
+			public Dictionary<ID<IUserOrGroup, Guid>, Group> groups;
+		}
+		
+		[Serializable]
+		internal class User
+		{
+			public string passwordMD5;
+			public bool builtIn;
+			public int identityProviderCode;
+			public string displayName;
+			public string identityProviderArgs;
+			public string name;
+			public List<AssociationHandle> associationHandles = null;
+		}
+		
+		[Serializable]
+		internal class AssociationHandle
+		{
+			public string value;
+			public DateTime TimeStamp = DateTime.UtcNow;
+		}
+		
+		[Serializable]
+		internal class Group
+		{
+			public ID<IUserOrGroup, Guid>? ownerID;
+			public bool builtIn;
+			public bool automatic;
+			public GroupType type;
+			public string displayName;
+			public string name;
+			public HashSet<User> users = new HashSet<User>();
+			public Dictionary<User, string> aliases = new Dictionary<User, string>();
+		}
 
-        public UserManagerHandler(IDatabaseConnector databaseConnector, FileHandlerFactoryLocator fileHandlerFactoryLocator, int? maxLocalUsers)
-            : base(databaseConnector, fileHandlerFactoryLocator) 
+        internal UserManagerHandler(PersistedBinaryFormatterObject<UserManagerData> persistedUserManagerData, FileHandlerFactoryLocator fileHandlerFactoryLocator, int? maxLocalUsers)
+            : base(fileHandlerFactoryLocator) 
         {
-            MaxLocalUsers = maxLocalUsers;
-            GroupIdsThatUserIsInCache = new Cache<ID<IUserOrGroup, Guid>, ICollection<ID<IUserOrGroup, Guid>>>(GetGroupIdsThatUserIsInForCache);
+            this.MaxLocalUsers = maxLocalUsers;
+			this.persistedUserManagerData = persistedUserManagerData;
         }
 
         public int? MaxLocalUsers { get; set; }
+		
+		private PersistedBinaryFormatterObject<UserManagerData> persistedUserManagerData;
 
         public IUser CreateUser(string name, string password, string displayName)
         {
@@ -75,7 +117,7 @@ namespace ObjectCloud.Disk.FileHandlers
             IIdentityProvider identityProvider)
         {
             if (null != MaxLocalUsers)
-                if (GetTotalLocalUsers() >= MaxLocalUsers.Value)
+                if (this.GetTotalLocalUsers() >= MaxLocalUsers.Value)
                     throw new MaximumUsersExceeded("The maximum number of users allowed on this server is met: " + MaxLocalUsers.Value.ToString());
 
             IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
@@ -88,11 +130,10 @@ namespace ObjectCloud.Disk.FileHandlers
 
             IUserHandler newUser;
             IUser userObj = null;
-
-            DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
-            {
-                // Make sure there isn't a duplicate user/group
-                ThrowExceptionIfDuplicate(transaction, name);
+			
+			this.persistedUserManagerData.Write(userManagerData =>
+			{
+				this.ThrowExceptionIfDuplicate(userManagerData, name);
 
                 if (identityProvider == FileHandlerFactoryLocator.LocalIdentityProvider)
                 {
@@ -102,72 +143,65 @@ namespace ObjectCloud.Disk.FileHandlers
                     if (usersDirectory.IsFilePresent(name + " .user"))
                         throw new UserAlreadyExistsException("There is a pre-existing " + name + ".user");
                 }
+				
+				var user = new User()
+				{
+                    name = name,
+                    passwordMD5 = passwordMD5,
+                    builtIn = builtIn,
+                    displayName = displayName,
+                    identityProviderCode = identityProvider.IdentityProviderCode,
+                    identityProviderArgs = identityProviderArgs
+				};
+				
+				userManagerData.users[userId] = user;
+                userObj = CreateUserObject(user);
+	
+	            if (identityProvider == FileHandlerFactoryLocator.LocalIdentityProvider)
+	            {
+	                try
+	                {
+	                    // Careful here!!!  When calling the constructor of the user's .user object or the user's directory, a transaction will
+	                    // be created against the user database!  That can cause a deadlock!
+	                    usersDirectory.CreateFile(name, "directory", userObj.Id);
+	
+	                    string userFileName = name + ".user";
+	                    newUser = usersDirectory.CreateSystemFile<IUserHandler>(userFileName, "user", userObj.Id);
+	                    newUser.Name = name;
+	                    usersDirectory.SetPermission(
+	                        null,
+	                        userFileName,
+	                        new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Everybody.Id },
+	                        FilePermissionEnum.Read,
+	                        false,
+	                        false);
+	                }
+	                catch
+	                {
+	                    if (null != usersDirectory)
+	                    {
+	                        if (usersDirectory.IsFilePresent(name))
+	                            try
+	                            {
+	                                usersDirectory.DeleteFile(null, name);
+	                            }
+	                            catch { }
+	
+	                        if (usersDirectory.IsFilePresent(name + ".user"))
+	                            try
+	                            {
+	                                usersDirectory.DeleteFile(null, name + ".user");
+	                            }
+	                            catch { }
+	                    }
 
-                DatabaseConnection.Users.Insert(delegate(IUsers_Writable user)
-                {
-                    user.Name = name;
-                    user.PasswordMD5 = passwordMD5;
-                    user.ID = userId;
-                    user.BuiltIn = builtIn;
-                    user.DisplayName = displayName;
-                    user.IdentityProviderCode = identityProvider.IdentityProviderCode;
-                    user.IdentityProviderArgs = identityProviderArgs;
-                });
-
-                // Reload the user
-                IUsers_Readable userFromDB = DatabaseConnection.Users.SelectSingle(Users_Table.ID == userId);
-                userObj = CreateUserObject(userFromDB);
-
-                transaction.Commit();
+						throw;
+	                }
+	
+	                if (!builtIn)
+	                    CreateGroup("friends", displayName + "'s friends", userObj.Id, GroupType.Personal);
+				}
             });
-
-            if (identityProvider == FileHandlerFactoryLocator.LocalIdentityProvider)
-            {
-                try
-                {
-                    // Careful here!!!  When calling the constructor of the user's .user object or the user's directory, a transaction will
-                    // be created against the user database!  That can cause a deadlock!
-                    usersDirectory.CreateFile(name, "directory", userObj.Id);
-
-                    string userFileName = name + ".user";
-                    newUser = usersDirectory.CreateSystemFile<IUserHandler>(userFileName, "user", userObj.Id);
-                    newUser.Name = name;
-                    usersDirectory.SetPermission(
-                        null,
-                        userFileName,
-                        new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Everybody.Id },
-                        FilePermissionEnum.Read,
-                        false,
-                        false);
-                }
-                catch
-                {
-                    if (null != usersDirectory)
-                    {
-                        if (usersDirectory.IsFilePresent(name))
-                            try
-                            {
-                                usersDirectory.DeleteFile(null, name);
-                            }
-                            catch { }
-
-                        if (usersDirectory.IsFilePresent(name + ".user"))
-                            try
-                            {
-                                usersDirectory.DeleteFile(null, name + ".user");
-                            }
-                            catch { }
-                    }
-
-                    // If there is an error creating the user's .user object or directory, try to delete the user
-                    DatabaseConnection.Users.Delete(Users_Table.ID == userId);
-
-                    throw;
-                }
-
-                if (!builtIn)
-                    CreateGroup("friends", displayName + "'s friends", userObj.Id, GroupType.Personal);
-            }
 
             return userObj;
         }
@@ -900,21 +934,6 @@ namespace ObjectCloud.Disk.FileHandlers
             });
 
             GroupIdsThatUserIsInCache.Remove(userId);
-        }
-
-        /// <summary>
-        /// Cache of groups that a user is in, this speeds access to files
-        /// </summary>
-        Cache<ID<IUserOrGroup, Guid>, ICollection<ID<IUserOrGroup, Guid>>> GroupIdsThatUserIsInCache;
-
-        private ICollection<ID<IUserOrGroup, Guid>> GetGroupIdsThatUserIsInForCache(ID<IUserOrGroup, Guid> userId)
-        {
-            List<ID<IUserOrGroup, Guid>> toReturn = new List<ID<IUserOrGroup, Guid>>();
-
-            foreach (IUserInGroups_Readable userInGroup in DatabaseConnection.UserInGroups.Select(UserInGroups_Table.UserID == userId))
-                toReturn.Add(userInGroup.GroupID);
-
-            return toReturn;
         }
 
         public IEnumerable<ID<IUserOrGroup, Guid>> GetGroupIdsThatUserIsIn(ID<IUserOrGroup, Guid> userId)
