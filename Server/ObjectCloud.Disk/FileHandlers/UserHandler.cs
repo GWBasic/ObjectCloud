@@ -4,14 +4,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Xml;
 
 using Common.Logging;
 
 using ObjectCloud.Common;
-using ObjectCloud.DataAccess.User;
 using ObjectCloud.Disk.FileHandlers.Particle;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
@@ -19,63 +20,103 @@ using ObjectCloud.ORM.DataAccess.WhereConditionals;
 
 namespace ObjectCloud.Disk.FileHandlers
 {
-    public class UserHandler : HasDatabaseFileHandler<IDatabaseConnector, IDatabaseConnection, IDatabaseTransaction>, IUserHandler
+    public class UserHandler : FileHandler, IUserHandler
     {
+		[Serializable]
+		internal class UserData
+		{
+			public Dictionary<string, string> nameValuePairs = new Dictionary<string, string>();
+			public Dictionary<string, Trusted> trusted = new Dictionary<string, Trusted>();
+		}
+
+		[Serializable]
+		internal class Trusted
+		{
+			public bool? login;
+			public bool? link;
+		}
+				
+		[Serializable]
+		internal class Notification : IHasTimeStamp
+		{
+			public DateTime timeStamp;
+			public string senderIdentity;
+			public string objectUrl;
+			public string summaryView;
+			public string documentType;
+			public string verb;
+			public string changeData;
+			public string linkedSenderIdentity;
+
+			public DateTime TimeStamp
+			{
+				get { return this.timeStamp; }
+			}
+		}
+		
         //static ILog log = LogManager.GetLogger<UserHandler>();
 
-        public UserHandler(IDatabaseConnector databaseConnector, FileHandlerFactoryLocator fileHandlerFactoryLocator)
-            : base(databaseConnector, fileHandlerFactoryLocator) { }
-						
+        internal UserHandler(PersistedBinaryFormatterObject<UserData> persistedUserData, PersistedObjectSequence<Notification> persistedNotifications, FileHandlerFactoryLocator fileHandlerFactoryLocator)
+            : base(fileHandlerFactoryLocator) 
+		{
+			this.persistedUserData = persistedUserData;
+			this.persistedNotifications = persistedNotifications;
+		}
+				
+		private PersistedBinaryFormatterObject<UserData> persistedUserData;
+		private PersistedObjectSequence<Notification> persistedNotifications;
+		
+		
         public string this[string name]
         {
             get
             {
-                IPairs_Readable pair = DatabaseConnection.Pairs.SelectSingle(Pairs_Table.Name == name);
-
-                if (null == pair)
-                    return null;
-
-                return pair.Value;
+				return this.persistedUserData.Read(userData =>
+				{
+					string value;
+					if (userData.nameValuePairs.TryGetValue(name, out value))
+						return value;
+					
+					return null;
+				});
             }
         }
 
         public void Set(IUser changer, string name, string value)
         {
-            DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
-            {
-                // Not sure if it's worth trying to update as opposed to delete...
-                // Update might be faster, but right now the data access system doesn't support it!
-                DatabaseConnection.Pairs.Delete(Pairs_Table.Name == name);
-
-                if (null != value)
-                    DatabaseConnection.Pairs.Insert(delegate(IPairs_Writable pair)
-                    {
-                        pair.Name = name;
-                        pair.Value = value;
-                    });
-
-                transaction.Commit();
-            });
+			this.persistedUserData.Write(userData =>
+			{
+				if (null != value)
+					userData.nameValuePairs[name] = value;
+				else
+					userData.nameValuePairs.Remove(name);
+			});
         }
 
         public bool Contains(string key)
         {
-            return this[key] != null;
+			return this.persistedUserData.Read(userData =>
+			{
+				return userData.nameValuePairs.ContainsKey(key);
+			});
         }
 
         public void Clear(IUser changer)
         {
-            DatabaseConnection.Pairs.Delete();
+			this.persistedUserData.Write(userData =>
+			{
+				userData.nameValuePairs.Clear();
+			});
         }
 
         public IEnumerator<KeyValuePair<string, string>> GetEnumerator()
         {
-            List<KeyValuePair<string, string>> toReturn = new List<KeyValuePair<string, string>>();
-
-            foreach (IPairs_Readable pair in DatabaseConnection.Pairs.Select())
-                toReturn.Add(new KeyValuePair<string, string>(pair.Name, pair.Value));
-
-            return toReturn.GetEnumerator();
+			IEnumerable<KeyValuePair<string, string>> enumerable = this.persistedUserData.Read(userData =>
+			{
+				return userData.nameValuePairs.ToArray();
+			});
+			
+			return enumerable.GetEnumerator();
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -85,33 +126,14 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public void WriteAll(IUser changer, IEnumerable<KeyValuePair<string, string>> contents, bool clearExisting)
         {
-            DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
-            {
-                if (clearExisting)
-                    DatabaseConnection.Pairs.Delete();
-
-                foreach (KeyValuePair<string, string> kvp in contents)
-                    Write(transaction, kvp.Key, kvp.Value);
-
-                transaction.Commit();
-            });
-        }
-
-        /// <summary>
-        /// Writes a pair onto a transaction
-        /// </summary>
-        /// <param name="transaction"></param>
-        /// <param name="name"></param>
-        /// <param name="value"></param>
-        private void Write(IDatabaseTransaction transaction, string name, string value)
-        {
-            DatabaseConnection.Pairs.Delete(Pairs_Table.Name == name);
-
-            DatabaseConnection.Pairs.Insert(delegate(IPairs_Writable pair)
-            {
-                pair.Name = name;
-                pair.Value = value;
-            });
+			this.persistedUserData.Write(userData =>
+			{
+				if (clearExisting)
+					userData.nameValuePairs.Clear();
+				
+				foreach (var pair in contents)
+					userData.nameValuePairs[pair.Key] = pair.Value;
+			});
         }
 
         public override void Dump(string path, ID<IUserOrGroup, Guid> userId)
@@ -163,23 +185,23 @@ namespace ObjectCloud.Disk.FileHandlers
                 throw new SecurityException("The anonymous user can not recieve notifications");
 
             DateTime timestamp = DateTime.UtcNow;
-
-            long notificationId = DatabaseConnection.Notification.InsertAndReturnPK<long>(delegate(INotification_Writable notification)
-            {
-                notification.ChangeData = changeData;
-                notification.DocumentType = documentType;
-                notification.LinkedSenderIdentity = linkedSenderIdentity;
-                notification.ObjectUrl = objectUrl;
-                notification.SenderIdentity = senderIdentity;
-                notification.SummaryView = summaryView;
-                notification.TimeStamp = timestamp;
-                notification.Verb = verb;
-            });
+			
+			this.persistedNotifications.Append(new Notification()
+			{
+                changeData = changeData,
+                documentType = documentType,
+                linkedSenderIdentity = linkedSenderIdentity,
+                objectUrl = objectUrl,
+                senderIdentity = senderIdentity,
+                summaryView = summaryView,
+                timeStamp = timestamp,
+                verb = verb
+			});
 
             Dictionary<NotificationColumn, object> notificationForEvent = new Dictionary<NotificationColumn, object>();
             notificationForEvent[NotificationColumn.ChangeData] = changeData;
             notificationForEvent[NotificationColumn.DocumentType] = documentType;
-            notificationForEvent[NotificationColumn.NotificationId] = notificationId;
+            notificationForEvent[NotificationColumn.NotificationId] = timestamp.Ticks;
             notificationForEvent[NotificationColumn.ObjectUrl] = objectUrl;
             notificationForEvent[NotificationColumn.SenderIdentity] = senderIdentity;
             notificationForEvent[NotificationColumn.SummaryView] = summaryView;
@@ -191,70 +213,67 @@ namespace ObjectCloud.Disk.FileHandlers
         }
 
         public IEnumerable<Dictionary<NotificationColumn, object>> GetNotifications(
-            long? newestNotificationId,
-            long? oldestNotificationId,
+            DateTime? newestNotificationNullable,
             long? maxNotificationsLong,
-            IEnumerable<string> objectUrls,
-            IEnumerable<string> senderIdentities,
+            HashSet<string> objectUrls,
+            HashSet<string> senderIdentities,
             HashSet<NotificationColumn> desiredValues)
         {
             if (this == FileHandlerFactoryLocator.UserFactory.AnonymousUser.UserHandler)
                 throw new SecurityException("The anonymous user can not recieve notifications");
 
-            uint? maxNotifications = null;
+            int maxNotifications;
             if (null != maxNotificationsLong)
-                maxNotifications = Convert.ToUInt32(maxNotificationsLong.Value);
+                maxNotifications = Convert.ToInt32(maxNotificationsLong.Value);
+			else
+				maxNotifications = 5000;
+			
+			
+			var newest = newestNotificationNullable ?? DateTime.MaxValue;
+			
+			var notifications = this.persistedNotifications.ReadSequence(newest, maxNotifications, notification =>
+			{
+				if (null != objectUrls)
+					if (!objectUrls.Contains(notification.objectUrl))
+						return false;
+				
+				if (null != senderIdentities)
+					if (!senderIdentities.Contains(notification.senderIdentity))
+					    return false;
+					    
+				return true;
+			});
 
-            // Build conditions
-            List<ComparisonCondition> comparisonConditions = new List<ComparisonCondition>();
-
-            if (null != newestNotificationId)
-                comparisonConditions.Add(Notification_Table.NotificationId <= newestNotificationId.Value);
-
-            if (null != oldestNotificationId)
-                comparisonConditions.Add(Notification_Table.NotificationId >= oldestNotificationId.Value);
-
-            if (null != objectUrls)
-                comparisonConditions.Add(Notification_Table.ObjectUrl.In(objectUrls));
-
-            if (null != senderIdentities)
-                comparisonConditions.Add(Notification_Table.SenderIdentity.In(senderIdentities) | Notification_Table.LinkedSenderIdentity.In(senderIdentities));
-
-            // run query and construct result
-            foreach (INotification_Readable notification in DatabaseConnection.Notification.Select(
-                ComparisonCondition.Condense(comparisonConditions),
-                maxNotifications,
-                ORM.DataAccess.OrderBy.Desc,
-                Notification_Table.NotificationId))
+			foreach (var notification in notifications)
             {
                 Dictionary<NotificationColumn, object> toYield = new Dictionary<NotificationColumn, object>();
 
                 if (desiredValues.Contains(NotificationColumn.NotificationId))
-                    toYield[NotificationColumn.NotificationId] = notification.NotificationId;
+                    toYield[NotificationColumn.NotificationId] = notification.timeStamp.Ticks;
 
                 if (desiredValues.Contains(NotificationColumn.ChangeData))
-                    toYield[NotificationColumn.ChangeData] = notification.ChangeData;
+                    toYield[NotificationColumn.ChangeData] = notification.changeData;
 
                 if (desiredValues.Contains(NotificationColumn.DocumentType))
-                    toYield[NotificationColumn.DocumentType] = notification.DocumentType;
+                    toYield[NotificationColumn.DocumentType] = notification.documentType;
 
                 if (desiredValues.Contains(NotificationColumn.LinkedSenderIdentity))
-                    toYield[NotificationColumn.LinkedSenderIdentity] = notification.LinkedSenderIdentity;
+                    toYield[NotificationColumn.LinkedSenderIdentity] = notification.linkedSenderIdentity;
 
                 if (desiredValues.Contains(NotificationColumn.ObjectUrl))
-                    toYield[NotificationColumn.ObjectUrl] = notification.ObjectUrl;
+                    toYield[NotificationColumn.ObjectUrl] = notification.objectUrl;
 
                 if (desiredValues.Contains(NotificationColumn.SenderIdentity))
-                    toYield[NotificationColumn.SenderIdentity] = notification.SenderIdentity;
+                    toYield[NotificationColumn.SenderIdentity] = notification.senderIdentity;
 
                 if (desiredValues.Contains(NotificationColumn.SummaryView))
-                    toYield[NotificationColumn.SummaryView] = notification.SummaryView;
+                    toYield[NotificationColumn.SummaryView] = notification.summaryView;
 
                 if (desiredValues.Contains(NotificationColumn.Timestamp))
-                    toYield[NotificationColumn.Timestamp] = notification.TimeStamp;
+                    toYield[NotificationColumn.Timestamp] = notification.timeStamp;
 
                 if (desiredValues.Contains(NotificationColumn.Verb))
-                    toYield[NotificationColumn.Verb] = notification.Verb;
+                    toYield[NotificationColumn.Verb] = notification.verb;
 
                 yield return toYield;
             }
@@ -285,46 +304,54 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public void SetRememberOpenIDLogin(string domain, bool remember)
         {
-            DatabaseConnection.Trusted.Upsert(
-                Trusted_Table.Domain == domain.ToLowerInvariant(),
-                delegate(ITrusted_Writable trusted)
-                {
-                    trusted.Login = remember;
-                });
+			domain = domain.ToLowerInvariant();
+			this.persistedUserData.Write(userData =>
+			{
+				Trusted trusted;
+				if (!userData.trusted.TryGetValue(domain, out trusted))
+					userData.trusted[domain] = trusted = new Trusted();
+				
+				trusted.login = remember;
+			});
         }
 
         public bool IsRememberOpenIDLogin(string domain)
         {
-            ITrusted_Readable trusted = DatabaseConnection.Trusted.SelectSingle(
-                Trusted_Table.Domain == domain.ToLowerInvariant());
-
-            if (null != trusted)
-                if (null != trusted.Login)
-                    return trusted.Login.Value;
-
-            return false;
+			return this.persistedUserData.Read(userData =>
+			{
+				Trusted trusted;
+				if (userData.trusted.TryGetValue(domain, out trusted))
+	                if (null != trusted.login)
+    	                return trusted.login.Value;
+				
+				return false;
+			});
         }
 
         public void SetRememberOpenIDLink(string domain, bool remember)
         {
-            DatabaseConnection.Trusted.Upsert(
-                Trusted_Table.Domain == domain.ToLowerInvariant(),
-                delegate(ITrusted_Writable trusted)
-                {
-                    trusted.Link = remember;
-                });
+			domain = domain.ToLowerInvariant();
+			this.persistedUserData.Write(userData =>
+			{
+				Trusted trusted;
+				if (!userData.trusted.TryGetValue(domain, out trusted))
+					userData.trusted[domain] = trusted = new Trusted();
+
+				trusted.link = remember;
+			});
         }
 
         public bool IsRememberOpenIDLink(string domain)
         {
-            ITrusted_Readable trusted = DatabaseConnection.Trusted.SelectSingle(
-                Trusted_Table.Domain == domain.ToLowerInvariant());
-
-            if (null != trusted)
-                if (null != trusted.Link)
-                    return trusted.Link.Value;
-
-            return false;
+			return this.persistedUserData.Read(userData =>
+			{
+				Trusted trusted;
+				if (userData.trusted.TryGetValue(domain, out trusted))
+	                if (null != trusted.link)
+    	                return trusted.link.Value;
+				
+				return false;
+			});
         }
     }
 }

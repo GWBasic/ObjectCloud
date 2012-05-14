@@ -51,11 +51,10 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="block"></param>
         /// <returns></returns>
         IEnumerable<Dictionary<NotificationColumn, object>> GetNotifications(
-            long? newestNotificationId,
-            long? oldestNotificationId,
+            DateTime? newestNotification,
             long? maxNotifications,
-            IEnumerable<string> objectUrls,
-            IEnumerable<string> senderIdentities,
+            HashSet<string> objectUrls,
+            HashSet<string> senderIdentities,
             HashSet<NotificationColumn> desiredValues);
 
         /// <summary>

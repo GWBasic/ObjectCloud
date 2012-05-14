@@ -358,8 +358,7 @@ namespace ObjectCloud.Disk.WebHandlers
         [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JavaScriptObject, FilePermissionEnum.Read)]
         public IWebResults GetNotifications(
             IWebConnection webConnection,
-            long? newestNotificationId,
-            long? oldestNotificationId,
+            DateTime? newestNotification,
             long? maxNotifications,
             string[] objectUrls,
             string[] senderIdentities,
@@ -405,9 +404,9 @@ namespace ObjectCloud.Disk.WebHandlers
             }
 
             List<Dictionary<string, object>> toReturn = new List<Dictionary<string, object>>();
-
+			
             foreach (Dictionary<NotificationColumn, object> notificationFromDB in FileHandler.GetNotifications(
-                newestNotificationId, oldestNotificationId, maxNotifications, objectUrls, senderIdentities, desiredValuesSet))
+                newestNotification, maxNotifications, objectUrls.ToHashSet(), senderIdentities.ToHashSet(), desiredValuesSet))
             {
                 Dictionary<string, object> notification = ConvertNotificationFromDBToNotificationForWeb(includeAvatarUrl, notificationFromDB);
                 toReturn.Add(notification);

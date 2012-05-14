@@ -25,6 +25,7 @@ using ObjectCloud.WebServer.Test;
 
 namespace ObjectCloud.Particle.UnitTests
 {
+	[TestFixture]
     public class TestParticle : HasThirdServer
     {
         private IDirectoryHandler TestDirectory
@@ -168,7 +169,7 @@ namespace ObjectCloud.Particle.UnitTests
             // Verify recipients
             Assert.IsNotNull(notification[NotificationColumn.ChangeData]);
             object parsedChangeData = JsonReader.Deserialize(notification[NotificationColumn.ChangeData].ToString());
-            Assert.IsInstanceOf<System.Collections.IEnumerable>(parsedChangeData);
+            Assert.IsInstanceOfType(typeof(System.Collections.IEnumerable), parsedChangeData);
             HashSet<string> recipients = new HashSet<string>(Enumerable<string>.Cast((System.Collections.IEnumerable)parsedChangeData));
 
             Assert.AreEqual(2, recipients.Count);

@@ -19,25 +19,20 @@ namespace ObjectCloud.Disk.Factories
         public override void CreateSystemFile(string path, FileId fileId)
         {
             Directory.CreateDirectory(path);
-
-            string databaseFilename = CreateDatabaseFilename(path);
-
-            DataAccessLocator.DatabaseCreator.Create(databaseFilename);
+			
+			string notificationsPath = this.CreateNotificationsPath(path);
+			Directory.CreateDirectory(notificationsPath);			
         }
-
-        /// <summary>
-        /// Service locator for data access objects
-        /// </summary>
-        public DataAccessLocator DataAccessLocator
-        {
-            get { return _DataAccessLocator; }
-            set { _DataAccessLocator = value; }
-        }
-        private DataAccessLocator _DataAccessLocator;
 
         public override UserHandler OpenFile(string path, FileId fileId)
         {
-            return ConstructNameValuePairsHander(CreateDatabaseFilename(path));
+			var databaseFilename = this.CreateDatabaseFilename(path);
+			string notificationsPath = this.CreateNotificationsPath(path);
+			
+			return new UserHandler(
+				new PersistedBinaryFormatterObject<UserHandler.UserData>(databaseFilename, () => new UserHandler.UserData()),
+				new PersistedObjectSequence<UserHandler.Notification>(notificationsPath, 5 * 1024 * 1024, 1024 * 1024 * 1024, this.FileHandlerFactoryLocator),
+				this.FileHandlerFactoryLocator);
         }
 
         /// <summary>
@@ -47,21 +42,17 @@ namespace ObjectCloud.Disk.Factories
         /// <returns></returns>
         private string CreateDatabaseFilename(string path)
         {
-            return string.Format("{0}{1}db.sqlite", path, Path.DirectorySeparatorChar);
+			return Path.Combine(path, "namevaluepairs");
         }
 
         /// <summary>
-        /// Constructs the NameValuePairsHandler to return
+        /// Creates the database file name
         /// </summary>
-        /// <param name="databaseFilename"></param>
+        /// <param name="path"></param>
         /// <returns></returns>
-        private UserHandler ConstructNameValuePairsHander(string databaseFilename)
+        private string CreateNotificationsPath(string path)
         {
-            UserHandler toReturn = new UserHandler(
-                DataAccessLocator.DatabaseConnectorFactory.CreateConnectorForEmbedded(databaseFilename),
-                FileHandlerFactoryLocator);
-
-            return toReturn;
+			return Path.Combine(path, "notifications");
         }
 
         public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID, IDirectoryHandler parentDirectory)
