@@ -32,8 +32,9 @@ namespace ObjectCloud.Disk.FileHandlers
 		[Serializable]
 		internal class UserManagerData
 		{
-			public Dictionary<ID<IUserOrGroup, Guid>, User> users;
-			public Dictionary<ID<IUserOrGroup, Guid>, Group> groups;
+			public Dictionary<ID<IUserOrGroup, Guid>, User> users = new Dictionary<ID<IUserOrGroup, Guid>, User>();
+			public Dictionary<ID<IUserOrGroup, Guid>, Group> groups = new Dictionary<ID<IUserOrGroup, Guid>, Group>();
+			public Dictionary<string, object> byName = new Dictionary<string, object>();
 		}
 		
 		[Serializable]
@@ -58,7 +59,7 @@ namespace ObjectCloud.Disk.FileHandlers
 		[Serializable]
 		internal class Group
 		{
-			public ID<IUserOrGroup, Guid>? ownerID;
+			public User owner;
 			public bool builtIn;
 			public bool automatic;
 			public GroupType type;
@@ -108,7 +109,8 @@ namespace ObjectCloud.Disk.FileHandlers
                 FileHandlerFactoryLocator.LocalIdentityProvider);
         }
 
-        public IUser CreateUser(string name,
+        public IUser CreateUser(
+			string name,
             string password,
             string displayName,
             ID<IUserOrGroup, Guid> userId,
@@ -116,6 +118,8 @@ namespace ObjectCloud.Disk.FileHandlers
             string identityProviderArgs,
             IIdentityProvider identityProvider)
         {
+			name = name.ToLowerInvariant();
+			
             if (null != MaxLocalUsers)
                 if (this.GetTotalLocalUsers() >= MaxLocalUsers.Value)
                     throw new MaximumUsersExceeded("The maximum number of users allowed on this server is met: " + MaxLocalUsers.Value.ToString());
@@ -155,7 +159,8 @@ namespace ObjectCloud.Disk.FileHandlers
 				};
 				
 				userManagerData.users[userId] = user;
-                userObj = CreateUserObject(user);
+				userManagerData.byName[name] = user;
+                userObj = this.CreateUserObject(user);
 	
 	            if (identityProvider == FileHandlerFactoryLocator.LocalIdentityProvider)
 	            {
@@ -230,60 +235,47 @@ namespace ObjectCloud.Disk.FileHandlers
                 throw new ArgumentException("Personal groups must have a declared owner");
 
             IGroup groupObj = null;
-
-            DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
-            {
-                // Make sure there isn't a duplicate user/group
-                ThrowExceptionIfDuplicate(transaction, name);
-
-                DatabaseConnection.Groups.Insert(delegate(IGroups_Writable group)
-                {
-                    if (groupType > GroupType.Personal)
-                        group.Name = name;
-                    else
-                        group.Name = groupId.ToString();
-
-                    group.ID = groupId;
-                    group.OwnerID = ownerId;
-                    group.BuiltIn = builtIn;
-                    group.Automatic = automatic;
-                    group.Type = groupType;
-                    group.DisplayName = displayName;
-                });
+			
+			this.persistedUserManagerData.Write(userManagerData =>
+			{
+				this.ThrowExceptionIfDuplicate(userManagerData, name);
 				
-                if (GroupType.Personal == groupType)
-                    DatabaseConnection.GroupAliases.Insert(delegate(IGroupAliases_Writable groupAlias)
-                    {
-                        groupAlias.Alias = name;
-                        groupAlias.GroupID = groupId;
-                        groupAlias.UserID = ownerId.Value;
-                    });
-
-                try
-                {
-                    // Reload the group
-                    IGroups_Readable groupFromDB = DatabaseConnection.Groups.SelectSingle(Groups_Table.ID == groupId);
-                    groupObj = CreateGroupObject(groupFromDB);
-                }
-                catch
-                {
-                    transaction.Rollback();
-                    throw;
-                }
+				User owner = null;
+				if (null != ownerId)
+					if (!userManagerData.users.TryGetValue(ownerId.Value, out owner))
+						throw new UnknownUser(ownerId.ToString());
+				
+				var group = new Group()
+				{
+					name = groupType > GroupType.Personal ? name : groupId.ToString(),
+                    owner = owner,
+                    builtIn = builtIn,
+                    automatic = automatic,
+                    type = groupType,
+                    displayName = displayName
+				};
+				
+				if (GroupType.Personal == groupType)
+					group.aliases[owner] = name;
+				
+				userManagerData.groups[groupId] = group;
+				userManagerData.byName[name] = group;
+				
+				groupObj = this.CreateGroupObject(group);
 				
                 IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
                 string groupFileName = name + ".group";
 				
-                IUser owner = null;
+                IUser ownerObj = null;
                 if (null != ownerId)
-                    owner = GetUser(ownerId.Value);
+                    ownerObj = GetUser(ownerId.Value);
 				
                 if (!automatic)
                 {
                     // Decide where the object goes, for personal groups in the user's directory, for system groups in the users directory
                     IDirectoryHandler groupObjectDestinationDirectory;
                     if (groupType == GroupType.Personal)
-                        groupObjectDestinationDirectory = usersDirectory.OpenFile(owner.Name).CastFileHandler<IDirectoryHandler>();
+                        groupObjectDestinationDirectory = usersDirectory.OpenFile(ownerObj.Name).CastFileHandler<IDirectoryHandler>();
                     else
                         groupObjectDestinationDirectory = usersDirectory;
 
@@ -315,7 +307,7 @@ namespace ObjectCloud.Disk.FileHandlers
                             true, 
                             false);
 
-                    groupDB.Set(owner, "GroupId", groupId.Value.ToString());
+                    groupDB.Set(ownerObj, "GroupId", groupId.Value.ToString());
                 }
 
 				transaction.Commit();
@@ -332,55 +324,56 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <param name="name">
         /// A <see cref="System.String"/>
         /// </param>
-        private void ThrowExceptionIfDuplicate(IDatabaseTransaction transaction, string name)
+        private void ThrowExceptionIfDuplicate(UserManagerData userManagerData, string name)
         {
-            IEnumerator enumerator;
-
-            enumerator = DatabaseConnection.Users.Select(Users_Table.Name.In(name.ToLowerInvariant(), name)).GetEnumerator();
-
-            if (enumerator.MoveNext())
-            {
-                // clean out enumerator
-                while (enumerator.MoveNext()) ;
-
+			if (userManagerData.byName.ContainsKey(name))
                 throw new UserAlreadyExistsException("Duplicate user: " + name);
-            }
-
-            enumerator = DatabaseConnection.Groups.Select(Groups_Table.Name.In(name.ToLowerInvariant(), name)).GetEnumerator();
-
-            if (enumerator.MoveNext())
-            {
-                // clean out enumerator
-                while (enumerator.MoveNext()) ;
-
-                throw new UserAlreadyExistsException("Duplicate user: " + name);
-            }
         }
 
         public IUser GetUserNoException(string nameOrGroupOrIdentity)
         {
-            nameOrGroupOrIdentity = FilterIdentityToLocalNameIfNeeded(nameOrGroupOrIdentity);
+            nameOrGroupOrIdentity = this.FilterIdentityToLocalNameIfNeeded(nameOrGroupOrIdentity);
 
-            IUsers_Readable user = DatabaseConnection.Users.SelectSingle(
-                Users_Table.Name.In(nameOrGroupOrIdentity.ToLowerInvariant(), nameOrGroupOrIdentity));
+			return this.persistedUserManagerData.Read(userManagerData =>
+			{
+				object userObj;
+				User user = null;
+				
+				if (userManagerData.byName.TryGetValue(nameOrGroupOrIdentity, out userObj))
+					user = userObj as User;
+				
+				if (null == user)
+					if (userManagerData.byName.TryGetValue(nameOrGroupOrIdentity.ToLowerInvariant(), out userObj))
+						user = userObj as User;
 
-            if (null == user)
-                return null;
+	            if (null == user)
+    	            return null;
 
-            return CreateUserObject(user);
+        	    return this.CreateUserObject(user);
+			});
         }
 
         private IUsers_Readable GetUserInt(string nameOrGroupOrIdentity)
         {
             nameOrGroupOrIdentity = FilterIdentityToLocalNameIfNeeded(nameOrGroupOrIdentity);
 
-            IUsers_Readable user = DatabaseConnection.Users.SelectSingle(
-                Users_Table.Name.In(nameOrGroupOrIdentity.ToLowerInvariant(), nameOrGroupOrIdentity));
+			return this.persistedUserManagerData.Read(userManagerData =>
+			{
+				object userObj;
+				User user = null;
+				
+				if (userManagerData.byName.TryGetValue(nameOrGroupOrIdentity, out userObj))
+					user = userObj as User;
+				
+				if (null == user)
+					if (userManagerData.byName.TryGetValue(nameOrGroupOrIdentity.ToLowerInvariant(), out userObj))
+						user = userObj as User;
 
-            if (null == user)
-                throw new UnknownUser("Unknown user");
+	            if (null == user)
+    	            throw new UnknownUser("Unknown user");
 
-            return user;
+        	    return this.CreateUserObject(user);
+			});			
         }
 
         /// <summary>
@@ -412,20 +405,14 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public IUser GetUserNoException(ID<IUserOrGroup, Guid> userId)
         {
-            IUser toReturn = null;
-
-            UsersCache.TryGetValue(userId, out toReturn);
-            if (null != toReturn)
-                return toReturn;
-
-            IUsers_Readable user = DatabaseConnection.Users.SelectSingle(Users_Table.ID == userId.Value);
-
-            if (null == user)
-                return null;
-
-            toReturn = CreateUserObject(user);
-            UsersCache[userId] = toReturn;
-            return toReturn;
+			return this.persistedUserManagerData.Read(userManagerData =>
+			{
+				User user;
+				if (userManagerData.users.TryGetValue(userId, out user))
+	        	    return this.CreateUserObject(user);
+				
+				return null;
+			});
         }
 
         public IGroup GetGroup(string name)
