@@ -18,7 +18,6 @@ using JsonFx.Json;
 
 using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
-using ObjectCloud.DataAccess.UserManager;
 using ObjectCloud.Disk.Implementation;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;

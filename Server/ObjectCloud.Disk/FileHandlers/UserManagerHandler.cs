@@ -16,7 +16,6 @@ using Common.Logging;
 using ExtremeSwank.OpenId;
 
 using ObjectCloud.Common;
-using ObjectCloud.DataAccess.UserManager;
 using ObjectCloud.Disk.Implementation;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
@@ -32,20 +31,25 @@ namespace ObjectCloud.Disk.FileHandlers
 		[Serializable]
 		internal class UserManagerData
 		{
-			public Dictionary<ID<IUserOrGroup, Guid>, User> users = new Dictionary<ID<IUserOrGroup, Guid>, User>();
-			public Dictionary<ID<IUserOrGroup, Guid>, Group> groups = new Dictionary<ID<IUserOrGroup, Guid>, Group>();
+			public Dictionary<ID<IUserOrGroup, Guid>, UserInt> users = new Dictionary<ID<IUserOrGroup, Guid>, UserInt>();
+			public Dictionary<ID<IUserOrGroup, Guid>, GroupInt> groups = new Dictionary<ID<IUserOrGroup, Guid>, GroupInt>();
 			public Dictionary<string, object> byName = new Dictionary<string, object>();
 		}
 		
+		internal class UserBase
+		{
+			public ID<IUserOrGroup, Guid> id;
+			public string name;
+			public bool builtIn;
+		}
+		
 		[Serializable]
-		internal class User
+		internal class UserInt : UserBase
 		{
 			public string passwordMD5;
-			public bool builtIn;
 			public int identityProviderCode;
 			public string displayName;
 			public string identityProviderArgs;
-			public string name;
 			public List<AssociationHandle> associationHandles = null;
 		}
 		
@@ -57,16 +61,14 @@ namespace ObjectCloud.Disk.FileHandlers
 		}
 		
 		[Serializable]
-		internal class Group
+		internal class GroupInt : UserBase
 		{
-			public User owner;
-			public bool builtIn;
+			public UserInt owner;
 			public bool automatic;
 			public GroupType type;
 			public string displayName;
-			public string name;
 			public HashSet<User> users = new HashSet<User>();
-			public Dictionary<User, string> aliases = new Dictionary<User, string>();
+			public Dictionary<UserInt, string> aliases = new Dictionary<UserInt, string>();
 		}
 
         internal UserManagerHandler(PersistedBinaryFormatterObject<UserManagerData> persistedUserManagerData, FileHandlerFactoryLocator fileHandlerFactoryLocator, int? maxLocalUsers)
@@ -148,9 +150,10 @@ namespace ObjectCloud.Disk.FileHandlers
                         throw new UserAlreadyExistsException("There is a pre-existing " + name + ".user");
                 }
 				
-				var user = new User()
+				var user = new UserInt()
 				{
                     name = name,
+					id = userId,
                     passwordMD5 = passwordMD5,
                     builtIn = builtIn,
                     displayName = displayName,
@@ -240,14 +243,15 @@ namespace ObjectCloud.Disk.FileHandlers
 			{
 				this.ThrowExceptionIfDuplicate(userManagerData, name);
 				
-				User owner = null;
+				UserInt owner = null;
 				if (null != ownerId)
 					if (!userManagerData.users.TryGetValue(ownerId.Value, out owner))
 						throw new UnknownUser(ownerId.ToString());
 				
-				var group = new Group()
+				var group = new GroupInt()
 				{
 					name = groupType > GroupType.Personal ? name : groupId.ToString(),
+					id = groupId,
                     owner = owner,
                     builtIn = builtIn,
                     automatic = automatic,
@@ -309,8 +313,6 @@ namespace ObjectCloud.Disk.FileHandlers
 
                     groupDB.Set(ownerObj, "GroupId", groupId.Value.ToString());
                 }
-
-				transaction.Commit();
             });
 
 			log.Info("Created group: " + name);
@@ -337,14 +339,14 @@ namespace ObjectCloud.Disk.FileHandlers
 			return this.persistedUserManagerData.Read(userManagerData =>
 			{
 				object userObj;
-				User user = null;
+				UserInt user = null;
 				
 				if (userManagerData.byName.TryGetValue(nameOrGroupOrIdentity, out userObj))
-					user = userObj as User;
+					user = userObj as UserInt;
 				
 				if (null == user)
 					if (userManagerData.byName.TryGetValue(nameOrGroupOrIdentity.ToLowerInvariant(), out userObj))
-						user = userObj as User;
+						user = userObj as UserInt;
 
 	            if (null == user)
     	            return null;
@@ -353,26 +355,26 @@ namespace ObjectCloud.Disk.FileHandlers
 			});
         }
 
-        private IUsers_Readable GetUserInt(string nameOrGroupOrIdentity)
+        private UserInt GetUserInt(string nameOrGroupOrIdentity)
         {
             nameOrGroupOrIdentity = FilterIdentityToLocalNameIfNeeded(nameOrGroupOrIdentity);
 
 			return this.persistedUserManagerData.Read(userManagerData =>
 			{
 				object userObj;
-				User user = null;
+				UserInt user = null;
 				
 				if (userManagerData.byName.TryGetValue(nameOrGroupOrIdentity, out userObj))
-					user = userObj as User;
+					user = userObj as UserInt;
 				
 				if (null == user)
 					if (userManagerData.byName.TryGetValue(nameOrGroupOrIdentity.ToLowerInvariant(), out userObj))
-						user = userObj as User;
+						user = userObj as UserInt;
 
 	            if (null == user)
     	            throw new UnknownUser("Unknown user");
 
-        	    return this.CreateUserObject(user);
+				return user;
 			});			
         }
 
@@ -407,7 +409,7 @@ namespace ObjectCloud.Disk.FileHandlers
         {
 			return this.persistedUserManagerData.Read(userManagerData =>
 			{
-				User user;
+				UserInt user;
 				if (userManagerData.users.TryGetValue(userId, out user))
 	        	    return this.CreateUserObject(user);
 				
@@ -434,102 +436,107 @@ namespace ObjectCloud.Disk.FileHandlers
 				}
             }
 
-            IGroups_Readable group = DatabaseConnection.Groups.SelectSingle(Groups_Table.Name == name);
-
-            if (null == group)
-                throw new UnknownUser("Unknown group");
-
-            return CreateGroupObject(group);
+			return this.persistedUserManagerData.Read(userManagerData =>
+			{
+				object groupObject;
+				if (userManagerData.byName.TryGetValue(name, out groupObject))
+					if (groupObject is GroupInt)
+						return this.CreateGroupObject((GroupInt)groupObject);
+			
+                throw new UnknownUser("Unknown group: " + name);
+			});
         }
 
         public IGroup GetGroup(ID<IUserOrGroup, Guid> groupId)
         {
-            IGroups_Readable group = GetGroupInt(ref groupId);
+            var group = this.GetGroupInt(groupId);
 
-            return CreateGroupObject(group);
+            return this.CreateGroupObject(group);
         }
 
-        private IGroups_Readable GetGroupInt(ref ID<IUserOrGroup, Guid> groupId)
+        private GroupInt GetGroupInt(ID<IUserOrGroup, Guid> groupId)
         {
-            IGroups_Readable group = DatabaseConnection.Groups.SelectSingle(Groups_Table.ID == groupId.Value);
+			return this.persistedUserManagerData.Read(userManagerData =>
+			{
+				GroupInt group;
+				if (!userManagerData.groups.TryGetValue(groupId, out group))
+	                throw new UnknownUser("Unknown group");
 
-            if (null == group)
-                throw new UnknownUser("Unknown group");
-
-            return group;
-        }
+				return group;
+			});
+		}
 
         public IUserOrGroup GetUserOrGroup(ID<IUserOrGroup, Guid> userOrGroupId)
         {
-            IUsers_Readable user = DatabaseConnection.Users.SelectSingle(Users_Table.ID == userOrGroupId.Value);
+			return this.persistedUserManagerData.Read<IUserOrGroup>(userManagerData =>
+			{
+				UserInt user;
+				if (userManagerData.users.TryGetValue(userOrGroupId, out user))
+					return this.CreateUserObject(user);
+				
+				GroupInt group;
+				if (userManagerData.groups.TryGetValue(userOrGroupId, out group))
+					return this.CreateGroupObject(group);
 
-            if (null != user)
-                return CreateUserObject(user);
-
-            IGroups_Readable group = DatabaseConnection.Groups.SelectSingle(Groups_Table.ID == userOrGroupId.Value);
-
-            if (null == group)
-                throw new UnknownUser("Unknown user or group");
-
-            return CreateGroupObject(group);
+				throw new UnknownUser("Unknown user or group");
+			});
         }
 
         public IUserOrGroup GetUserOrGroupNoException(ID<IUserOrGroup, Guid> userOrGroupId)
         {
-            IUsers_Readable user = DatabaseConnection.Users.SelectSingle(Users_Table.ID == userOrGroupId.Value);
+			return this.persistedUserManagerData.Read<IUserOrGroup>(userManagerData =>
+			{
+				UserInt user;
+				if (userManagerData.users.TryGetValue(userOrGroupId, out user))
+					return this.CreateUserObject(user);
+				
+				GroupInt group;
+				if (userManagerData.groups.TryGetValue(userOrGroupId, out group))
+					return this.CreateGroupObject(group);
 
-            if (null != user)
-                return CreateUserObject(user);
-
-            IGroups_Readable group = DatabaseConnection.Groups.SelectSingle(Groups_Table.ID == userOrGroupId.Value);
-
-            if (null != group)
-                return CreateGroupObject(group);
-
-            return null;
+				return null;
+			});
         }
 
         public IUser GetUser(string name)
         {
-            IUsers_Readable user = GetUserInt(name);
+            var user = this.GetUserInt(name);
 
-            IUser toReturn = CreateUserObject(user);
-
-            return toReturn;
+            return this.CreateUserObject(user);
         }
 
         public IUserOrGroup GetUserOrGroupOrOpenId(string nameOrGroupOrIdentity)
         {
-            return GetUserOrGroupOrOpenId(nameOrGroupOrIdentity, false);
+            return this.GetUserOrGroupOrOpenId(nameOrGroupOrIdentity, false);
         }
 
         public IUserOrGroup GetUserOrGroupOrOpenId(string nameOrGroupOrIdentity, bool onlyInLocalDB)
         {
             nameOrGroupOrIdentity = FilterIdentityToLocalNameIfNeeded(nameOrGroupOrIdentity);
 
-            // This will find local users but not openID users
-            IUsers_Readable user = DatabaseConnection.Users.SelectSingle(
-                Users_Table.Name.In(nameOrGroupOrIdentity.ToLowerInvariant(), nameOrGroupOrIdentity));
+			return this.persistedUserManagerData.Read<IUserOrGroup>(userManagerData =>
+			{
+				object userOrGroup = null;
+				
+				if (!userManagerData.byName.TryGetValue(nameOrGroupOrIdentity, out userOrGroup))
+					userManagerData.byName.TryGetValue(nameOrGroupOrIdentity.ToLowerInvariant(), out userOrGroup);
+				
+				if (userOrGroup is UserInt)
+					return this.CreateUserObject((UserInt)userOrGroup);
+				
+				if (userOrGroup is GroupInt)
+					return this.CreateGroupObject((GroupInt)userOrGroup);
 
-            // If there is a matching user, return it
-            if (null != user)
-                return CreateUserObject(user);
-
-            IGroups_Readable group = DatabaseConnection.Groups.SelectSingle(Groups_Table.Name == nameOrGroupOrIdentity.ToLowerInvariant());
-
-            // If there is a matching group, return it
-            if (null != group)
-                return CreateGroupObject(group);
-
-            if (!onlyInLocalDB)
-                foreach (IIdentityProvider identityProvider in FileHandlerFactoryLocator.IdentityProviders.Values)
-                {
-                    IUser createdUser = identityProvider.GetOrCreateUserIfCorrectFormOfIdentity(nameOrGroupOrIdentity);
-                    if (null != createdUser)
-                        return createdUser;
-                }
-
-            throw new UnknownUser(nameOrGroupOrIdentity + " is not a known user, group, or identity");
+	            if (!onlyInLocalDB)
+	                foreach (IIdentityProvider identityProvider in FileHandlerFactoryLocator.IdentityProviders.Values)
+	                {
+	                    IUser createdUser = identityProvider.GetOrCreateUserIfCorrectFormOfIdentity(nameOrGroupOrIdentity);
+	                    if (null != createdUser)
+	                        return createdUser;
+	                }
+	
+	            throw new UnknownUser(nameOrGroupOrIdentity + " is not a known user, group, or identity");
+			});
         }
 
         public IUser GetUser(string name, string password)
@@ -632,17 +639,17 @@ namespace ObjectCloud.Disk.FileHandlers
         /// </summary>
         /// <param name="userFromDB"></param>
         /// <returns></returns>
-        private IUser CreateUserObject(IUsers_Readable userFromDB)
+        private IUser CreateUserObject(UserInt user)
         {
-            IIdentityProvider identityProvider = FileHandlerFactoryLocator.IdentityProviders[userFromDB.IdentityProviderCode];
+            IIdentityProvider identityProvider = FileHandlerFactoryLocator.IdentityProviders[user.identityProviderCode];
 
             IUser toReturn = identityProvider.CreateUserObject(
                 FileHandlerFactoryLocator,
-                userFromDB.ID,
-                userFromDB.Name,
-                userFromDB.BuiltIn,
-                userFromDB.DisplayName,
-                userFromDB.IdentityProviderArgs);
+                user.id,
+                user.name,
+                user.builtIn,
+                user.displayName,
+                user.identityProviderArgs);
 
             return toReturn;
         }
@@ -652,17 +659,17 @@ namespace ObjectCloud.Disk.FileHandlers
         /// </summary>
         /// <param name="groupFromDB"></param>
         /// <returns></returns>
-        private IGroup CreateGroupObject(IGroups_Readable groupFromDB)
+        private IGroup CreateGroupObject(GroupInt group)
         {
             return new Group(
-                groupFromDB.OwnerID,
-                groupFromDB.ID,
-                groupFromDB.Name,
-                groupFromDB.BuiltIn,
-                groupFromDB.Automatic,
-                groupFromDB.Type,
+                group.owner.id,
+                group.id,
+                group.name,
+                group.builtIn,
+                group.automatic,
+                group.type,
                 FileHandlerFactoryLocator,
-                groupFromDB.DisplayName);
+                group.displayName);
         }
 
         /// <summary>
@@ -670,18 +677,18 @@ namespace ObjectCloud.Disk.FileHandlers
         /// </summary>
         /// <param name="groupFromDB"></param>
         /// <returns></returns>
-        private IGroupAndAlias CreateGroupAndAliasObject(IGroups_Readable groupFromDB, IGroupAliases_Readable groupAliasFromDB)
+        private IGroupAndAlias CreateGroupAndAliasObject(GroupInt group, string alias)
         {
             return new GroupAndAlias(
-                groupFromDB.OwnerID,
-                groupFromDB.ID,
-                groupFromDB.Name,
-                groupFromDB.BuiltIn,
-                groupFromDB.Automatic,
-                groupFromDB.Type,
-                groupAliasFromDB != null ? groupAliasFromDB.Alias : null,
+                group.owner.id,
+                group.id,
+                group.name,
+                group.builtIn,
+                group.automatic,
+                group.type,
+                alias,
                 FileHandlerFactoryLocator,
-                groupFromDB.DisplayName);
+                group.displayName);
         }
 
         public void DeleteUser(string name)
