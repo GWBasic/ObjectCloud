@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Data.Common;
+using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 using System.Text;
@@ -33,7 +34,7 @@ namespace ObjectCloud.Disk.FileHandlers
 		{
 			public Dictionary<ID<IUserOrGroup, Guid>, UserInt> users = new Dictionary<ID<IUserOrGroup, Guid>, UserInt>();
 			public Dictionary<ID<IUserOrGroup, Guid>, GroupInt> groups = new Dictionary<ID<IUserOrGroup, Guid>, GroupInt>();
-			public Dictionary<string, object> byName = new Dictionary<string, object>();
+			public Dictionary<string, UserBase> byName = new Dictionary<string, UserBase>();
 		}
 		
 		internal class UserBase
@@ -50,14 +51,7 @@ namespace ObjectCloud.Disk.FileHandlers
 			public int identityProviderCode;
 			public string displayName;
 			public string identityProviderArgs;
-			public List<AssociationHandle> associationHandles = null;
-		}
-		
-		[Serializable]
-		internal class AssociationHandle
-		{
-			public string value;
-			public DateTime TimeStamp = DateTime.UtcNow;
+			public Dictionary<string, DateTime> associationHandles = new Dictionary<string, DateTime>();
 		}
 		
 		[Serializable]
@@ -338,7 +332,7 @@ namespace ObjectCloud.Disk.FileHandlers
 
 			return this.persistedUserManagerData.Read(userManagerData =>
 			{
-				object userObj;
+				UserBase userObj;
 				UserInt user = null;
 				
 				if (userManagerData.byName.TryGetValue(nameOrGroupOrIdentity, out userObj))
@@ -361,7 +355,7 @@ namespace ObjectCloud.Disk.FileHandlers
 
 			return this.persistedUserManagerData.Read(userManagerData =>
 			{
-				object userObj;
+				UserBase userObj;
 				UserInt user = null;
 				
 				if (userManagerData.byName.TryGetValue(nameOrGroupOrIdentity, out userObj))
@@ -438,7 +432,7 @@ namespace ObjectCloud.Disk.FileHandlers
 
 			return this.persistedUserManagerData.Read(userManagerData =>
 			{
-				object groupObject;
+				UserBase groupObject;
 				if (userManagerData.byName.TryGetValue(name, out groupObject))
 					if (groupObject is GroupInt)
 						return this.CreateGroupObject((GroupInt)groupObject);
@@ -516,7 +510,7 @@ namespace ObjectCloud.Disk.FileHandlers
 
 			return this.persistedUserManagerData.Read<IUserOrGroup>(userManagerData =>
 			{
-				object userOrGroup = null;
+				UserBase userOrGroup = null;
 				
 				if (!userManagerData.byName.TryGetValue(nameOrGroupOrIdentity, out userOrGroup))
 					userManagerData.byName.TryGetValue(nameOrGroupOrIdentity.ToLowerInvariant(), out userOrGroup);
@@ -541,25 +535,37 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public IUser GetUser(string name, string password)
         {
-            IUsers_Readable user = GetUserInt(name);
+            var user = GetUserInt(name);
 
             string passwordMD5 = CreateMD5(password);
 
-            if (!user.PasswordMD5.Equals(passwordMD5))
+            if (!user.passwordMD5.Equals(passwordMD5))
                 throw new WrongPasswordException("Incorrect password");
 
-            IUser toReturn = CreateUserObject(user);
-
-            return toReturn;
+            return this.CreateUserObject(user);
         }
 
-        public IEnumerable<IUserOrGroup> GetUsersAndGroups(IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds)
+        public IEnumerable<IUserOrGroup> GetUsersAndGroups(IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIdsArg)
         {
-            foreach (IUsers_Readable user in DatabaseConnection.Users.Select(Users_Table.ID.In(userOrGroupIds)))
-                yield return CreateUserObject(user);
-
-            foreach (IGroups_Readable group in DatabaseConnection.Groups.Select(Groups_Table.ID.In(userOrGroupIds)))
-                yield return CreateGroupObject(group);
+			var userOrGroupIds = userOrGroupIdsArg.ToArray();
+			
+			return this.persistedUserManagerData.Read(userManagerData =>
+			{
+				var toReturn = new List<IUserOrGroup>(userOrGroupIds.Length);
+				
+				foreach (var userOrGroupId in userOrGroupIds)
+				{
+					UserInt user;
+					if (userManagerData.users.TryGetValue(userOrGroupId, out user))
+						toReturn.Add(this.CreateUserObject(user));
+					
+					GroupInt group;
+					if (userManagerData.groups.TryGetValue(userOrGroupId, out group))
+						toReturn.Add(this.CreateGroupObject(group));
+				}
+				
+				return toReturn.ToArray();
+			});
         }
 
         /// <summary>
@@ -567,51 +573,72 @@ namespace ObjectCloud.Disk.FileHandlers
         /// </summary>
         /// <param name="names"></param>
         /// <returns></returns>
-        public IEnumerable<IUserOrGroup> GetUsersAndGroups(IEnumerable<string> names)
+        public IEnumerable<IUserOrGroup> GetUsersAndGroups(IEnumerable<string> namesArg)
         {
-			string[] namesArray = Enumerable<string>.ToArray(names);
-			for (int ctr = 0; ctr < namesArray.Length; ctr++)
-				if (namesArray[ctr].StartsWith("/Users/"))
-					if (namesArray[ctr].EndsWith(".user")) 
+			var names = namesArg.ToArray();
+			for (int ctr = 0; ctr < names.Length; ctr++)
+				if (names[ctr].StartsWith("/Users/"))
+					if (names[ctr].EndsWith(".user")) 
                     {
-                        namesArray[ctr] = namesArray[ctr].Substring(7);
-                        namesArray[ctr] = namesArray[ctr].Substring(0, namesArray[ctr].Length - 5);
+                        names[ctr] = names[ctr].Substring(7);
+                        names[ctr] = names[ctr].Substring(0, names[ctr].Length - 5);
                     }
-					else if (namesArray[ctr].EndsWith(".group"))
+					else if (names[ctr].EndsWith(".group"))
                     {
-                        namesArray[ctr] = namesArray[ctr].Substring(7);
-                        namesArray[ctr] = namesArray[ctr].Substring(0, namesArray[ctr].Length - 6);
+                        names[ctr] = names[ctr].Substring(7);
+                        names[ctr] = names[ctr].Substring(0, names[ctr].Length - 6);
 				
 						// If this is a personal group, then the name must be loaded
-						if (namesArray[ctr].Contains("/"))
+						if (names[ctr].Contains("/"))
 						{
-							string filename = "/Users/" + namesArray[ctr] + ".group";
+							string filename = "/Users/" + names[ctr] + ".group";
 							IFileContainer groupFileContainer = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile(filename);
 							INameValuePairsHandler groupData = groupFileContainer.CastFileHandler<INameValuePairsHandler>();
 							
-							namesArray[ctr] = groupData["GroupId"];
+							names[ctr] = groupData["GroupId"];
 						}
                     }
 
-			foreach (IUsers_Readable user in DatabaseConnection.Users.Select(Users_Table.Name.In(namesArray)))
-                yield return CreateUserObject(user);
-
-            foreach (IGroups_Readable group in DatabaseConnection.Groups.Select(Groups_Table.Name.In(namesArray)))
-                yield return CreateGroupObject(group);
+			return this.persistedUserManagerData.Read(userManagerData =>
+			{
+				var toReturn = new List<IUserOrGroup>(names.Length);
+				
+				foreach (var name in names)
+				{
+					UserBase userBase;
+					if (userManagerData.byName.TryGetValue(name, out userBase))
+					{
+						if (userBase is UserInt)
+							toReturn.Add(this.CreateUserObject((UserInt)userBase));
+						else if (userBase is GroupInt)
+							toReturn.Add(this.CreateGroupObject((GroupInt)userBase));
+					}
+				}
+				
+				return toReturn;
+			});
         }
 
         public IEnumerable<IUser> GetUsersAndResolveGroupsToUsers(IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds)
         {
-            HashSet<IUser> toReturn = new HashSet<IUser>();
-
-            foreach (IUsers_Readable user in DatabaseConnection.Users.Select(Users_Table.ID.In(userOrGroupIds)))
-                toReturn.Add(CreateUserObject(user));
-
-            foreach (ID<IUserOrGroup, Guid> userOrGroupId in userOrGroupIds)
-                foreach (IUser user in GetUsersInGroup(userOrGroupId))
-                    toReturn.Add(user);
-
-            return toReturn;
+			return this.persistedUserManagerData.Read(userManagerData =>
+			{
+				var toReturn = new Dictionary<ID<IUserOrGroup, Guid>, IUser>();
+			
+				foreach (var userOrGroupId in userOrGroupIds)
+				{
+					UserInt user;
+					if (userManagerData.users.TryGetValue(userOrGroupId, out user))
+						toReturn[userOrGroupId] = this.CreateUserObject(user);
+					
+					if (userManagerData.groups.ContainsKey(userOrGroupId))
+						foreach (var userObj in this.GetUsersInGroup(userOrGroupId))
+							if (!toReturn.ContainsKey(userObj.Id))
+								toReturn[userObj.Id] = userObj;
+				}
+				
+				return toReturn.Values.ToArray();
+			});
         }
 
         /// <summary>
@@ -695,26 +722,30 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             name = name.ToLowerInvariant();
 
-            DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
-            {
-                IUsers_Readable user = DatabaseConnection.Users.SelectSingle(Users_Table.Name == name);
-
-                if (null == user)
+			this.persistedUserManagerData.Write(userManagerData =>
+			{
+				UserBase userObj;
+				if (!userManagerData.byName.TryGetValue(name, out userObj))
                     throw new UnknownUser("Unknown user");
+				
+				if (!(userObj is UserInt))
+                    throw new InvalidCastException("Unknown user");
+				
+				var user = (UserInt)userObj;
 
-                if (user.BuiltIn)
+                if (user.builtIn)
                     throw new CanNotDeleteBuiltInUserOrGroup();
 
                 // Delete user's old files
-                IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
+                var usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
                 usersDirectory.DeleteFile(null, name + ".user");
                 usersDirectory.DeleteFile(null, name);
-
-                DatabaseConnection.GroupAliases.Delete(GroupAliases_Table.UserID == user.ID);
-                DatabaseConnection.UserInGroups.Delete(UserInGroups_Table.UserID == user.ID);
-                DatabaseConnection.Users.Delete(Users_Table.ID == user.ID);
-
-                transaction.Commit();
+				
+				userManagerData.byName.Remove(name);
+				userManagerData.users.Remove(user.id);
+				
+				foreach (var group in userManagerData.groups.Values)
+					group.aliases.Remove(user);
             });
 			
 			// TODO: Need to delete all permissions assigned to the user!
@@ -724,28 +755,31 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             name = name.ToLowerInvariant();
 
-            DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
-            {
-                IGroups_Readable group = DatabaseConnection.Groups.SelectSingle(Groups_Table.Name == name);
-
-                if (null == group)
+			this.persistedUserManagerData.Write(userManagerData =>
+			{
+				UserBase groupObj;
+				if (!userManagerData.byName.TryGetValue(name, out groupObj))
                     throw new UnknownUser("Unknown group");
+				
+				if (!(groupObj is GroupInt))
+                    throw new InvalidCastException("Unknown group");
+				
+				var group = (GroupInt)groupObj;
 
-                if (group.BuiltIn)
+                if (group.builtIn)
                     throw new CanNotDeleteBuiltInUserOrGroup();
 
-                IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
+                var usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
 
                 try
                 {
-                    if (group.Type > GroupType.Personal)
+                    if (group.type > GroupType.Personal)
                         usersDirectory.DeleteFile(null, name + ".group");
-                    else if (null != group.OwnerID)
+                    else if (null != group.owner)
                     {
-                        IUser owner = GetUser(group.OwnerID.Value);
-                        IGroupAliases_Readable alias = DatabaseConnection.GroupAliases.SelectSingle(GroupAliases_Table.GroupID == group.ID & GroupAliases_Table.UserID == owner.Id);
-                        IDirectoryHandler ownerDirectory = usersDirectory.OpenFile(owner.Name).CastFileHandler<IDirectoryHandler>();
-                        ownerDirectory.DeleteFile(null, alias.Alias + ".group");
+						var alias = group.aliases[group.owner];
+                        var ownerDirectory = usersDirectory.OpenFile(group.owner.name).CastFileHandler<IDirectoryHandler>();
+                        ownerDirectory.DeleteFile(null, alias + ".group");
                     }
                 }
                 catch (Exception e)
@@ -753,11 +787,8 @@ namespace ObjectCloud.Disk.FileHandlers
                     log.Warn("Exception deleting group's object", e);
                 }
 
-                DatabaseConnection.GroupAliases.Delete(GroupAliases_Table.GroupID == group.ID);
-                DatabaseConnection.UserInGroups.Delete(UserInGroups_Table.GroupID == group.ID);
-                DatabaseConnection.Groups.Delete(Groups_Table.ID == group.ID);
-
-                transaction.Commit();
+				userManagerData.byName.Remove(name);
+				userManagerData.groups.Remove(group.id);
             });
 			
 			// TODO: Need to delete all permissions assigned to the group!
@@ -838,15 +869,14 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             byte[] associationHandleBytes = new byte[64];
             SRandom.NextBytes(associationHandleBytes);
+			
+			var associationHandle = Convert.ToBase64String(associationHandleBytes);
 
-            string associationHandle = Convert.ToBase64String(associationHandleBytes);
-
-            DatabaseConnection.AssociationHandles.Insert(delegate(IAssociationHandles_Writable newHandle)
-            {
-                newHandle.UserID = userId;
-                newHandle.AssociationHandle = associationHandle;
-                newHandle.Timestamp = DateTime.UtcNow;
-            });
+			this.persistedUserManagerData.Write(userManagerData =>
+			{
+				var user = userManagerData.users[userId];
+				user.associationHandles[associationHandle] = DateTime.UtcNow;
+			});
 
             return associationHandle;
         }
@@ -857,25 +887,17 @@ namespace ObjectCloud.Disk.FileHandlers
 
             DateTime maxAssociationAge = DateTime.Now.AddMinutes(-1);
 
-            DatabaseConnection.AssociationHandles.Delete(AssociationHandles_Table.Timestamp <= maxAssociationAge);
-
-            // Now, see if the association is valid
-            return DatabaseConnection.CallOnTransaction<bool>(delegate(IDatabaseTransaction transaction)
-            {
-                // Now, see if the handle is valid
-                IAssociationHandles_Readable existingHandle = DatabaseConnection.AssociationHandles.SelectSingle(
-                    AssociationHandles_Table.UserID == userId & AssociationHandles_Table.AssociationHandle == associationHandle);
-
-                bool isValid = existingHandle != null;
-
+			return this.persistedUserManagerData.Write(userManagerData =>
+			{
+				var user = userManagerData.users[userId];
+				
+				// clean out old association handles
+				var outdatedAssociationHandles = user.associationHandles.Where(a => a.Value > maxAssociationAge).Select(a => a.Key);
+				foreach (var outdatedAssociationHandle in outdatedAssociationHandles)
+					user.associationHandles.Remove(outdatedAssociationHandle);
+				
                 // Only allow an association handle to be used once, for security reasons
-                if (isValid)
-                {
-                    DatabaseConnection.AssociationHandles.Delete(
-                        AssociationHandles_Table.AssociationHandle == associationHandle & AssociationHandles_Table.UserID == userId);
-
-                    transaction.Commit();
-                }
+				var isValid = user.associationHandles.Remove(associationHandle);
 
                 return isValid;
             });
