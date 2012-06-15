@@ -35,6 +35,24 @@ namespace ObjectCloud.Disk.FileHandlers
 			public Dictionary<ID<IUserOrGroup, Guid>, UserInt> users = new Dictionary<ID<IUserOrGroup, Guid>, UserInt>();
 			public Dictionary<ID<IUserOrGroup, Guid>, GroupInt> groups = new Dictionary<ID<IUserOrGroup, Guid>, GroupInt>();
 			public Dictionary<string, UserBase> byName = new Dictionary<string, UserBase>();
+			
+			public UserInt GetUser(ID<IUserOrGroup, Guid> userId)
+			{
+				UserInt user;
+				if (!this.users.TryGetValue(userId, out user))
+					throw new UnknownUser("Unknown user");
+				
+				return user;
+			}
+			
+			public GroupInt GetGroup(ID<IUserOrGroup, Guid> groupId)
+			{
+				GroupInt group;
+				if (!this.groups.TryGetValue(groupId, out group))
+	                throw new UnknownUser("Unknown group");
+				
+				return group;
+			}
 		}
 		
 		internal class UserBase
@@ -42,16 +60,32 @@ namespace ObjectCloud.Disk.FileHandlers
 			public ID<IUserOrGroup, Guid> id;
 			public string name;
 			public bool builtIn;
+			
+			public override int GetHashCode ()
+			{
+				return this.id.GetHashCode();
+			}
+			
+			public override bool Equals (object obj)
+			{
+				return this == obj;
+			}
+			
+			public override string ToString ()
+			{
+				return this.name;
+			}
 		}
 		
 		[Serializable]
 		internal class UserInt : UserBase
 		{
-			public string passwordMD5;
+			public byte[] passwordMD5;
 			public int identityProviderCode;
 			public string displayName;
 			public string identityProviderArgs;
 			public Dictionary<string, DateTime> associationHandles = new Dictionary<string, DateTime>();
+			public HashSet<GroupInt> groups = new HashSet<GroupInt>();
 		}
 		
 		[Serializable]
@@ -61,7 +95,7 @@ namespace ObjectCloud.Disk.FileHandlers
 			public bool automatic;
 			public GroupType type;
 			public string displayName;
-			public HashSet<User> users = new HashSet<User>();
+			public HashSet<UserInt> users = new HashSet<UserInt>();
 			public Dictionary<UserInt, string> aliases = new Dictionary<UserInt, string>();
 		}
 
@@ -122,11 +156,11 @@ namespace ObjectCloud.Disk.FileHandlers
 
             IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
 
-            string passwordMD5;
+            byte[] passwordMD5;
             if (null != password)
-                passwordMD5 = CreateMD5(password);
-            else
-                passwordMD5 = identityProvider.GetType().Name;
+                passwordMD5 = UserManagerHandler.CreateMD5(password);
+			else
+				passwordMD5 = null;
 
             IUserHandler newUser;
             IUser userObj = null;
@@ -239,8 +273,7 @@ namespace ObjectCloud.Disk.FileHandlers
 				
 				UserInt owner = null;
 				if (null != ownerId)
-					if (!userManagerData.users.TryGetValue(ownerId.Value, out owner))
-						throw new UnknownUser(ownerId.ToString());
+					owner = userManagerData.GetUser(ownerId.Value);
 				
 				var group = new GroupInt()
 				{
@@ -452,11 +485,7 @@ namespace ObjectCloud.Disk.FileHandlers
         {
 			return this.persistedUserManagerData.Read(userManagerData =>
 			{
-				GroupInt group;
-				if (!userManagerData.groups.TryGetValue(groupId, out group))
-	                throw new UnknownUser("Unknown group");
-
-				return group;
+				return userManagerData.GetGroup(groupId);
 			});
 		}
 
@@ -537,10 +566,14 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             var user = GetUserInt(name);
 
-            string passwordMD5 = CreateMD5(password);
+            var passwordMD5 = UserManagerHandler.CreateMD5(password);
 
-            if (!user.passwordMD5.Equals(passwordMD5))
+			if (passwordMD5.Length != user.passwordMD5.Length)
                 throw new WrongPasswordException("Incorrect password");
+			
+			for (var ctr = 0; ctr < passwordMD5.Length; ctr++)
+				if (passwordMD5[ctr] != user.passwordMD5[ctr])
+	                throw new WrongPasswordException("Incorrect password");
 
             return this.CreateUserObject(user);
         }
@@ -646,14 +679,12 @@ namespace ObjectCloud.Disk.FileHandlers
         /// </summary>
         /// <param name="password"></param>
         /// <returns></returns>
-        private static string CreateMD5(string password)
+        private static byte[] CreateMD5(string password)
         {
             string saltedPassword = string.Format(PasswordSalt, password);
             byte[] passwordBytes = System.Text.Encoding.UTF8.GetBytes(saltedPassword);
 
-            byte[] passwordHash = (new System.Security.Cryptography.MD5CryptoServiceProvider()).ComputeHash(passwordBytes);
-
-            return Convert.ToBase64String(passwordHash);
+            return (new System.Security.Cryptography.MD5CryptoServiceProvider()).ComputeHash(passwordBytes);
         }
 
         /// <summary>
@@ -905,169 +936,137 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public void AddUserToGroup(ID<IUserOrGroup, Guid> userId, ID<IUserOrGroup, Guid> groupId)
         {
-            DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
-            {
-                IGroups_Readable group = DatabaseConnection.Groups.SelectSingle(Groups_Table.ID == groupId);
+			this.persistedUserManagerData.Write(userManagerData =>
+			{
+				var group = userManagerData.GetGroup(groupId);
+				var user = userManagerData.GetUser(userId);
 
-                if (null == group)
-                    throw new UnknownUser("Unknown group");
-
-                if (group.Automatic)
+                if (group.automatic)
                     throw new CanNotEditMembershipOfSystemGroup();
-
-                // Only insert if there isn't already a matching entry
-                if (null == DatabaseConnection.UserInGroups.SelectSingle(
-                    UserInGroups_Table.UserID == userId & UserInGroups_Table.GroupID == groupId))
-                {
-                    DatabaseConnection.UserInGroups.Insert(delegate(IUserInGroups_Writable userInGroup)
-                    {
-                        userInGroup.GroupID = groupId;
-                        userInGroup.UserID = userId;
-                    });
-
-                    transaction.Commit();
-                }
+				
+				group.users.Add(user);
+				user.groups.Add(group);
             });
-
-            GroupIdsThatUserIsInCache.Remove(userId);
         }
 
         public void RemoveUserFromGroup(ID<IUserOrGroup, Guid> userId, ID<IUserOrGroup, Guid> groupId)
         {
-            DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
-            {
-                IGroups_Readable group = DatabaseConnection.Groups.SelectSingle(Groups_Table.ID == groupId);
+			this.persistedUserManagerData.Write(userManagerData =>
+			{
+				var group = userManagerData.GetGroup(groupId);
+				var user = userManagerData.GetUser(userId);
 
-                if (null == group)
-                    throw new UnknownUser("Unknown group");
-
-                if (group.Automatic)
+                if (group.automatic)
                     throw new CanNotEditMembershipOfSystemGroup();
-
-                DatabaseConnection.UserInGroups.Delete(UserInGroups_Table.UserID == userId & UserInGroups_Table.GroupID == groupId);
-
-                transaction.Commit();
+				
+				group.users.Remove(user);
+				user.groups.Remove(group);
             });
-
-            GroupIdsThatUserIsInCache.Remove(userId);
         }
 
         public IEnumerable<ID<IUserOrGroup, Guid>> GetGroupIdsThatUserIsIn(ID<IUserOrGroup, Guid> userId)
         {
-            return GroupIdsThatUserIsInCache[userId];
+			return this.persistedUserManagerData.Read(userManagerData =>
+			{
+				var user = userManagerData.GetUser(userId);
+				
+				var groupIds = new List<ID<IUserOrGroup, Guid>>(user.groups.Count);
+				groupIds.AddRange(user.groups.Select(g => g.id));
+
+				return groupIds;
+			});
         }
 
         public IEnumerable<IGroupAndAlias> GetGroupsThatUserIsIn(ID<IUserOrGroup, Guid> userId)
         {
-            List<IGroups_Readable> groupsFromDB = new List<IGroups_Readable>();
-            Dictionary<ID<IUserOrGroup, Guid>, IGroupAliases_Readable> groupAliasesFromDB = new Dictionary<ID<IUserOrGroup, Guid>, IGroupAliases_Readable>();
+			return this.persistedUserManagerData.Read(userManagerData =>
+			{
+				var user = userManagerData.GetUser(userId);
+				
+				var groups = new List<IGroupAndAlias>(user.groups.Count);
+				foreach (var group in user.groups)
+				{
+					string alias = null;
+					group.aliases.TryGetValue(user, out alias);
+					
+					groups.Add(this.CreateGroupAndAliasObject(group, alias));
+				}
 
-            DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
-            {
-                groupsFromDB.AddRange(DatabaseConnection.Groups.Select(Groups_Table.ID.In(GroupIdsThatUserIsInCache[userId])));
-
-                foreach (IGroupAliases_Readable groupAliasFromDB in DatabaseConnection.GroupAliases.Select(GroupAliases_Table.UserID == userId))
-                    groupAliasesFromDB[groupAliasFromDB.GroupID] = groupAliasFromDB;
-            });
-
-            // Only return non-personal groups
-            foreach (IGroups_Readable groupfromDB in groupsFromDB)
-                if (groupfromDB.Type > GroupType.Personal)
-                {
-                    IGroupAliases_Readable groupAliasFromDB = null;
-                    groupAliasesFromDB.TryGetValue(groupfromDB.ID, out groupAliasFromDB);
-
-                    yield return CreateGroupAndAliasObject(groupfromDB, groupAliasFromDB);
-                }
+				return groups;
+			});
         }
 
         public IEnumerable<IGroup> GetAllGroups()
         {
-            foreach (IGroups_Readable group in DatabaseConnection.Groups.Select())
-                yield return CreateGroupObject(group);
+			return this.persistedUserManagerData.Read(userManagerData =>
+			{
+				var groups = new List<IGroup>(userManagerData.groups.Count);
+				groups.AddRange(userManagerData.groups.Values.Select(g => this.CreateGroupObject(g)));
+				
+				return groups;
+			});
         }
 
         public IEnumerable<IGroupAndAlias> GetAllGroups(ID<IUserOrGroup, Guid> userId)
         {
-            List<IGroups_Readable> groupsFromDB = new List<IGroups_Readable>();
-            Dictionary<ID<IUserOrGroup, Guid>, IGroupAliases_Readable> groupAliasesFromDB = new Dictionary<ID<IUserOrGroup, Guid>, IGroupAliases_Readable>();
+			return this.persistedUserManagerData.Read(userManagerData =>
+			{
+				var user = userManagerData.GetUser(userId);
 
-            DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
-            {
-                groupsFromDB.AddRange(DatabaseConnection.Groups.Select());
+				var groups = new List<IGroupAndAlias>(userManagerData.groups.Count);
 
-                List<ID<IUserOrGroup, Guid>> groupIds = new List<ID<IUserOrGroup, Guid>>();
-                foreach (IGroups_Readable groupFromDB in groupsFromDB)
-                    groupIds.Add(groupFromDB.ID);
+				foreach (var group in userManagerData.groups.Values)
+				{
+					string alias = null;
+					group.aliases.TryGetValue(user, out alias);
+					
+					groups.Add(this.CreateGroupAndAliasObject(group, alias));
+				}
 
-                foreach (IGroupAliases_Readable groupAliasFromDB in DatabaseConnection.GroupAliases.Select(
-                    GroupAliases_Table.GroupID.In(groupIds) & GroupAliases_Table.UserID == userId))
-                {
-                    groupAliasesFromDB[groupAliasFromDB.GroupID] = groupAliasFromDB;
-                }
-            });
-
-            foreach (IGroups_Readable groupfromDB in groupsFromDB)
-            {
-                IGroupAliases_Readable groupAliasFromDB = null;
-                groupAliasesFromDB.TryGetValue(groupfromDB.ID, out groupAliasFromDB);
-
-                yield return CreateGroupAndAliasObject(groupfromDB, groupAliasFromDB);
-            }
+				return groups;
+			});
         }
 
         public IEnumerable<IGroupAndAlias> GetGroupsThatUserOwns(ID<IUserOrGroup, Guid> userId)
         {
-            /*foreach (IGroups_Readable groupFromDB in DatabaseConnection.Groups.Select(Groups_Table.OwnerID == userId))
-                yield return CreateGroupObject(groupFromDB);*/
+			return this.persistedUserManagerData.Read(userManagerData =>
+			{
+				var user = userManagerData.GetUser(userId);
 
-            List<IGroups_Readable> groupsFromDB = new List<IGroups_Readable>();
-            Dictionary<ID<IUserOrGroup, Guid>, IGroupAliases_Readable> groupAliasesFromDB = new Dictionary<ID<IUserOrGroup, Guid>, IGroupAliases_Readable>();
+				var groups = new List<IGroupAndAlias>();
 
-            // Not sure why, but closing the transaction is timing out
-            //DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
-            //{
-                groupsFromDB.AddRange(DatabaseConnection.Groups.Select(Groups_Table.OwnerID == userId));
+				foreach (var group in userManagerData.groups.Values.Where(g => g.owner == user))
+				{
+					string alias = null;
+					group.aliases.TryGetValue(user, out alias);
+					
+					groups.Add(this.CreateGroupAndAliasObject(group, alias));
+				}
 
-                List<ID<IUserOrGroup, Guid>> groupIds = new List<ID<IUserOrGroup, Guid>>();
-                foreach (IGroups_Readable groupFromDB in groupsFromDB)
-                    groupIds.Add(groupFromDB.ID);
-
-                foreach (IGroupAliases_Readable groupAliasFromDB in DatabaseConnection.GroupAliases.Select(
-                    GroupAliases_Table.GroupID.In(groupIds) & GroupAliases_Table.UserID == userId))
-                {
-                    groupAliasesFromDB[groupAliasFromDB.GroupID] = groupAliasFromDB;
-                }
-            //});
-
-            foreach (IGroups_Readable groupfromDB in groupsFromDB)
-            {
-                IGroupAliases_Readable groupAliasFromDB = null;
-                groupAliasesFromDB.TryGetValue(groupfromDB.ID, out groupAliasFromDB);
-
-                yield return CreateGroupAndAliasObject(groupfromDB, groupAliasFromDB);
-            }
+				return groups;
+			});
         }
 
         public IEnumerable<IUser> GetUsersInGroup(ID<IUserOrGroup, Guid> groupId)
         {
-            List<Guid> userIds = new List<Guid>();
-            foreach (IUserInGroups_Readable userInGroup in DatabaseConnection.UserInGroups.Select(UserInGroups_Table.GroupID == groupId))
-                userIds.Add(userInGroup.UserID.Value);
-
-            foreach (IUsers_Readable user in DatabaseConnection.Users.Select(Users_Table.ID.In(userIds)))
-                yield return CreateUserObject(user);
+			return this.persistedUserManagerData.Read(userManagerData =>
+			{
+				var group = userManagerData.GetGroup(groupId);
+				
+				var users = new List<IUser>(group.users.Count);
+				users.AddRange(group.users.Select(u => this.CreateUserObject(u)));
+				
+				return users;
+			});
         }
 
         public void SetPassword(ID<IUserOrGroup, Guid> userId, string password)
         {
-            string passwordMD5 = CreateMD5(password);
-
-            DatabaseConnection.Users.Update(Users_Table.ID == userId,
-                delegate(IUsers_Writable user)
-                {
-                    user.PasswordMD5 = passwordMD5;
-                });
+			this.persistedUserManagerData.Write(userManagerData =>
+            {
+				var user = userManagerData.GetUser(userId);
+				user.passwordMD5 = UserManagerHandler.CreateMD5(password);
+			});
         }
 
         /// <summary>
@@ -1078,108 +1077,91 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <returns></returns>
         public bool IsUserInGroup(ID<IUserOrGroup, Guid> userId, ID<IUserOrGroup, Guid> groupId)
         {
-            return GroupIdsThatUserIsInCache[userId].Contains(groupId);
+			return this.persistedUserManagerData.Read(userManagerData =>
+            {
+				var group = userManagerData.GetGroup(groupId);
+				var user = userManagerData.GetUser(userId);
+				
+				return group.users.Contains(user);
+			});
         }
 
         public void SetGroupAlias(ID<IUserOrGroup, Guid> userId, ID<IUserOrGroup, Guid> groupId, string alias)
         {
-            DatabaseConnection.CallOnTransaction(delegate(IDatabaseTransaction transaction)
+			this.persistedUserManagerData.Write(userManagerData =>
             {
-                // Setting the alias to be the same as the group name should delete it
-                IGroup group = GetGroup(groupId);
-                if (alias == group.Name)
-                    alias = null;
+				var group = userManagerData.GetGroup(groupId);
+				var user = userManagerData.GetUser(userId);
 
-                // update or insert if the alias isn't null
-                if (null != alias)
-                {
-                    // Make sure that the user has permission to set the alias
-                    bool hasPermission = false;
-                    if (null != DatabaseConnection.UserInGroups.Select(UserInGroups_Table.UserID == userId & UserInGroups_Table.GroupID == groupId))
-                        hasPermission = true;
-                    else if (null != DatabaseConnection.Groups.Select(Groups_Table.ID == groupId & Groups_Table.Type != GroupType.Personal))
-                        hasPermission = true;
+                // Make sure that the user has permission to set the alias
+                bool hasPermission = false;
+                if (group.users.Contains(user))
+                    hasPermission = true;
+                else if (group.type != GroupType.Personal)
+                    hasPermission = true;
 
-                    if (!hasPermission)
-                        throw new SecurityException("Invalid group");
-
-                    if (null == DatabaseConnection.GroupAliases.SelectSingle(GroupAliases_Table.UserID == userId & GroupAliases_Table.GroupID == groupId))
-                        DatabaseConnection.GroupAliases.Insert(delegate(IGroupAliases_Writable groupAliasWritable)
-                        {
-                            groupAliasWritable.Alias = alias;
-                            groupAliasWritable.GroupID = groupId;
-                            groupAliasWritable.UserID = userId;
-                        });
-                    else
-                        DatabaseConnection.GroupAliases.Update(
-                            GroupAliases_Table.UserID == userId & GroupAliases_Table.GroupID == groupId,
-                            delegate(IGroupAliases_Writable groupAliasWritable)
-                            {
-                                groupAliasWritable.Alias = alias;
-                            });
-                }
-                else
-                    DatabaseConnection.GroupAliases.Delete(GroupAliases_Table.UserID == userId & GroupAliases_Table.GroupID == groupId);
-
-                transaction.Commit();
+                if (!hasPermission)
+                    throw new SecurityException("Invalid group");
+				
+				if (null != alias)
+					group.aliases[user] = alias;
+				else
+					group.aliases.Remove(user);
             });
         }
 
         public IGroupAndAlias GetGroupAndAlias(ID<IUserOrGroup, Guid> userId, ID<IUserOrGroup, Guid> groupId)
         {
-            IGroupAliases_Readable groupAliasFromDB =
-                DatabaseConnection.GroupAliases.SelectSingle(GroupAliases_Table.UserID == userId & GroupAliases_Table.GroupID == groupId);
+			return this.persistedUserManagerData.Read(userManagerData =>
+            {
+				var group = userManagerData.GetGroup(groupId);
+				var user = userManagerData.GetUser(userId);
+				
+				string alias = null;
+				group.aliases.TryGetValue(user, out alias);
 
-            IGroups_Readable groupFromDB = DatabaseConnection.Groups.SelectSingle(Groups_Table.ID == groupId);
-
-            return CreateGroupAndAliasObject(groupFromDB, groupAliasFromDB);
+				return this.CreateGroupAndAliasObject(group, alias);
+			});
         }
 
-        public IEnumerable<IUserOrGroup> SearchUsersAndGroups(string query, uint? max)
+        public IEnumerable<IUserOrGroup> SearchUsersAndGroups(string query, int max)
         {
-            uint returned = 0;
-
-            foreach (IUsers_Readable userFromDB in DatabaseConnection.Users.Select(Users_Table.Name.Like(query + "*"), max, ObjectCloud.ORM.DataAccess.OrderBy.Asc))
-            {
-                returned++;
-                yield return CreateUserObject(userFromDB);
-            }
-
-            if (null != max)
-                max = max.Value - returned;
-
-            Dictionary<ID<IUserOrGroup, Guid>, IGroupAliases_Readable> groupsIdsMatchedByAlias = new Dictionary<ID<IUserOrGroup, Guid>, IGroupAliases_Readable>();
-            foreach (IGroupAliases_Readable groupAliasFromDB in DatabaseConnection.GroupAliases.Select(GroupAliases_Table.Alias.Like(query)))
-                groupsIdsMatchedByAlias[groupAliasFromDB.GroupID] = groupAliasFromDB;
-
-            Dictionary<ID<IUserOrGroup, Guid>, IGroups_Readable> groupsFromDBMatchingQuery = new Dictionary<ID<IUserOrGroup, Guid>, IGroups_Readable>();
-
-            foreach (IGroups_Readable groupFromDB in DatabaseConnection.Groups.Select(
-                (Groups_Table.Type != GroupType.Personal & Groups_Table.Name.Like(query)) | (Groups_Table.ID.In(groupsIdsMatchedByAlias.Keys)), max, ObjectCloud.ORM.DataAccess.OrderBy.Asc))
-                groupsFromDBMatchingQuery[groupFromDB.ID] = groupFromDB;
-
-            foreach (IGroupAliases_Readable groupAliasFromDB in DatabaseConnection.GroupAliases.Select(GroupAliases_Table.GroupID.In(groupsFromDBMatchingQuery.Keys)))
-                groupsIdsMatchedByAlias[groupAliasFromDB.GroupID] = groupAliasFromDB;
-
-            foreach (IGroups_Readable groupFromDB in groupsFromDBMatchingQuery.Values)
-            {
-                IGroupAliases_Readable groupAliasFromDB = null;
-                groupsIdsMatchedByAlias.TryGetValue(groupFromDB.ID, out groupAliasFromDB);
-
-                yield return CreateGroupAndAliasObject(groupFromDB, groupAliasFromDB);
-            }
+			return this.persistedUserManagerData.Read(userManagerData =>
+			{
+				var usersAndGroups = new List<IUserOrGroup>(max);
+				
+				foreach (var userOrGroup in userManagerData.byName.Values.Where(u => u.name.Contains(query)))
+				{
+					if (userOrGroup is UserInt)
+						usersAndGroups.Add(this.CreateUserObject((UserInt)userOrGroup));
+					else
+						usersAndGroups.Add(this.CreateGroupObject((GroupInt)userOrGroup));
+					
+					if (usersAndGroups.Count >= max)
+						return usersAndGroups;
+				}
+				
+				return usersAndGroups;
+			});
         }
 
         public IEnumerable<ID<IUserOrGroup, Guid>> GetAllLocalUserIds()
         {
-            foreach (IUsers_Readable user in DatabaseConnection.Users.Select(Users_Table.PasswordMD5 != "openid" & Users_Table.BuiltIn == false))
-                yield return user.ID;
+			return this.persistedUserManagerData.Read(userManagerData =>
+			{
+				var userIds = new List<ID<IUserOrGroup, Guid>>(userManagerData.users.Count);
+				userIds.AddRange(userManagerData.users.Values.Select(u => u.id));
+				
+				return userIds;
+			});
         }
 
-        public long GetTotalLocalUsers()
+        public int GetTotalLocalUsers()
         {
-            LinkedList<ID<IUserOrGroup, Guid>> localUserIds = new LinkedList<ID<IUserOrGroup, Guid>>(GetAllLocalUserIds());
-            return localUserIds.Count;
+			return this.persistedUserManagerData.Read(userManagerData =>
+			{
+				return userManagerData.users.Count;
+			});
         }
     }
 }

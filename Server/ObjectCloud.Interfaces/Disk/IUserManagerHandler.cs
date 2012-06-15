@@ -285,7 +285,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
-        IEnumerable<IUserOrGroup> SearchUsersAndGroups(string query, uint? max);
+        IEnumerable<IUserOrGroup> SearchUsersAndGroups(string query, int max);
 
         /// <summary>
         /// Returns all groups in the system 
@@ -458,7 +458,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// Returns the total number of local users
         /// </summary>
         /// <returns></returns>
-        long GetTotalLocalUsers();
+        int GetTotalLocalUsers();
 
         /// <summary>
         /// The maximum number of local users allowed
