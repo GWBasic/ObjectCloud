@@ -35,8 +35,10 @@ namespace ObjectCloud.Disk.Factories
 		
 		private UserManagerHandler ConstructUserManagerHandler(string databaseFilename)
 		{
-			var persistedUserManagerData = new PersistedBinaryFormatterObject<UserManagerHandler.UserManagerData>(databaseFilename);
-        	return new UserManagerHandler(persistedUserManagerData, this.FileHandlerFactoryLocator, this.MaxLocalUsers);
+			var persistedUserManagerData = new PersistedBinaryFormatterObject<UserManagerHandler.UserManagerData>(
+				databaseFilename, () => new UserManagerHandler.UserManagerData());
+        	
+			return new UserManagerHandler(persistedUserManagerData, this.FileHandlerFactoryLocator, this.MaxLocalUsers);
 		}
 
         /// <summary>

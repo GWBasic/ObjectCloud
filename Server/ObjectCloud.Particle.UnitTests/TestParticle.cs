@@ -142,7 +142,7 @@ namespace ObjectCloud.Particle.UnitTests
 
             lock (key)
             {
-                TestDirectory.SetPermission(sender.Id, file.FileContainer.Filename, new ID<IUserOrGroup, Guid>[] { localRecipient.Id }, FilePermissionEnum.Read, true, true);
+                TestDirectory.SetPermission(sender, file.FileContainer.Filename, new ID<IUserOrGroup, Guid>[] { localRecipient.Id }, FilePermissionEnum.Read, true, true);
 
                 bool notified = Monitor.Wait(key, TimeSpan.FromSeconds(20));
                 Assert.IsTrue(notified, "Timeout waiting for notification");
@@ -153,7 +153,12 @@ namespace ObjectCloud.Particle.UnitTests
             VerifyNotificiationRecieved(recipient, sender, file, notification);
 
             List<Dictionary<NotificationColumn, object>> notifications = new List<Dictionary<NotificationColumn,object>>(
-                recipient.UserHandler.GetNotifications(null, null, null, new string[] {sender.Identity }, new HashSet<NotificationColumn>(Enum<NotificationColumn>.Values)));
+                recipient.UserHandler.GetNotifications(
+					null,
+					null,
+					null,
+					new string[] {sender.Identity }.ToHashSet(),
+					new HashSet<NotificationColumn>(Enum<NotificationColumn>.Values)));
 
             Assert.AreEqual(1, notifications.Count);
             VerifyNotificiationRecieved(recipient, sender, file, notifications[0]);
@@ -215,7 +220,7 @@ namespace ObjectCloud.Particle.UnitTests
 
             IFileHandler file = TestDirectory.CreateFile("test" + SRandom.Next().ToString(), "text", hostUser.Id);
             TestDirectory.SetPermission(
-                hostUser.Id,
+                hostUser,
                 file.FileContainer.Filename,
                 new ID<IUserOrGroup, Guid>[] { identityUserOnHost.Id, recipientUserOnHost.Id },
                 FilePermissionEnum.Read,

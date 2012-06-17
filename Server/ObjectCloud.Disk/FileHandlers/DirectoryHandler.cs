@@ -416,7 +416,7 @@ namespace ObjectCloud.Disk.FileHandlers
 			});
         }
 
-        public void SetPermission(ID<IUserOrGroup, Guid>? assigningPermission, string filename, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, FilePermissionEnum level, bool inherit, bool sendNotifications)
+        public void SetPermission(IUser sender, string filename, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, FilePermissionEnum level, bool inherit, bool sendNotifications)
         {
 			this.WriteReentrant(directoryInformation =>
 			{
@@ -436,11 +436,8 @@ namespace ObjectCloud.Disk.FileHandlers
             // If notifications are enabled, then send a notification informing the user of the change
             IFileContainer targetFile = OpenFile(filename);
 
-            if (null != assigningPermission)
-            {
-                IUser sender = FileHandlerFactoryLocator.UserManagerHandler.GetUser(assigningPermission.Value);
+            if (null != sender)
                 targetFile.FileHandler.SendShareNotificationFrom(sender);
-            }
 
             OnDirectoryChanged();
         }

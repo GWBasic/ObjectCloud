@@ -182,7 +182,7 @@ namespace ObjectCloud.Disk.FileHandlers
             IUserHandler newUser;
             IUser userObj = null;
 			
-			this.persistedUserManagerData.Write(userManagerData =>
+			this.persistedUserManagerData.WriteReentrant(userManagerData =>
 			{
 				this.ThrowExceptionIfDuplicate(userManagerData, name);
 
@@ -252,7 +252,15 @@ namespace ObjectCloud.Disk.FileHandlers
 	                }
 	
 	                if (!builtIn)
-	                    CreateGroup("friends", displayName + "'s friends", userObj.Id, GroupType.Personal);
+	                    this.CreateGroupInt(
+							userManagerData,
+							"friends",
+							displayName + "'s friends",
+							userObj.Id,
+							new ID<IUserOrGroup, Guid>(Guid.NewGuid()),
+							false,
+							false,
+							GroupType.Personal);
 				}
             });
 
@@ -277,92 +285,104 @@ namespace ObjectCloud.Disk.FileHandlers
             bool automatic,
             GroupType groupType)
         {
-            name = name.ToLowerInvariant();
-			
             if (GroupType.Personal == groupType && null == ownerId)
                 throw new ArgumentException("Personal groups must have a declared owner");
 
-            IGroup groupObj = null;
+			IGroup toReturn = null;
+			this.persistedUserManagerData.WriteReentrant(userManagerData =>
+				toReturn = this.CreateGroupInt(userManagerData, name, displayName, ownerId, groupId, builtIn, automatic, groupType));
 			
-			this.persistedUserManagerData.Write(userManagerData =>
+			return toReturn;
+        }
+		
+		private IGroup CreateGroupInt(
+			UserManagerData userManagerData,
+            string name,
+            string displayName,
+            ID<IUserOrGroup, Guid>? ownerId,
+            ID<IUserOrGroup, Guid> groupId,
+            bool builtIn,
+            bool automatic,
+            GroupType groupType)
+		{
+            name = name.ToLowerInvariant();
+			
+			this.ThrowExceptionIfDuplicate(userManagerData, name);
+			
+			UserInt owner = null;
+			if (null != ownerId)
+				owner = userManagerData.GetUser(ownerId.Value);
+			
+			var group = new GroupInt()
 			{
-				this.ThrowExceptionIfDuplicate(userManagerData, name);
-				
-				UserInt owner = null;
-				if (null != ownerId)
-					owner = userManagerData.GetUser(ownerId.Value);
-				
-				var group = new GroupInt()
-				{
-					name = groupType > GroupType.Personal ? name : groupId.ToString(),
-					id = groupId,
-                    owner = owner,
-                    builtIn = builtIn,
-                    automatic = automatic,
-                    type = groupType,
-                    displayName = displayName
-				};
-				
-				if (GroupType.Personal == groupType)
-					group.aliases[owner] = name;
-				
-				userManagerData.groups[groupId] = group;
-				userManagerData.byName[name] = group;
-				
-				groupObj = this.CreateGroupObject(group);
-				
-                IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
-                string groupFileName = name + ".group";
-				
-                IUser ownerObj = null;
-                if (null != ownerId)
-                    ownerObj = GetUser(ownerId.Value);
-				
-                if (!automatic)
+				name = groupType > GroupType.Personal ? name : groupId.ToString(),
+				id = groupId,
+                owner = owner,
+                builtIn = builtIn,
+                automatic = automatic,
+                type = groupType,
+                displayName = displayName
+			};
+			
+			if (GroupType.Personal == groupType)
+				group.aliases[owner] = name;
+			
+			userManagerData.groups[groupId] = group;
+			userManagerData.byName[name] = group;
+			
+			var groupObj = this.CreateGroupObject(group);
+			
+            IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
+            string groupFileName = name + ".group";
+			
+            if (!automatic)
+            {
+                // Decide where the object goes, for personal groups in the user's directory, for system groups in the users directory
+                IDirectoryHandler groupObjectDestinationDirectory;
+                if (groupType == GroupType.Personal)
+                    groupObjectDestinationDirectory = usersDirectory.OpenFile(owner.name).CastFileHandler<IDirectoryHandler>();
+                else
+                    groupObjectDestinationDirectory = usersDirectory;
+
+                INameValuePairsHandler groupDB;
+                try
                 {
-                    // Decide where the object goes, for personal groups in the user's directory, for system groups in the users directory
-                    IDirectoryHandler groupObjectDestinationDirectory;
-                    if (groupType == GroupType.Personal)
-                        groupObjectDestinationDirectory = usersDirectory.OpenFile(ownerObj.Name).CastFileHandler<IDirectoryHandler>();
-                    else
-                        groupObjectDestinationDirectory = usersDirectory;
+                    groupDB = groupObjectDestinationDirectory.CreateFile(groupFileName, "group", ownerId).FileContainer.CastFileHandler<INameValuePairsHandler>(); ;
+                }
+                catch (DuplicateFile)
+                {
+                    throw new UserAlreadyExistsException(name + " already exists");
+                }
 
-                    INameValuePairsHandler groupDB;
-                    try
-                    {
-                        groupDB = groupObjectDestinationDirectory.CreateFile(groupFileName, "group", ownerId).FileContainer.CastFileHandler<INameValuePairsHandler>(); ;
-                    }
-                    catch (DuplicateFile)
-                    {
-                        throw new UserAlreadyExistsException(name + " already exists");
-                    }
+				IUser ownerObj = null;
+				if (null != owner)
+					ownerObj = this.CreateUserObject(owner);
+				
+                groupObjectDestinationDirectory.SetPermission(
+                    ownerObj, 
+                    groupFileName, 
+                    new ID<IUserOrGroup, Guid>[] { groupId }, 
+                    FilePermissionEnum.Read, 
+                    true, 
+                    true);
 
-                    groupObjectDestinationDirectory.SetPermission(
-                        ownerId, 
+                // Everyone can read a public group
+                if (GroupType.Public == groupType)
+                    usersDirectory.SetPermission(
+                        ownerObj, 
                         groupFileName, 
-                        new ID<IUserOrGroup, Guid>[] { groupId }, 
+                        new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Everybody.Id }, 
                         FilePermissionEnum.Read, 
                         true, 
-                        true);
+                        false);
 
-                    // Everyone can read a public group
-                    if (GroupType.Public == groupType)
-                        usersDirectory.SetPermission(
-                            ownerId, 
-                            groupFileName, 
-                            new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Everybody.Id }, 
-                            FilePermissionEnum.Read, 
-                            true, 
-                            false);
-
-                    groupDB.Set(ownerObj, "GroupId", groupId.Value.ToString());
-                }
-            });
-
+                groupDB.Set(ownerObj, "GroupId", groupId.Value.ToString());
+            }
+			
 			log.Info("Created group: " + name);
 
             return groupObj;
-        }
+		}
 
         /// <summary>
         /// Throws a UserAlreadyExistsException if there is a user or group with the same name
@@ -732,7 +752,7 @@ namespace ObjectCloud.Disk.FileHandlers
         private IGroup CreateGroupObject(GroupInt group)
         {
             return new Group(
-                group.owner.id,
+                group.owner != null ? (ID<IUserOrGroup, Guid>?)group.owner.id : (ID<IUserOrGroup, Guid>?)null,
                 group.id,
                 group.name,
                 group.builtIn,

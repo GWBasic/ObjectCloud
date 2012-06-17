@@ -119,7 +119,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// <param name="userId">The user to set the permission for</param>
         /// <param name="filePermission">The permission value</param>
         /// <exception cref="FileDoesNotExist">Thrown if the file does not exist</exception>
-        void SetPermission(ID<IUserOrGroup, Guid>? assigningPermission, string filename, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, FilePermissionEnum level, bool inherit, bool sendNotifications);
+        void SetPermission(IUser sender, string filename, IEnumerable<ID<IUserOrGroup, Guid>> userOrGroupIds, FilePermissionEnum level, bool inherit, bool sendNotifications);
 
         /// <summary>
         /// Removes a permission for a given user

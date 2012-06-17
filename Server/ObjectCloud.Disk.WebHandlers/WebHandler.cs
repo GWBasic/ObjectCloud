@@ -363,7 +363,7 @@ namespace ObjectCloud.Disk.WebHandlers
             if (null != level)
             {
                 FileHandler.FileContainer.ParentDirectoryHandler.SetPermission(
-                   webConnection.Session.User.Id,
+                   webConnection.Session.User,
                    FileHandler.FileContainer.Filename,
                    userOrGroupIds,
                    level.Value,
