@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Data.Common;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -122,25 +123,32 @@ namespace ObjectCloud.Disk.FileHandlers
                 {
                     // Load for situations where trust is already established
                     // copy is to avoid locked the database
-                    foreach (IRecipient_Readable recipient in Enumerable<IRecipient_Readable>.FastCopy(
-                        DatabaseConnection.Recipient.Select(
-                        Recipient_Table.receiveNotificationEndpoint.In(recipientsAtEndpoints.Keys) &
-                        Recipient_Table.userID == sender.Id)))
-                    {
-                        EndpointInfo recipientInfo = new EndpointInfo();
-
-                        string endpoint;
-                        if (requestedEndpoints.TryGetValue(recipient.receiveNotificationEndpoint, out endpoint))
-                        {
-                            recipientInfo.RecipientIdentities = recipientsAtEndpoints[recipient.receiveNotificationEndpoint];
-                            recipientInfo.Endpoint = endpoint;
-                            recipientInfo.SenderToken = recipient.senderToken;
-
-                            recipientsAtEndpoints.Remove(recipient.receiveNotificationEndpoint);
-
-                            callback(recipientInfo);
-                        }
-                    }
+					this.persistedUserManagerData.Read(userManagerData =>
+					{
+						var recipientUser = userManagerData.GetUser(sender.Id);
+						
+						foreach (var recipientAndToken in recipientUser.receiveNotificationEndpointsBySenderToken.Where(
+							r => recipientsAtEndpoints.ContainsKey(r.Value)))
+						{
+							var receiveNotificationEndpoint = recipientAndToken.Value;
+							var senderToken = recipientAndToken.Key;
+							
+	                        string endpoint;
+	                        if (requestedEndpoints.TryGetValue(receiveNotificationEndpoint, out endpoint))
+	                        {
+                        		var recipientInfo = new EndpointInfo()
+								{
+									RecipientIdentities = recipientsAtEndpoints[receiveNotificationEndpoint],
+	                            	Endpoint = endpoint,
+	                            	SenderToken = senderToken
+								};
+								
+	                            recipientsAtEndpoints.Remove(receiveNotificationEndpoint);
+	
+	                            callback(recipientInfo);
+	                        }
+						}
+					});
                 }
 
                 // For situations where trust isn't established, establish trust and then use the callback
@@ -176,13 +184,15 @@ namespace ObjectCloud.Disk.FileHandlers
             GenericArgument<EndpointInfo> callback,
             GenericArgument<IEnumerable<string>> errorCallback)
         {
-            BeginEstablishTrust(sender, receiveNotificationEndpoint, establishTrustEndpoint, delegate(string senderToken)
+            this.BeginEstablishTrust(sender, receiveNotificationEndpoint, establishTrustEndpoint, delegate(string senderToken)
             {
-                EndpointInfo recipientInfo = new EndpointInfo();
-                recipientInfo.RecipientIdentities = recipients;
-                recipientInfo.Endpoint = requestedEndpoint;
-                recipientInfo.SenderToken = senderToken;
-
+                var recipientInfo = new EndpointInfo()
+				{
+                	RecipientIdentities = recipients,
+                	Endpoint = requestedEndpoint,
+                	SenderToken = senderToken
+				};
+				
                 callback(recipientInfo);
             },
             delegate(Exception e)
@@ -302,12 +312,17 @@ namespace ObjectCloud.Disk.FileHandlers
                             EstablishTrustDatasByToken.Remove(token);
                         }
 
-                        DatabaseConnection.Recipient.Upsert(
-                            Recipient_Table.receiveNotificationEndpoint == receiveNotificationEndpoint & Recipient_Table.userID == sender.Id,
-                            delegate(IRecipient_Writable recipient)
-                            {
-                                recipient.senderToken = senderToken;
-                            });
+						this.persistedUserManagerData.Write(userManagerData =>
+						{
+							var user = userManagerData.GetUser(sender.Id);
+						
+							string oldSenderToken;
+							if (user.receiveNotificationSenderTokensByEndpoint.TryGetValue(receiveNotificationEndpoint, out oldSenderToken))
+								user.receiveNotificationEndpointsBySenderToken.Remove(oldSenderToken);
+						
+							user.receiveNotificationEndpointsBySenderToken[senderToken] = receiveNotificationEndpoint;
+							user.receiveNotificationSenderTokensByEndpoint[receiveNotificationEndpoint] = senderToken;
+						});
 
                         callback(senderToken);
                     }
@@ -349,16 +364,25 @@ namespace ObjectCloud.Disk.FileHandlers
             string loginUrlWebFinger,
             string loginUrlRedirect)
         {
-            DatabaseConnection.Sender.Upsert(
-                Sender_Table.identity == senderIdentity,
-                delegate(ISender_Writable senderEntry)
-                {
-                    senderEntry.loginURL = loginUrl;
-                    senderEntry.loginURLOpenID = loginUrlOpenID;
-                    senderEntry.loginURLRedirect = loginUrlRedirect;
-                    senderEntry.loginURLWebFinger = loginUrlWebFinger;
-                    senderEntry.senderToken = senderToken;
-                });
+			this.persistedUserManagerData.Write(userManagerData =>
+			{
+				Sender sender;
+				if (userManagerData.sendersByIdentity.TryGetValue(senderIdentity, out sender))
+					userManagerData.sendersByToken.Remove(sender.token);
+				
+				sender = new Sender()
+				{
+                    loginURL = loginUrl,
+                    loginURLOpenID = loginUrlOpenID,
+                    loginURLRedirect = loginUrlRedirect,
+                    loginURLWebFinger = loginUrlWebFinger,
+                    token = senderToken,
+					identity = senderIdentity
+				};
+				
+				userManagerData.sendersByToken[senderToken] = sender;
+				userManagerData.sendersByIdentity[senderIdentity] = sender;
+			});
 
             /*if (null != DatabaseConnection.Sender.SelectSingle(Sender_Table.identity == senderIdentity))
                 DatabaseConnection.Sender.Update(
@@ -405,18 +429,21 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public bool TryGetSenderIdentity(string senderToken, out string senderIdendity)
         {
-            ISender_Readable sender = DatabaseConnection.Sender.SelectSingle(Sender_Table.senderToken == senderToken);
-
-            if (null == sender)
-            {
-                senderIdendity = null;
-                return false;
-            }
-            else
-            {
-                senderIdendity = sender.identity;
-                return true;
-            }
+			bool found = false;
+			
+			senderIdendity = this.persistedUserManagerData.Read(userManagerData =>
+			{
+				Sender sender;
+				if (userManagerData.sendersByToken.TryGetValue(senderToken, out sender))
+				{
+					found = true;
+					return sender.identity;
+				}
+				else
+					return null;
+			});
+			
+			return found;
         }
 
         public void SendNotification(
@@ -631,23 +658,30 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public RapidLoginInfo GetRapidLoginInfo(string senderIdentity)
         {
-            ISender_Readable sender = DatabaseConnection.Sender.SelectSingle(Sender_Table.identity == senderIdentity);
-
-            if (null == sender)
-                throw new ParticleException("No information is known about " + senderIdentity);
-
-            RapidLoginInfo toReturn = new RapidLoginInfo();
-            toReturn.LoginUrl = sender.loginURL;
-            toReturn.LoginUrlOpenID = sender.loginURLOpenID;
-            toReturn.LoginUrlRedirect = sender.loginURLRedirect;
-            toReturn.LoginUrlWebFinger = sender.loginURLWebFinger;
-
-            return toReturn;
+			return this.persistedUserManagerData.Read(userManagerData =>
+			{
+				Sender sender;
+				if (!userManagerData.sendersByIdentity.TryGetValue(senderIdentity, out sender))
+                	throw new ParticleException("No information is known about " + senderIdentity);
+	
+    	        return new RapidLoginInfo()
+				{
+            		LoginUrl = sender.loginURL,
+            		LoginUrlOpenID = sender.loginURLOpenID,
+            		LoginUrlRedirect = sender.loginURLRedirect,
+            		LoginUrlWebFinger = sender.loginURLWebFinger
+				};
+			});
         }
 
         public void DeleteAllEstablishedTrust(IUserOrGroup userOrGroup)
         {
-            DatabaseConnection.Recipient.Delete(Recipient_Table.userID == userOrGroup.Id);
+			this.persistedUserManagerData.Read(userManagerData =>
+			{
+				var user = userManagerData.GetUser(userOrGroup.Id);
+				user.receiveNotificationEndpointsBySenderToken.Clear();
+				user.receiveNotificationSenderTokensByEndpoint.Clear();
+			});
         }
 
         /// <summary>

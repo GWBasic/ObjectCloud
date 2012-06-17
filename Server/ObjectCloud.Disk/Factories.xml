@@ -38,7 +38,6 @@
   </object>
   <object id="UserManagerHandlerFactory" type="ObjectCloud.Disk.Factories.UserManagerHandlerFactory, ObjectCloud.Disk">
     <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
-    <property name="DataAccessLocator" ref="UserManagerDataAccessLocator" />
   </object>
   <object id="DatabaseHandlerFactory" type="ObjectCloud.Disk.Factories.DatabaseHandlerFactory, ObjectCloud.Disk" >
     <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />

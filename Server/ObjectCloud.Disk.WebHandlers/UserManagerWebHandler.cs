@@ -646,33 +646,28 @@ namespace ObjectCloud.Disk.WebHandlers
         /// <returns></returns>
         [WebCallable(WebCallingConvention.GET_application_x_www_form_urlencoded, WebReturnConvention.JSON)]
         public IWebResults SearchUsersAndGroups(
-            IWebConnection webConnection, string query, uint? max, bool? excludeLocalUsers, string[] pluginArgs)
+            IWebConnection webConnection, string query, int? max, bool? excludeLocalUsers, string[] pluginArgs)
         {
             List<object> toReturn = new List<object>();
 
             // Prevent too large maxes unless the user has admin privileges
-            bool fixMax = false;
             if (null == max)
-                fixMax = true;
+				max = 50;
             else if (max.Value < 50)
-                fixMax = true;
+				max = 50;
 
             bool noLocal = false;
             if (null != excludeLocalUsers)
                 noLocal = excludeLocalUsers.Value;
 
-            if (fixMax)
-                if (FilePermissionEnum.Administer != FileContainer.LoadPermission(webConnection.Session.User.Id))
-                    max = 50;
-
             LinkedList<IUserOrGroup> usersToReturn;
             if (!noLocal)
-                usersToReturn = new LinkedList<IUserOrGroup>(FileHandler.SearchUsersAndGroups(query, max));
+                usersToReturn = new LinkedList<IUserOrGroup>(FileHandler.SearchUsersAndGroups(query, max.Value));
             else
                 usersToReturn = new LinkedList<IUserOrGroup>();
 
             foreach (IIdentityProvider identityProvider in FileHandlerFactoryLocator.IdentityProviders.Values)
-                foreach (IUserOrGroup userOrGroup in identityProvider.Search(query, max, pluginArgs))
+                foreach (IUserOrGroup userOrGroup in identityProvider.Search(query, max.Value, pluginArgs))
                     usersToReturn.AddLast(userOrGroup);
 
             if (null != max)

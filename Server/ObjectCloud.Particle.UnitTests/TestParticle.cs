@@ -153,7 +153,7 @@ namespace ObjectCloud.Particle.UnitTests
             VerifyNotificiationRecieved(recipient, sender, file, notification);
 
             List<Dictionary<NotificationColumn, object>> notifications = new List<Dictionary<NotificationColumn,object>>(
-                recipient.UserHandler.GetNotifications(null, null, null, null, new string[] {sender.Identity }, new HashSet<NotificationColumn>(Enum<NotificationColumn>.Values)));
+                recipient.UserHandler.GetNotifications(null, null, null, new string[] {sender.Identity }, new HashSet<NotificationColumn>(Enum<NotificationColumn>.Values)));
 
             Assert.AreEqual(1, notifications.Count);
             VerifyNotificiationRecieved(recipient, sender, file, notifications[0]);

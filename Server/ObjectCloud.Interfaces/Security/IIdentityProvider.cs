@@ -61,6 +61,6 @@ namespace ObjectCloud.Interfaces.Security
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
-        IEnumerable<IUserOrGroup> Search(string query, uint? max, IEnumerable<string> pluginArgs);
+        IEnumerable<IUserOrGroup> Search(string query, int max, IEnumerable<string> pluginArgs);
     }
 }

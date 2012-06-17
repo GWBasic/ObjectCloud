@@ -35,6 +35,8 @@ namespace ObjectCloud.Disk.FileHandlers
 			public Dictionary<ID<IUserOrGroup, Guid>, UserInt> users = new Dictionary<ID<IUserOrGroup, Guid>, UserInt>();
 			public Dictionary<ID<IUserOrGroup, Guid>, GroupInt> groups = new Dictionary<ID<IUserOrGroup, Guid>, GroupInt>();
 			public Dictionary<string, UserBase> byName = new Dictionary<string, UserBase>();
+			public Dictionary<string, Sender> sendersByToken = new Dictionary<string, Sender>();
+			public Dictionary<string, Sender> sendersByIdentity = new Dictionary<string, Sender>();
 			
 			public UserInt GetUser(ID<IUserOrGroup, Guid> userId)
 			{
@@ -55,6 +57,7 @@ namespace ObjectCloud.Disk.FileHandlers
 			}
 		}
 		
+		[Serializable]
 		internal class UserBase
 		{
 			public ID<IUserOrGroup, Guid> id;
@@ -86,6 +89,8 @@ namespace ObjectCloud.Disk.FileHandlers
 			public string identityProviderArgs;
 			public Dictionary<string, DateTime> associationHandles = new Dictionary<string, DateTime>();
 			public HashSet<GroupInt> groups = new HashSet<GroupInt>();
+			public Dictionary<string, string> receiveNotificationEndpointsBySenderToken = new Dictionary<string, string>();
+			public Dictionary<string, string> receiveNotificationSenderTokensByEndpoint = new Dictionary<string, string>();
 		}
 		
 		[Serializable]
@@ -97,6 +102,18 @@ namespace ObjectCloud.Disk.FileHandlers
 			public string displayName;
 			public HashSet<UserInt> users = new HashSet<UserInt>();
 			public Dictionary<UserInt, string> aliases = new Dictionary<UserInt, string>();
+		}
+		
+		[Serializable]
+		internal class Sender
+		{
+			public string identity;
+			public string token;
+			public string loginURL;
+			public string loginURLOpenID;
+			public string loginURLWebFinger;
+			public string loginURLRedirect;
+			//long senderID;
 		}
 
         internal UserManagerHandler(PersistedBinaryFormatterObject<UserManagerData> persistedUserManagerData, FileHandlerFactoryLocator fileHandlerFactoryLocator, int? maxLocalUsers)
@@ -417,11 +434,6 @@ namespace ObjectCloud.Disk.FileHandlers
 
             return nameOrGroupOrIdentity;
         }
-
-        /// <summary>
-        /// TODO:  This is okay because users are immutable, except for their password, but if users become mutable, this needs to be updated
-        /// </summary>
-        Dictionary<ID<IUserOrGroup, Guid>, IUser> UsersCache = new Dictionary<ID<IUserOrGroup, Guid>, IUser>();
 
         public IUser GetUser(ID<IUserOrGroup, Guid> userId)
         {
