@@ -307,7 +307,8 @@ namespace ObjectCloud.Disk.FileHandlers
 		{
             name = name.ToLowerInvariant();
 			
-			this.ThrowExceptionIfDuplicate(userManagerData, name);
+			if (groupType >= GroupType.Public)
+				this.ThrowExceptionIfDuplicate(userManagerData, name);
 			
 			UserInt owner = null;
 			if (null != ownerId)
@@ -328,7 +329,9 @@ namespace ObjectCloud.Disk.FileHandlers
 				group.aliases[owner] = name;
 			
 			userManagerData.groups[groupId] = group;
-			userManagerData.byName[name] = group;
+
+			if (groupType != GroupType.Personal)
+				userManagerData.byName[name] = group;
 			
 			var groupObj = this.CreateGroupObject(group);
 			
