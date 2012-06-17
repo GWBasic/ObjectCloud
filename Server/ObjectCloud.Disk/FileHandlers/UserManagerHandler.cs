@@ -307,7 +307,7 @@ namespace ObjectCloud.Disk.FileHandlers
 		{
             name = name.ToLowerInvariant();
 			
-			if (groupType >= GroupType.Public)
+			if (groupType >= GroupType.Private)
 				this.ThrowExceptionIfDuplicate(userManagerData, name);
 			
 			UserInt owner = null;
@@ -959,7 +959,7 @@ namespace ObjectCloud.Disk.FileHandlers
 				
 				// clean out old association handles
 				var outdatedAssociationHandles = user.associationHandles.Where(a => a.Value > maxAssociationAge).Select(a => a.Key);
-				foreach (var outdatedAssociationHandle in outdatedAssociationHandles)
+				foreach (var outdatedAssociationHandle in outdatedAssociationHandles.ToArray())
 					user.associationHandles.Remove(outdatedAssociationHandle);
 				
                 // Only allow an association handle to be used once, for security reasons
@@ -1006,7 +1006,10 @@ namespace ObjectCloud.Disk.FileHandlers
 				var user = userManagerData.GetUser(userId);
 				
 				var groupIds = new List<ID<IUserOrGroup, Guid>>(user.groups.Count);
-				groupIds.AddRange(user.groups.Select(g => g.id));
+				
+				// wtf??? TODO: nulls are getting into user.groups!!!
+				
+				groupIds.AddRange(user.groups.Where(g => null != g).Select(g => g.id));
 
 				return groupIds;
 			});
@@ -1019,7 +1022,9 @@ namespace ObjectCloud.Disk.FileHandlers
 				var user = userManagerData.GetUser(userId);
 				
 				var groups = new List<IGroupAndAlias>(user.groups.Count);
-				foreach (var group in user.groups)
+				// wtf??? TODO: nulls are getting into user.groups!!!
+				
+				foreach (var group in user.groups.Where(g => null != g))
 				{
 					string alias = null;
 					group.aliases.TryGetValue(user, out alias);

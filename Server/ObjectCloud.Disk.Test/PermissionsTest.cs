@@ -346,7 +346,7 @@ namespace ObjectCloud.Disk.Test
 		public void TestCanNotAddUserToSystemGroup()
 		{
 			FileHandlerFactoryLocator.UserManagerHandler.AddUserToGroup(
-				new ID<IUserOrGroup, Guid>(Guid.NewGuid()),
+				TestUser_1.Id,
 				FileHandlerFactoryLocator.UserFactory.AuthenticatedUsers.Id);
 		}
 		
@@ -354,8 +354,8 @@ namespace ObjectCloud.Disk.Test
 		[ExpectedException(typeof(CanNotEditMembershipOfSystemGroup))]
 		public void TestCanNotRemoveUserFromSystemGroup()
 		{
-			FileHandlerFactoryLocator.UserManagerHandler.AddUserToGroup(
-				new ID<IUserOrGroup, Guid>(Guid.NewGuid()),
+			FileHandlerFactoryLocator.UserManagerHandler.RemoveUserFromGroup(
+				TestUser_1.Id,
 				FileHandlerFactoryLocator.UserFactory.LocalUsers.Id);
 		}
 	}
