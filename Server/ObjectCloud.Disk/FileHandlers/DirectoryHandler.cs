@@ -434,7 +434,7 @@ namespace ObjectCloud.Disk.FileHandlers
             });
 
             // If notifications are enabled, then send a notification informing the user of the change
-            IFileContainer targetFile = OpenFile(filename);
+            var targetFile = OpenFile(filename);
 
             if (null != sender)
                 targetFile.FileHandler.SendShareNotificationFrom(sender);
@@ -542,40 +542,25 @@ namespace ObjectCloud.Disk.FileHandlers
         /// <returns></returns>
         protected IEnumerable<ID<IUserOrGroup, Guid>> GetAllUserAndGroupIdsThatApplyToUser(ID<IUserOrGroup, Guid> userId)
         {
-            List<ID<IUserOrGroup, Guid>> userAndGroupsIds = new List<ID<IUserOrGroup, Guid>>();
+            var userAndGroupsIds = new HashSet<ID<IUserOrGroup, Guid>>();
             userAndGroupsIds.Add(userId);
 
-            IEnumerable<ID<IUserOrGroup, Guid>> groupIds = FileHandlerFactoryLocator.UserManagerHandler.GetGroupIdsThatUserIsIn(userId);
-            userAndGroupsIds.AddRange(groupIds);
+            foreach (var groupId in FileHandlerFactoryLocator.UserManagerHandler.GetGroupIdsThatUserIsIn(userId))
+            	userAndGroupsIds.Add(groupId);
 
             // Make sure that permissions that apply to everybody are present
-            ID<IUserOrGroup, Guid> everybodyId = FileHandlerFactoryLocator.UserFactory.Everybody.Id;
-            if (!userAndGroupsIds.Contains(everybodyId))
-                userAndGroupsIds.Add(everybodyId);
+            userAndGroupsIds.Add(FileHandlerFactoryLocator.UserFactory.Everybody.Id);
 
             // If the user is authenticated, make sure that authenticated permissions apply
             if (userId != FileHandlerFactoryLocator.UserFactory.AnonymousUser.Id)
             {
-                ID<IUserOrGroup, Guid> authenticatedId = FileHandlerFactoryLocator.UserFactory.AuthenticatedUsers.Id;
-                if (!userAndGroupsIds.Contains(authenticatedId))
-                    userAndGroupsIds.Add(authenticatedId);
+                userAndGroupsIds.Add(FileHandlerFactoryLocator.UserFactory.AuthenticatedUsers.Id);
 
                 // If the user is local, make sure that the local permissions apply
-                try
-                {
-                    IUser userOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUser(userId);
+                IUser userOrGroup = FileHandlerFactoryLocator.UserManagerHandler.GetUserNoException(userId);
 
-                    if (FileHandlerFactoryLocator.FileSystemResolver.IsFilePresent("/Users/" + userOrGroup.Name + ".user"))
-                    {
-                        ID<IUserOrGroup, Guid> localId = FileHandlerFactoryLocator.UserFactory.LocalUsers.Id;
-                        if (!userAndGroupsIds.Contains(localId))
-                            userAndGroupsIds.Add(localId);
-                    }
-                }
-                catch (UnknownUser)
-                {
-                    // Unknown users are swallowed, for now
-                }
+                if (userOrGroup.Local)
+                    userAndGroupsIds.Add(FileHandlerFactoryLocator.UserFactory.LocalUsers.Id);
             }
 
             return userAndGroupsIds;

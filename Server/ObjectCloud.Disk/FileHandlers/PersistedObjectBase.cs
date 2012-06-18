@@ -315,9 +315,9 @@ namespace ObjectCloud.Disk.FileHandlers
 				
 				if (0 == this.writeReentrantCount)
 				{
-					this.readerWriterLockSlim.ExitWriteLock();
 					this.writeReentrantThread = null;
 					this.writeReentrantException = null;
+					this.readerWriterLockSlim.ExitWriteLock();
 				}
 			}
 		}

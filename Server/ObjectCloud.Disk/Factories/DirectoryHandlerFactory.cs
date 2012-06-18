@@ -81,7 +81,40 @@ namespace ObjectCloud.Disk.Factories
 		/// </summary>
 		private void RemoveDeadPermissions()
 		{
-			var allUserIds = this.FileHandlerFactoryLocator.UserManagerHandler.GetAllLocalUserIds().ToHashSet();
+			var knownUserAndGroupIds = new HashSet<ID<IUserOrGroup, Guid>>();
+			var missingUserAndGroupIds = new HashSet<ID<IUserOrGroup, Guid>>();
+			
+			// Clean up permissions for deleted users
+			// This really should be event-driven
+			this.persistedFileInformations.Read(fileInformations =>
+			{
+				foreach (var fileInformation in fileInformations.Values)
+					foreach (var userOrGroupId in fileInformation.permissions.Keys.Union(
+						fileInformation.namedPermissions.Keys))
+							knownUserAndGroupIds.Add(userOrGroupId);
+			});
+
+			foreach (var userOrGroupId in knownUserAndGroupIds)
+				if (null == this.FileHandlerFactoryLocator.UserManagerHandler.GetUserOrGroupNoException(userOrGroupId))
+					missingUserAndGroupIds.Add(userOrGroupId);
+			
+			if (missingUserAndGroupIds.Count > 0)
+				this.persistedFileInformations.Write(fileInformations =>
+		        {
+					foreach (var fileInformation in fileInformations.Values)
+						foreach (var userOrGroupId in missingUserAndGroupIds)
+						{
+							fileInformation.namedPermissions.Remove(userOrGroupId);
+							fileInformation.permissions.Remove(userOrGroupId);
+						}
+				});
+		}
+		
+		/*// <summary>
+		/// Cleans up dead permissions. Runs on a background thread because it relies on complete initialization
+		/// </summary>
+		private void RemoveDeadPermissions()
+		{
 			HashSet<ID<IUserOrGroup, Guid>> missingUserAndGroupIds;
 			
 			do
@@ -114,7 +147,7 @@ namespace ObjectCloud.Disk.Factories
 							fileInformation.permissions.Remove(userOrGroupId);
 						}
 				});
-		}
+		}*/
 
         public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID, IDirectoryHandler parentDirectory)
         {
