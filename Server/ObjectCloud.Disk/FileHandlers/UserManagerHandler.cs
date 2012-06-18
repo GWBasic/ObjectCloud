@@ -955,10 +955,10 @@ namespace ObjectCloud.Disk.FileHandlers
 
 			return this.persistedUserManagerData.Write(userManagerData =>
 			{
-				var user = userManagerData.users[userId];
+				var user = userManagerData.GetUser(userId);
 				
 				// clean out old association handles
-				var outdatedAssociationHandles = user.associationHandles.Where(a => a.Value > maxAssociationAge).Select(a => a.Key);
+				var outdatedAssociationHandles = user.associationHandles.Where(a => a.Value < maxAssociationAge).Select(a => a.Key);
 				foreach (var outdatedAssociationHandle in outdatedAssociationHandles.ToArray())
 					user.associationHandles.Remove(outdatedAssociationHandle);
 				
