@@ -92,10 +92,6 @@
       <Project>{94994068-0772-49E0-9D4B-0BDBB32AD730}</Project>
       <Name>ObjectCloud.DataAccess</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ObjectCloud.Disk.Implementation\ObjectCloud.Disk.Implementation.csproj">
-      <Project>{AF309392-2A65-4ADD-83C6-0D612C48562C}</Project>
-      <Name>ObjectCloud.Disk.Implementation</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ObjectCloud.Interfaces\ObjectCloud.Interfaces.csproj">
       <Project>{DBA3E72A-7B35-4107-88EF-2BD8FB782BAC}</Project>
       <Name>ObjectCloud.Interfaces</Name>
@@ -108,10 +104,14 @@
       <Project>{8420B7F6-5479-4CBB-909D-7AAEE909C336}</Project>
       <Name>ObjectCloud.ORM.DataAccess.SQLite</Name>
     </ProjectReference>
+    <ProjectReference Include="Implementation\ObjectCloud.Disk.Implementation.csproj">
+      <Project>{AF309392-2A65-4ADD-83C6-0D612C48562C}</Project>
+      <Name>ObjectCloud.Disk.Implementation</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Factories.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 </Project>
