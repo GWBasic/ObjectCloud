@@ -16,7 +16,7 @@ namespace ObjectCloud.Disk.WebHandlers
     /// <summary>
     /// Methods to manage the session
     /// </summary>
-    class SessionManagerWebHandler : DatabaseWebHandler<ISessionManagerHandler, SessionManagerWebHandler>
+    class SessionManagerWebHandler : WebHandler<ISessionManagerHandler>
     {
         /// <summary>
         /// Updates if the browser should remember the session after being closed

@@ -23,7 +23,7 @@ namespace ObjectCloud.Disk.WebHandlers
     /// <summary>
     /// Wraps all functionality of a directory
     /// </summary>
-    public class DirectoryWebHandler : DatabaseWebHandler<IDirectoryHandler, DirectoryWebHandler>
+    public class DirectoryWebHandler : WebHandler<IDirectoryHandler>
     {
 		static ILog log = LogManager.GetLogger<DirectoryWebHandler>();
 		

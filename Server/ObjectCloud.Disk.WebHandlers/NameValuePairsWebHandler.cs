@@ -19,7 +19,7 @@ namespace ObjectCloud.Disk.WebHandlers
     /// <summary>
     /// Wrapper for web methods that handle name-value pairs
     /// </summary>
-    public class NameValuePairsWebHandler : DatabaseWebHandler<INameValuePairsHandler, NameValuePairsWebHandler>
+    public class NameValuePairsWebHandler : WebHandler<INameValuePairsHandler>
     {
         /// <summary>
         /// Gets the named value

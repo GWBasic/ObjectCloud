@@ -21,7 +21,7 @@ namespace ObjectCloud.Disk.WebHandlers
     /// <summary>
     /// Allows manipulation and querying of local users.
     /// </summary>
-    public class UserWebHandler : DatabaseWebHandler<IUserHandler, UserWebHandler>
+    public class UserWebHandler : WebHandler<IUserHandler>
     {
         private static ILog log = LogManager.GetLogger(typeof(UserWebHandler));
 

@@ -100,14 +100,6 @@
       <Project>{4E351911-60AC-4BCE-99D7-066C3C9DA67E}</Project>
       <Name>ObjectCloud.Common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ObjectCloud.DataAccess.SQLite\ObjectCloud.DataAccess.SQLite.csproj">
-      <Project>{53A4920D-B0E2-4B84-928D-BD6F6B2BE23C}</Project>
-      <Name>ObjectCloud.DataAccess.SQLite</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ObjectCloud.DataAccess\ObjectCloud.DataAccess.csproj">
-      <Project>{94994068-0772-49E0-9D4B-0BDBB32AD730}</Project>
-      <Name>ObjectCloud.DataAccess</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ObjectCloud.Disk.Implementation\ObjectCloud.Disk.Implementation.csproj">
       <Project>{AF309392-2A65-4ADD-83C6-0D612C48562C}</Project>
       <Name>ObjectCloud.Disk.Implementation</Name>
@@ -119,10 +111,6 @@
     <ProjectReference Include="..\ObjectCloud.Logger\ObjectCloud.Logger.csproj">
       <Project>{445C9C48-8721-458E-9C19-C833157301B3}</Project>
       <Name>ObjectCloud.Logger</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ObjectCloud.ORM.DataAccess.SQLite\ObjectCloud.ORM.DataAccess.SQLite.csproj">
-      <Project>{8420B7F6-5479-4CBB-909D-7AAEE909C336}</Project>
-      <Name>ObjectCloud.ORM.DataAccess.SQLite</Name>
     </ProjectReference>
     <ProjectReference Include="..\ObjectCloud.WebServer.Implementation\ObjectCloud.WebServer.Implementation.csproj">
       <Project>{34B1F8C9-E830-4BD6-8854-9FB7DEDA5EE5}</Project>

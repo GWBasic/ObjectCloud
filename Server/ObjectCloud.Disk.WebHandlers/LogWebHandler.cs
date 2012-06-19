@@ -13,7 +13,7 @@ namespace ObjectCloud.Disk.WebHandlers
     /// <summary>
     /// Reads ObjectCloud's system log
     /// </summary>
-	public class LogWebHandler : DatabaseWebHandler<IObjectCloudLogHandler, LogWebHandler>
+	public class LogWebHandler : WebHandler<IObjectCloudLogHandler>
 	{
 		/// <summary>
 		/// Returns all of the class names that are present in the log

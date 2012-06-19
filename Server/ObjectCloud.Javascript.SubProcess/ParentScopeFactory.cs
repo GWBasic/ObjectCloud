@@ -257,9 +257,6 @@ namespace ObjectCloud.Javascript.SubProcess
         private static IEnumerable<Type> GetTypesThatHaveJavascriptFunctions(string fileType)
         {
             yield return typeof(JavascriptFunctions);
-
-            if ("database" == fileType)
-                yield return typeof(JavascriptDatabaseFunctions);
         }
 
         /// <summary>

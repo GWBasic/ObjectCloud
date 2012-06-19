@@ -57,7 +57,6 @@
     <Compile Include="Comet\EchoCometWebHandler.cs" />
     <Compile Include="Comet\LoopbackCometWebHandler.cs" />
     <Compile Include="Comet\LoopbackQueuingReliableWebHandler.cs" />
-    <Compile Include="DatabaseWebHandler.cs" />
     <Compile Include="DirectoryWebHandler.cs" />
     <Compile Include="DocumentationWebHandler.cs" />
     <Compile Include="GroupWebHandler.cs" />
@@ -132,10 +131,6 @@
     <ProjectReference Include="..\JsonFx.Json\JsonFx.Json.csproj">
       <Project>{ABA23F14-7E47-43FE-A3E7-1FF97840C3FB}</Project>
       <Name>JsonFx.Json</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ObjectCloud.ORM.DataAccess.SQLite\ObjectCloud.ORM.DataAccess.SQLite.csproj">
-      <Project>{8420B7F6-5479-4CBB-909D-7AAEE909C336}</Project>
-      <Name>ObjectCloud.ORM.DataAccess.SQLite</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

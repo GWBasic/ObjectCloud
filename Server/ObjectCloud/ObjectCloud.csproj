@@ -112,14 +112,6 @@
       <Project>{4E351911-60AC-4BCE-99D7-066C3C9DA67E}</Project>
       <Name>ObjectCloud.Common</Name>
     </ProjectReference>
-    <ProjectReference Include="DataAccess.SQLite\ObjectCloud.DataAccess.SQLite.csproj">
-      <Project>{53A4920D-B0E2-4B84-928D-BD6F6B2BE23C}</Project>
-      <Name>ObjectCloud.DataAccess.SQLite</Name>
-    </ProjectReference>
-    <ProjectReference Include="DataAccess\ObjectCloud.DataAccess.csproj">
-      <Project>{94994068-0772-49E0-9D4B-0BDBB32AD730}</Project>
-      <Name>ObjectCloud.DataAccess</Name>
-    </ProjectReference>
     <ProjectReference Include="Disk.Implementation\ObjectCloud.Disk.Implementation.csproj">
       <Project>{AF309392-2A65-4ADD-83C6-0D612C48562C}</Project>
       <Name>ObjectCloud.Disk.Implementation</Name>
@@ -136,10 +128,6 @@
       <Project>{445C9C48-8721-458E-9C19-C833157301B3}</Project>
       <Name>ObjectCloud.Logger</Name>
     </ProjectReference>
-    <ProjectReference Include="ORM.DataAccess\ObjectCloud.ORM.DataAccess.csproj">
-      <Project>{516C38E4-D59A-41E0-893F-ADDF2E4DB5A6}</Project>
-      <Name>ObjectCloud.ORM.DataAccess</Name>
-    </ProjectReference>
     <ProjectReference Include="WebAccessCodeGenerators\ObjectCloud.WebAccessCodeGenerators.csproj">
       <Project>{B2052165-C0FE-44F7-8F23-B48FB77AE2CA}</Project>
       <Name>ObjectCloud.WebAccessCodeGenerators</Name>
@@ -155,10 +143,6 @@
     <ProjectReference Include="Disk.WebHandlers\ObjectCloud.Disk.WebHandlers.csproj">
       <Project>{A7EE8471-B9EC-454E-BD65-EF85BE5094B6}</Project>
       <Name>ObjectCloud.Disk.WebHandlers</Name>
-    </ProjectReference>
-    <ProjectReference Include="ORM.DataAccess.SQLite\ObjectCloud.ORM.DataAccess.SQLite.csproj">
-      <Project>{8420B7F6-5479-4CBB-909D-7AAEE909C336}</Project>
-      <Name>ObjectCloud.ORM.DataAccess.SQLite</Name>
     </ProjectReference>
     <ProjectReference Include="Disk\ObjectCloud.Disk.csproj">
       <Project>{2380191A-6FC6-429A-8CF5-32BBE656C3A5}</Project>

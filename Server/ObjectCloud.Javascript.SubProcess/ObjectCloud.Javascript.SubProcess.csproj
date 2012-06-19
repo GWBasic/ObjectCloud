@@ -65,7 +65,6 @@
     <Compile Include="ExecutionEnvironmentFactory.cs" />
     <Compile Include="FunctionCallContext.cs" />
     <Compile Include="FunctionCaller.cs" />
-    <Compile Include="JavascriptDatabaseFunctions.cs" />
     <Compile Include="JavascriptFunctions.cs" />
     <Compile Include="ParentScope.cs" />
     <Compile Include="ParentScopeFactory.cs" />

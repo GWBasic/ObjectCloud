@@ -535,42 +535,6 @@ namespace ObjectCloud.Disk.Implementation
             }
 
             IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
-            string groupFileName = FileHandlerFactoryLocator.UserFactory.Administrators.Name.ToLower() + ".group";
-            if (!usersDirectory.IsFilePresent(groupFileName))
-            {
-                IDatabaseHandler groupDB = usersDirectory.CreateFile(
-                    groupFileName,
-                    "database",
-                    FileHandlerFactoryLocator.UserFactory.RootUser.Id).FileContainer.CastFileHandler<IDatabaseHandler>();
-
-                usersDirectory.SetPermission(
-                    null,
-                    groupFileName,
-                    new ID<IUserOrGroup, Guid>[] { FileHandlerFactoryLocator.UserFactory.Administrators.Id },
-                    FilePermissionEnum.Read,
-                    true,
-                    true);
-
-                using (DbCommand command = groupDB.Connection.CreateCommand())
-                {
-                    command.CommandText =
-@"create table Metadata 
-(
-	Value			string not null,
-	Name			string not null	primary key
-);
-Create index Metadata_Name on Metadata (Name);
-insert into Metadata (Name, Value) values ('GroupId', @groupId);
-";
-
-                    DbParameter parameter = command.CreateParameter();
-                    parameter.ParameterName = "@groupId";
-                    parameter.Value = FileHandlerFactoryLocator.UserFactory.Administrators.Id;
-                    command.Parameters.Add(parameter);
-
-                    command.ExecuteNonQuery();
-                }
-            }
 
             if (!systemDirectory.IsFilePresent("Documentation"))
             {

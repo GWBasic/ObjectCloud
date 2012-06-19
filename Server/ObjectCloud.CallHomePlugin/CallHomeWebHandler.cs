@@ -21,7 +21,7 @@ using ObjectCloud.Interfaces.WebServer;
 
 namespace ObjectCloud.CallHomePlugin
 {
-    public class CallHomeWebHandler : DatabaseWebHandler<CallHomeFileHandler, CallHomeWebHandler>
+    public class CallHomeWebHandler : WebHandler<CallHomeFileHandler>
     {
         static ILog log = LogManager.GetLogger<CallHomeWebHandler>();
 

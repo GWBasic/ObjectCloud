@@ -17,7 +17,6 @@ using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
 using ObjectCloud.Disk.Implementation;
-using ObjectCloud.ORM.DataAccess.SQLite;
 
 namespace ObjectCloud.Disk.Test
 {
@@ -307,64 +306,5 @@ namespace ObjectCloud.Disk.Test
                 catch { }
             }
         }
-
-        [Test]
-        public void TestDumpRestoreDatabase()
-        {
-            IDirectoryHandler rootDir = FileHandlerFactoryLocator.FileSystemResolver.RootDirectoryHandler;
-
-            string filename = "TestDumpRestoreDatabase" + SRandom.Next();
-            IDatabaseHandler databaseHandler = (IDatabaseHandler)rootDir.CreateFile(filename, "database", RootUserId);
-
-            int testVal = SRandom.Next<int>();
-
-            DbCommand command = databaseHandler.Connection.CreateCommand();
-
-            command.CommandText = "create table testtable (testcol int)";
-            command.ExecuteNonQuery();
-
-            command = databaseHandler.Connection.CreateCommand();
-            command.CommandText = "insert into testtable (testcol) values (@testVal)";
-
-            DbParameter dbParameter = command.CreateParameter();
-            dbParameter.ParameterName = "@testVal";
-            dbParameter.Value = testVal;
-            command.Parameters.Add(dbParameter);
-            
-            command.ExecuteNonQuery();
-
-            string dumpDestination = Path.GetTempFileName();
-            File.Delete(dumpDestination);
-
-            IDatabaseHandler restoredDatabase;
-
-            try
-            {
-                using (TimedLock.Lock(databaseHandler))
-                    databaseHandler.Dump(dumpDestination, RootUserId);
-
-                string restoredFileName = "Restored_" + filename;
-
-                restoredDatabase = (IDatabaseHandler)rootDir.RestoreFile(
-                    restoredFileName, "database", dumpDestination, RootUserId);
-				
-				Assert.IsNotNull(restoredDatabase);
-
-            }
-            finally
-            {
-                try
-                {
-                    File.Delete(dumpDestination);
-                }
-                catch { }
-            }
-
-            command = databaseHandler.Connection.CreateCommand();
-            command.CommandText = "select testcol from testtable";
-            object scalarResult = command.ExecuteScalar();
-
-            Assert.AreEqual(testVal, scalarResult, "Unexpected result from RunQueryForScalar");
-        }
-    }
+	}
 }

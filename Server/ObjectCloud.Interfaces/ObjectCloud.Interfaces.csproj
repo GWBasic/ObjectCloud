@@ -63,8 +63,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Database\ISqlDatabaseConnector.cs" />
-    <Compile Include="Database\IEmbeddedDatabaseConnector.cs" />
     <Compile Include="Disk\BadFileName.cs" />
     <Compile Include="Disk\CanNotCreateFile.cs" />
     <Compile Include="Disk\CanNotOpenFile.cs" />
@@ -174,7 +172,6 @@
     <Compile Include="WebServer\WebHandlerPlugin.cs" />
     <Compile Include="WebServer\WebMethod.cs" />
     <Compile Include="WebServer\WebResults.cs" />
-    <Compile Include="Disk\IDatabaseHandler.cs" />
     <Compile Include="WebServer\WebResultsOverrideException.cs" />
     <Compile Include="Security\IGroup.cs" />
     <Compile Include="Security\FilePermission.cs" />
@@ -204,10 +201,6 @@
     <ProjectReference Include="..\ObjectCloud.Common\ObjectCloud.Common.csproj">
       <Project>{4E351911-60AC-4BCE-99D7-066C3C9DA67E}</Project>
       <Name>ObjectCloud.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ObjectCloud.ORM.DataAccess\ObjectCloud.ORM.DataAccess.csproj">
-      <Project>{516C38E4-D59A-41E0-893F-ADDF2E4DB5A6}</Project>
-      <Name>ObjectCloud.ORM.DataAccess</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
