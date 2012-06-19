@@ -120,9 +120,6 @@
         <entry key="usermanager">
           <ref object="UserManagerHandlerFactory" />
         </entry>
-        <entry key="database">
-          <ref object="DatabaseHandlerFactory" />
-        </entry>
         <entry key="sessionmanager">
           <ref object="SessionManagerHandlerFactory" />
         </entry>
@@ -201,11 +198,6 @@
         <entry key="usermanager">
           <object type="System.Type" factory-method="GetType" id="usermanagerWebHandlerType">
             <constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.UserManagerWebHandler, ObjectCloud.Disk.WebHandlers" />
-          </object>
-        </entry>
-        <entry key="database">
-          <object type="System.Type" factory-method="GetType" id="databaseWebHandlerType">
-            <constructor-arg name="typeName" value="ObjectCloud.Disk.WebHandlers.DatabaseWebHandler, ObjectCloud.Disk.WebHandlers" />
           </object>
         </entry>
         <entry key="sessionmanager">
