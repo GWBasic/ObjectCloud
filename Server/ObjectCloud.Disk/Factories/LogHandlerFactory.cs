@@ -7,7 +7,6 @@ using System.IO;
 
 using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
-using ObjectCloud.DataAccess.Log;
 using ObjectCloud.Disk.FileHandlers;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;

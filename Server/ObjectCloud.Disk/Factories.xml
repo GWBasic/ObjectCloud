@@ -39,10 +39,6 @@
   <object id="UserManagerHandlerFactory" type="ObjectCloud.Disk.Factories.UserManagerHandlerFactory, ObjectCloud.Disk">
     <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
   </object>
-  <object id="DatabaseHandlerFactory" type="ObjectCloud.Disk.Factories.DatabaseHandlerFactory, ObjectCloud.Disk" >
-    <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
-    <property name="EmbeddedDatabaseConnector" ref="EmbeddedDatabaseConnector" />
-  </object>
   <object id="SessionManagerHandlerFactory" type="ObjectCloud.Disk.Factories.SessionManagerHandlerFactory, ObjectCloud.Disk" >
     <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
   </object>

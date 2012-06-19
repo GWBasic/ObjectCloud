@@ -45,11 +45,9 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="FileHandlers\BinaryHandler.cs" />
-    <Compile Include="FileHandlers\DatabaseHandler.cs" />
     <Compile Include="FileHandlers\DirectoryHandler.cs" />
     <Compile Include="FileHandlers\FileContainer.cs" />
     <Compile Include="FileHandlers\FileId.cs" />
-    <Compile Include="FileHandlers\HasDatabaseFileHandler.cs" />
     <Compile Include="FileHandlers\LastModifiedFileHandler.cs" />
     <Compile Include="FileHandlers\LogHandler.cs" />
     <Compile Include="FileHandlers\NameValuePairsHandler.cs" />
@@ -61,7 +59,6 @@
     <Compile Include="FileHandlers\UserManagerHandler.cs" />
     <Compile Include="FileHandlers\Particle\Endpoints.cs" />
     <Compile Include="Factories\BinaryHandlerFactory.cs" />
-    <Compile Include="Factories\DatabaseHandlerFactory.cs" />
     <Compile Include="Factories\DirectoryHandlerFactory.cs" />
     <Compile Include="Factories\FileHandlerFactory.cs" />
     <Compile Include="Factories\FileSystem.cs" />
@@ -88,21 +85,9 @@
       <Project>{4E351911-60AC-4BCE-99D7-066C3C9DA67E}</Project>
       <Name>ObjectCloud.Common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ObjectCloud.DataAccess\ObjectCloud.DataAccess.csproj">
-      <Project>{94994068-0772-49E0-9D4B-0BDBB32AD730}</Project>
-      <Name>ObjectCloud.DataAccess</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ObjectCloud.Interfaces\ObjectCloud.Interfaces.csproj">
       <Project>{DBA3E72A-7B35-4107-88EF-2BD8FB782BAC}</Project>
       <Name>ObjectCloud.Interfaces</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ObjectCloud.ORM.DataAccess\ObjectCloud.ORM.DataAccess.csproj">
-      <Project>{516C38E4-D59A-41E0-893F-ADDF2E4DB5A6}</Project>
-      <Name>ObjectCloud.ORM.DataAccess</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ObjectCloud.ORM.DataAccess.SQLite\ObjectCloud.ORM.DataAccess.SQLite.csproj">
-      <Project>{8420B7F6-5479-4CBB-909D-7AAEE909C336}</Project>
-      <Name>ObjectCloud.ORM.DataAccess.SQLite</Name>
     </ProjectReference>
     <ProjectReference Include="Implementation\ObjectCloud.Disk.Implementation.csproj">
       <Project>{AF309392-2A65-4ADD-83C6-0D612C48562C}</Project>

@@ -10,7 +10,6 @@ using System.Threading;
 
 using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
-using ObjectCloud.DataAccess.SessionManager;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
 using ObjectCloud.Interfaces.WebServer;

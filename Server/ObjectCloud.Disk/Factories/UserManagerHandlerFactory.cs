@@ -9,7 +9,6 @@ using System.Text;
 using System.Xml;
 
 using ObjectCloud.Common;
-using ObjectCloud.DataAccess.UserManager;
 using ObjectCloud.Disk.FileHandlers;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;

@@ -15,20 +15,6 @@
     <property name="CallHomeFileHandlerFactory">
       <object id="CallHomeFileHandlerFactory" type="ObjectCloud.CallHomePlugin.CallHomeFileHandlerFactory, ObjectCloud.CallHomePlugin">
         <property name="FileHandlerFactoryLocator" ref="FileHandlerFactoryLocator" />
-        <property name="DataAccessLocator">
-          <object id="CallHomeDataAccessLocator" type="ObjectCloud.CallHomePlugin.DataAccessBase.DataAccessLocator, ObjectCloud.CallHomePlugin">
-            <property name="DatabaseCreator">
-              <object type="ObjectCloud.CallHomePlugin.DataAccess.EmbeddedDatabaseCreator, ObjectCloud.CallHomePlugin" id="CallHomePlugin.EmbeddedDatabaseCreator">
-                <property name="EmbeddedDatabaseConnector" ref="EmbeddedDatabaseConnector" />
-              </object>
-            </property>
-            <property name="DatabaseConnectorFactory">
-              <object type="ObjectCloud.CallHomePlugin.DataAccess.DatabaseConnectorFactory, ObjectCloud.CallHomePlugin" id="CallHomePlugin.DatabaseConnectorFactory">
-                <property name="EmbeddedDatabaseConnector" ref="EmbeddedDatabaseConnector" />
-              </object>
-            </property>
-          </object>
-        </property>
       </object>
     </property>
   </object>

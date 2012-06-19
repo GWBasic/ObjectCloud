@@ -11,7 +11,6 @@ using System.Xml;
 
 using ObjectCloud.Common;
 using ObjectCloud.Common.StreamEx;
-using ObjectCloud.DataAccess.Directory;
 using ObjectCloud.Disk.FileHandlers;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;

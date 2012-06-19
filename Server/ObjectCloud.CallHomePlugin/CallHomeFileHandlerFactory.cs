@@ -3,33 +3,21 @@
 // For more information, see either DefaultFiles/Docs/license.wchtml or /Docs/license.wchtml
 
 using System;
+using System.Collections.Generic;
 using System.Data.Common;
 using System.IO;
 
-using ObjectCloud.CallHomePlugin.DataAccess;
-using ObjectCloud.CallHomePlugin.DataAccessBase;
 using ObjectCloud.Common;
 using ObjectCloud.Disk.Factories;
 using ObjectCloud.Disk.FileHandlers;
 using ObjectCloud.Interfaces.Database;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
-using ObjectCloud.ORM.DataAccess.SQLite;
 
 namespace ObjectCloud.CallHomePlugin
 {
     public class CallHomeFileHandlerFactory : FileHandlerFactory<CallHomeFileHandler>
     {
-        /// <summary>
-        /// Service locator for data access objects
-        /// </summary>
-        public DataAccessLocator DataAccessLocator
-        {
-            get { return _DataAccessLocator; }
-            set { _DataAccessLocator = value; }
-        }
-        private DataAccessLocator _DataAccessLocator;
-
         public override void CopyFile(IFileHandler sourceFileHandler, IFileId fileId, ID<IUserOrGroup, Guid>? ownerID, IDirectoryHandler parentDirectory)
         {
             throw new NotImplementedException();
@@ -43,10 +31,15 @@ namespace ObjectCloud.CallHomePlugin
         public override void CreateFile(string path, FileId fileId)
         {
             Directory.CreateDirectory(path);
+			var databaseFilename = this.CreateDatabaseFilename(path);
+			this.ConstructCallHomeFileHander(databaseFilename);
+        }
 
-            string databaseFilename = CreateDatabaseFilename(path);
-
-            DataAccessLocator.DatabaseCreator.Create(databaseFilename);
+        public override CallHomeFileHandler OpenFile(string path, FileId fileId)
+        {
+            Directory.CreateDirectory(path);
+			var databaseFilename = this.CreateDatabaseFilename(path);
+			return this.ConstructCallHomeFileHander(databaseFilename);
         }
 
         /// <summary>
@@ -54,18 +47,23 @@ namespace ObjectCloud.CallHomePlugin
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        internal static string CreateDatabaseFilename(string path)
+        private string CreateDatabaseFilename(string path)
         {
-            return string.Format("{0}{1}db.sqlite", path, Path.DirectorySeparatorChar);
+            return string.Format("{0}{1}callhome", path, Path.DirectorySeparatorChar);
         }
 
-        public override CallHomeFileHandler OpenFile(string path, FileId fileId)
+        /// <summary>
+        /// Constructs the NameValuePairsHandler to return
+        /// </summary>
+        /// <param name="databaseFilename"></param>
+        /// <returns></returns>
+        private CallHomeFileHandler ConstructCallHomeFileHander(string databaseFilename)
         {
-            string databaseFilename = CreateDatabaseFilename(path);
-
-            return new CallHomeFileHandler(
-                DataAccessLocator.DatabaseConnectorFactory.CreateConnectorForEmbedded(databaseFilename),
-                FileHandlerFactoryLocator);
+			var persistedServers = new PersistedBinaryFormatterObject<Dictionary<string, CallHomeFileHandler.Server>>(
+				databaseFilename,
+				() => new Dictionary<string, CallHomeFileHandler.Server>());
+			
+			return new CallHomeFileHandler(persistedServers, this.FileHandlerFactoryLocator);
         }
     }
 }

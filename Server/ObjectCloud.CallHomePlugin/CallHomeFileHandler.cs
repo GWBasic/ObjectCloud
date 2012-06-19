@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading;
 using System.Xml;
@@ -13,7 +15,6 @@ using System.Xml;
 using Common.Logging;
 using JsonFx.Json;
 
-using ObjectCloud.CallHomePlugin.DataAccess;
 using ObjectCloud.Common;
 using ObjectCloud.Common.Threading;
 using ObjectCloud.Disk.FileHandlers;
@@ -21,50 +22,30 @@ using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Javascript;
 using ObjectCloud.Interfaces.Security;
 using ObjectCloud.Interfaces.WebServer;
-using ObjectCloud.ORM.DataAccess.WhereConditionals;
-
-using ICallhomeLog_Writable = ObjectCloud.CallHomePlugin.DataAccessBase.ICallhomeLog_Writable;
-using IServers_Readable = ObjectCloud.CallHomePlugin.DataAccessBase.IServers_Readable;
-using IServers_Writable = ObjectCloud.CallHomePlugin.DataAccessBase.IServers_Writable;
 
 namespace ObjectCloud.CallHomePlugin
 {
-    public class CallHomeFileHandler : HasDatabaseFileHandler<ObjectCloud.CallHomePlugin.DataAccessBase.IDatabaseConnector, ObjectCloud.CallHomePlugin.DataAccessBase.IDatabaseConnection, ObjectCloud.CallHomePlugin.DataAccessBase.IDatabaseTransaction>
+    public class CallHomeFileHandler : FileHandler
     {
-        public CallHomeFileHandler(ObjectCloud.CallHomePlugin.DataAccessBase.IDatabaseConnector databaseConnector, FileHandlerFactoryLocator fileHandlerFactoryLocator)
-            : base(databaseConnector, fileHandlerFactoryLocator)
+		[Serializable]
+		public class Server
+		{
+			public DateTime lastCheckin;
+			public string version;
+		}
+		
+        public CallHomeFileHandler(PersistedObjectBase<Dictionary<string, Server>> persistedServers, FileHandlerFactoryLocator fileHandlerFactoryLocator)
+            : base(fileHandlerFactoryLocator)
         {
-            ClearRunningObjectCloudInstanceInfoTimer = new Timer(ClearRunningObjectCloudInstanceInfo, null, 3600000, 3600000);
+			this.persistedServers = persistedServers;
         }
+		
+		PersistedObjectBase<Dictionary<string, Server>> persistedServers;
 
         public override void Dump(string path, ID<IUserOrGroup, Guid> userId)
         {
-			// No-op for a strict compiler
-			if (null == ClearRunningObjectCloudInstanceInfoTimer)
-			{}
-			
             throw new NotImplementedException();
         }
-
-        /// <summary>
-        /// Cached information about running objectcloud instances
-        /// </summary>
-        IEnumerable<string> RunningObjectCloudInstances = null;
-
-        /// <summary>
-        /// Syncronizes loading RunningObjectCloudInstanceInfo
-        /// </summary>
-        object RunningObjectCloudInstancesKey = new object();
-
-        /// <summary>
-        /// Periodically clear out RunningObjectCloudInstanceInfo so it can be refreshed
-        /// </summary>
-        /// <param name="state"></param>
-        private void ClearRunningObjectCloudInstanceInfo(object state)
-        {
-            RunningObjectCloudInstances = null;
-        }
-        Timer ClearRunningObjectCloudInstanceInfoTimer;
 
         /// <summary>
         /// Marks a server as running
@@ -73,42 +54,20 @@ namespace ObjectCloud.CallHomePlugin
         /// <param name="version"></param>
         public void MarkServerAsRunning(string hostname, string version)
         {
-            // Get the host ID and either update or insert
-            IServers_Readable server = DatabaseConnection.Servers.SelectSingle(Servers_Table.Hostname == hostname);
-
-            long hostID;
-            if (null != server)
+			this.persistedServers.WriteEventual(servers =>
             {
-                hostID = server.HostID;
-                DatabaseConnection.Servers.Update(
-                    Servers_Table.HostID == hostID,
-                    delegate(IServers_Writable serverW)
-                    {
-                        serverW.LastCheckin = DateTime.UtcNow;
-                        serverW.Version = version;
-                    });
-            }
-            else
-            {
-                hostID = DatabaseConnection.Servers.InsertAndReturnPK<long>(
-                    delegate(IServers_Writable serverW)
-                    {
-                        serverW.Hostname = hostname;
-                        serverW.LastCheckin = DateTime.UtcNow;
-                        serverW.Version = version;
-                    });
-
-                // When inserting, clear the cache
-                RunningObjectCloudInstances = null;
-            }
-
-            // Log the entry
-            DatabaseConnection.CallhomeLog.Insert(delegate(ICallhomeLog_Writable callhomeLog)
-            {
-                callhomeLog.HostID = hostID;
-                callhomeLog.Timestamp = DateTime.UtcNow;
-            });
+				servers[hostname] = new Server()
+				{
+					lastCheckin = DateTime.UtcNow,
+					version = version
+				};
+			});
         }
+		
+        /// <summary>
+        /// The oldest checkin to be considered running
+        /// </summary>
+		private static readonly TimeSpan maxLastCheckinAge = TimeSpan.FromHours(5);
 
         /// <summary>
         /// Returns information about hosts that have checked in within the most recent 5 - 6 hours
@@ -116,31 +75,23 @@ namespace ObjectCloud.CallHomePlugin
         /// <returns></returns>
         public IEnumerable<string> GetRunningObjectCloudInstances()
         {
-            IEnumerable<string> toReturn = RunningObjectCloudInstances;
+			return this.persistedServers.Read(servers =>
+			{
+                List<string> toReturn = new List<string>(servers.Count);
 
-            if (null == toReturn)
-                lock (RunningObjectCloudInstancesKey)
-                {
-                    // double-check in case other thread made assignment
-                    toReturn = RunningObjectCloudInstances;
-
-                    if (null == toReturn)
-                    {
-                        List<string> toReturnBuilder = new List<string>();
-
-                        foreach (IServers_Readable server in DatabaseConnection.Servers.Select(
-                            Servers_Table.LastCheckin >= DateTime.UtcNow.Subtract(TimeSpan.FromHours(5))))
-                        {
-                            toReturnBuilder.Add(server.Hostname);
-                        }
-
-                        toReturnBuilder.Sort();
-                        toReturn = new ReadOnlyCollection<string>(toReturnBuilder);
-                        RunningObjectCloudInstances = toReturn;
-                    }
-                }
-
-            return toReturn;
+				foreach (var serverAndHostname in servers)
+				{
+					var server = serverAndHostname.Value;
+					
+					if (server.lastCheckin + CallHomeFileHandler.maxLastCheckinAge >= DateTime.UtcNow)
+					{
+						var hostname = serverAndHostname.Key;
+						toReturn.Add(hostname);
+					}
+				}
+				
+				return toReturn;
+			});
         }
     }
 }

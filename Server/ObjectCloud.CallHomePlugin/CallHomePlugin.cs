@@ -6,15 +6,12 @@ using System;
 using System.Data.Common;
 using System.IO;
 
-using ObjectCloud.CallHomePlugin.DataAccess;
-using ObjectCloud.CallHomePlugin.DataAccessBase;
 using ObjectCloud.Common;
 using ObjectCloud.Disk.Factories;
 using ObjectCloud.Disk.FileHandlers;
 using ObjectCloud.Interfaces.Database;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
-using ObjectCloud.ORM.DataAccess.SQLite;
 
 namespace ObjectCloud.CallHomePlugin
 {
