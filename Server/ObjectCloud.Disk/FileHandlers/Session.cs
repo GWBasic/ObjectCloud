@@ -23,7 +23,7 @@ namespace ObjectCloud.Disk.FileHandlers
         public Session(
 			SessionManagerHandler sessionManagerHandler, 
 			FileHandlerFactoryLocator fileHandlerFactoryLocator,
-			PersistedBinaryFormatterObject<Dictionary<ID<ISession, Guid>, SessionData>> persistedSessionDatas,
+			PersistedObject<Dictionary<ID<ISession, Guid>, SessionData>> persistedSessionDatas,
 			ID<ISession, Guid> sessionId,
 			SessionData sessionData)
         {
@@ -39,7 +39,7 @@ namespace ObjectCloud.Disk.FileHandlers
 
         private readonly SessionManagerHandler sessionManagerHandler;
         private readonly FileHandlerFactoryLocator fileHandlerFactoryLocator;
-		private readonly PersistedBinaryFormatterObject<Dictionary<ID<ISession, Guid>, SessionData>> persistedSessionDatas;
+		private readonly PersistedObject<Dictionary<ID<ISession, Guid>, SessionData>> persistedSessionDatas;
 
         /// <summary>
         /// The session ID

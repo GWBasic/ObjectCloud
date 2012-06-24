@@ -14,24 +14,6 @@ namespace ObjectCloud.Disk.Test
 	public class TestPersistedBinaryFormatterObject
 	{
 		[Test]
-		public void TestOverwriteRecreate()
-		{
-			var path = Path.GetTempFileName();
-			
-			try
-			{
-				new PersistedBinaryFormatterObject<string>(path, "this is a test");
-				
-				new PersistedBinaryFormatterObject<string>(path).Read(value =>
-					Assert.AreEqual("this is a test", value));
-			}
-			finally
-			{
-				File.Delete(path);
-			}
-		}
-		
-		[Test]
 		public void TestCreateRecreateConstructor()
 		{
 			var path = Path.GetTempFileName();
@@ -41,7 +23,7 @@ namespace ObjectCloud.Disk.Test
 			{
 				new PersistedBinaryFormatterObject<string>(path, () => "this is a test");
 				
-				new PersistedBinaryFormatterObject<string>(path).Read(value =>
+				new PersistedBinaryFormatterObject<string>(path, () => "error").Read(value =>
 					Assert.AreEqual("this is a test", value));
 			}
 			finally
@@ -62,7 +44,7 @@ namespace ObjectCloud.Disk.Test
 				
 				toUpdate.Write(wrapper => wrapper.Value = "updated");
 				
-				new PersistedBinaryFormatterObject<Wrapped<string>>(path).Read(value =>
+				new PersistedBinaryFormatterObject<Wrapped<string>>(path, () => "error").Read(value =>
 					Assert.AreEqual("updated", value.Value));
 			}
 			finally
@@ -95,7 +77,7 @@ namespace ObjectCloud.Disk.Test
 						throw;
 				}
 				
-				new PersistedBinaryFormatterObject<Wrapped<string>>(path).Read(value =>
+				new PersistedBinaryFormatterObject<Wrapped<string>>(path, () => "error").Read(value =>
 					Assert.AreEqual("this is a test", value.Value));
 			}
 			finally
@@ -118,12 +100,12 @@ namespace ObjectCloud.Disk.Test
 				
 				toUpdate.WriteEventual(wrapper => wrapper.Value = "updated");
 				
-				new PersistedBinaryFormatterObject<Wrapped<string>>(path).Read(value =>
+				new PersistedBinaryFormatterObject<Wrapped<string>>(path, () => "error").Read(value =>
 					Assert.AreEqual("this is a test", value.Value));
 				
 				Thread.Sleep(200);
 				
-				new PersistedBinaryFormatterObject<Wrapped<string>>(path).Read(value =>
+				new PersistedBinaryFormatterObject<Wrapped<string>>(path, () => "error").Read(value =>
 					Assert.AreEqual("updated", value.Value));
 			}
 			finally
@@ -147,16 +129,16 @@ namespace ObjectCloud.Disk.Test
 				toUpdate.WriteEventual(wrapper => wrapper.Value = "updated");
 				toUpdate.Write(wrapper => wrapper.Value = "updated2");
 				
-				new PersistedBinaryFormatterObject<Wrapped<string>>(path).Read(value =>
+				new PersistedBinaryFormatterObject<Wrapped<string>>(path, () => "error").Read(value =>
 					Assert.AreEqual("updated2", value.Value));
 				
 				// Change this in a different incarnation
-				toUpdate = new PersistedBinaryFormatterObject<Wrapped<string>>(path);
+				toUpdate = new PersistedBinaryFormatterObject<Wrapped<string>>(path, () => "error");
 				toUpdate.Write(wrapper => wrapper.Value = "updated3");
 
 				Thread.Sleep(200);
 				
-				new PersistedBinaryFormatterObject<Wrapped<string>>(path).Read(value =>
+				new PersistedBinaryFormatterObject<Wrapped<string>>(path, () => "error").Read(value =>
 					Assert.AreEqual("updated3", value.Value));
 			}
 			finally
@@ -191,12 +173,12 @@ namespace ObjectCloud.Disk.Test
 						throw;
 				}
 				
-				new PersistedBinaryFormatterObject<Wrapped<string>>(path).Read(value =>
+				new PersistedBinaryFormatterObject<Wrapped<string>>(path, () => "error").Read(value =>
 					Assert.AreEqual("this is a test", value.Value));
 				
 				Thread.Sleep(200);
 				
-				new PersistedBinaryFormatterObject<Wrapped<string>>(path).Read(value =>
+				new PersistedBinaryFormatterObject<Wrapped<string>>(path, () => "error").Read(value =>
 					Assert.AreEqual("this is a test", value.Value));
 			}
 			finally
@@ -243,12 +225,12 @@ namespace ObjectCloud.Disk.Test
 					Assert.AreEqual("updated4", wrapper.Value);
 				});
 				
-				new PersistedBinaryFormatterObject<Wrapped<string>>(path).Read(value =>
+				new PersistedBinaryFormatterObject<Wrapped<string>>(path, () => "error").Read(value =>
 					Assert.AreEqual("updated4", value.Value));
 				
 				Thread.Sleep(200);
 				
-				new PersistedBinaryFormatterObject<Wrapped<string>>(path).Read(value =>
+				new PersistedBinaryFormatterObject<Wrapped<string>>(path, () => "error").Read(value =>
 					Assert.AreEqual("updated4", value.Value));
 			}
 			finally
@@ -296,7 +278,7 @@ namespace ObjectCloud.Disk.Test
 				}
 				catch (TestWriteReentrantExceptionException) {}
 				
-				new PersistedBinaryFormatterObject<Wrapped<string>>(path).Read(value =>
+				new PersistedBinaryFormatterObject<Wrapped<string>>(path, () => "error").Read(value =>
 					Assert.AreEqual("this is a test", value.Value));
 			}
 			finally

@@ -11,6 +11,7 @@ using System.Xml;
 using Common.Logging;
 
 using ObjectCloud.Common;
+using ObjectCloud.Common.StreamEx;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
 
@@ -25,12 +26,18 @@ namespace ObjectCloud.Disk.FileHandlers
         public SessionManagerHandler(FileHandlerFactoryLocator fileHandlerFactoryLocator, string path)
             : base(fileHandlerFactoryLocator)
         {
-            this.sessions = new Dictionary<ID<ISession, Guid>, Session>();
-			this.persistedSessionDatas = new PersistedBinaryFormatterObject<Dictionary<ID<ISession, Guid>, SessionData>>(path);
-            me = this;
+			this.persistedSessionDatas = new PersistedObject<Dictionary<ID<ISession, Guid>, SessionData>>(
+				path,
+				() => new Dictionary<ID<ISession, Guid>, SessionData>(),
+				this.Deserialize,
+				this.Serialize);
+            
+			me = this;
 			
 			this.persistedSessionDatas.Read(sessionDatas =>
 			{
+	            this.sessions = new Dictionary<ID<ISession, Guid>, Session>(sessionDatas.Count);
+
 				foreach (var sessionDataKVP in sessionDatas)
 				{
 					var sessionId = sessionDataKVP.Key;
@@ -62,7 +69,54 @@ namespace ObjectCloud.Disk.FileHandlers
 		/// <summary>
 		/// All of the data for the persisted sessions
 		/// </summary>
-		private PersistedBinaryFormatterObject<Dictionary<ID<ISession, Guid>, SessionData>> persistedSessionDatas;
+		private PersistedObject<Dictionary<ID<ISession, Guid>, SessionData>> persistedSessionDatas;
+
+		private Dictionary<ID<ISession, Guid>, SessionData> Deserialize(Stream stream)
+		{
+			// Version
+			stream.Read<int>();
+
+			var numSessions = stream.Read<int>();
+
+			var sessions = new Dictionary<ID<ISession, Guid>, SessionData>(numSessions);
+			for (var ctr = 0; ctr < numSessions; ctr++)
+			{
+				var sessionId = stream.Read<ID<ISession, Guid>>();
+
+				var session = new SessionData()
+				{
+					keepAlive = stream.Read<bool>(),
+					lastQuery = stream.Read<DateTime>(),
+					maxAge = stream.Read<TimeSpan>(),
+					userId = stream.Read<ID<IUserOrGroup, Guid>>()
+				};
+
+				sessions[sessionId] = session;
+			}
+
+			return sessions;
+		}
+
+		private void Serialize(Stream stream, Dictionary<ID<ISession, Guid>, SessionData> sessions)
+		{
+			// Version
+			stream.Write(0);
+
+			stream.Write(sessions.Count);
+
+			foreach (var sessionKVP in sessions)
+			{
+				var sessionId = sessionKVP.Key;
+				var session = sessionKVP.Value;
+
+				stream.Write(sessionId);
+
+				stream.Write(session.keepAlive);
+				stream.Write(session.lastQuery);
+				stream.Write(session.maxAge);
+				stream.Write(session.userId);
+			}
+		}
 
         /// <summary>
         /// Used to clean old sessions

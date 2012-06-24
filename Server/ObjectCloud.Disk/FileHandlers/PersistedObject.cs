@@ -12,15 +12,6 @@ namespace ObjectCloud.Disk.FileHandlers
 {
 	public class PersistedObject<T> : PersistedObjectBase<T>
 	{
-		public PersistedObject(string path, Func<Stream, T> deserializeCallback, Action<Stream, T> serializeCallback)
-			: base(path)
-		{
-			this.deserializeCallback = deserializeCallback;
-			this.serializeCallback = serializeCallback;
-
-			this.Load();
-		}
-		
 		public PersistedObject(string path, Func<T> constructor, Func<Stream, T> deserializeCallback, Action<Stream, T> serializeCallback)
 			: base(path, constructor)
 		{
@@ -29,16 +20,7 @@ namespace ObjectCloud.Disk.FileHandlers
 
 			this.Load();
 		}
-		
-		public PersistedObject(string path, T persistedObject, Func<Stream, T> deserializeCallback, Action<Stream, T> serializeCallback)
-			: base(path, persistedObject)
-		{
-			this.deserializeCallback = deserializeCallback;
-			this.serializeCallback = serializeCallback;
 
-			this.Save();
-		}
-		
 		/// <summary>
 		/// Callback to deserialize the object
 		/// </summary>

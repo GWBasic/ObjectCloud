@@ -11,22 +11,11 @@ namespace ObjectCloud.Disk.FileHandlers
 {
 	public abstract class PersistedObjectBase<T>
 	{
-		public PersistedObjectBase(string path)
-			: this(path, () => default(T)) { }
-		
 		public PersistedObjectBase(string path, Func<T> constructor)
 		{
 			this.constructor = constructor;
 			this.path = path;
 			this.transactionPath = path + ".transaction";
-		}
-		
-		public PersistedObjectBase(string path, T persistedObject)
-		{
-			this.constructor = () => default(T);
-			this.path = path;
-			this.transactionPath = path + ".transaction";
-			this.persistedObject = persistedObject;
 		}
 		
 		/// <summary>

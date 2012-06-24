@@ -19,10 +19,15 @@ namespace ObjectCloud.Disk.Factories
         public override void CreateFile(string path, FileId fileId)
         {
             Directory.CreateDirectory(path);
-			var databaseFilename = this.CreateDatabaseFilename(path);
+
+			this.OpenFile(path, fileId);
+
+			/*var databaseFilename = this.CreateDatabaseFilename(path);
 			
 			// Create an empty persisted session object file
-			new PersistedBinaryFormatterObject<Dictionary<ID<ISession, Guid>, SessionData>>(databaseFilename, new Dictionary<ID<ISession, Guid>, SessionData>());
+			new PersistedObject<Dictionary<ID<ISession, Guid>, SessionData>>(
+				databaseFilename,
+				new Dictionary<ID<ISession, Guid>, SessionData>());*/
         }
 
         public override ISessionManagerHandler OpenFile(string path, FileId fileId)
