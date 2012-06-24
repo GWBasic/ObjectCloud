@@ -8,6 +8,7 @@ using System.IO;
 using System.Xml;
 
 using ObjectCloud.Common;
+using ObjectCloud.Common.StreamEx;
 using ObjectCloud.Common.Threading;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
@@ -19,12 +20,48 @@ namespace ObjectCloud.Disk.FileHandlers
         public NameValuePairsHandler(FileHandlerFactoryLocator fileHandlerFactoryLocator, string path)
 			: base(fileHandlerFactoryLocator, path)
 		{
-			this.persistedPairs = new PersistedBinaryFormatterObject<Dictionary<string, string>>(
+			this.persistedPairs = new PersistedObject<Dictionary<string, string>>(
 				path,
-				() => new Dictionary<string, string>());
+				() => new Dictionary<string, string>(),
+				this.Deserialize,
+				this.Serialize);
 		}
 
-		private readonly PersistedBinaryFormatterObject<Dictionary<string, string>> persistedPairs;
+		private readonly PersistedObject<Dictionary<string, string>> persistedPairs;
+
+		private Dictionary<string, string> Deserialize(Stream stream)
+		{
+			// Version
+			stream.Read<int>();
+
+			var numPairs = stream.Read<int>();
+
+			var pairs = new Dictionary<string, string>(numPairs);
+
+			for (var ctr = 0; ctr < numPairs; ctr++)
+			{
+				var key = stream.ReadString();
+				var value = stream.ReadString();
+
+				pairs[key] = value;
+			}
+
+			return pairs;
+		}
+
+		private void Serialize(Stream stream, Dictionary<string, string> pairs)
+		{
+			// Version
+			stream.Write(0);
+
+			stream.Write(pairs.Count);
+
+			foreach (var kvp in pairs)
+			{
+				stream.Write(kvp.Key);
+				stream.Write(kvp.Value);
+			}
+		}
 		
         public string this[string name]
         {
