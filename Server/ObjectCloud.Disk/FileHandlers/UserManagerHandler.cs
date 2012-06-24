@@ -766,7 +766,7 @@ namespace ObjectCloud.Disk.FileHandlers
         private IGroupAndAlias CreateGroupAndAliasObject(GroupInt group, string alias)
         {
             return new GroupAndAlias(
-                group.owner.id,
+                null != group.owner ? (ID<IUserOrGroup, Guid>?)group.owner.id : (ID<IUserOrGroup, Guid>?)null,
                 group.id,
                 group.name,
                 group.builtIn,
