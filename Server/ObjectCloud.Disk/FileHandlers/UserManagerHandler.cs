@@ -28,7 +28,6 @@ namespace ObjectCloud.Disk.FileHandlers
     {
         private static ILog log = LogManager.GetLogger<UserManagerHandler>();
 		
-		[Serializable]
 		internal class UserManagerData
 		{
 			public Dictionary<ID<IUserOrGroup, Guid>, UserInt> users = new Dictionary<ID<IUserOrGroup, Guid>, UserInt>();
@@ -56,12 +55,12 @@ namespace ObjectCloud.Disk.FileHandlers
 			}
 		}
 		
-		[Serializable]
 		internal class UserBase
 		{
 			public ID<IUserOrGroup, Guid> id;
 			public string name;
 			public bool builtIn;
+			public string displayName;
 			
 			public override int GetHashCode ()
 			{
@@ -79,12 +78,10 @@ namespace ObjectCloud.Disk.FileHandlers
 			}
 		}
 		
-		[Serializable]
 		internal class UserInt : UserBase
 		{
 			public byte[] passwordMD5;
 			public int identityProviderCode;
-			public string displayName;
 			public string identityProviderArgs;
 			public Dictionary<string, DateTime> associationHandles = new Dictionary<string, DateTime>();
 			public HashSet<GroupInt> groups = new HashSet<GroupInt>();
@@ -92,18 +89,15 @@ namespace ObjectCloud.Disk.FileHandlers
 			public Dictionary<string, string> receiveNotificationSenderTokensByEndpoint = new Dictionary<string, string>();
 		}
 		
-		[Serializable]
 		internal class GroupInt : UserBase
 		{
 			public UserInt owner;
 			public bool automatic;
 			public GroupType type;
-			public string displayName;
 			public HashSet<UserInt> users = new HashSet<UserInt>();
 			public Dictionary<UserInt, string> aliases = new Dictionary<UserInt, string>();
 		}
 		
-		[Serializable]
 		internal class Sender
 		{
 			public string identity;
@@ -115,7 +109,7 @@ namespace ObjectCloud.Disk.FileHandlers
 			//long senderID;
 		}
 
-        internal UserManagerHandler(PersistedBinaryFormatterObject<UserManagerData> persistedUserManagerData, FileHandlerFactoryLocator fileHandlerFactoryLocator, int? maxLocalUsers)
+        internal UserManagerHandler(PersistedObject<UserManagerData> persistedUserManagerData, FileHandlerFactoryLocator fileHandlerFactoryLocator, int? maxLocalUsers)
             : base(fileHandlerFactoryLocator) 
         {
             this.MaxLocalUsers = maxLocalUsers;
@@ -124,7 +118,7 @@ namespace ObjectCloud.Disk.FileHandlers
 
         public int? MaxLocalUsers { get; set; }
 		
-		private PersistedBinaryFormatterObject<UserManagerData> persistedUserManagerData;
+		private PersistedObject<UserManagerData> persistedUserManagerData;
 
         public IUser CreateUser(string name, string password, string displayName)
         {

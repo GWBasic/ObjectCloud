@@ -139,7 +139,7 @@ namespace ObjectCloud.Common.StreamEx
 			return Encoding.UTF8.GetString(buffer);
 		}
 		
-		public static void WriteString(this Stream stream, string val)
+		public static void Write(this Stream stream, string val)
 		{
 			if (null == val)
 			{
@@ -152,6 +152,31 @@ namespace ObjectCloud.Common.StreamEx
 			stream.Write(buffer.Length);
 			
 			stream.Write(buffer, 0, buffer.Length);
+		}
+
+		public static byte[] ReadBytes(this Stream stream)
+		{
+			var length = stream.Read<int>();
+			
+			if (length < 0)
+				return null;
+
+			var bytes = new byte[length];
+			stream.Read(bytes, 0, length);
+
+			return bytes;
+		}
+
+		public static void WriteBytes(this Stream stream, byte[] bytes)
+		{
+			if (null == bytes)
+			{
+				stream.Write(int.MinValue);
+				return;
+			}
+
+			stream.Write(bytes.Length);
+			stream.Write(bytes, 0, bytes.Length);
 		}
 	}
 }

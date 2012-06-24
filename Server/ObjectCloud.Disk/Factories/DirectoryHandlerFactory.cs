@@ -407,7 +407,7 @@ namespace ObjectCloud.Disk.Factories
 		{
 			this.SerializeFile(writeStream, directoryInformation);
 			
-			writeStream.WriteString(directoryInformation.indexFile);
+			writeStream.Write(directoryInformation.indexFile);
 			
 			writeStream.Write(directoryInformation.files.Count);
 			foreach (var subFileInformation in directoryInformation.files.Values)
@@ -426,8 +426,8 @@ namespace ObjectCloud.Disk.Factories
 		private void SerializeFile(Stream writeStream, DirectoryHandler.FileInformation fileInformation)
 		{
 			writeStream.Write(fileInformation.fileId);
-			writeStream.WriteString(fileInformation.typeId);
-			writeStream.WriteString(fileInformation.filename);
+			writeStream.Write(fileInformation.typeId);
+			writeStream.Write(fileInformation.filename);
 			writeStream.WriteNullable(fileInformation.ownerId);
 			writeStream.Write(fileInformation.created);
 			
@@ -452,7 +452,7 @@ namespace ObjectCloud.Disk.Factories
 				
 				foreach (var namedPermissionForUserKVP in namedPermissionsForUser)
 				{
-					writeStream.WriteString(namedPermissionForUserKVP.Key);
+					writeStream.Write(namedPermissionForUserKVP.Key);
 					writeStream.Write(namedPermissionForUserKVP.Value);
 				}
 			}
@@ -468,7 +468,7 @@ namespace ObjectCloud.Disk.Factories
 				
 				foreach (var relationshipAndInhert in relationshipsAndInhert)
 				{
-					writeStream.WriteString(relationshipAndInhert.Key);
+					writeStream.Write(relationshipAndInhert.Key);
 					writeStream.Write(relationshipAndInhert.Value);
 				}
 			}
