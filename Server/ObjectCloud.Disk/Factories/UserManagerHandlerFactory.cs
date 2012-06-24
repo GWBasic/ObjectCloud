@@ -256,7 +256,6 @@ namespace ObjectCloud.Disk.Factories
 			this.Serialize(stream, group as UserManagerHandler.UserBase);
 
 			stream.Write(group.automatic);
-			stream.Write(group.displayName);
 
 			if (null != group.owner)
 				stream.WriteNullable<ID<IUserOrGroup, Guid>>(group.owner.id);
