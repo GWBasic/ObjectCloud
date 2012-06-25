@@ -6,6 +6,7 @@ using System;
 using System.IO;
 
 using ObjectCloud.Common;
+using ObjectCloud.Common.StreamEx;
 using ObjectCloud.Common.Threading;
 using ObjectCloud.Disk.FileHandlers;
 using ObjectCloud.Interfaces.Disk;
@@ -86,5 +87,38 @@ namespace ObjectCloud.Disk.Factories
                 delegateQueues.Enqueue(delegateQueue);
             }
         }
+
+		private LoggingEvent Deserialize(Stream stream)
+		{
+			return new LoggingEvent()
+			{
+				Classname = stream.ReadString(),
+				ExceptionClassname = stream.ReadString(),
+				ExceptionMessage = stream.ReadString(),
+				ExceptionStackTrace = stream.ReadString(),
+				Level = (LoggingLevel)stream.Read<int>(),
+				Message = stream.ReadString(),
+				RemoteEndPoint = stream.ReadString(),
+				SessionId = stream.ReadNullable<ID<ISession, Guid>>(),
+				ThreadId = stream.Read<int>(),
+				TimeStamp = new DateTime(stream.Read<long>()),
+				UserId = stream.ReadNullable<ID<IUserOrGroup, Guid>>()
+			};
+		}
+
+		private void Serialize(Stream stream, LoggingEvent loggingEvent)
+		{
+			stream.Write(loggingEvent.Classname);
+			stream.Write(loggingEvent.ExceptionClassname);
+			stream.Write(loggingEvent.ExceptionMessage);
+			stream.Write(loggingEvent.ExceptionStackTrace);
+			stream.Write((int)loggingEvent.Level);
+			stream.Write(loggingEvent.Message);
+			stream.Write(loggingEvent.RemoteEndPoint);
+			stream.WriteNullable(loggingEvent.SessionId);
+			stream.Write(loggingEvent.ThreadId);
+			stream.Write(loggingEvent.TimeStamp.Ticks);
+			stream.WriteNullable(loggingEvent.UserId);
+		}
     }
 }
