@@ -7,6 +7,7 @@ using System.IO;
 using System.Xml;
 
 using ObjectCloud.Common;
+using ObjectCloud.Common.StreamEx;
 using ObjectCloud.Disk.FileHandlers;
 using ObjectCloud.Interfaces.Disk;
 using ObjectCloud.Interfaces.Security;
@@ -29,7 +30,11 @@ namespace ObjectCloud.Disk.Factories
 			string notificationsPath = this.CreateNotificationsPath(path);
 			
 			return new UserHandler(
-				new PersistedBinaryFormatterObject<UserHandler.UserData>(databaseFilename, () => new UserHandler.UserData()),
+				new PersistedObject<UserHandler.UserData>(
+					databaseFilename,
+					() => new UserHandler.UserData(),
+					this.Deserialize,
+					this.Serialize),
 				new PersistedObjectSequence<UserHandler.Notification>(notificationsPath, 5 * 1024 * 1024, 1024 * 1024 * 1024, this.FileHandlerFactoryLocator),
 				this.FileHandlerFactoryLocator);
         }
@@ -63,5 +68,63 @@ namespace ObjectCloud.Disk.Factories
         {
             throw new NotImplementedException("Users can not be copied");
         }
+
+		private UserHandler.UserData Deserialize(Stream stream)
+		{
+			// Version
+			stream.Read<int>();
+
+			var userData = new UserHandler.UserData();
+
+			var numNameValuePairs = stream.Read<int>();
+			userData.nameValuePairs = new System.Collections.Generic.Dictionary<string, string>(numNameValuePairs);
+			for (var ctr = 0; ctr < numNameValuePairs; ctr++)
+			{
+				var key = stream.ReadString();
+				var value = stream.ReadString();
+
+				userData.nameValuePairs[key] = value;
+			}
+
+			var numTrusted = stream.Read<int>();
+			userData.trusted = new System.Collections.Generic.Dictionary<string, UserHandler.Trusted>(numTrusted);
+			for (var ctr = 0; ctr < numTrusted; ctr++)
+			{
+				var identity = stream.ReadString();
+				var trusted = new UserHandler.Trusted()
+				{
+					link = stream.ReadNullable<bool>(),
+					login = stream.ReadNullable<bool>()
+				};
+
+				userData.trusted[identity] = trusted;
+			}
+
+			return userData;
+		}
+
+		private void Serialize(Stream stream, UserHandler.UserData userData)
+		{
+			// Version
+			stream.Write(0);
+
+			stream.Write(userData.nameValuePairs.Count);
+			foreach (var kvp in userData.nameValuePairs)
+			{
+				stream.Write(kvp.Key);
+				stream.Write(kvp.Value);
+			}
+
+			stream.Write(userData.trusted.Count);
+			foreach (var trustedKVP in userData.trusted)
+			{
+				var identity = trustedKVP.Key;
+				var trusted = trustedKVP.Value;
+
+				stream.Write(identity);
+				stream.WriteNullable(trusted.link);
+				stream.WriteNullable(trusted.login);
+			}
+		}
     }
 }

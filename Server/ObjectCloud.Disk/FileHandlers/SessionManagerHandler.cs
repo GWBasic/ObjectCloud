@@ -86,8 +86,8 @@ namespace ObjectCloud.Disk.FileHandlers
 				var session = new SessionData()
 				{
 					keepAlive = stream.Read<bool>(),
-					lastQuery = stream.Read<DateTime>(),
-					maxAge = stream.Read<TimeSpan>(),
+					lastQuery = new DateTime(stream.Read<long>()),
+					maxAge = new TimeSpan(stream.Read<long>()),
 					userId = stream.Read<ID<IUserOrGroup, Guid>>()
 				};
 
@@ -112,8 +112,8 @@ namespace ObjectCloud.Disk.FileHandlers
 				stream.Write(sessionId);
 
 				stream.Write(session.keepAlive);
-				stream.Write(session.lastQuery);
-				stream.Write(session.maxAge);
+				stream.Write(session.lastQuery.Ticks);
+				stream.Write(session.maxAge.Ticks);
 				stream.Write(session.userId);
 			}
 		}

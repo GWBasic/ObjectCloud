@@ -21,14 +21,12 @@ namespace ObjectCloud.Disk.FileHandlers
 {
     public class UserHandler : FileHandler, IUserHandler
     {
-		[Serializable]
 		internal class UserData
 		{
 			public Dictionary<string, string> nameValuePairs = new Dictionary<string, string>();
 			public Dictionary<string, Trusted> trusted = new Dictionary<string, Trusted>();
 		}
 
-		[Serializable]
 		internal class Trusted
 		{
 			public bool? login;
@@ -55,14 +53,14 @@ namespace ObjectCloud.Disk.FileHandlers
 		
         //static ILog log = LogManager.GetLogger<UserHandler>();
 
-        internal UserHandler(PersistedBinaryFormatterObject<UserData> persistedUserData, PersistedObjectSequence<Notification> persistedNotifications, FileHandlerFactoryLocator fileHandlerFactoryLocator)
+        internal UserHandler(PersistedObject<UserData> persistedUserData, PersistedObjectSequence<Notification> persistedNotifications, FileHandlerFactoryLocator fileHandlerFactoryLocator)
             : base(fileHandlerFactoryLocator) 
 		{
 			this.persistedUserData = persistedUserData;
 			this.persistedNotifications = persistedNotifications;
 		}
 				
-		private PersistedBinaryFormatterObject<UserData> persistedUserData;
+		private PersistedObject<UserData> persistedUserData;
 		private PersistedObjectSequence<Notification> persistedNotifications;
 		
 		
