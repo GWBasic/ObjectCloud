@@ -35,7 +35,7 @@ namespace ObjectCloud.Disk.Factories
 					() => new UserHandler.UserData(),
 					this.Deserialize,
 					this.Serialize),
-				new PersistedObjectSequence<UserHandler.Notification>(notificationsPath, 5 * 1024 * 1024, 1024 * 1024 * 1024, this.FileHandlerFactoryLocator),
+				new PersistedObjectSequence_BinaryFormatter<UserHandler.Notification>(notificationsPath, 5 * 1024 * 1024, 1024 * 1024 * 1024, this.FileHandlerFactoryLocator),
 				this.FileHandlerFactoryLocator);
         }
 

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 
 using ObjectCloud.Common;
@@ -16,13 +15,21 @@ namespace ObjectCloud.Disk
 	public class PersistedObjectSequence<T> : IDisposable
 		where T : IHasTimeStamp
 	{
-		public PersistedObjectSequence(string path, long maxChunkSize, long maxSize, FileHandlerFactoryLocator fileHandlerFactoryLocator)
+		public PersistedObjectSequence(
+			string path,
+			long maxChunkSize,
+			long maxSize,
+			FileHandlerFactoryLocator fileHandlerFactoryLocator,
+			Func<Stream, T> deserializeCallback,
+			Action<Stream, T> serializeCallback)
 		{
 			this.fileHandlerFactoryLocator = fileHandlerFactoryLocator;
 			this.directoryName = path;
 			this.maxChunkSize = maxChunkSize;
 			this.maxSize = maxSize;
 			this.currentWriteStreamFilename = Path.Combine(this.directoryName, "newest");
+			this.serializeCallback = serializeCallback;
+			this.deserializeCallback = deserializeCallback;
 			
 			this.fileHandlerFactoryLocator.FileSystemResolver.Stopping += HandleFileHandlerFactoryLocatorFileSystemResolverStopping;
 			
@@ -35,7 +42,7 @@ namespace ObjectCloud.Disk
 			{
 				while (lastSuccess < this.currentWriteStream.Length)
 				{
-					this.binaryFormatter.Deserialize(this.currentWriteStream);
+					this.deserializeCallback(this.currentWriteStream);
 					lastSuccess = this.currentWriteStream.Position;
 				}
 			}
@@ -101,12 +108,7 @@ namespace ObjectCloud.Disk
 		/// Used to sync
 		/// </summary>
 		private readonly object key = new object();
-		
-		/// <summary>
-		/// A single binary formatter instanciated onces for quick reuse
-		/// </summary>
-		private readonly BinaryFormatter binaryFormatter = new BinaryFormatter();
-		
+
 		/// <summary>
 		/// The current write stream's filename.
 		/// </summary>
@@ -121,6 +123,16 @@ namespace ObjectCloud.Disk
 		/// The size of the last object writen
 		/// </summary>
 		private long lastWriteSize = 400;
+
+		/// <summary>
+		/// Serializes an object to the stream
+		/// </summary>
+		private readonly Action<Stream, T> serializeCallback;
+
+		/// <summary>
+		/// Reads an object from the stream
+		/// </summary>
+		private readonly Func<Stream, T> deserializeCallback;
 		
 		/// <summary>
 		/// Append the specified item to the sequence. The caller must garantee that item's timestamp is always newer then the last call
@@ -136,11 +148,9 @@ namespace ObjectCloud.Disk
 					return;
 		
 				var lastPosition = this.currentWriteStream.Length;
-				
-				this.binaryFormatter.Serialize(
-					this.currentWriteStream,
-					item);
-				
+
+				this.serializeCallback(this.currentWriteStream, item);
+
 				this.lastWriteSize = this.currentWriteStream.Position - lastPosition;
 				
 				this.CreateNewChunkIfNeeded();
@@ -155,7 +165,7 @@ namespace ObjectCloud.Disk
 			var items = new List<T>(Convert.ToInt32((stream.Length / this.lastWriteSize) * 2));
 			
 			while (stream.Position < stream.Length)
-				items.Add((T)this.binaryFormatter.Deserialize(stream));
+				items.Add(this.deserializeCallback(stream));
 			
 			return items;
 		}
@@ -211,7 +221,7 @@ namespace ObjectCloud.Disk
 					for (var ctr = newestItems.Count - 1; ctr >= 0; ctr--)
 					{
 						var item = newestItems[ctr];
-						this.binaryFormatter.Serialize(chunkStream, item);
+						this.serializeCallback(chunkStream, item);
 					}
 					
 					chunkStream.Flush();
@@ -255,8 +265,6 @@ namespace ObjectCloud.Disk
 						}
 				}
 				
-				var binaryFormatter = new BinaryFormatter();
-				
 				var files = Directory.GetFiles(this.directoryName).Where(s => s != this.currentWriteStreamFilename).ToList();
 				files.Sort();
 				files.Reverse();
@@ -275,7 +283,7 @@ namespace ObjectCloud.Disk
 
 								try
 								{
-									deserialized = binaryFormatter.Deserialize(fileStream);
+									deserialized = this.deserializeCallback(fileStream);
 								}
 								catch (Exception e)
 								{

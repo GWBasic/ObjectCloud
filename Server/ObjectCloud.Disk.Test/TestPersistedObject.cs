@@ -291,11 +291,19 @@ namespace ObjectCloud.Disk.Test
 		public class PersistedBinaryFormatterObject<T> : PersistedObject<T>
 		{
 			public PersistedBinaryFormatterObject(string path, Func<T> constructor) : 
+				this(
+					path,
+					constructor,
+					new BinaryFormatter()) 
+			{
+			}
+
+			public PersistedBinaryFormatterObject(string path, Func<T> constructor, BinaryFormatter binaryFormatter) : 
 				base(
 					path,
 					constructor,
-					PersistedBinaryFormatterObject<T>.Deserialize,
-					PersistedBinaryFormatterObject<T>.Serialize) 
+					stream => (T)binaryFormatter.Deserialize(stream),
+					binaryFormatter.Serialize) 
 			{
 				this.Load();
 			}

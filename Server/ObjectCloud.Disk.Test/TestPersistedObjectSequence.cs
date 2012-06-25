@@ -56,7 +56,7 @@ namespace ObjectCloud.Disk.Test
 		[Test]
 		public void TestSimpleSequence()
 		{
-			using (var sequence = new PersistedObjectSequence<Event<int>>(this.path, int.MaxValue, int.MaxValue, this.fileHandlerFactoryLocator))
+			using (var sequence = new PersistedObjectSequence_BinaryFormatter<Event<int>>(this.path, int.MaxValue, int.MaxValue, this.fileHandlerFactoryLocator))
 			{
 				sequence.Append(new Event<int>(0));
 				sequence.Append(new Event<int>(1));
@@ -91,7 +91,7 @@ namespace ObjectCloud.Disk.Test
 		{
 			this.TestSimpleSequence();
 			
-			using (var sequence = new PersistedObjectSequence<Event<int>>(this.path, int.MaxValue, int.MaxValue, this.fileHandlerFactoryLocator))
+			using (var sequence = new PersistedObjectSequence_BinaryFormatter<Event<int>>(this.path, int.MaxValue, int.MaxValue, this.fileHandlerFactoryLocator))
 			{
 				var events = sequence.ReadSequence(DateTime.MaxValue, 10, e => true).Select(e => e.Item).ToArray();
 				
@@ -123,7 +123,7 @@ namespace ObjectCloud.Disk.Test
 			var serializedObjectLength = memoryStream.Length;
 			var chunkLength = serializedObjectLength * 10;
 			
-			using (var sequence = new PersistedObjectSequence<Event<byte[]>>(this.path, chunkLength, int.MaxValue, this.fileHandlerFactoryLocator))
+			using (var sequence = new PersistedObjectSequence_BinaryFormatter<Event<byte[]>>(this.path, chunkLength, int.MaxValue, this.fileHandlerFactoryLocator))
 			{
 				for (byte ctr = 0; ctr < 30; ctr++)
 				{
@@ -165,7 +165,7 @@ namespace ObjectCloud.Disk.Test
 		[Test]
 		public void TestRollover()
 		{
-			using (var sequence = new PersistedObjectSequence<Event<int[]>>(this.path, 1000, 30000, this.fileHandlerFactoryLocator))
+			using (var sequence = new PersistedObjectSequence_BinaryFormatter<Event<int[]>>(this.path, 1000, 30000, this.fileHandlerFactoryLocator))
 			{
 				for (int ctr = 0; ctr < 100; ctr++)
 				{
@@ -181,7 +181,7 @@ namespace ObjectCloud.Disk.Test
 			Assert.IsTrue(totalSize >= 30000, "Total size too small");
 			Assert.IsTrue(totalSize < 31000, "Total size too big");
 
-			using (var sequence = new PersistedObjectSequence<Event<int[]>>(this.path, 1000, 30000, this.fileHandlerFactoryLocator))
+			using (var sequence = new PersistedObjectSequence_BinaryFormatter<Event<int[]>>(this.path, 1000, 30000, this.fileHandlerFactoryLocator))
 			{
 				var items = sequence.ReadSequence(DateTime.MaxValue, 2000, ev => true).Select(ev => ev.Item).ToArray();
 				
@@ -197,7 +197,7 @@ namespace ObjectCloud.Disk.Test
 		[Test]
 		public void TestFilter()
 		{
-			using (var sequence = new PersistedObjectSequence<Event<int>>(this.path, 500, 3000, this.fileHandlerFactoryLocator))
+			using (var sequence = new PersistedObjectSequence_BinaryFormatter<Event<int>>(this.path, 500, 3000, this.fileHandlerFactoryLocator))
 			{
 				for (int ctr = 0; ctr < 500; ctr++)
 					sequence.Append(new Event<int>(ctr));
@@ -210,7 +210,7 @@ namespace ObjectCloud.Disk.Test
 		[Test]
 		public void TestDateRange()
 		{
-			using (var sequence = new PersistedObjectSequence<Event<int>>(this.path, 500, 3000, this.fileHandlerFactoryLocator))
+			using (var sequence = new PersistedObjectSequence_BinaryFormatter<Event<int>>(this.path, 500, 3000, this.fileHandlerFactoryLocator))
 			{
 				for (int ctr = 0; ctr < 500; ctr++)
 					sequence.Append(new Event<int>(ctr));
@@ -230,7 +230,7 @@ namespace ObjectCloud.Disk.Test
 		[Test]
 		public void TestDatesOrdered()
 		{
-			using (var sequence = new PersistedObjectSequence<Event<int>>(this.path, 500, 3000, this.fileHandlerFactoryLocator))
+			using (var sequence = new PersistedObjectSequence_BinaryFormatter<Event<int>>(this.path, 500, 3000, this.fileHandlerFactoryLocator))
 			{
 				for (int ctr = 0; ctr < 500; ctr++)
 					sequence.Append(new Event<int>(ctr));
