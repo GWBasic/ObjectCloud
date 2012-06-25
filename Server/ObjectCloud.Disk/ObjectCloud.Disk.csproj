@@ -71,8 +71,6 @@
     <Compile Include="Factories\UserManagerHandlerFactory.cs" />
     <Compile Include="FileHandlers\SessionData.cs" />
     <Compile Include="FileHandlers\PersistedObjectSequence.cs" />
-    <Compile Include="FileHandlers\PersistedObjectBase.cs" />
-    <Compile Include="FileHandlers\PersistedBinaryFormatterObject.cs" />
     <Compile Include="FileHandlers\PersistedObject.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
@@ -89,7 +87,7 @@
       <Project>{DBA3E72A-7B35-4107-88EF-2BD8FB782BAC}</Project>
       <Name>ObjectCloud.Interfaces</Name>
     </ProjectReference>
-    <ProjectReference Include="Implementation\ObjectCloud.Disk.Implementation.csproj">
+    <ProjectReference Include="..\ObjectCloud.Disk.Implementation\ObjectCloud.Disk.Implementation.csproj">
       <Project>{AF309392-2A65-4ADD-83C6-0D612C48562C}</Project>
       <Name>ObjectCloud.Disk.Implementation</Name>
     </ProjectReference>
