@@ -54,7 +54,13 @@ namespace ObjectCloud.Disk.Factories
 			this.delegateQueues.Enqueue(delegateQueue);
 			
 			return new LogHandler(
-				new PersistedObjectSequence_BinaryFormatter<LoggingEvent>(path, this.MaxChunkSize, this.MaxSize, this.FileHandlerFactoryLocator),
+				new PersistedObjectSequence<LoggingEvent>(
+					path,
+					this.MaxChunkSize,
+					this.MaxSize,
+					this.FileHandlerFactoryLocator,
+					this.Deserialize,
+					this.Serialize),
 				this.FileHandlerFactoryLocator,
 				this.WriteToConsole,
 				delegateQueue);

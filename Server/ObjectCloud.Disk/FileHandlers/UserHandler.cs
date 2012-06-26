@@ -33,7 +33,6 @@ namespace ObjectCloud.Disk.FileHandlers
 			public bool? link;
 		}
 				
-		[Serializable]
 		internal class Notification : IHasTimeStamp
 		{
 			public DateTime timeStamp;

@@ -33,9 +33,14 @@ namespace ObjectCloud.Disk.Factories
 				new PersistedObject<UserHandler.UserData>(
 					databaseFilename,
 					() => new UserHandler.UserData(),
-					this.Deserialize,
+					this.DeserializeUserData,
 					this.Serialize),
-				new PersistedObjectSequence_BinaryFormatter<UserHandler.Notification>(notificationsPath, 5 * 1024 * 1024, 1024 * 1024 * 1024, this.FileHandlerFactoryLocator),
+				new PersistedObjectSequence<UserHandler.Notification>(
+					notificationsPath,
+					5 * 1024 * 1024, 1024 * 1024 * 1024,
+					this.FileHandlerFactoryLocator,
+					this.DeserializeNotification,
+					this.Serialize),
 				this.FileHandlerFactoryLocator);
         }
 
@@ -69,7 +74,7 @@ namespace ObjectCloud.Disk.Factories
             throw new NotImplementedException("Users can not be copied");
         }
 
-		private UserHandler.UserData Deserialize(Stream stream)
+		private UserHandler.UserData DeserializeUserData(Stream stream)
 		{
 			// Version
 			stream.Read<int>();
@@ -125,6 +130,33 @@ namespace ObjectCloud.Disk.Factories
 				stream.WriteNullable(trusted.link);
 				stream.WriteNullable(trusted.login);
 			}
+		}
+
+		private UserHandler.Notification DeserializeNotification(Stream stream)
+		{
+			return new UserHandler.Notification()
+			{
+				changeData = stream.ReadString(),
+				documentType = stream.ReadString(),
+				linkedSenderIdentity = stream.ReadString(),
+				objectUrl = stream.ReadString(),
+				senderIdentity = stream.ReadString(),
+				summaryView = stream.ReadString(),
+				timeStamp = new DateTime(stream.Read<int>()),
+				verb = stream.ReadString()
+			};
+		}
+
+		private void Serialize(Stream stream, UserHandler.Notification notification)
+		{
+			stream.Write(notification.changeData);
+			stream.Write(notification.documentType);
+			stream.Write(notification.linkedSenderIdentity);
+			stream.Write(notification.objectUrl);
+			stream.Write(notification.senderIdentity);
+			stream.Write(notification.summaryView);
+			stream.Write(notification.timeStamp.Ticks);
+			stream.Write(notification.verb);
 		}
     }
 }
