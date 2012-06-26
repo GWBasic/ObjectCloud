@@ -34,13 +34,13 @@ namespace ObjectCloud.CallHomePlugin
 			public string version;
 		}
 		
-        public CallHomeFileHandler(PersistedObjectBase<Dictionary<string, Server>> persistedServers, FileHandlerFactoryLocator fileHandlerFactoryLocator)
+        public CallHomeFileHandler(PersistedObject<Dictionary<string, Server>> persistedServers, FileHandlerFactoryLocator fileHandlerFactoryLocator)
             : base(fileHandlerFactoryLocator)
         {
 			this.persistedServers = persistedServers;
         }
 		
-		PersistedObjectBase<Dictionary<string, Server>> persistedServers;
+		PersistedObject<Dictionary<string, Server>> persistedServers;
 
         public override void Dump(string path, ID<IUserOrGroup, Guid> userId)
         {

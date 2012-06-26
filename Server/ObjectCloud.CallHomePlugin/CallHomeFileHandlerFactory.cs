@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 
 using ObjectCloud.Common;
 using ObjectCloud.Disk.Factories;
@@ -58,9 +59,13 @@ namespace ObjectCloud.CallHomePlugin
         /// <returns></returns>
         private CallHomeFileHandler ConstructCallHomeFileHander(string databaseFilename)
         {
-			var persistedServers = new PersistedBinaryFormatterObject<Dictionary<string, CallHomeFileHandler.Server>>(
+			var binaryFormatter = new BinaryFormatter();
+
+			var persistedServers = new PersistedObject<Dictionary<string, CallHomeFileHandler.Server>>(
 				databaseFilename,
-				() => new Dictionary<string, CallHomeFileHandler.Server>());
+				() => new Dictionary<string, CallHomeFileHandler.Server>(),
+				stream => (Dictionary<string, CallHomeFileHandler.Server>)binaryFormatter.Deserialize(stream),
+				binaryFormatter.Serialize);
 			
 			return new CallHomeFileHandler(persistedServers, this.FileHandlerFactoryLocator);
         }
