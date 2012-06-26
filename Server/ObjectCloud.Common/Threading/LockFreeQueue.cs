@@ -135,9 +135,9 @@ namespace ObjectCloud.Common.Threading
 		/// Unreliable way to filter out items from the queue.  This may not accurately filter around the head or tail.  This function is not thread safe, but hopefully it won't explode if insertions and deletions happen while this is near the head or tail 
 		/// </summary>
 		/// <param name="filter">
-		/// A <see cref="GenericArgumentReturn<T, System.Boolean>"/>
+		/// A <see cref="Func<T, System.Boolean>"/>
 		/// </param>
-		public void ScanForRemoval(GenericArgumentReturn<T, bool> filter)
+		public void ScanForRemoval(Func<T, bool> filter)
 		{
 			SingleLinkNode<T> cur = Head;
 			

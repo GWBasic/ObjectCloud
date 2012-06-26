@@ -92,7 +92,7 @@ namespace ObjectCloud.Disk.WebHandlers
 
             } while (senderTokenInMemory);
 
-            GenericArgument<HttpResponseHandler> callback = delegate(HttpResponseHandler response)
+            Action<HttpResponseHandler> callback = delegate(HttpResponseHandler response)
             {
                 if (response.StatusCode == System.Net.HttpStatusCode.Accepted)
                 {
@@ -120,7 +120,7 @@ namespace ObjectCloud.Disk.WebHandlers
                     webConnection.SendResults(WebResults.From(Status._400_Bad_Request, "Error from RespondTrust"));
             };
 
-            GenericArgument<Exception> errorCallback = delegate(Exception e)
+            Action<Exception> errorCallback = delegate(Exception e)
             {
                 webConnection.SendResults(WebResults.From(Status._401_Unauthorized, "Could not establish trust"));
             };

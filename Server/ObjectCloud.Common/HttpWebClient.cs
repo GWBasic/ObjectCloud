@@ -90,8 +90,8 @@ namespace ObjectCloud.Common
         class RequestState
         {
             public HttpWebRequest HttpWebRequest;
-            public GenericArgument<HttpResponseHandler> Callback;
-            public GenericArgument<Exception> ErrorCallback;
+            public Action<HttpResponseHandler> Callback;
+            public Action<Exception> ErrorCallback;
         }
 
         /// <summary>
@@ -102,8 +102,8 @@ namespace ObjectCloud.Common
         /// <returns></returns>
         public void BeginGet(
             string url,
-            GenericArgument<HttpResponseHandler> callback,
-            GenericArgument<Exception> errorCallback)
+            Action<HttpResponseHandler> callback,
+            Action<Exception> errorCallback)
         {
             BeginGet(url, null, callback, errorCallback);
         }
@@ -117,8 +117,8 @@ namespace ObjectCloud.Common
         public void BeginGet(
             string url, 
             ICollection<KeyValuePair<string, string>> arguments,
-            GenericArgument<HttpResponseHandler> callback,
-            GenericArgument<Exception> errorCallback)
+            Action<HttpResponseHandler> callback,
+            Action<Exception> errorCallback)
         {
             HttpWebRequest webRequest = CreateGetWebRequest(url, arguments);
 
@@ -244,8 +244,8 @@ namespace ObjectCloud.Common
         /// <returns></returns>
         public void BeginPost(
             string url,
-            GenericArgument<HttpResponseHandler> callback,
-            GenericArgument<Exception> errorCallback,
+            Action<HttpResponseHandler> callback,
+            Action<Exception> errorCallback,
             params KeyValuePair<string, string>[] arguments)
         {
             HttpWebRequest webRequest = CreatePostWebRequest(url, arguments);

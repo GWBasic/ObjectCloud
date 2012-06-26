@@ -33,7 +33,7 @@ namespace ObjectCloud.WebServer.Implementation
         /// </summary>
         /// <param name="s"></param>
         /// <param name="webServer"></param>
-        public WebConnection(WebServer webServer, EndPoint remoteEndPoint, GenericArgument<Stream> sendToBrowser)
+        public WebConnection(WebServer webServer, EndPoint remoteEndPoint, Action<Stream> sendToBrowser)
             : base(webServer, CallingFrom.Web)
         {
             _RemoteEndPoint = remoteEndPoint;
@@ -409,7 +409,7 @@ namespace ObjectCloud.WebServer.Implementation
         /// Sends the stream of data to the browser.  The recipient must close and dispose the stream
         /// </summary>
         /// <param name="stream"></param>
-        private GenericArgument<Stream> SendToBrowser;
+        private Action<Stream> SendToBrowser;
 
         /// <summary>
         /// Formats the cookies to send for the header of the response to the client

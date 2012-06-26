@@ -244,7 +244,7 @@ namespace ObjectCloud.Common.Threading
         /// <summary>
         /// Occurs whenever a lock is created.  This is only availalbe in debug builds
         /// </summary>
-        public static event GenericArgument<TimedLock> LockCreated;
+        public static event Action<TimedLock> LockCreated;
 
         internal static void OnLockCreated(TimedLock timedLock)
         {
@@ -255,7 +255,7 @@ namespace ObjectCloud.Common.Threading
         /// <summary>
         /// Occurs whenever a lock is complete.  This is only availalbe in debug builds
         /// </summary>
-        public static event GenericArgument<TimedLock> LockComplete;
+        public static event Action<TimedLock> LockComplete;
 
         internal static void OnLockComplete(TimedLock timedLock)
         {

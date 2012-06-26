@@ -171,12 +171,12 @@ namespace ObjectCloud.Disk.FileHandlers.Particle
 
         private static void LoadEndpoints(
             string name,
-            GenericArgument<Endpoints> callback,
-            GenericArgument<Exception> errorCallback)
+            Action<Endpoints> callback,
+            Action<Exception> errorCallback)
         {
             HttpWebClient httpWebClient = new HttpWebClient();
 
-            GenericArgument<HttpResponseHandler> responseHandler = delegate(HttpResponseHandler response)
+            Action<HttpResponseHandler> responseHandler = delegate(HttpResponseHandler response)
             {
                 // If there was an error
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
@@ -215,8 +215,8 @@ namespace ObjectCloud.Disk.FileHandlers.Particle
         public static void GetEndpoints(
             string name,
             bool forceRefresh,
-            GenericArgument<Endpoints> callback,
-            GenericArgument<Exception> errorCallback)
+            Action<Endpoints> callback,
+            Action<Exception> errorCallback)
         {
             if (forceRefresh)
             {

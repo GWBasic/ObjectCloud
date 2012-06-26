@@ -897,7 +897,7 @@ namespace ObjectCloud.Interfaces.WebServer
         }
         protected bool _BypassJavascript = false;
 
-        /*public void TemporaryChangeSession(ISession tempSession, GenericVoid del)
+        /*public void TemporaryChangeSession(ISession tempSession, Action del)
         {
             ISession realSession = _Session;
             _Session = tempSession;
@@ -912,7 +912,7 @@ namespace ObjectCloud.Interfaces.WebServer
             }
         }*/
 
-        public void ChangeCallingFrom(CallingFrom newCallingFrom, GenericVoid toCall)
+        public void ChangeCallingFrom(CallingFrom newCallingFrom, Action toCall)
         {
             CallingFrom oldCallingFrom = _CallingFrom;
             _CallingFrom = newCallingFrom;

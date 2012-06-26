@@ -39,7 +39,7 @@ namespace ObjectCloud.Common
         /// </summary>
         public struct Listener
         {
-            public Listener(TimeSpan timeout, EventHandler<TSender, TEventArgs> handler, GenericArgument<TSender> timeoutHandler)
+            public Listener(TimeSpan timeout, EventHandler<TSender, TEventArgs> handler, Action<TSender> timeoutHandler)
             {
                 if (timeout > TimeSpan.FromDays(90000))
                     ExpireDateTime = DateTime.MaxValue;
@@ -53,7 +53,7 @@ namespace ObjectCloud.Common
 
             public DateTime ExpireDateTime;
             public EventHandler<TSender, TEventArgs> Handler;
-            public GenericArgument<TSender> TimeoutHandler;
+            public Action<TSender> TimeoutHandler;
 
             /// <summary>
             /// GetHashCode() doesn't garantee uniqueness; this is causing issues on mono

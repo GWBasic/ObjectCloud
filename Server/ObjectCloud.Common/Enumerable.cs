@@ -75,7 +75,7 @@ namespace ObjectCloud.Common
 		public static IEnumerable<KeyValuePair<T,Exception>> MultithreadedEach(
 			double numThreadsPerCPU,
 		    IEnumerable<T> toEnumerate,
-		    GenericArgument<T> del)
+		    Action<T> del)
 		{
             LockFreeQueue_WithCount<T> list = new LockFreeQueue_WithCount<T>();
             foreach (T t in toEnumerate)

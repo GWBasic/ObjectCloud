@@ -53,7 +53,7 @@ namespace ObjectCloud.Particle.UnitTests
             object pulser = new object();
 
             EndpointInfo recipientInfo = default(EndpointInfo);
-            GenericArgument<EndpointInfo> callback = delegate(EndpointInfo recipientInfoCB)
+            Action<EndpointInfo> callback = delegate(EndpointInfo recipientInfoCB)
             {
                 recipientInfo = recipientInfoCB;
 
@@ -62,7 +62,7 @@ namespace ObjectCloud.Particle.UnitTests
             };
 
             Exception e = null;
-            GenericArgument<IEnumerable<string>> errorCallback = delegate(IEnumerable<string> recipients)
+            Action<IEnumerable<string>> errorCallback = delegate(IEnumerable<string> recipients)
             {
                 e = new Exception("Could not establish trust with " + StringGenerator.GenerateCommaSeperatedList(recipients));
 
@@ -70,7 +70,7 @@ namespace ObjectCloud.Particle.UnitTests
                     Monitor.Pulse(pulser);
             };
 
-            GenericArgument<Exception> exceptionCallback = delegate(Exception ex)
+            Action<Exception> exceptionCallback = delegate(Exception ex)
             {
                 e = ex;
 

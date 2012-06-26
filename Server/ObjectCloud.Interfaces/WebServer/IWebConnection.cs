@@ -217,7 +217,7 @@ namespace ObjectCloud.Interfaces.WebServer
         /// </summary>
         /// <param name="newCallingFrom"></param>
         /// <param name="toCall"></param>
-        void ChangeCallingFrom(CallingFrom newCallingFrom, GenericVoid toCall);
+        void ChangeCallingFrom(CallingFrom newCallingFrom, Action toCall);
 
         /// <summary>
         /// When set to true, server-side Javascript should be bypassed
@@ -229,7 +229,7 @@ namespace ObjectCloud.Interfaces.WebServer
         /// </summary>
         /// <param name="tempSession"></param>
         /// <param name="del"></param>
-        void TemporaryChangeSession(ISession tempSession, GenericVoid del);*/
+        void TemporaryChangeSession(ISession tempSession, Action del);*/
 		
 		/// <value>
 		/// The remote endpoint, such as an IPv4 or IPv6 address 

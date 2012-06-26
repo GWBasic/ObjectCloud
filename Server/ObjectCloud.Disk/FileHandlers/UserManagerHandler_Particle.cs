@@ -45,9 +45,9 @@ namespace ObjectCloud.Disk.FileHandlers
             bool forceRefresh, 
             IEnumerable<string> recipientIdentitiesArg,
             ParticleEndpoint particleEndpoint,
-            GenericArgument<EndpointInfo> callback,
-            GenericArgument<IEnumerable<string>> errorCallback,
-            GenericArgument<Exception> exceptionCallback)
+            Action<EndpointInfo> callback,
+            Action<IEnumerable<string>> errorCallback,
+            Action<Exception> exceptionCallback)
         {
             HashSet<string> recipientIdentities = new HashSet<string>(recipientIdentitiesArg);
 
@@ -55,7 +55,7 @@ namespace ObjectCloud.Disk.FileHandlers
 
             LockFreeQueue<Endpoints> loadedEndpoints = new LockFreeQueue<Endpoints>();
 
-            GenericArgument<Endpoints> endpointLoaded = delegate(Endpoints endpoints)
+            Action<Endpoints> endpointLoaded = delegate(Endpoints endpoints)
             {
                 loadedEndpoints.Enqueue(endpoints);
 
@@ -63,7 +63,7 @@ namespace ObjectCloud.Disk.FileHandlers
                     GetRecipientInfos(sender, forceRefresh, recipientIdentities, loadedEndpoints, particleEndpoint, callback, errorCallback, exceptionCallback);
             };
 
-            GenericArgument<Exception> endpointException = delegate(Exception e)
+            Action<Exception> endpointException = delegate(Exception e)
             {
                 if (0 == Interlocked.Decrement(ref outstandingRequests))
                     GetRecipientInfos(sender, forceRefresh, recipientIdentities, loadedEndpoints, particleEndpoint, callback, errorCallback, exceptionCallback);
@@ -86,9 +86,9 @@ namespace ObjectCloud.Disk.FileHandlers
             HashSet<string> recipientIdentities, 
             LockFreeQueue<Endpoints> loadedEndpoints,
             ParticleEndpoint particleEndpoint,
-            GenericArgument<EndpointInfo> callback,
-            GenericArgument<IEnumerable<string>> errorCallback,
-            GenericArgument<Exception> exceptionCallback)
+            Action<EndpointInfo> callback,
+            Action<IEnumerable<string>> errorCallback,
+            Action<Exception> exceptionCallback)
         {
             try
             {
@@ -180,8 +180,8 @@ namespace ObjectCloud.Disk.FileHandlers
             string establishTrustEndpoint,
             List<string> recipients,
             string requestedEndpoint,
-            GenericArgument<EndpointInfo> callback,
-            GenericArgument<IEnumerable<string>> errorCallback)
+            Action<EndpointInfo> callback,
+            Action<IEnumerable<string>> errorCallback)
         {
             this.BeginEstablishTrust(sender, receiveNotificationEndpoint, establishTrustEndpoint, delegate(string senderToken)
             {
@@ -211,7 +211,7 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             //public IUserOrGroup Sender;
             //public string ReceiveNotificationEndpoint;
-            //public GenericArgument<string> Callback;
+            //public Action<string> Callback;
             public string SenderToken;
             public DateTime Created = DateTime.UtcNow;
         }
@@ -244,8 +244,8 @@ namespace ObjectCloud.Disk.FileHandlers
             IUserOrGroup sender,
             string receiveNotificationEndpoint,
             string establishTrustEndpoint,
-            GenericArgument<string> callback,
-            GenericArgument<Exception> errorCallback)
+            Action<string> callback,
+            Action<Exception> errorCallback)
         {
             // Make sure the timer is created
             if (null == EstablishTrustDataTimer)
@@ -411,7 +411,7 @@ namespace ObjectCloud.Disk.FileHandlers
         /// </summary>
         /// <param name="identity"></param>
         /// <param name="callback"></param>
-        public void GetEndpoints(string identity, GenericArgument<IEndpoints> callback, GenericArgument<Exception> errorCallback)
+        public void GetEndpoints(string identity, Action<IEndpoints> callback, Action<Exception> errorCallback)
         {
             Endpoints.GetEndpoints(
                 identity,
@@ -591,7 +591,7 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             HttpWebClient webClient = new HttpWebClient();
 
-            GenericVoid retry = delegate()
+            Action retry = delegate()
             {
                 if (maxRetries > 0)
                     ThreadPool.QueueUserWorkItem(delegate(object state)

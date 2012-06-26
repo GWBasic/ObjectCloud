@@ -167,7 +167,7 @@ namespace ObjectCloud.Javascript.SubProcess
         /// <summary>
         /// The delegates that convert the passed in argument from the web to the javascript's expected type
         /// </summary>
-        private readonly Dictionary<string, GenericArgumentReturn<string, object>> ArgnameToConversionDelegate = new Dictionary<string, GenericArgumentReturn<string, object>>();
+        private readonly Dictionary<string, Func<string, object>> ArgnameToConversionDelegate = new Dictionary<string, Func<string, object>>();
         
         /// <summary>
         /// Stack of WebConnections.  Each time a new request is made to call a Javascript method, the WebConnection is put on this stack.  A
@@ -649,7 +649,7 @@ namespace ObjectCloud.Javascript.SubProcess
             ScopeWrapper scopeWrapper,
             IFileContainer fileContainer,
             IWebConnection webConnection,
-            GenericReturn<R> del)
+            Func<R> del)
         {
             // This value is ThreadStatic so that if the function shells, it can still know about the connection
             FunctionCaller oldMe = _Current;

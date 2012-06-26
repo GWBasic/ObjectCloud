@@ -376,9 +376,9 @@ namespace ObjectCloud.Interfaces.Disk
             bool forceRefresh, 
             IEnumerable<string> recipientIdentities,
             ParticleEndpoint particleEndpoint,
-            GenericArgument<EndpointInfo> callback,
-            GenericArgument<IEnumerable<string>> errorCallback,
-            GenericArgument<Exception> exceptionCallback);
+            Action<EndpointInfo> callback,
+            Action<IEnumerable<string>> errorCallback,
+            Action<Exception> exceptionCallback);
 
         /// <summary>
         /// Used when responding to a request to establish trust
@@ -417,7 +417,7 @@ namespace ObjectCloud.Interfaces.Disk
         /// </summary>
         /// <param name="identity"></param>
         /// <param name="callback"></param>
-        void GetEndpoints(string identity, GenericArgument<IEndpoints> callback, GenericArgument<Exception> errorCallback);
+        void GetEndpoints(string identity, Action<IEndpoints> callback, Action<Exception> errorCallback);
 
         /// <summary>
         /// Gets the sender token ID for the given sender token, or returns false if the sender token is unknown
