@@ -81,6 +81,7 @@ namespace ObjectCloud.Disk.FileHandlers
 		internal class UserInt : UserBase
 		{
 			public byte[] passwordMD5;
+			public byte[] salt;
 			public int identityProviderCode;
 			public string identityProviderArgs;
 			public Dictionary<string, DateTime> associationHandles = new Dictionary<string, DateTime>();
@@ -166,12 +167,6 @@ namespace ObjectCloud.Disk.FileHandlers
 
             IDirectoryHandler usersDirectory = FileHandlerFactoryLocator.FileSystemResolver.ResolveFile("Users").CastFileHandler<IDirectoryHandler>();
 
-            byte[] passwordMD5;
-            if (null != password)
-                passwordMD5 = UserManagerHandler.CreateMD5(password);
-			else
-				passwordMD5 = null;
-
             IUserHandler newUser;
             IUser userObj = null;
 			
@@ -192,13 +187,20 @@ namespace ObjectCloud.Disk.FileHandlers
 				{
                     name = name,
 					id = userId,
-                    passwordMD5 = passwordMD5,
                     builtIn = builtIn,
                     displayName = displayName,
                     identityProviderCode = identityProvider.IdentityProviderCode,
                     identityProviderArgs = identityProviderArgs
 				};
-				
+
+				if (null != password)
+					this.SetPassword(user, password);
+				else
+				{
+					user.passwordMD5 = null;
+					user.salt = null;
+				}
+
 				userManagerData.users[userId] = user;
 				userManagerData.byName[name] = user;
                 userObj = this.CreateUserObject(user);
@@ -594,7 +596,7 @@ namespace ObjectCloud.Disk.FileHandlers
         {
             var user = GetUserInt(name);
 
-            var passwordMD5 = UserManagerHandler.CreateMD5(password);
+            var passwordMD5 = UserManagerHandler.CreateMD5(password, user.salt);
 
 			if (passwordMD5.Length != user.passwordMD5.Length)
                 throw new WrongPasswordException("Incorrect password");
@@ -707,18 +709,17 @@ namespace ObjectCloud.Disk.FileHandlers
         /// </summary>
         /// <param name="password"></param>
         /// <returns></returns>
-        private static byte[] CreateMD5(string password)
+        private static byte[] CreateMD5(string password, byte[] salt)
         {
-            string saltedPassword = string.Format(PasswordSalt, password);
-            byte[] passwordBytes = System.Text.Encoding.UTF8.GetBytes(saltedPassword);
+            var passwordBytes = System.Text.Encoding.UTF8.GetBytes(password);
 
-            return (new System.Security.Cryptography.MD5CryptoServiceProvider()).ComputeHash(passwordBytes);
+			var saltedPassword = new byte[passwordBytes.Length + salt.Length];
+			Array.Copy(salt, saltedPassword, salt.Length);
+			Array.Copy(passwordBytes, 0, saltedPassword, salt.Length, passwordBytes.Length);
+
+			var cryptoProvider = new SHA256CryptoServiceProvider();
+			return cryptoProvider.ComputeHash(passwordBytes);
         }
-
-        /// <summary>
-        /// The salt for the password.  Insert a {0} where the password goes
-        /// </summary>
-        private static string PasswordSalt = "{0} objectCloud!!!!salt {0}xyzbhjkbk {0} {0} {0} !!!!!!!!!";
 
         /// <summary>
         /// Creates the user object
@@ -1098,9 +1099,20 @@ namespace ObjectCloud.Disk.FileHandlers
 			this.persistedUserManagerData.Write(userManagerData =>
             {
 				var user = userManagerData.GetUser(userId);
-				user.passwordMD5 = UserManagerHandler.CreateMD5(password);
+				this.SetPassword(user, password);
 			});
         }
+
+		private void SetPassword(UserInt user, string password)
+		{
+			var rngCryptoServiceProvider = new RNGCryptoServiceProvider();
+			var salt = new byte[512];
+
+			rngCryptoServiceProvider.GetBytes(salt);
+
+			user.salt = salt;
+			user.passwordMD5 = UserManagerHandler.CreateMD5(password, salt);
+		}
 
         /// <summary>
         /// Returns true if the user is in the group

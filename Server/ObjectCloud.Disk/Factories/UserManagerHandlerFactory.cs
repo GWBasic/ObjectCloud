@@ -114,6 +114,7 @@ namespace ObjectCloud.Disk.Factories
 			user.identityProviderArgs = stream.ReadString();
 			user.identityProviderCode = stream.Read<int>();
 			user.passwordMD5 = stream.ReadBytes();
+			user.salt = stream.ReadBytes();
 
 			// Association Handles
 			var numAssociationHandles = stream.Read<int>();
@@ -227,6 +228,7 @@ namespace ObjectCloud.Disk.Factories
 			stream.Write(user.identityProviderArgs);
 			stream.Write(user.identityProviderCode);
 			stream.WriteBytes(user.passwordMD5);
+			stream.WriteBytes(user.salt);
 
 			// Association Handles
 			stream.Write(user.associationHandles.Count);

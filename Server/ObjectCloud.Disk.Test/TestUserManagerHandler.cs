@@ -34,6 +34,20 @@ namespace ObjectCloud.Disk.Test
         }
 
         [Test]
+		[ExpectedException(typeof(WrongPasswordException))]
+        public void TestWrongPassword()
+        {
+            IUserManagerHandler userManager = FileHandlerFactoryLocator.UserManagerHandler;
+
+            IUser testUser = userManager.CreateUser("TestSetPassword" + SRandom.Next<long>().ToString(), "password", "test user");
+
+            userManager.SetPassword(testUser.Id, "newpassword");
+
+            // reload the user after the password change
+            testUser = userManager.GetUser(testUser.Name, "newpasswordxxx");
+        }
+
+        [Test]
         public void TestGroupAliases()
         {
             IUserManagerHandler userManager = FileHandlerFactoryLocator.UserManagerHandler;
